@@ -7,6 +7,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.cnv.shr.dmn.Main;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
@@ -45,6 +47,12 @@ public abstract class Message
 			ByteListBuffer buffer = new ByteListBuffer();
 			write(buffer);
 			out.write(buffer.getBytes());
+		}
+		catch (UnsupportedEncodingException ex)
+		{
+			Services.logger.logStream.println("No UTF-8 support, quiting.");
+			ex.printStackTrace(Services.logger.logStream);
+			Main.quit();
 		}
 	}
 

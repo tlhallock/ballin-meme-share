@@ -10,7 +10,6 @@ import org.cnv.shr.mdl.User;
 
 public class Remotes
 {
-	HashMap<String, User> otherUsers = new HashMap<>();
 	HashMap<Machine, List<RemoteDirectory>> sharedDirectories = new HashMap<>();
 
 	public void refresh(String ip)
@@ -29,16 +28,8 @@ public class Remotes
 
 	}
 
-	public Collection<User> getUsers()
+	public Collection<Machine> getMachines()
 	{
-		return otherUsers.values();
+		return sharedDirectories.keySet();
 	}
-
-	static Remotes instance = new Remotes();
-
-	public static Remotes getInstance()
-	{
-		return instance;
-	}
-
 }

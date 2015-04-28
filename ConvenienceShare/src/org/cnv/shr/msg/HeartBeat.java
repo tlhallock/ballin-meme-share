@@ -1,6 +1,6 @@
 package org.cnv.shr.msg;
 
-import org.cnv.shr.dmn.Remotes;
+import org.cnv.shr.dmn.Services;
 
 public class HeartBeat extends Message
 {
@@ -8,7 +8,7 @@ public class HeartBeat extends Message
 	@Override
 	public void perform()
 	{
-		Remotes.getInstance().isAlive(getMachine());
+		Services.remotes.isAlive(getMachine());
 	}
 
 }

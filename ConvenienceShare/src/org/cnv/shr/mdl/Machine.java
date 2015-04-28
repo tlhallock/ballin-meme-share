@@ -3,14 +3,16 @@ package org.cnv.shr.mdl;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PublicKey;
 
-import org.cnv.shr.dmn.Settings;
+import org.cnv.shr.dmn.Services;
 
 public class Machine
 {
 	String ip;
-	int port = Settings.getInstance().getDefaultPort();
-	String user;
+	int port = Services.settings.defaultPort;
+	PublicKey publicKey;
+	long lastActive;
 
 	public Machine(String machine)
 	{
@@ -39,7 +41,7 @@ public class Machine
 
 	public String toString()
 	{
-		return ip + ":" + port;
+		return ip + ":" + port + "[" + publicKey + "]";
 	}
 
 	public int hashCode()

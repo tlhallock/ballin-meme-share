@@ -3,6 +3,7 @@ package org.cnv.shr.util;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.Settings;
 
 public class ByteReader
@@ -27,8 +28,8 @@ public class ByteReader
 	{
 		long i = 0;
 
-		i |= (readByte(in)) << 0L;
-		i |= (readByte(in)) << 8L;
+		i |= (readByte(in)) <<  0L;
+		i |= (readByte(in)) <<  8L;
 		i |= (readByte(in)) << 16L;
 		i |= (readByte(in)) << 24L;
 
@@ -39,8 +40,8 @@ public class ByteReader
 	{
 		long i = 0;
 
-		i |= (readByte(in)) << 0L;
-		i |= (readByte(in)) << 8L;
+		i |= (readByte(in)) <<  0L;
+		i |= (readByte(in)) <<  8L;
 		i |= (readByte(in)) << 16L;
 		i |= (readByte(in)) << 24L;
 		i |= (readByte(in)) << 32L;
@@ -54,7 +55,7 @@ public class ByteReader
 	public static String readString(InputStream in) throws IOException
 	{
 		int size = (int) readInt(in);
-		if (size > Settings.getInstance().getMaxStringSize())
+		if (size > Services.settings.maxStringSize)
 		{
 			throw new IOException("Received string that is way too big!! Size=" + size);
 		}
@@ -66,6 +67,6 @@ public class ByteReader
 			readSoFar += in.read(returnValue, readSoFar, size - readSoFar);
 		}
 
-		return new String(returnValue, Settings.getInstance().getEncoding());
+		return new String(returnValue, Settings.encoding);
 	}
 }

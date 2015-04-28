@@ -2,7 +2,7 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 
-import org.cnv.shr.dmn.Locals;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 
 public class ListFiles extends Message
@@ -11,7 +11,7 @@ public class ListFiles extends Message
 	@Override
 	public void perform()
 	{
-		for (LocalDirectory local : Locals.getInstance().listLocals())
+		for (LocalDirectory local : Services.locals.listLocals())
 		{
 			try
 			{

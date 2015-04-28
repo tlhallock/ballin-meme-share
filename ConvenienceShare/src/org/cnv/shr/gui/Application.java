@@ -5,8 +5,10 @@
  */
 package org.cnv.shr.gui;
 
-import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RemoteDirectory;
+import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
+import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.LocalDirectory;
 
 /**
  * 
@@ -14,7 +16,6 @@ import org.cnv.shr.mdl.RemoteDirectory;
  */
 public class Application extends javax.swing.JFrame
 {
-
 	/**
 	 * Creates new form Application
 	 */
@@ -23,12 +24,35 @@ public class Application extends javax.swing.JFrame
 		initComponents();
 	}
         
-        void view(Machine m)
+        public void refreshAll()
+        {
+            refreshLocals();
+            refreshRemotes();
+            refreshDownloads();
+            refreshSettings();
+        }
+	
+	public void refreshLocals()
+	{
+            DefaultListModel<String> localsListModel = new DefaultListModel<>();
+            for (LocalDirectory local : Services.locals.listLocals())
+            {
+                localsListModel.addElement(local.toString());
+            }
+            localsList.setModel(localsListModel);
+	}
+        
+        public void refreshRemotes()
         {
             
         }
         
-        void view(RemoteDirectory d)
+        public void refreshDownloads()
+        {
+            
+        }
+        
+        public void refreshSettings()
         {
             
         }
@@ -50,7 +74,7 @@ public class Application extends javax.swing.JFrame
         jButton2 = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane6 = new javax.swing.JScrollPane();
-        jList4 = new javax.swing.JList();
+        localsList = new javax.swing.JList();
         jButton1 = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jSplitPane1 = new javax.swing.JSplitPane();
@@ -100,14 +124,14 @@ public class Application extends javax.swing.JFrame
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Currently Shared Directories/Files"));
 
-        jList4.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane6.setViewportView(jList4);
+        jScrollPane6.setViewportView(localsList);
 
         jButton1.setText("Add...");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -128,7 +152,7 @@ public class Application extends javax.swing.JFrame
                 .addContainerGap()
                 .addComponent(jButton1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 504, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -247,6 +271,15 @@ public class Application extends javax.swing.JFrame
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        JFileChooser fc = new JFileChooser();
+        fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
+            Services.locals.share(fc.getSelectedFile());
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
 	/**
 	 * @param args
 	 *            the command line arguments
@@ -304,7 +337,6 @@ public class Application extends javax.swing.JFrame
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
-    private javax.swing.JList jList4;
     private javax.swing.JList jList5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
@@ -320,5 +352,6 @@ public class Application extends javax.swing.JFrame
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
+    private javax.swing.JList localsList;
     // End of variables declaration//GEN-END:variables
 }

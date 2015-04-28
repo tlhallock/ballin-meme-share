@@ -2,8 +2,7 @@ package org.cnv.shr.mdl;
 
 public class SharedFile
 {
-	String path;
-	long filesize;
-	String chekSum;
-	String desc;
+	protected long filesize;
+	protected String checksum;
+	protected String description;
 }
