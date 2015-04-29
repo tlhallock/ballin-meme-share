@@ -1,13 +1,7 @@
 package org.cnv.shr.dmn;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.BindException;
 import java.net.ServerSocket;
-import java.net.Socket;
-
-import org.cnv.shr.msg.Message;
-import org.cnv.shr.msg.MessageReader;
 
 public class RequestHandler extends Thread
 {	
@@ -25,7 +19,8 @@ public class RequestHandler extends Thread
 		{
 			try (ServerSocket socket = new ServerSocket(Services.settings.defaultPort);)
 			{
-				handleConnection(socket.accept());
+				Connection connection = new Connection(socket.accept());
+				connection.run();
 			}
 			catch(BindException ex)
 			{
@@ -38,38 +33,5 @@ public class RequestHandler extends Thread
 				ex.printStackTrace(Services.logger.logStream);
 			}
 		}
-	}
-	
-	private void handleConnection(Socket accept) throws IOException
-	{
-		try (InputStream inputStream = accept.getInputStream();)
-		{
-			Message request = Services.msgReader.readMsg(accept.getInetAddress(), inputStream);
-			if (!request.authenticate())
-			{
-				return;
-			}
-
-			perform(request);
-		}
-	}
-	
-	private void perform(final Message request)
-	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					request.perform();
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace(Services.logger.logStream);
-				}
-			}
-		});
 	}
 }

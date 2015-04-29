@@ -15,40 +15,38 @@ public class ByteListBuffer
 	public ByteListBuffer append(byte[] bytes)
 	{
 		currentBytes.add(bytes);
+		length += bytes.length;
 		return this;
 	}
 
 	public ByteListBuffer append(byte i)
 	{
-		currentBytes.add(new byte[] {
+		return append(new byte[] {
 				(byte) ((i >> 0) & 0xff),
 		});
-		return this;
 	}
 
 	public ByteListBuffer append(short i)
 	{
-		currentBytes.add(new byte[] { 
+		return append(new byte[] { 
 				(byte) ((i >> 0) & 0xff), 
 				(byte) ((i >> 8) & 0xff), 
 		});
-		return this;
 	}
 
 	public ByteListBuffer append(int i)
 	{
-		currentBytes.add(new byte[] { 
+		return append(new byte[] { 
 				(byte) ((i >>  0) & 0xff), 
 				(byte) ((i >>  8) & 0xff), 
 				(byte) ((i >> 16) & 0xff), 
 				(byte) ((i >> 24) & 0xff),
 		});
-		return this;
 	}
 
 	public ByteListBuffer append(long i)
 	{
-		currentBytes.add(new byte[] { 
+		return append(new byte[] { 
 				(byte) ((i >>  0L) & 0xff), 
 				(byte) ((i >>  8L) & 0xff), 
 				(byte) ((i >> 16L) & 0xff), 
@@ -58,7 +56,6 @@ public class ByteListBuffer
 				(byte) ((i >> 48L) & 0xff), 
 				(byte) ((i >> 56L) & 0xff), 
 		});
-		return this;
 	}
 
 	public ByteListBuffer append(String str)
@@ -76,8 +73,7 @@ public class ByteListBuffer
 			return this;
 		}
 		append(bytes.length);
-		append(bytes);
-		return this;
+		return append(bytes);
 	}
 
 	public byte[] getBytes()

@@ -26,4 +26,10 @@ public class Failure extends Message
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public static int TYPE = 1;
+	protected int getType()
+	{
+		return TYPE;
+	}
 }

@@ -15,14 +15,14 @@ public class ListFiles extends Message
 	{
 		for (LocalDirectory local : Services.locals.listLocals())
 		{
-			try
-			{
-				new FileList(local).send(getMachine());
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
+//			try
+//			{
+//				new FileList(local).send(getMachine());
+//			}
+//			catch (IOException e)
+//			{
+//				e.printStackTrace();
+//			}
 		}
 	}
 
@@ -38,5 +38,11 @@ public class ListFiles extends Message
 	{
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public static int TYPE = 1;
+	protected int getType()
+	{
+		return TYPE;
 	}
 }

@@ -11,7 +11,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class MachineFound extends Message
 {
-	public static int TYPE = 23434;
+	public static int TYPE = 1;
 	
 	private String ip;
 	private int port;
@@ -70,5 +70,10 @@ public class MachineFound extends Message
 		{
 			buffer.append(key);
 		}
+	}
+	
+	protected int getType()
+	{
+		return TYPE;
 	}
 }

@@ -3,13 +3,8 @@ package org.cnv.shr.msg;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
 
-import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
@@ -65,30 +60,24 @@ public abstract class Message
 		
 		parse(new ByteArrayInputStream(msgData));
 	}
-
-	final void send(Machine machine) throws UnknownHostException, IOException
+	
+	public final byte[] getBytes()
 	{
-		try (Socket socket = machine.open(); OutputStream out = socket.getOutputStream();)
-		{
-			ByteListBuffer buffer = new ByteListBuffer();
-			write(buffer);
-			byte[] bytes = buffer.getBytes();
-			
-			// encrypt
+		ByteListBuffer buffer = new ByteListBuffer();
+		write(buffer);
+		byte[] bytes = buffer.getBytes();
 
-			ByteListBuffer header = new ByteListBuffer();
-			header.append(port);
-			header.append(bytes.length);
-			
-			out.write(buffer.getBytes());
-		}
-		catch (UnsupportedEncodingException ex)
-		{
-			Services.logger.logStream.println("No UTF-8 support, quiting.");
-			ex.printStackTrace(Services.logger.logStream);
-			Main.quit();
-		}
+		// encrypt
+
+		ByteListBuffer header = new ByteListBuffer();
+		header.append(getType());
+		header.append(port);
+		header.append(bytes.length);
+		header.append(bytes);
+		
+		return header.getBytes();
 	}
+
 	public boolean authenticate()
 	{
 		return true;
@@ -96,5 +85,7 @@ public abstract class Message
 
 	protected abstract void parse(InputStream bytes) throws IOException;
 	protected abstract void write(ByteListBuffer buffer);
+	protected abstract int getType();
 	public abstract void perform() throws Exception;
+	
 }

@@ -68,7 +68,6 @@ public class Initialization
 
 		for (int i = 0; i < statements.length; i++)
 		{
-			System.out.println("Found " + statements[i]);
 			returnValue[i] = c.prepareStatement(statements[i] + ";");
 		}
 		

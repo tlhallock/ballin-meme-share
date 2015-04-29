@@ -13,6 +13,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.util.Misc;
 
 public class DbConnection
 {
@@ -22,6 +23,8 @@ public class DbConnection
 	public DbConnection() throws ClassNotFoundException, SQLException, IOException
 	{
 		Class.forName("org.sqlite.JDBC");
+		
+		Misc.ensureDirectory(Services.settings.getDbFile(), true);
 		c = DriverManager.getConnection("jdbc:sqlite:" + Services.settings.getDbFile());
 
 		HashSet<String> currentTables = Initialization.getCurrentTables(c);

@@ -20,14 +20,21 @@ public class MessageReader
 	
 	private void add(MessageIdentifier identifier)
 	{
-		MessageIdentifier messageIdentifier = identifiers.get(identifier.getType());
-		if (messageIdentifier != null)
+		int type = identifier.getType();
+		if (type > Byte.MAX_VALUE || type < Byte.MIN_VALUE)
 		{
-			Services.logger.logStream.println("Type " + identifier.getType() + " is already used by " + messageIdentifier.name + " so " + identifier.name + " cannot also use it.");
+			Services.logger.logStream.println("Message type " + type + " for " + identifier.name + " is not in range.");
 			Main.quit();
 			return;
 		}
-		identifiers.put(identifier.getType(), identifier);
+		MessageIdentifier messageIdentifier = identifiers.get(type);
+		if (messageIdentifier != null)
+		{
+			Services.logger.logStream.println("Type " + type + " is already used by " + messageIdentifier.name + " so " + identifier.name + " cannot also use it.");
+			Main.quit();
+			return;
+		}
+		identifiers.put(type, identifier);
 	}
 	
 	public Message readMsg(InetAddress address, InputStream inputStream) throws IOException
@@ -90,6 +97,7 @@ public class MessageReader
 		{
 			try
 			{
+				Services.logger.logStream.println("Received message of type " + name);
 				return constructor.newInstance(address, stream);
 			}
 			catch (Exception e)

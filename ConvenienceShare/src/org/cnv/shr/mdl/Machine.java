@@ -29,6 +29,7 @@ public class Machine
 		if (index < 0)
 		{
 			this.ip = machine;
+			port = Services.settings.defaultPort;
 		}
 		else
 		{

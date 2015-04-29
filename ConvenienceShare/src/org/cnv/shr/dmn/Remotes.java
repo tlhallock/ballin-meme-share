@@ -43,6 +43,7 @@ public class Remotes
 	
 	public void addMachine(Machine m)
 	{
+		Services.logger.logStream.println("Adding remote " + m.getIp() + ":" + m.getPort());
 		try
 		{
 			Services.db.addMachine(m);
