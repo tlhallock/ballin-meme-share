@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
 
 import org.cnv.shr.util.Misc;
@@ -15,13 +17,12 @@ public class Settings
 	public static final String checksumAlgorithm = "SHA1";
 	public static String encryptionAlgorithm = "RSA";
 	
-
-	private static final File SETTINGS_FILE = new File("./app/settings.props");
-	
 	private static final String LOCALS_FILE = "/locals.txt";
 	private static final String REMOTES_FILE = "/remotes.json";
 	private static final String KEYS_FILE = "/remotes.json";
 	private static final String LOG_FILE = "/log.txt";
+	private static final String SQL_DIR = "sql";
+	private static final String DB_FILE = "/files.db";
 	
 	public String machineName = "foobar";
 	
@@ -35,6 +36,7 @@ public class Settings
 	
 	public int maxDownloads;
 	public int maxServes;
+	public int minNaunce;
 	
 	public int maxStringSize;
 	public int numThreads;
@@ -43,6 +45,15 @@ public class Settings
 	public long monitorRepeat;
 
 	public long checksumWait;
+	
+	private File settingsFile;
+	private String localAddress;
+	
+	Settings(File settingsFile) throws UnknownHostException
+	{
+		this.settingsFile = settingsFile;
+		localAddress = InetAddress.getLocalHost().getHostAddress();
+	}
 
 	private static int getInt(Properties p, String key, String defaultValue)
 	{
@@ -76,12 +87,12 @@ public class Settings
 		properties.setProperty("max.up",           String.valueOf(maxServes           ));
 		properties.setProperty("max.str",          String.valueOf(maxStringSize       ));
 		properties.setProperty("max.port",         String.valueOf(maxDirectorySize    ));
+		properties.setProperty("min.naunce",       String.valueOf(minNaunce           ));
 		properties.setProperty("monitor.repeat",   String.valueOf(monitorRepeat       ));
 
 
-		File f = SETTINGS_FILE;
-		Misc.ensureDirectory(SETTINGS_FILE, true);
-		try (FileOutputStream outputStream = new FileOutputStream(f))
+		Misc.ensureDirectory(settingsFile, true);
+		try (FileOutputStream outputStream = new FileOutputStream(settingsFile))
 		{
 			properties.store(outputStream, null);
 		}
@@ -89,9 +100,8 @@ public class Settings
 	
 	public synchronized void read() throws FileNotFoundException, IOException
 	{
-		File f = SETTINGS_FILE;
 		Properties properties = new Properties();
-		try (FileInputStream inStream = new FileInputStream(f))
+		try (FileInputStream inStream = new FileInputStream(settingsFile))
 		{
 			properties.load(inStream);
 		}
@@ -116,6 +126,7 @@ public class Settings
 		maxDownloads         = getInt (properties,     "max.down",                      "10");
 		maxServes            = getInt (properties,     "max.up",                        "10");
 		maxStringSize        = getInt (properties,     "max.str",                     "4096");
+		minNaunce            = getInt (properties,     "min.naunce",                   "128");
 		maxDirectorySize     = getLong(properties,     "max.port",                      "-1");
 		monitorRepeat        = getLong(properties,     "monitor.repeat",             "50000");
 	}
@@ -136,5 +147,18 @@ public class Settings
 	public File getLogFile()
 	{
 		return new File(applicationDirectory + LOG_FILE);
+	}
+	public String getSqlDir()
+	{
+		return /*applicationDirectory +*/ SQL_DIR;
+	}
+	public String getDbFile()
+	{
+		return applicationDirectory + DB_FILE;
+	}
+
+	public String getLocalIp()
+	{
+		return localAddress;
 	}
 }

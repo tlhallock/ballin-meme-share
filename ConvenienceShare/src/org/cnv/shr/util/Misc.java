@@ -1,9 +1,14 @@
 package org.cnv.shr.util;
 
 import java.io.File;
+import java.util.Random;
+
+import org.cnv.shr.dmn.Services;
 
 public class Misc
 {
+	private static final Random random = new Random();
+	
 	public static void ensureDirectory(String path, boolean file)
 	{
 		ensureDirectory(new File(path), file);
@@ -38,6 +43,25 @@ public class Misc
 			returnValue[i] = (byte) Integer.parseInt(str.charAt(2*i) + "" + str.charAt(2*i+1), 16);
 		}
 
+		return returnValue;
+	}
+	
+	private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	
+	public String getRandomString(int size)
+	{
+		StringBuilder builder = new StringBuilder(size);
+		for (int i = 0; i < size; i++)
+		{
+			builder.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
+		}
+		return builder.toString();
+	}
+	
+	public static byte[] getNaunce()
+	{
+		byte[] returnValue = new byte[Services.settings.minNaunce];
+		random.nextBytes(returnValue);
 		return returnValue;
 	}
 }

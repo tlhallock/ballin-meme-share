@@ -33,6 +33,16 @@ public class Machine
 		}
 	}
 	
+	public Machine(String ip, int port, String[] keys)
+	{
+		this.ip = ip;
+		this.port = port;
+		for (String key : keys)
+		{
+			
+		}
+	}
+	
 	public Machine(JSONObject object) throws JSONException
 	{
 		ip = object.getString("ip");
@@ -62,6 +72,22 @@ public class Machine
 		machines.put(machines.length(), object);
 	}
 
+
+	public String getName()
+	{
+		return "Foobar";
+	}
+	
+	public String getIp()
+	{
+		return ip;
+	}
+	
+	public int getPort()
+	{
+		return port;
+	}
+
 	public Machine(String ip, int port)
 	{
 		this.ip = ip;
@@ -86,5 +112,10 @@ public class Machine
 	public boolean equals(Object other)
 	{
 		return other instanceof Machine && toString().equals(other.toString());
+	}
+
+	public String[] getKeys()
+	{
+		return null;
 	}
 }

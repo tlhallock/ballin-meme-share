@@ -41,4 +41,9 @@ public class KeyManager
 	{
 		
 	}
+
+	public String[] getKeys()
+	{
+		return new String[0];
+	}
 }

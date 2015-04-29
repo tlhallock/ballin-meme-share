@@ -4,22 +4,17 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintStream;
-import java.util.Collection;
-import java.util.HashMap;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.User;
 import org.json.JSONArray;
 import org.json.JSONTokener;
 
 public class Remotes
 {
-	LinkedList<Machine> machines = new LinkedList<>();
-	HashMap<Machine, List<RemoteDirectory>> sharedDirectories = new HashMap<>();
-
 	public void refresh(String ip)
 	{
 
@@ -38,7 +33,25 @@ public class Remotes
 
 	public List<Machine> getMachines()
 	{
-		return machines;
+		return null;
+	}
+	
+	public String[] getKeys(String ip, int port)
+	{
+		return null;
+	}
+	
+	public void addMachine(Machine m)
+	{
+		try
+		{
+			Services.db.addMachine(m);
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		Notifications.remotesChanged();
 	}
 	
 	public void write()
@@ -46,7 +59,7 @@ public class Remotes
 		try (PrintStream ps = new PrintStream(new FileOutputStream(Services.settings.getRemotesFile())))
 		{
 			JSONArray arr = new JSONArray();
-			for (Machine machine : machines)
+			for (Machine machine : getMachines())
 			{
 				machine.append(arr);
 			}
@@ -60,8 +73,10 @@ public class Remotes
 		}
 	}
 	
-	public void read()
+	public List<Machine> read()
 	{
+		LinkedList<Machine> machines = new LinkedList<>();
+		
 		try (BufferedReader reader = new BufferedReader(new FileReader(Services.settings.getRemotesFile())))
 		{
 			JSONArray arr = new JSONArray(new JSONTokener(reader));
@@ -76,7 +91,7 @@ public class Remotes
 			Services.logger.logStream.println("This is expected on first run.");
 			e.printStackTrace(Services.logger.logStream);
 		}
-		
-		Notifications.remotesChanged();
+
+		return machines;
 	}
 }

@@ -39,11 +39,13 @@ Keys:
 	 */
 	
 	
+	/*
+	
 	
 	public static String createDbStatement = "";
 	public static String clearDbStatement = "";
 	public static String findFileByHashStatement = "";
 	public static String findFileByHashStatement = "";
-	
+	*/
 
 }

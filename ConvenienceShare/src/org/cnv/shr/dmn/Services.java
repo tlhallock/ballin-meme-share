@@ -1,13 +1,17 @@
 package org.cnv.shr.dmn;
 
+import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.cnv.shr.db.DbConnection;
 import org.cnv.shr.gui.Application;
+import org.cnv.shr.msg.MessageReader;
 import org.cnv.shr.util.Misc;
 
 public class Services
@@ -23,15 +27,26 @@ public class Services
 	public static RequestHandler handler;
 	public static Remotes remotes;
 	public static Locals locals;
+	public static MessageReader msgReader;
+	public static KeyManager keyManager;
+	public static DbConnection db;
 
 	public static Timer monitorTimer;
 
 	public static Application application;
 	
-	public static void initialize() throws IOException
+	public static void initialize(String[] args) throws Exception
 	{
 		logger = new Logger();
-		settings = new Settings();
+		if (args.length >= 1)
+		{
+			settings = new Settings(new File(args[0]));
+		}
+		else
+		{
+			settings = new Settings(new File("./app/settings.props"));
+		}
+		
 		settings.setToDefaults();
 		
 		try
@@ -40,11 +55,17 @@ public class Services
 		}
 		catch (IOException e)
 		{
-			settings.write();
 			logger.logStream.println("Creating settings file.");
 		}
+		settings.write();
 
 		logger.setLogLocation();
+		
+		db = new DbConnection();
+		db.initialize();
+
+		keyManager = new KeyManager();
+		msgReader = new MessageReader();
 		
 		Misc.ensureDirectory(settings.applicationDirectory, false);
 		Misc.ensureDirectory(settings.stagingDirectory, false);

@@ -24,7 +24,7 @@ public class ByteReader
 		return i;
 	}
 
-	public static long readInt(InputStream in) throws IOException
+	public static int readInt(InputStream in) throws IOException
 	{
 		long i = 0;
 
@@ -33,7 +33,7 @@ public class ByteReader
 		i |= (readByte(in)) << 16L;
 		i |= (readByte(in)) << 24L;
 
-		return i;
+		return (int) i;
 	}
 
 	public static long readLong(InputStream in) throws IOException

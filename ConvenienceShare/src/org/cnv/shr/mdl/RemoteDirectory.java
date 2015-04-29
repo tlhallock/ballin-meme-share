@@ -24,4 +24,9 @@ public class RemoteDirectory
 	{
 
 	}
+
+	public String getPath()
+	{
+		return path;
+	}
 }

@@ -5,9 +5,11 @@
  */
 package org.cnv.shr.gui;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.LinkedList;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
-
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
@@ -18,6 +20,8 @@ import org.cnv.shr.mdl.Machine;
  */
 public class Application extends javax.swing.JFrame
 {
+    public LinkedList<RemoteView> remoteViewers = new LinkedList<>();
+    
 	/**
 	 * Creates new form Application
 	 */
@@ -52,7 +56,27 @@ public class Application extends javax.swing.JFrame
 			remotesListModel.addElement(remote.toString());
 		}
 		remotesList.setModel(remotesListModel);
+                
+                for (RemoteView view : remoteViewers)
+                {
+                    view.refresh();
+                }
 	}
+        
+        public void showRemote(Machine machine)
+        {
+            RemoteViewer frame = new RemoteViewer();
+            final RemoteView viewer = frame.getRemoteView();
+            remoteViewers.add(viewer);
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent evt) {
+                    remoteViewers.remove(viewer);
+                }
+            });
+            viewer.setRemote(machine);
+            frame.setVisible(true);
+        }
 
 	public void refreshDownloads()
 	{

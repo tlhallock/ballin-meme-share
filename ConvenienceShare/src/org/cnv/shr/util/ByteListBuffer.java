@@ -3,6 +3,8 @@ package org.cnv.shr.util;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 
+import org.cnv.shr.dmn.Main;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.Settings;
 
 public class ByteListBuffer
@@ -59,9 +61,20 @@ public class ByteListBuffer
 		return this;
 	}
 
-	public ByteListBuffer append(String str) throws UnsupportedEncodingException
+	public ByteListBuffer append(String str)
 	{
-		byte[] bytes = str.getBytes(Settings.encoding);
+		byte[] bytes;
+		try
+		{
+			bytes = str.getBytes(Settings.encoding);
+		}
+		catch (UnsupportedEncodingException e)
+		{
+			Services.logger.logStream.println("Encoding is not supported");
+			e.printStackTrace(Services.logger.logStream);
+			Main.quit();
+			return this;
+		}
 		append(bytes.length);
 		append(bytes);
 		return this;

@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import org.cnv.shr.msg.Message;
+import org.cnv.shr.msg.MessageReader;
 
 public class RequestHandler extends Thread
 {	
@@ -43,7 +44,7 @@ public class RequestHandler extends Thread
 	{
 		try (InputStream inputStream = accept.getInputStream();)
 		{
-			Message request = Message.readMsg(inputStream);
+			Message request = Services.msgReader.readMsg(accept.getInetAddress(), inputStream);
 			if (!request.authenticate())
 			{
 				return;
