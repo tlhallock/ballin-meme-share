@@ -5,14 +5,25 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Properties;
+
+import org.cnv.shr.util.Misc;
 
 public class Settings
 {
 	public static final String encoding = "UTF8";
 	public static final String checksumAlgorithm = "SHA1";
+	public static String encryptionAlgorithm = "RSA";
+	
+
+	private static final File SETTINGS_FILE = new File("./app/settings.props");
+	
+	private static final String LOCALS_FILE = "/locals.txt";
+	private static final String REMOTES_FILE = "/remotes.json";
+	private static final String KEYS_FILE = "/remotes.json";
+	private static final String LOG_FILE = "/log.txt";
+	
+	public String machineName = "foobar";
 	
 	public String downloadsDirectory;
 	public String applicationDirectory;
@@ -28,11 +39,7 @@ public class Settings
 	public int maxStringSize;
 	public int numThreads;
 	public long maxDirectorySize;
-
-	public PublicKey publicKey;
-	public PrivateKey privateKey;
 	
-	public String logLocation;
 	public long monitorRepeat;
 
 	public long checksumWait;
@@ -53,32 +60,36 @@ public class Settings
 		}
 	}
 	
-	public synchronized void write(File f) throws FileNotFoundException, IOException
+	public synchronized void write() throws FileNotFoundException, IOException
 	{
 		Properties properties = new Properties();
 
-		properties.setProperty("dirs.downloads",   String.valueOf(downloadsDirectory));
+		properties.setProperty("dirs.downloads",   String.valueOf(downloadsDirectory  ));
 		properties.setProperty("dirs.application", String.valueOf(applicationDirectory));
-		properties.setProperty("dirs.staging",     String.valueOf(stagingDirectory));
-		properties.setProperty("files.log",        String.valueOf(logLocation));
-		properties.setProperty("port.server",      String.valueOf(defaultPort));
-		properties.setProperty("port.begin",       String.valueOf(servePortBegin));
-		properties.setProperty("port.end",         String.valueOf(servePortEnd));
-		properties.setProperty("max.threads",      String.valueOf(numThreads));
-		properties.setProperty("max.down",         String.valueOf(maxDownloads));
-		properties.setProperty("max.up",           String.valueOf(maxServes));
-		properties.setProperty("max.str",          String.valueOf(maxStringSize));
-		properties.setProperty("max.port",         String.valueOf(maxDirectorySize));
-		properties.setProperty("monitor.repeat",   String.valueOf(monitorRepeat));
+		properties.setProperty("dirs.staging",     String.valueOf(stagingDirectory    ));
+		properties.setProperty("machinename",      String.valueOf(machineName         ));
+		properties.setProperty("port.server",      String.valueOf(defaultPort         ));
+		properties.setProperty("port.begin",       String.valueOf(servePortBegin      ));
+		properties.setProperty("port.end",         String.valueOf(servePortEnd        ));
+		properties.setProperty("max.threads",      String.valueOf(numThreads          ));
+		properties.setProperty("max.down",         String.valueOf(maxDownloads        ));
+		properties.setProperty("max.up",           String.valueOf(maxServes           ));
+		properties.setProperty("max.str",          String.valueOf(maxStringSize       ));
+		properties.setProperty("max.port",         String.valueOf(maxDirectorySize    ));
+		properties.setProperty("monitor.repeat",   String.valueOf(monitorRepeat       ));
 
+
+		File f = SETTINGS_FILE;
+		Misc.ensureDirectory(SETTINGS_FILE, true);
 		try (FileOutputStream outputStream = new FileOutputStream(f))
 		{
 			properties.store(outputStream, null);
 		}
 	}
 	
-	public synchronized void read(File f) throws FileNotFoundException, IOException
+	public synchronized void read() throws FileNotFoundException, IOException
 	{
+		File f = SETTINGS_FILE;
 		Properties properties = new Properties();
 		try (FileInputStream inStream = new FileInputStream(f))
 		{
@@ -94,18 +105,36 @@ public class Settings
 
 	private synchronized void read(Properties properties) throws FileNotFoundException, IOException
 	{
-		downloadsDirectory   = properties.getProperty("dirs.downloads",       "./downloads");
-		applicationDirectory = properties.getProperty("dirs.application",           "./app");
-		stagingDirectory     = properties.getProperty("dirs.staging",              "./temp");
-		logLocation          = properties.getProperty("files.log",              "./log.txt");
-		defaultPort          = getInt(properties,     "port.server",                 "8989");
-		servePortBegin       = getInt(properties,     "port.begin",                  "8990");
-		servePortEnd         = getInt(properties,     "port.end",                    "9000");
-		numThreads           = getInt(properties,     "max.threads",                   "10");
-		maxDownloads         = getInt(properties,     "max.down",                      "10");
-		maxServes            = getInt(properties,     "max.up",                        "10");
-		maxStringSize        = getInt(properties,     "max.str",                     "4096");
-		maxDirectorySize     = getInt(properties,     "max.port",                      "-1");
-		monitorRepeat        = getInt(properties,     "monitor.repeat",             "50000");
+		downloadsDirectory   = properties.getProperty( "dirs.downloads",       "./downloads");
+		applicationDirectory = properties.getProperty( "dirs.application",           "./app");
+		stagingDirectory     = properties.getProperty( "dirs.staging",              "./temp");
+		machineName          = properties.getProperty( "machinename",               "foobar");
+		defaultPort          = getInt (properties,     "port.server",                 "8989");
+		servePortBegin       = getInt (properties,     "port.begin",                  "8990");
+		servePortEnd         = getInt (properties,     "port.end",                    "9000");
+		numThreads           = getInt (properties,     "max.threads",                   "10");
+		maxDownloads         = getInt (properties,     "max.down",                      "10");
+		maxServes            = getInt (properties,     "max.up",                        "10");
+		maxStringSize        = getInt (properties,     "max.str",                     "4096");
+		maxDirectorySize     = getLong(properties,     "max.port",                      "-1");
+		monitorRepeat        = getLong(properties,     "monitor.repeat",             "50000");
+	}
+	
+
+	public File getLocalsFile()
+	{
+		return new File(applicationDirectory + LOCALS_FILE);
+	}
+	public File getRemotesFile()
+	{
+		return new File(applicationDirectory + REMOTES_FILE);
+	}
+	public File getKeysFile()
+	{
+		return new File(applicationDirectory + KEYS_FILE);
+	}
+	public File getLogFile()
+	{
+		return new File(applicationDirectory + LOG_FILE);
 	}
 }

@@ -13,3 +13,4 @@ hs_err_pid*
 workspace/
 /ConvenienceShare/nbproject/private/
 ConvenienceShare/app/
+ConvenienceShare/temp/

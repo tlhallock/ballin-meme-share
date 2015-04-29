@@ -7,8 +7,10 @@ package org.cnv.shr.gui;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.Machine;
 
 /**
  * 
@@ -23,39 +25,44 @@ public class Application extends javax.swing.JFrame
 	{
 		initComponents();
 	}
-        
-        public void refreshAll()
-        {
-            refreshLocals();
-            refreshRemotes();
-            refreshDownloads();
-            refreshSettings();
-        }
-	
+
+	public void refreshAll()
+	{
+		refreshLocals();
+		refreshRemotes();
+		refreshDownloads();
+		refreshSettings();
+	}
+
 	public void refreshLocals()
 	{
-            DefaultListModel<String> localsListModel = new DefaultListModel<>();
-            for (LocalDirectory local : Services.locals.listLocals())
-            {
-                localsListModel.addElement(local.toString());
-            }
-            localsList.setModel(localsListModel);
+		DefaultListModel<String> localsListModel = new DefaultListModel<>();
+		for (LocalDirectory local : Services.locals.listLocals())
+		{
+			localsListModel.addElement(local.toString());
+		}
+		localsList.setModel(localsListModel);
 	}
-        
-        public void refreshRemotes()
-        {
-            
-        }
-        
-        public void refreshDownloads()
-        {
-            
-        }
-        
-        public void refreshSettings()
-        {
-            
-        }
+
+	public void refreshRemotes()
+	{
+		DefaultListModel<String> remotesListModel = new DefaultListModel<>();
+		for (Machine remote : Services.remotes.getMachines())
+		{
+			remotesListModel.addElement(remote.toString());
+		}
+		remotesList.setModel(remotesListModel);
+	}
+
+	public void refreshDownloads()
+	{
+
+	}
+
+	public void refreshSettings()
+	{
+
+	}
 
 	/**
 	 * This method is called from within the constructor to initialize the form.
@@ -70,7 +77,7 @@ public class Application extends javax.swing.JFrame
         jTabbedPane2 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         jScrollPane7 = new javax.swing.JScrollPane();
-        jList5 = new javax.swing.JList();
+        remotesList = new javax.swing.JList();
         jButton2 = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane6 = new javax.swing.JScrollPane();
@@ -88,12 +95,7 @@ public class Application extends javax.swing.JFrame
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jList5.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane7.setViewportView(jList5);
+        jScrollPane7.setViewportView(remotesList);
 
         jButton2.setText("Add...");
 
@@ -152,7 +154,7 @@ public class Application extends javax.swing.JFrame
                 .addContainerGap()
                 .addComponent(jButton1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 558, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -337,7 +339,6 @@ public class Application extends javax.swing.JFrame
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
-    private javax.swing.JList jList5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -353,5 +354,6 @@ public class Application extends javax.swing.JFrame
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
     private javax.swing.JList localsList;
+    private javax.swing.JList remotesList;
     // End of variables declaration//GEN-END:variables
 }

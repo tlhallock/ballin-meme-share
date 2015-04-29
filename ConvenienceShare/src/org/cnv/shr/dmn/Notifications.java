@@ -1,15 +1,23 @@
 package org.cnv.shr.dmn;
 
+
 public class Notifications
 {
 	public static void localsChanged()
 	{
-		Services.application.refreshLocals();
-		// save locals...
+		if (Services.application != null)
+		{
+			Services.application.refreshLocals();
+		}
+		Services.locals.write();
 	}
 	
 	public static void remotesChanged()
 	{
-		
+		if (Services.application != null)
+		{
+			Services.application.refreshRemotes();
+		}
+		Services.remotes.write();
 	}
 }

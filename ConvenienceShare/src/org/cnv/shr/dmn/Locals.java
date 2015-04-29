@@ -28,9 +28,10 @@ public class Locals
 		String path = localDirectory.getAbsolutePath(); 
 		final LocalDirectory local = new LocalDirectory(localDirectory);
 		locals.put(path, local);
-		Services.userThreads.execute(new Runnable() { public void run() { local.synchronize(); } } );
-
-		Notifications.localsChanged();
+		Services.userThreads.execute(new Runnable() { public void run()
+		{
+			local.synchronize();
+		}});
 	}
 
 	public synchronized List<LocalDirectory> listLocals()
@@ -56,10 +57,12 @@ public class Locals
 		{
 			localDir.synchronize();
 		}
+		Notifications.localsChanged();
 	}
 	
-	public void read(File f)
+	public void read()
 	{
+		File f = Services.settings.getLocalsFile();
 		try (BufferedReader reader = new BufferedReader(new FileReader(f)))
 		{
 			String line;
@@ -76,14 +79,16 @@ public class Locals
 		catch (IOException e)
 		{
 			Services.logger.logStream.println("Unable to read Locals.");
+			Services.logger.logStream.println("This is expected on first run.");
 			e.printStackTrace(Services.logger.logStream);
 		}
 		
 		synchronize();
 	}
 	
-	public void write(File f)
+	public void write()
 	{
+		File f = Services.settings.getLocalsFile();
 		try (PrintStream ps = new PrintStream(new FileOutputStream(f)))
 		{
 			for (String path : locals.keySet())

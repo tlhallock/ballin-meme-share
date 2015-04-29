@@ -2,6 +2,7 @@ package org.cnv.shr.dmn;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -24,6 +25,12 @@ public class RequestHandler extends Thread
 			try (ServerSocket socket = new ServerSocket(Services.settings.defaultPort);)
 			{
 				handleConnection(socket.accept());
+			}
+			catch(BindException ex)
+			{
+				Services.logger.logStream.println("Port already in use.");
+				Services.logger.logStream.println("Quiting.");
+				Main.quit();
 			}
 			catch (Exception ex)
 			{

@@ -1,6 +1,5 @@
 package org.cnv.shr.dmn;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -9,12 +8,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.cnv.shr.gui.Application;
-import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.util.Misc;
 
 public class Services
-{
-	private static final File SETTINGS_FILE = new File("./app/settings.props");
-	
+{	
 	public static ExecutorService userThreads;
 	public static ExecutorService requestThreads;
 	public static ExecutorService serveThreads;
@@ -39,22 +36,19 @@ public class Services
 		
 		try
 		{
-			settings.read(SETTINGS_FILE);
+			settings.read();
 		}
 		catch (IOException e)
 		{
-			ensureDirectory(SETTINGS_FILE, true);
-			settings.write(SETTINGS_FILE);
-			
+			settings.write();
 			logger.logStream.println("Creating settings file.");
 		}
 
-		ensureDirectory(settings.logLocation, true);
-		logger.setLogLocation(settings.logLocation);
+		logger.setLogLocation();
 		
-		ensureDirectory(settings.applicationDirectory, false);
-		ensureDirectory(settings.stagingDirectory, false);
-		ensureDirectory(settings.downloadsDirectory, false);
+		Misc.ensureDirectory(settings.applicationDirectory, false);
+		Misc.ensureDirectory(settings.stagingDirectory, false);
+		Misc.ensureDirectory(settings.downloadsDirectory, false);
 		
 		userThreads     = Executors.newCachedThreadPool();
 		requestThreads  = Executors.newCachedThreadPool();
@@ -84,13 +78,19 @@ public class Services
 				application = new Application();
 				application.refreshAll();
 				application.setVisible(true);
+				
+				locals.read();
+				remotes.read();
 			}
 		});
 	}
 
 	public static void deInitialize()
 	{
-		application.dispose();
+		if (application != null)
+		{
+			application.dispose();
+		}
 		
 		handler.quit();
 		
@@ -113,18 +113,5 @@ public class Services
 		}
 
 		logger.close();
-	}
-	
-	private static void ensureDirectory(String path, boolean file)
-	{
-		ensureDirectory(new File(path), file);
-	}
-	private static void ensureDirectory(File f, boolean file)
-	{
-		if (file)
-		{
-			f = f.getParentFile();
-		}
-		f.mkdirs();
 	}
 }
