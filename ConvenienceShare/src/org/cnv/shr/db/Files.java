@@ -91,16 +91,13 @@ public class Files
 			addFileWithChecksum(c, rootId, f);
 		}
 	}
-	
-	static void addFiles(RootDirectory directory, List<SharedFile> files) throws SQLException  
+
+	static void addFiles(Connection c, RootDirectory directory, List<SharedFile> files) throws SQLException
 	{
-		try (Connection c = Services.db.getConnection();)
+		int rootId = getRootDirectoryId(c, directory.getMachine(), directory.getPath());
+		for (SharedFile file : files)
 		{
-			int rootId = getRootDirectoryId(c, directory.getMachine(), directory.getPath());
-			for (SharedFile file : files)
-			{
-				updateFile(c, rootId, file);
-			}
+			updateFile(c, rootId, file);
 		}
 	}
 }

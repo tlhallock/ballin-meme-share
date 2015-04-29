@@ -1,9 +1,11 @@
 package org.cnv.shr.msg;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.util.ByteListBuffer;
 
 public class ListFiles extends Message
 {
@@ -22,5 +24,19 @@ public class ListFiles extends Message
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@Override
+	protected void parse(InputStream bytes) throws IOException
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void write(ByteListBuffer buffer)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

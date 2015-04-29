@@ -33,7 +33,7 @@ public class Remotes
 
 	public List<Machine> getMachines()
 	{
-		return null;
+		return Services.db.getMachines();
 	}
 	
 	public String[] getKeys(String ip, int port)

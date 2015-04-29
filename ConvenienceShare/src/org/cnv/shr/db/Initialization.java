@@ -1,8 +1,6 @@
 package org.cnv.shr.db;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
@@ -15,41 +13,29 @@ import org.cnv.shr.dmn.Services;
 
 public class Initialization
 {
-	static void clearDb() throws SQLException, IOException
+	static void clearDb(Connection c) throws SQLException, IOException
 	{
-		try (Connection c = Services.db.getConnection();)
-		{
-			execute(c, "/clear.sql");
-		}
+		execute(c, "/clear.sql");
 	}
 
-	static void createDb() throws SQLException, IOException
+	static void createDb(Connection c) throws SQLException, IOException
 	{
-		try (Connection c = Services.db.getConnection();)
-		{
-			execute(c, "/create.sql");
-		}
+		execute(c, "/create.sql");
 	}
 	
-	static HashSet<String> getCurrentTables() throws SQLException
+	static HashSet<String> getCurrentTables(Connection c) throws SQLException
 	{
 		HashSet<String> returnValue = new HashSet<>();
 		
-		try (Connection c = Services.db.getConnection();
-			 PreparedStatement stmt = c.prepareStatement(
+		try (PreparedStatement stmt = c.prepareStatement(
 					 "select name from sqlite_master where type='table';");)
 		{
 			ResultSet executeQuery = stmt.executeQuery();
-
-			if (!executeQuery.first())
-			{
-				return returnValue;
-			}
-
-			do
+			
+			while (executeQuery.next())
 			{
 				returnValue.add(executeQuery.getString("name"));
-			} while (executeQuery.next());
+			}
 		}
 
 		return returnValue;
@@ -82,6 +68,7 @@ public class Initialization
 
 		for (int i = 0; i < statements.length; i++)
 		{
+			System.out.println("Found " + statements[i]);
 			returnValue[i] = c.prepareStatement(statements[i] + ";");
 		}
 		

@@ -14,10 +14,14 @@ import org.json.JSONObject;
 
 public class Machine
 {
+	private String name;
 	private String ip;
-	private int port = Services.settings.defaultPort;
-	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
+	private int port;
 	private long lastActive;
+	private boolean sharing;
+	
+
+	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
 
 	public Machine(String machine)
 	{
@@ -116,6 +120,21 @@ public class Machine
 
 	public String[] getKeys()
 	{
-		return null;
+		return new String[0];
+	}
+
+	public void setSharing(boolean b)
+	{
+		sharing = b;
+	}
+
+	public void setName(String string)
+	{
+		name = string;
+	}
+
+	public void setLastActive(long long1)
+	{
+		lastActive = long1;
 	}
 }

@@ -1,0 +1,14 @@
+#Wed Apr 29 14:03:37 MDT 2015
+max.up=10
+max.str=4096
+dirs.staging=/work/ballin-meme-share/runDir/instance2/temp
+machinename=foobar
+port.end=8000
+port.begin=7990
+monitor.repeat=50000
+max.down=10
+max.port=-1
+max.threads=10
+dirs.application=/work/ballin-meme-share/runDir/instance2/app
+port.server=7989
+dirs.downloads=/work/ballin-meme-share/runDir/instance2/downloads

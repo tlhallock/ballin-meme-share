@@ -62,7 +62,6 @@ public class Services
 		logger.setLogLocation();
 		
 		db = new DbConnection();
-		db.initialize();
 
 		keyManager = new KeyManager();
 		msgReader = new MessageReader();
@@ -96,12 +95,22 @@ public class Services
 		{
 			public void run()
 			{
-				application = new Application();
-				application.refreshAll();
-				application.setVisible(true);
-				
-				locals.read();
-				remotes.read();
+				try
+				{
+					application = new Application();
+					application.refreshAll();
+					application.setVisible(true);
+				}
+				catch (Exception ex)
+				{
+					Services.logger.logStream.println("Unable to start GUI.\nQuiting.");
+					ex.printStackTrace(Services.logger.logStream);
+					Main.quit();
+				}
+
+				System.out.println("Should this be here?");
+//				locals.read();
+//				remotes.read();
 			}
 		});
 	}
@@ -132,6 +141,8 @@ public class Services
 		{
 			e.printStackTrace();
 		}
+		
+		db.close();
 
 		logger.close();
 	}

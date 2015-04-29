@@ -5,8 +5,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
@@ -14,19 +16,15 @@ import org.cnv.shr.mdl.SharedFile;
 
 public class DbConnection
 {
-	public DbConnection() throws ClassNotFoundException
+	// Should be based on thread...
+	private Connection c;
+	
+	public DbConnection() throws ClassNotFoundException, SQLException, IOException
 	{
 		Class.forName("org.sqlite.JDBC");
-	}
-	
-	public Connection getConnection() throws SQLException
-	{
-		return DriverManager.getConnection("jdbc:sqlite:" + Services.settings.getDbFile());
-	}
-	
-	public void initialize() throws SQLException, IOException
-	{
-		HashSet<String> currentTables = Initialization.getCurrentTables();
+		c = DriverManager.getConnection("jdbc:sqlite:" + Services.settings.getDbFile());
+
+		HashSet<String> currentTables = Initialization.getCurrentTables(c);
 		
 		if (	!currentTables.contains("FILE") ||
 				!currentTables.contains("PATH") ||
@@ -34,24 +32,53 @@ public class DbConnection
 				!currentTables.contains("MACHINE") ||
 				!currentTables.contains("KEY"))
 		{
-			Initialization.createDb();
+			Services.logger.logStream.println("Creating database.");
+			Initialization.createDb(c);
+		}
+	}
+	
+	public void close()
+	{
+		try
+		{
+			c.close();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace(Services.logger.logStream);
+			Services.logger.logStream.println("Unable to open database.");
+			Main.quit();
 		}
 	}
 
 	public Machine getMachine(String ip, int port)
 	{
-		return Machines.getMachine(ip, port);
+		return Machines.getMachine(c, ip, port);
 	}
 	public void addMachine(Machine m) throws SQLException
 	{
-		Machines.addMachine(m);
+		Machines.addMachine(c, m);
 	}
 	public void addRoot(Machine m, RootDirectory root) throws SQLException
 	{
-		Machines.addRoot(m, root);
+		Machines.addRoot(c, m, root);
 	}
 	public void addFiles(RootDirectory directory, List<SharedFile> files) throws SQLException
 	{
-		Files.addFiles(directory, files);
+		Files.addFiles(c, directory, files);
+	}
+
+	public List<Machine> getMachines()
+	{
+		try
+		{
+			return Machines.getRemotes(c);
+		}
+		catch (SQLException e)
+		{
+			Services.logger.logStream.println("Unable to get remotes.");
+			e.printStackTrace(Services.logger.logStream);
+			return new LinkedList<Machine>();
+		}
 	}
 }

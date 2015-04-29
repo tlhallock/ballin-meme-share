@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
@@ -38,6 +40,7 @@ public class Machines
 			return executeQuery.getInt("M_ID");
 		}
 	}
+	
 	private static int getMachineId(Connection c, String publicKey) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
@@ -50,10 +53,8 @@ public class Machines
 		}
 	}
 	
-	static void addMachine(Machine m) throws SQLException
+	static void addMachine(Connection c, Machine m) throws SQLException
 	{
-		try (Connection c = Services.db.getConnection();)
-		{
 			try (PreparedStatement stmt = c.prepareStatement(
 					"insert or ignore into MACHINE(NAME, IP, PORT, LASTACTIVE) values(?, ?, ?, CURRENT_TIMESTAMP);"))
 			{
@@ -70,13 +71,11 @@ public class Machines
 			{
 				addKey(c, machineId, publicKey);
 			}
-		}
 	}
 
-	static void addRoot(Machine m, RootDirectory root) throws SQLException
+	static void addRoot(Connection c, Machine m, RootDirectory root) throws SQLException
 	{
-		try (Connection c = Services.db.getConnection();
-			 PreparedStatement stmt = c.prepareStatement(
+		try (PreparedStatement stmt = c.prepareStatement(
 					"insert into ROOT(PATH, MID)                          " +
 					"select ?, M_ID                                       " +
 					"from MACHINE where MACHINE.ip=? and MACHINE.port=?;  "
@@ -90,8 +89,29 @@ public class Machines
 		}
 	}
 	
-	static Machine getMachine(String ip, int port)
+	static Machine getMachine(Connection c, String ip, int port)
 	{
 		return null;
+	}
+	
+	static List<Machine> getRemotes(Connection c) throws SQLException
+	{
+		LinkedList<Machine> returnValue = new LinkedList<>();
+		try (PreparedStatement stmt = c.prepareStatement(
+				"select name, ip, port, lastactive, sharing from MACHINE"))
+		{
+			ResultSet resultSet = stmt.executeQuery();
+			while (resultSet.next())
+			{
+				Machine machine = new Machine(resultSet.getString("ip"), resultSet.getInt("port"));
+				
+				machine.setSharing(resultSet.getInt("sharing") == 1);
+				machine.setName(resultSet.getString("name"));
+				machine.setLastActive(resultSet.getLong("lastactive"));
+				
+				returnValue.add(machine);
+			}
+		}
+		return returnValue;
 	}
 }

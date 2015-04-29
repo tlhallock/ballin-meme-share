@@ -4,4 +4,11 @@ public class RemoteFile extends SharedFile
 {
 	RemoteDirectory d;
 	String localCopy;
+	
+	
+	public enum State
+	{
+		REMOTE,
+		DOWNLOADED,
+	}
 }
