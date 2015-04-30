@@ -17,12 +17,10 @@ public class Settings
 	public static final String checksumAlgorithm = "SHA1";
 	public static String encryptionAlgorithm = "RSA";
 	
-	private static final String LOCALS_FILE = "/locals.txt";
-	private static final String REMOTES_FILE = "/remotes.json";
-	private static final String KEYS_FILE = "/remotes.json";
-	private static final String LOG_FILE = "/log.txt";
+	private static final String KEYS_FILE = File.separatorChar + "keys.json";
+	private static final String LOG_FILE = File.separatorChar + "log.txt";
 	private static final String SQL_DIR = "sql";
-	private static final String DB_FILE = "/files.db";
+	private static final String DB_FILE = File.separatorChar + "files.db";
 	
 	public String machineName = "foobar";
 	
@@ -115,9 +113,9 @@ public class Settings
 
 	private synchronized void read(Properties properties) throws FileNotFoundException, IOException
 	{
-		downloadsDirectory   = properties.getProperty( "dirs.downloads",       "./downloads");
-		applicationDirectory = properties.getProperty( "dirs.application",           "./app");
-		stagingDirectory     = properties.getProperty( "dirs.staging",              "./temp");
+		downloadsDirectory   = properties.getProperty( "dirs.downloads",         "downloads");
+		applicationDirectory = properties.getProperty( "dirs.application",             "app");
+		stagingDirectory     = properties.getProperty( "dirs.staging",                "temp");
 		machineName          = properties.getProperty( "machinename",               "foobar");
 		defaultPort          = getInt (properties,     "port.server",                 "8989");
 		servePortBegin       = getInt (properties,     "port.begin",                  "8990");
@@ -132,6 +130,7 @@ public class Settings
 	}
 	
 
+	/**
 	public File getLocalsFile()
 	{
 		return new File(applicationDirectory + LOCALS_FILE);
@@ -140,6 +139,7 @@ public class Settings
 	{
 		return new File(applicationDirectory + REMOTES_FILE);
 	}
+	**/
 	public File getKeysFile()
 	{
 		return new File(applicationDirectory + KEYS_FILE);

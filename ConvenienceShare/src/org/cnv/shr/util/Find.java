@@ -4,7 +4,19 @@ import java.io.File;
 
 public class Find
 {
-	public static void find(File directory, FileListener listener)
+	public interface FileListener
+	{
+		void fileFound(File f);
+		void flush();
+	}
+	
+	public static void find(File directory, Find.FileListener listener)
+	{
+		findInternal(directory, listener);
+		listener.flush();
+	}
+	
+	private static void findInternal(File directory, Find.FileListener listener)
 	{
 		if (directory.isDirectory())
 		{
@@ -22,10 +34,5 @@ public class Find
 		{
 			listener.fileFound(directory);
 		}
-	}
-	
-	public interface FileListener
-	{
-		void fileFound(File f);
 	}
 }

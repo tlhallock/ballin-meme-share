@@ -1,15 +1,19 @@
 package org.cnv.shr.db;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
@@ -83,5 +87,41 @@ public class DbConnection
 			e.printStackTrace(Services.logger.logStream);
 			return new LinkedList<Machine>();
 		}
+	}
+	
+	public List<LocalDirectory> getLocals()
+	{
+		return new LinkedList<LocalDirectory>();
+	}
+	
+	public HashMap<String, LocalFile> list(RootDirectory d)
+	{
+		return new HashMap<String, LocalFile>();
+	}
+
+	public LocalFile getFile(Machine localMachine, RootDirectory directory, String relPath)
+	{
+		return null;
+	}
+
+	public void updateFile(SharedFile localFile)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void removeFile(SharedFile localFile)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void debug(PrintStream ps)
+	{
+		ps.println("Locals:");
+		Services.locals.debug(ps);
+		
+		ps.println("Remotes: ");
+		Services.remotes.debug(ps);
 	}
 }

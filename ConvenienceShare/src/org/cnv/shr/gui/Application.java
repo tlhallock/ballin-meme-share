@@ -60,10 +60,10 @@ public class Application extends javax.swing.JFrame
 		}
 		remotesList.setModel(remotesListModel);
                 
-                for (RemoteView view : remoteViewers)
-                {
-                    view.refresh();
-                }
+		for (RemoteView view : remoteViewers)
+		{
+			view.refresh();
+		}
 	}
         
         public void showRemote(Machine machine)
@@ -121,6 +121,7 @@ public class Application extends javax.swing.JFrame
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jPanel4 = new javax.swing.JPanel();
+        jButton3 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -290,15 +291,28 @@ public class Application extends javax.swing.JFrame
 
         jTabbedPane2.addTab("Downloads", jPanel3);
 
+        jButton3.setText("jButton3");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 991, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addContainerGap(577, Short.MAX_VALUE)
+                .addComponent(jButton3)
+                .addGap(320, 320, 320))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 635, Short.MAX_VALUE)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addGap(156, 156, 156)
+                .addComponent(jButton3)
+                .addContainerGap(454, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Settings", jPanel4);
@@ -347,6 +361,10 @@ public class Application extends javax.swing.JFrame
             ex.printStackTrace();
         }
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        Services.db.debug(System.out);
+    }//GEN-LAST:event_jButton3ActionPerformed
 
 	/**
 	 * @param args
@@ -406,6 +424,7 @@ public class Application extends javax.swing.JFrame
     private javax.swing.JTextField addressLabel;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

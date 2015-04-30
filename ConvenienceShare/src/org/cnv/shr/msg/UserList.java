@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 
+import org.cnv.shr.dmn.Connection;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
@@ -21,7 +22,7 @@ public class UserList extends Message
 	}
 
 	@Override
-	public void perform()
+	public void perform(Connection connection)
 	{
 		// Remotes.getInstance().addUser(); ...
 	}

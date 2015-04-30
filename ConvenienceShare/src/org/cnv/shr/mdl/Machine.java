@@ -6,7 +6,10 @@ import java.net.UnknownHostException;
 import java.security.PublicKey;
 import java.util.LinkedList;
 
+import org.cnv.shr.dmn.Connection;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.msg.FindMachines;
+import org.cnv.shr.msg.ListFiles;
 import org.cnv.shr.util.Misc;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,12 +17,13 @@ import org.json.JSONObject;
 
 public class Machine
 {
-	private String name;
 	private String ip;
 	private int port;
-	private long lastActive;
-	private boolean sharing;
 	
+	private String name;
+	
+	private long lastActive;
+	private Boolean sharing;
 
 	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
 
@@ -48,39 +52,19 @@ public class Machine
 		}
 	}
 	
-	public Machine(JSONObject object) throws JSONException
+	/** local machine **/
+	private Machine()
 	{
-		ip = object.getString("ip");
-		port = object.getInt("port");
-		
-		JSONArray arr = object.getJSONArray("keys");
-		for (int i = 0; i < arr.length(); i++)
-		{
-			String key = arr.getString(i);
-		}
-		lastActive = object.getLong("lastActive");
-	}
-	
-	public void append(JSONArray machines) throws JSONException
-	{
-		LinkedList<String> keys = new LinkedList<>();
-		for (PublicKey key : publicKeys)
-		{
-			keys.add(Misc.format(key.getEncoded()));
-		}
-		JSONObject object = new JSONObject();
-		object.put("ip", ip);
-		object.put("port", port);
-		object.put("keys", new JSONArray(keys));
-		object.put("lastActive", lastActive);
-		
-		machines.put(machines.length(), object);
+		name = Services.settings.machineName;
+		ip   = Services.settings.getLocalIp();
+		port = Services.settings.defaultPort;
+		Services.keyManager.getKeys();
 	}
 
 
 	public String getName()
 	{
-		return "Foobar";
+		return name;
 	}
 	
 	public String getIp()
@@ -137,5 +121,83 @@ public class Machine
 	public void setLastActive(long long1)
 	{
 		lastActive = long1;
+	}
+	
+	public long getLastActive()
+	{
+		return lastActive;
+	}
+
+	public boolean isSharing()
+	{
+		return sharing;
+	}
+
+	public void refresh()
+	{
+		try
+		{
+			Connection openConnection = Services.networkManager.openConnection(this);
+			openConnection.send(new FindMachines());
+			openConnection.send(new ListFiles());
+			openConnection.notifyDone();
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Unable to discover refresh " + this);
+			e.printStackTrace(Services.logger.logStream);
+		}
+	}
+	
+	
+	/**
+	 * 
+	
+	public Machine(JSONObject object) throws JSONException
+	{
+		ip = object.getString("ip");
+		port = object.getInt("port");
+		
+		JSONArray arr = object.getJSONArray("keys");
+		for (int i = 0; i < arr.length(); i++)
+		{
+			String key = arr.getString(i);
+		}
+		lastActive = object.getLong("lastActive");
+	}
+	
+	 */
+	
+
+	public void append(JSONArray machines) throws JSONException
+	{
+		LinkedList<String> keys = new LinkedList<>();
+		for (PublicKey key : publicKeys)
+		{
+			keys.add(Misc.format(key.getEncoded()));
+		}
+		JSONObject object = new JSONObject();
+		object.put("ip", ip);
+		object.put("port", port);
+		object.put("keys", new JSONArray(keys));
+		object.put("lastActive", lastActive);
+		
+		machines.put(machines.length(), object);
+	}
+	
+	public static Machine getLocalMachine()
+	{
+		return new Machine()
+		{
+			public void setSharing(boolean b)
+			{
+				throw new UnsupportedOperationException("This is the local machine.");
+			}
+			
+			public long getLastActive()
+			{
+				return System.currentTimeMillis();
+			}
+		};
 	}
 }

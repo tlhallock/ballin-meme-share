@@ -83,8 +83,7 @@ public class ChecksumManager extends Thread
 			Services.logger.logStream.println("File is not part of a shared directory: " + f);
 			return;
 		}
-		l.setChecksum(checksum);
-		l.setLastUpdated(startTime);
+		l.setChecksum(startTime, checksum);
 
 		lock.lock();
 		try

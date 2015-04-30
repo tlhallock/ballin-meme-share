@@ -8,6 +8,7 @@ public class SharedFile
 	protected long filesize;
 	protected String checksum;
 	protected String description;
+	protected long lastUpdated;
 	
 	public String getName()
 	{

@@ -15,7 +15,21 @@ public class MessageReader
 	
 	public MessageReader()
 	{
-		add(new MessageIdentifier(MachineFound.class));
+		add(new MessageIdentifier(DoneMessage.class));
+		add(new MessageIdentifier(Failure.class));
+		add(new MessageIdentifier(FileList.class));
+		add(new MessageIdentifier(FileRequest.class));
+		//add(new MessageIdentifier(FileUrl.class));
+		add(new MessageIdentifier(FindMachines.class));
+		//add(new MessageIdentifier(FoundUser.class));
+		add(new MessageIdentifier(HeartBeat.class));
+		add(new MessageIdentifier(ListFiles.class));
+		//add(new MessageIdentifier(ListUsers.class));
+		add(new MessageIdentifier(RequestAccess.class));
+		add(new MessageIdentifier(UpdateCode.class));
+		add(new MessageIdentifier(Wait.class));
+
+		Services.logger.logStream.println("Message map:\n" + this);
 	}
 	
 	private void add(MessageIdentifier identifier)
@@ -24,6 +38,7 @@ public class MessageReader
 		if (type > Byte.MAX_VALUE || type < Byte.MIN_VALUE)
 		{
 			Services.logger.logStream.println("Message type " + type + " for " + identifier.name + " is not in range.");
+			Services.logger.logStream.println(this);
 			Main.quit();
 			return;
 		}
@@ -31,6 +46,7 @@ public class MessageReader
 		if (messageIdentifier != null)
 		{
 			Services.logger.logStream.println("Type " + type + " is already used by " + messageIdentifier.name + " so " + identifier.name + " cannot also use it.");
+			Services.logger.logStream.println(this);
 			Main.quit();
 			return;
 		}
@@ -59,6 +75,16 @@ public class MessageReader
 		message.read(inputStream);
 
 		return message;
+	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		for (MessageIdentifier identifier : identifiers.values())
+		{
+			builder.append(identifier).append('\n');
+		}
+		return builder.toString();
 	}
 	
 	
@@ -106,6 +132,11 @@ public class MessageReader
 				Main.quit();
 				return null;
 			}
+		}
+		
+		public String toString()
+		{
+			return type + "->" + name;
 		}
 	}
 }

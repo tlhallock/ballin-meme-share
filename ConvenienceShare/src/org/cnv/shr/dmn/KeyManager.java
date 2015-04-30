@@ -35,6 +35,7 @@ public class KeyManager
 
 	void write()
 	{
+		
 	}
 	
 	void read()

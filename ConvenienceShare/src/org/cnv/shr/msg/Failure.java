@@ -2,13 +2,21 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 
+import org.cnv.shr.dmn.Connection;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class Failure extends Message
 {
+	public Failure() {}
+	public Failure(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
+	}
+	
 	@Override
-	public void perform()
+	public void perform(Connection connection)
 	{
 		System.out.println("Unable to perform request.");
 	}
@@ -27,7 +35,7 @@ public class Failure extends Message
 		
 	}
 	
-	public static int TYPE = 1;
+	public static int TYPE = 2;
 	protected int getType()
 	{
 		return TYPE;

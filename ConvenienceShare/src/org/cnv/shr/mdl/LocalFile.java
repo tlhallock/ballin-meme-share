@@ -6,36 +6,78 @@ import org.cnv.shr.dmn.Services;
 
 public class LocalFile extends SharedFile
 {
-	private String absPath;
-	private long lastUpdated;
-	
-	public LocalFile(String path)
+	public LocalFile(LocalDirectory local, String path)
 	{
-		absPath = path;
+		lastUpdated = System.currentTimeMillis();
+		
+		File f = new File(path);
+		name = f.getName();
+		filesize = f.getTotalSpace();
+		
+		path = f.getParentFile().getAbsolutePath().substring(
+				local.getPath().length());
+		
+		rootDirectory = local;
+		description = null;
+	}
+	
+	public String getFullPath()
+	{
+		return rootDirectory.getPath() + File.separatorChar + path + File.separatorChar + name;
 	}
 
-	public boolean refresh()
+	/**
+	 * @return true if something has changed.
+	 */
+	public boolean refreshAndWriteToDb()
 	{
-		File fsCopy = new File(absPath);
-		if (!fsCopy.exists())
+		long startTime = System.currentTimeMillis();
+		
+		if (!exists())
+		{
+			removeFromDb();
+			return true;
+		}
+
+		File fsCopy = new File(getFullPath());
+		if (fsCopy.lastModified() < lastUpdated)
 		{
 			return false;
 		}
-		if (fsCopy.lastModified() < lastUpdated)
-		{
-			return true;
-		}
+		
+		lastUpdated = startTime;
+		// update info...
 		Services.checksums.checksum(fsCopy);
+		filesize = fsCopy.getTotalSpace();
+		
+		writeToDb();
 		return true;
 	}
 
-	public void setChecksum(String checksum)
+	public void setChecksum(long timeStamp, String checksum)
 	{
+		if (checksum != null && checksum.equals(checksum))
+		{
+			return;
+		}
 		this.checksum = checksum;
+		if (!refreshAndWriteToDb())
+		{
+			writeToDb();
+		}
 	}
-
-	public void setLastUpdated(long startTime)
+	
+	public boolean exists()
 	{
-		lastUpdated = startTime;
+		return new File(getFullPath()).exists();
+	}
+	
+	private void writeToDb()
+	{
+		Services.db.updateFile(this);
+	}
+	private void removeFromDb()
+	{
+		Services.db.removeFile(this);
 	}
 }

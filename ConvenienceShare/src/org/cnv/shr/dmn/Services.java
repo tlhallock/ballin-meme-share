@@ -2,7 +2,6 @@ package org.cnv.shr.dmn;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
@@ -11,19 +10,21 @@ import java.util.concurrent.TimeUnit;
 
 import org.cnv.shr.db.DbConnection;
 import org.cnv.shr.gui.Application;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.MessageReader;
 import org.cnv.shr.util.Misc;
 
 public class Services
-{	
+{
+	/** To take items off the AWT event thread **/
 	public static ExecutorService userThreads;
-	public static ExecutorService requestThreads;
-	public static ExecutorService serveThreads;
+	/** To handle network traffic **/
+	public static ExecutorService connectionThreads;
 	
 	public static Settings settings;
 	public static Logger logger;
 	public static ChecksumManager checksums;
-	public static NetworkQueue requestQueue;
+	public static connectionManager networkManager;
 	public static RequestHandler handler;
 	public static Remotes remotes;
 	public static Locals locals;
@@ -35,6 +36,8 @@ public class Services
 
 	public static Application application;
 	
+	public static Machine localMachine;
+	
 	public static void initialize(String[] args) throws Exception
 	{
 		logger = new Logger();
@@ -44,7 +47,7 @@ public class Services
 		}
 		else
 		{
-			settings = new Settings(new File("./app/settings.props"));
+			settings = new Settings(new File("convencie_share_settings.props"));
 		}
 		
 		settings.setToDefaults();
@@ -64,6 +67,9 @@ public class Services
 		db = new DbConnection();
 
 		keyManager = new KeyManager();
+		localMachine = Machine.getLocalMachine();
+
+		networkManager = new connectionManager();
 		msgReader = new MessageReader();
 		
 		Misc.ensureDirectory(settings.applicationDirectory, false);
@@ -71,8 +77,7 @@ public class Services
 		Misc.ensureDirectory(settings.downloadsDirectory, false);
 		
 		userThreads     = Executors.newCachedThreadPool();
-		requestThreads  = Executors.newCachedThreadPool();
-		serveThreads    = Executors.newCachedThreadPool();
+		connectionThreads  = Executors.newCachedThreadPool();
 		
 		locals = new Locals();
 		remotes = new Remotes();
@@ -90,6 +95,7 @@ public class Services
 				locals.synchronize();
 				
 			}}, settings.monitorRepeat, settings.monitorRepeat);
+		locals.share(new File(settings.downloadsDirectory));
 
 		java.awt.EventQueue.invokeLater(new Runnable()
 		{
@@ -107,10 +113,6 @@ public class Services
 					ex.printStackTrace(Services.logger.logStream);
 					Main.quit();
 				}
-
-				System.out.println("Should this be here?");
-//				locals.read();
-//				remotes.read();
 			}
 		});
 	}
@@ -128,14 +130,12 @@ public class Services
 		checksums.quit();
 		
 		userThreads.shutdown();
-		requestThreads.shutdown();
-		serveThreads.shutdown();
+		connectionThreads.shutdown();
 		
 		try
 		{
 			userThreads.awaitTermination(60, TimeUnit.SECONDS);
-			requestThreads.awaitTermination(60, TimeUnit.SECONDS);
-			serveThreads.awaitTermination(60, TimeUnit.SECONDS);
+			connectionThreads.awaitTermination(60, TimeUnit.SECONDS);
 		}
 		catch (InterruptedException e)
 		{

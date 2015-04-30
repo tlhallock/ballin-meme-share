@@ -38,7 +38,11 @@ public class Files
 			stmt.setString(ndx++, m.getIp());
 			stmt.setInt   (ndx++, m.getPort());
 			ResultSet executeQuery = stmt.executeQuery();
-			return executeQuery.getInt("R_ID");
+			if (executeQuery.next())
+			{
+				executeQuery.getInt("R_ID");
+			}
+			return -1;
 		}
 	}
 
@@ -95,6 +99,11 @@ public class Files
 	static void addFiles(Connection c, RootDirectory directory, List<SharedFile> files) throws SQLException
 	{
 		int rootId = getRootDirectoryId(c, directory.getMachine(), directory.getPath());
+		if (rootId < 0)
+		{
+			Services.logger.logStream.println("Unable to add files from " + directory.getPath());
+			return;
+		}
 		for (SharedFile file : files)
 		{
 			updateFile(c, rootId, file);

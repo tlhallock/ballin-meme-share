@@ -19,8 +19,7 @@ public class RequestHandler extends Thread
 		{
 			try (ServerSocket socket = new ServerSocket(Services.settings.defaultPort);)
 			{
-				Connection connection = new Connection(socket.accept());
-				connection.run();
+				Services.networkManager.handleConnection(socket.accept());
 			}
 			catch(BindException ex)
 			{

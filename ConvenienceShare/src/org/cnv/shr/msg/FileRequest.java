@@ -2,15 +2,22 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 
+import org.cnv.shr.dmn.Connection;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class FileRequest extends Message
 {
 	String directory;
 
+	public FileRequest(InetAddress a, InputStream i) throws IOException
+	{
+		super(a, i);
+	}
+
 	@Override
-	public void perform()
+	public void perform(Connection connection)
 	{
 
 	}
@@ -29,7 +36,7 @@ public class FileRequest extends Message
 		
 	}
 	
-	public static int TYPE = 1;
+	public static int TYPE = 10;
 	protected int getType()
 	{
 		return TYPE;

@@ -1,34 +1,39 @@
 package org.cnv.shr.dmn;
 
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.SQLException;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.User;
+import org.cnv.shr.msg.FindMachines;
+import org.cnv.shr.msg.MachineFound;
 import org.json.JSONArray;
-import org.json.JSONTokener;
 
 public class Remotes
 {
-	public void refresh(String ip)
+	public void refresh()
 	{
-
+		for (Machine machine : getMachines())
+		{
+			machine.refresh();
+		}
 	}
 
-	public User discover(String ip, int port)
+	public void discover(String url)
 	{
-		return null;
-
-	}
-
-	public void isAlive(Machine machine)
-	{
-
+		try
+		{
+			Connection openConnection = Services.networkManager.openConnection(new Machine(url));
+			openConnection.send(new MachineFound());
+			openConnection.send(new FindMachines());
+			openConnection.notifyDone();
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Unable to discover " + url);
+			e.printStackTrace(Services.logger.logStream);
+		}
 	}
 
 	public List<Machine> getMachines()
@@ -54,10 +59,16 @@ public class Remotes
 		}
 		Notifications.remotesChanged();
 	}
-	
-	public void write()
+
+	public void isAlive(Machine machine)
 	{
-		try (PrintStream ps = new PrintStream(new FileOutputStream(Services.settings.getRemotesFile())))
+		
+	}
+	
+	
+	public void debug(PrintStream ps)
+	{
+		try
 		{
 			JSONArray arr = new JSONArray();
 			for (Machine machine : getMachines())
@@ -74,6 +85,7 @@ public class Remotes
 		}
 	}
 	
+	/**
 	public List<Machine> read()
 	{
 		LinkedList<Machine> machines = new LinkedList<>();
@@ -95,4 +107,5 @@ public class Remotes
 
 		return machines;
 	}
+	**/
 }

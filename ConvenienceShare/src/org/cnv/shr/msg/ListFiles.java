@@ -2,45 +2,37 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 
+import org.cnv.shr.dmn.Connection;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class ListFiles extends Message
 {
-
+	public ListFiles() {}
+	public ListFiles(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
+	}
+	
 	@Override
-	public void perform()
+	public void perform(Connection connection)
 	{
 		for (LocalDirectory local : Services.locals.listLocals())
 		{
-//			try
-//			{
-//				new FileList(local).send(getMachine());
-//			}
-//			catch (IOException e)
-//			{
-//				e.printStackTrace();
-//			}
+			connection.send(new FileList(local));
 		}
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	protected void parse(InputStream bytes) throws IOException {}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	protected void write(ByteListBuffer buffer) {}
 	
-	public static int TYPE = 1;
+	public static int TYPE = 6;
 	protected int getType()
 	{
 		return TYPE;

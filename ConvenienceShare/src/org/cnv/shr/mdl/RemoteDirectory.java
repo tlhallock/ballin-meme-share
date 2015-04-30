@@ -1,32 +1,21 @@
 package org.cnv.shr.mdl;
 
-public class RemoteDirectory
+public class RemoteDirectory extends RootDirectory
 {
-	String path;
-	RemoteFile[] cache;
-	Machine remote;
-
-	void refresh()
+	public RemoteDirectory(Machine machine, String path)
 	{
-		// new ListFiles().send(remote);
+		super(machine, path);
 	}
 
-	RemoteFile[] list()
+	@Override
+	public boolean isLocal()
 	{
-		if (cache == null)
-		{
-			refresh();
-		}
-		return cache;
+		return false;
 	}
 
-	void setFiles(RemoteFile[] files)
+	@Override
+	public void synchronize()
 	{
-
-	}
-
-	public String getPath()
-	{
-		return path;
+		
 	}
 }

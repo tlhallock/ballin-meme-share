@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
+import org.cnv.shr.dmn.Connection;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.User;
 import org.cnv.shr.util.ByteListBuffer;
@@ -18,7 +19,7 @@ public class ListUsers extends Message
 	}
 
 	@Override
-	public void perform() throws UnknownHostException, IOException
+	public void perform(Connection connection) throws UnknownHostException, IOException
 	{
 //		new UserList().send(getMachine());
 	}

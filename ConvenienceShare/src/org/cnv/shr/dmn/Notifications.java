@@ -1,9 +1,5 @@
 package org.cnv.shr.dmn;
 
-import java.util.LinkedList;
-import org.cnv.shr.gui.RemoteView;
-
-
 public class Notifications
 {   
 	public static void localsChanged()
@@ -12,7 +8,7 @@ public class Notifications
 		{
 			Services.application.refreshLocals();
 		}
-		Services.locals.write();
+//		Services.locals.write();
 	}
 	
 	public static void remotesChanged()
@@ -21,6 +17,6 @@ public class Notifications
 		{
 			Services.application.refreshRemotes();
 		}
-		Services.remotes.write();
+//		Services.remotes.write();
 	}
 }
