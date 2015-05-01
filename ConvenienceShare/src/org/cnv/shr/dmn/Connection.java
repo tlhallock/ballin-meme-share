@@ -15,7 +15,7 @@ import org.cnv.shr.msg.Message;
 public class Connection implements Runnable
 {
 	private long connectionOpened;
-	private long lastMessage;
+	private long lastActivity;
 	
 	private Socket socket;
 	private InputStream input;
@@ -24,10 +24,10 @@ public class Connection implements Runnable
 	private boolean allDone = false;
 
 	/** Initiator **/
-	public Connection(Machine m) throws UnknownHostException, IOException
+	public Connection(String ip, int port) throws UnknownHostException, IOException
 	{
-		connectionOpened = System.currentTimeMillis();
-		socket = m.open();
+		lastActivity = connectionOpened = System.currentTimeMillis();
+		socket = new Socket(ip, port);
 		output = new GZIPOutputStream(socket.getOutputStream());
 		input =  new GZIPInputStream(socket.getInputStream());
 	}
@@ -35,7 +35,7 @@ public class Connection implements Runnable
 	/** Receiver **/
 	public Connection(Socket socket) throws IOException
 	{
-		connectionOpened = System.currentTimeMillis();
+		lastActivity = connectionOpened = System.currentTimeMillis();
 		this.socket = socket;
 		input =  new GZIPInputStream(socket.getInputStream());
 		output = new GZIPOutputStream(socket.getOutputStream());
@@ -58,7 +58,7 @@ public class Connection implements Runnable
 					return;
 				}
 				
-				lastMessage = System.currentTimeMillis();
+				lastActivity = System.currentTimeMillis();
 
 				try
 				{

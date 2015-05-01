@@ -1,48 +1,151 @@
 package org.cnv.shr.msg;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.cnv.shr.dmn.Connection;
-import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
+import org.cnv.shr.mdl.RemoteFile;
+import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.ByteReader;
 
 public class FileList extends Message
 {
-	private LinkedList<File> files;
+	private List<FilesList> sharedDirectories = new LinkedList<>();
 
-	public FileList(LocalDirectory local)
-	{
-		
-	}
+	public FileList() {}
+	
 	public FileList(InetAddress a, InputStream i) throws IOException
 	{
 		super(a, i);
+	}
+	
+	private FilesList getList(RootDirectory dir)
+	{
+		for (FilesList l : sharedDirectories)
+		{
+			if (l.is(dir))
+			{
+				return l;
+			}
+		}
+		FilesList l = new FilesList(dir);
+		sharedDirectories.add(l);
+		return l;
+	}
+	
+	public void add(RootDirectory root, SharedFile sharedFile)
+	{
+		getList(root).sharedFiles.add(sharedFile);
 	}
 
 	@Override
 	public void perform(Connection connection)
 	{
-		// Machine m = Remotes.getInstance().getMachine(getMachine());
-		// set remote directories
+		boolean changed = false;
+		Machine machine = getMachine();
+		for (FilesList l : sharedDirectories)
+		{
+			RootDirectory root = l.root;
+			if (Services.db.getRoot(machine, root) == null)
+			{
+				Services.db.addRoot(machine, root);
+				changed = true;
+			}
+			for (SharedFile r : l.sharedFiles)
+			{
+				SharedFile file = Services.db.getFile(root, r.getCanonicalPath(), r.getName()); 
+				if (file == null)
+				{
+					Services.db.addFile(root, r);
+					changed = true;
+				}
+				else
+				{
+					Services.db.updateFile(r);
+				}
+			}
+		}
 
+		if (changed)
+		{
+			Services.notifications.remotesChanged();
+		}
 	}
 
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		// TODO Auto-generated method stub
-		
+		Machine machine = getMachine();
+		int numFolders = ByteReader.readInt(bytes);
+		for (int i = 0; i < numFolders; i++)
+		{
+			String path        = ByteReader.readString(bytes);
+			String tags        = ByteReader.readString(bytes);
+			String description = ByteReader.readString(bytes);
+
+			FilesList list = getList(new RemoteDirectory(machine, path, tags, description));
+			int nFiles         = ByteReader.readInt(bytes);
+			for (int j = 0; j < nFiles; j++)
+			{
+				SharedFile file = new RemoteFile();
+				
+				file.setName       (ByteReader.readString(bytes));
+				file.setPath       (ByteReader.readString(bytes));
+				file.setFileSize   (ByteReader.readLong  (bytes));
+				file.setDescription(ByteReader.readString(bytes));
+				file.setChecksum   (ByteReader.readString(bytes));
+				file.setLastUpdated(ByteReader.readLong  (bytes));
+				
+				list.sharedFiles.add(file);
+			}
+		}
 	}
 
 	@Override
 	protected void write(ByteListBuffer buffer)
 	{
-		// TODO Auto-generated method stub
+		buffer.append(sharedDirectories.size());
+		for (FilesList dir : sharedDirectories)
+		{
+			buffer.append(dir.root.getCanonicalPath());
+			buffer.append(dir.root.getTags());
+			buffer.append(dir.root.getDescription());
+
+			buffer.append(dir.sharedFiles.size());
+			for (SharedFile file : dir.sharedFiles)
+			{
+				buffer.append(file.getName());
+				buffer.append(file.getCanonicalPath());
+				buffer.append(file.getFileSize());
+				buffer.append(file.getDescription());
+				buffer.append(file.getChecksum());
+				buffer.append(file.getLastUpdated());
+			}
+		}
+	}
+	
+	private static class FilesList
+	{
+		private RootDirectory root;
+		private List<SharedFile> sharedFiles = new LinkedList<>();
 		
+		FilesList(RootDirectory root)
+		{
+			this.root = root;
+		}
+		
+		boolean is(RootDirectory root)
+		{
+			return this.root.getCanonicalPath().equals(root.getCanonicalPath());
+		}
 	}
 
 	

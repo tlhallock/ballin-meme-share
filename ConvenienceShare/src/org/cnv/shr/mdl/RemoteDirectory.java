@@ -2,9 +2,9 @@ package org.cnv.shr.mdl;
 
 public class RemoteDirectory extends RootDirectory
 {
-	public RemoteDirectory(Machine machine, String path)
+	public RemoteDirectory(Machine machine, String path, String tags, String description)
 	{
-		super(machine, path);
+		super(machine, path, tags, description);
 	}
 
 	@Override

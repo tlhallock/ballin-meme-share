@@ -18,6 +18,8 @@ public class MachineFound extends Message
 	private int port;
 	private String[] keys;
 	private String name;
+	private String ident;
+	private long lastActive;
 	
 	public MachineFound(InetAddress address, InputStream stream) throws IOException
 	{
@@ -31,24 +33,30 @@ public class MachineFound extends Message
 	
 	public MachineFound(Machine m)
 	{
-		ip   = m.getIp();
-		port = m.getPort();
-		keys = m.getKeys();
-		name = m.getName();
+		ip         = m.getIp();
+		port       = m.getPort();
+		keys       = m.getKeys();
+		name       = m.getName();
+		ident      = m.getIdentifier();
+		lastActive = m.getLastActive();
 	}
 	
 	@Override
 	public void perform(Connection connection) throws Exception
 	{
-		Services.remotes.addMachine(new Machine(ip, port, keys));
+		Machine newMachine = new Machine(ip, port, name, ident, keys);
+		newMachine.setLastActive(lastActive);
+		Services.remotes.addMachine(newMachine);
 	}
 
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		ip   =        ByteReader.readString(bytes);
-		port =        ByteReader.readInt(bytes);
-		name =        ByteReader.readString(bytes);
+		ip          = ByteReader.readString(bytes);
+		port        = ByteReader.readInt(bytes);
+		name        = ByteReader.readString(bytes);
+		ident       = ByteReader.readString(bytes);
+		lastActive  = ByteReader.readLong(bytes);
 		int numKeys = ByteReader.readInt(bytes);
 		keys = new String[numKeys];
 		for (int i = 0; i < numKeys; i++)
@@ -63,6 +71,8 @@ public class MachineFound extends Message
 		buffer.append(ip);
 		buffer.append(port);
 		buffer.append(name);
+		buffer.append(ident);
+		buffer.append(lastActive);
 		buffer.append(keys.length);
 		for (String key : keys)
 		{

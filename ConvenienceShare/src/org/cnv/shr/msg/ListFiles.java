@@ -6,7 +6,6 @@ import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Connection;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class ListFiles extends Message
@@ -20,10 +19,7 @@ public class ListFiles extends Message
 	@Override
 	public void perform(Connection connection)
 	{
-		for (LocalDirectory local : Services.locals.listLocals())
-		{
-			connection.send(new FileList(local));
-		}
+		Services.locals.share(connection);
 	}
 
 	@Override

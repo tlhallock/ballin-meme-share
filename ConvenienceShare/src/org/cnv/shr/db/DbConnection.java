@@ -84,11 +84,11 @@ public class DbConnection
 		}
 	}
 
-	public Machine getMachine(String ip, int port)
+	public Machine getMachine(String identifier)
 	{
 		try
 		{
-			return Machines.getMachine(getConnection(), ip, port);
+			return Machines.getMachine(getConnection(), identifier);
 		}
 		catch (SQLException e)
 		{
@@ -97,6 +97,19 @@ public class DbConnection
 			return null;
 		}
 	}
+//	public Machine getMachine(String ip, int port)
+//	{
+//		try
+//		{
+//			return Machines.getMachine(getConnection(), ip, port);
+//		}
+//		catch (SQLException e)
+//		{
+//			Services.logger.logStream.println("Unable to open database.");
+//			e.printStackTrace(Services.logger.logStream);
+//			return null;
+//		}
+//	}
 
 	public void addMachine(Machine m) throws SQLException
 	{
@@ -117,13 +130,27 @@ public class DbConnection
 			return false;
 		}
 	}
+	
+	public RootDirectory getRoot(Machine machine, RootDirectory root)
+	{
+		try
+		{
+			return Machines.getRoot(getConnection(), machine, root.getCanonicalPath());
+		}
+		catch (SQLException e)
+		{
+			Services.logger.logStream.println("Unable to get root " + root);
+			e.printStackTrace(Services.logger.logStream);
+			return null;
+		}
+	}
 
 	public void addFiles(RootDirectory directory, List<SharedFile> files) throws SQLException
 	{
 		Files.addFiles(getConnection(), directory, files);
 	}
 
-	public void addFile(LocalDirectory localDirectory, LocalFile newFile)
+	public void addFile(RootDirectory localDirectory, SharedFile newFile)
 	{
 		try
 		{
@@ -363,4 +390,18 @@ public class DbConnection
 			e.printStackTrace(ps);
 		}
 	}
+
+	public void updateDirectory(Machine machine, RootDirectory rootDirectory)
+	{
+		try
+		{
+			Machines.updateRoot(getConnection(), machine, rootDirectory);
+		}
+		catch (SQLException e)
+		{
+			Services.logger.logStream.println("Unable to update directory " + rootDirectory);
+			e.printStackTrace(Services.logger.logStream);
+		}
+	}
+
 }

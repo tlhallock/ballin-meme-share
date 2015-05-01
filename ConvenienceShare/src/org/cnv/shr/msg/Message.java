@@ -14,9 +14,11 @@ import org.cnv.shr.util.Misc;
 
 public abstract class Message
 {
-	private String ip;
+	private String originatorIdentifier; 
 	private int port = Services.settings.defaultPort;
 	private int size;
+	
+	// need to have a version
 	
 	// These are not used yet...
 	private byte[] naunce;
@@ -25,7 +27,7 @@ public abstract class Message
 	/** Outgoing Message **/
 	protected Message()
 	{
-		ip = Services.settings.getLocalIp();
+		originatorIdentifier = Services.settings.machineIdentifier;
 		port = Services.settings.defaultPort;
 		naunce = Misc.getNaunce();
 	}
@@ -40,7 +42,7 @@ public abstract class Message
 	
 	public Machine getMachine()
 	{
-		return new Machine(ip, port, Services.remotes.getKeys(ip, port));
+		return Services.db.getMachine(originatorIdentifier);
 	}
 
 	public void read(InputStream stream) throws IOException

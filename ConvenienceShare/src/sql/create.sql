@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS  ROOT (
    R_ID INTEGER PRIMARY KEY   AUTOINCREMENT,
    PATH           TEXT        NOT NULL,
    TAGS           TEXT(50),
+   DESC           TEXT(100),
    MID            INT         NOT NULL,
    LOCAL          INT         NOT NULL,
    SPACE          LONG,
@@ -42,7 +43,8 @@ CREATE TABLE IF NOT EXISTS  MACHINE (
    SHARING        INT           NOT NULL  DEFAULT 0,
    IDENT          char(50)      NOT NULL,
    LOCAL          INT           NOT NULL  DEFAULT 0,
-   UNIQUE (IP, PORT)
+   UNIQUE (IP, PORT),
+   UNIQUE (IDENT)
 );
 
 CREATE TABLE IF NOT EXISTS  KEY (

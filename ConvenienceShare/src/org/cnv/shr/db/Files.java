@@ -18,17 +18,6 @@ import org.cnv.shr.mdl.SharedFile;
 
 public class Files
 {
-	private static void ensurePath(Connection c, String path) throws SQLException
-	{
-		try (PreparedStatement stmt = c.prepareStatement(
-					"insert or ignore into PATH (PATH) values (?);"))
-		{
-			int ndx = 1;
-			stmt.setString(ndx++, path);
-			stmt.execute();
-		}
-	}
-	
 	static int getRootDirectoryId(Connection c, Machine m, String path) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
@@ -92,8 +81,7 @@ public class Files
 						"insert into FILE(NAME, SIZE, PATH, ROOT, CHKSUM, MODIFIED) " +
 						"select ?, ?, P_ID, ?, ?, ?                                 " +
 						"from PATH                                                  " +
-						"where PATH = ?                                             "
-				))
+						"where PATH = ?                                             "))
 		{
 			int ndx = 1;
 			stmt.setString(ndx++, file.getName()           );
@@ -192,15 +180,26 @@ public class Files
 	
 	static void addFiles(Connection c, RootDirectory directory, List<SharedFile> files) throws SQLException
 	{
-		int rootId = directory.getId();
-		if (rootId < 0)
+		StringBuilder sqlStmt = new StringBuilder();
+		sqlStmt.append("insert into FILE(NAME, SIZE, PATH, ROOT, CHKSUM, MODIFIED) values ");
+		Iterator<SharedFile> iterator = files.iterator();
+		while (iterator.hasNext())
 		{
-			Services.logger.logStream.println("Unable to find root id for " + directory.getCanonicalPath());
-			return;
+			SharedFile f = iterator.next();
+			sqlStmt.append(", (")
+				.append(f.getName()).append(',')
+				.append(f.getFileSize()).append(',')
+				.append(getPath(c, f.getCanonicalPath())).append(',')
+				.append(directory.getId()).append(',')
+				.append(f.getChecksum()).append(',')
+				.append(f.getLastUpdated()).append(',')
+				.append(")");
 		}
-		for (SharedFile file : files)
+		sqlStmt.append(";");
+		
+		try (PreparedStatement stmt = c.prepareStatement(sqlStmt.toString());)
 		{
-			addFile(c, rootId, file);
+			stmt.execute();
 		}
 	}
 	
@@ -235,6 +234,45 @@ public class Files
 			else
 			{
 				return null;
+			}
+		}
+	}
+	
+	private static void ensurePath(Connection c, String path) throws SQLException
+	{
+		try (PreparedStatement stmt = c.prepareStatement(
+					"insert or ignore into PATH (PATH) values (?);"))
+		{
+			int ndx = 1;
+			stmt.setString(ndx++, path);
+			stmt.execute();
+		}
+	}
+	
+	private static int getPath(Connection c, String path) throws SQLException
+	{
+		try (PreparedStatement stmt = c.prepareStatement("select P_ID from PATH where PATH.PATH=?;"))
+		{
+			stmt.setString(1, path);
+			ResultSet executeQuery = stmt.executeQuery();
+			if (executeQuery.next())
+			{
+				return executeQuery.getInt(1);
+			}
+		}
+		
+		ensurePath(c, path);
+		try (PreparedStatement stmt = c.prepareStatement("select P_ID from PATH where PATH.PATH=?;"))
+		{
+			stmt.setString(1, path);
+			ResultSet executeQuery = stmt.executeQuery();
+			if (executeQuery.next())
+			{
+				return executeQuery.getInt(1);
+			}
+			else
+			{
+				return -1;
 			}
 		}
 	}

@@ -1,8 +1,6 @@
 package org.cnv.shr.mdl;
 
 import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.PublicKey;
 import java.util.LinkedList;
 
@@ -25,9 +23,12 @@ public class Machine
 	
 	private long lastActive;
 	private Boolean sharing;
+	
+	private Integer dbId;
 
 	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
 
+	/*
 	public Machine(String machine)
 	{
 		int index = machine.indexOf(':');
@@ -42,11 +43,17 @@ public class Machine
 			port = Integer.parseInt(machine.substring(index + 1, machine.length()));
 		}
 	}
+	*/
 	
-	public Machine(String ip, int port, String[] keys)
+	public Machine(
+			String ip, int port,
+			String name, String identifier,
+			String[] keys)
 	{
 		this.ip = ip;
 		this.port = port;
+		this.name = name;
+		this.identifier = identifier;
 		for (String key : keys)
 		{
 			
@@ -56,15 +63,42 @@ public class Machine
 	/** local machine **/
 	private Machine()
 	{
-		name = Services.settings.machineName;
-		ip   = Services.settings.getLocalIp();
-		port = Services.settings.defaultPort;
+		name       = Services.settings.machineName;
+		ip         = Services.settings.getLocalIp();
+		port       = Services.settings.defaultPort;
+		identifier = Services.settings.machineIdentifier;
 		Services.keyManager.getKeys();
+	}
+
+
+	public void setDbId(int int1)
+	{
+		dbId = int1;
+	}
+
+	public void setIp(String string)
+	{
+		this.ip = string;
+	}
+
+	public void setPort(int int1)
+	{
+		this.port = int1;
+	}
+
+	public void setIdentifier(String string)
+	{
+		this.identifier = string;
 	}
 
 	public String getIdentifier()
 	{
 		return identifier;
+	}
+	
+	public int getDbId()
+	{
+		return dbId;
 	}
 
 	public String getName()
@@ -82,20 +116,9 @@ public class Machine
 		return port;
 	}
 
-	public Machine(String ip, int port)
-	{
-		this.ip = ip;
-		this.port = port;
-	}
-
-	public Socket open() throws UnknownHostException, IOException
-	{
-		return new Socket(ip, port);
-	}
-
 	public String toString()
 	{
-		return ip + ":" + port + "[" + publicKeys + "]";
+		return ip + ":" + port + "[id=" + identifier + "][keys=" + publicKeys + "]";
 	}
 
 	public int hashCode()
@@ -147,7 +170,7 @@ public class Machine
 	{
 		try
 		{
-			Connection openConnection = Services.networkManager.openConnection(this);
+			Connection openConnection = Services.networkManager.openConnection(ip, port);
 			openConnection.send(new FindMachines());
 			openConnection.send(new ListFiles());
 			openConnection.notifyDone();

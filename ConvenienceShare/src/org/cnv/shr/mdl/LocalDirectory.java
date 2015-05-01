@@ -11,7 +11,7 @@ public class LocalDirectory extends RootDirectory
 {
 	public LocalDirectory(File localDirectory) throws IOException
 	{
-		super(Services.localMachine, localDirectory.getCanonicalPath());
+		super(Services.localMachine, localDirectory.getCanonicalPath(), "", "");
 	}
 	
 	public boolean contains(File f)
@@ -42,7 +42,7 @@ public class LocalDirectory extends RootDirectory
 	private boolean search()
 	{
 		boolean changed = false;
-		Find find = new Find(new File(path));
+		Find find = new Find(path);
 		while (find.hasNext())
 		{
 			File f = find.next();
@@ -102,7 +102,8 @@ public class LocalDirectory extends RootDirectory
 	{
 		return Services.db.findLocalFile(this, new File(fsPath));
 	}
-	
+
+	@Override
 	public String toString()
 	{
 		return path + " [number of files: " + totalNumFiles + "] [disk usage: " + totalFileSize + " b]";

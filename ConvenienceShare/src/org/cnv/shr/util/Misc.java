@@ -47,7 +47,7 @@ public class Misc
 	}
 	
 	private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	public String getRandomString(int size)
+	public static String getRandomString(int size)
 	{
 		StringBuilder builder = new StringBuilder(size);
 		for (int i = 0; i < size; i++)

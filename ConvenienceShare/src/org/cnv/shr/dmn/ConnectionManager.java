@@ -5,15 +5,26 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
-import org.cnv.shr.mdl.Machine;
-
 public class ConnectionManager
 {
 	private HashMap<String, Connection> openConnections = new HashMap<>();
 	
-	public synchronized Connection openConnection(Machine m) throws UnknownHostException, IOException
+	public Connection openConnection(String url) throws UnknownHostException, IOException
 	{
-		Connection connection = new Connection(m);
+		int index = url.indexOf(':');
+		if (index < 0)
+		{
+			return openConnection(url, Services.settings.defaultPort);
+		}
+		else
+		{
+			return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())));
+		}
+	}
+	
+	public synchronized Connection openConnection(String ip, int port) throws UnknownHostException, IOException
+	{
+		Connection connection = new Connection(ip, port);
 		openConnections.put(connection.getUrl(), connection);
 		run(connection);
 		return connection;

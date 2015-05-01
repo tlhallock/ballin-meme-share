@@ -10,8 +10,6 @@ public class Find implements Iterator<File>
 {
 	private File next;
 	private LinkedList<Node> stack = new LinkedList<>();
-	
-	
 
 	public Find(String string)
 	{

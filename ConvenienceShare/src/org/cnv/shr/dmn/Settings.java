@@ -25,6 +25,7 @@ public class Settings
 	public static boolean logToFile = false;
 	
 	public String machineName = "foobar";
+	public String machineIdentifier;
 	
 	public String downloadsDirectory;
 	public String applicationDirectory;
@@ -91,6 +92,7 @@ public class Settings
 		properties.setProperty("max.port",         String.valueOf(maxDirectorySize    ));
 		properties.setProperty("min.naunce",       String.valueOf(minNaunce           ));
 		properties.setProperty("monitor.repeat",   String.valueOf(monitorRepeat       ));
+		properties.setProperty("identifier",       String.valueOf(machineIdentifier   ));
 
 
 		Misc.ensureDirectory(settingsFile, true);
@@ -117,20 +119,21 @@ public class Settings
 
 	private synchronized void read(Properties properties) throws FileNotFoundException, IOException
 	{
-		downloadsDirectory   = properties.getProperty( "dirs.downloads",         "downloads");
-		applicationDirectory = properties.getProperty( "dirs.application",             "app");
-		stagingDirectory     = properties.getProperty( "dirs.staging",                "temp");
-		machineName          = properties.getProperty( "machinename",               "foobar");
-		defaultPort          = getInt (properties,     "port.server",                 "8989");
-		servePortBegin       = getInt (properties,     "port.begin",                  "8990");
-		servePortEnd         = getInt (properties,     "port.end",                    "9000");
-		numThreads           = getInt (properties,     "max.threads",                   "10");
-		maxDownloads         = getInt (properties,     "max.down",                      "10");
-		maxServes            = getInt (properties,     "max.up",                        "10");
-		maxStringSize        = getInt (properties,     "max.str",                     "4096");
-		minNaunce            = getInt (properties,     "min.naunce",                   "128");
-		maxDirectorySize     = getLong(properties,     "max.port",                      "-1");
-		monitorRepeat        = getLong(properties,     "monitor.repeat",             "50000");
+		downloadsDirectory   = properties.getProperty( "dirs.downloads",             "downloads");
+		applicationDirectory = properties.getProperty( "dirs.application",                 "app");
+		stagingDirectory     = properties.getProperty( "dirs.staging",                    "temp");
+		machineName          = properties.getProperty( "machinename",                   "foobar");
+		machineIdentifier    = properties.getProperty( "identifier",    Misc.getRandomString(50));
+		defaultPort          = getInt (properties,     "port.server",                     "8989");
+		servePortBegin       = getInt (properties,     "port.begin",                      "8990");
+		servePortEnd         = getInt (properties,     "port.end",                        "9000");
+		numThreads           = getInt (properties,     "max.threads",                       "10");
+		maxDownloads         = getInt (properties,     "max.down",                          "10");
+		maxServes            = getInt (properties,     "max.up",                            "10");
+		maxStringSize        = getInt (properties,     "max.str",                         "4096");
+		minNaunce            = getInt (properties,     "min.naunce",                       "128");
+		maxDirectorySize     = getLong(properties,     "max.port",                          "-1");
+		monitorRepeat        = getLong(properties,     "monitor.repeat",                 "50000");
 	}
 	
 
