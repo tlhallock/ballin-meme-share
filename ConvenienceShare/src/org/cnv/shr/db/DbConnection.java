@@ -294,6 +294,12 @@ public class DbConnection
 	
 	public void debug(PrintStream ps)
 	{
+		DbConnection.printTable(ps, "PATH");
+		DbConnection.printTable(ps, "FILE");
+		DbConnection.printTable(ps, "MACHINE");
+		DbConnection.printTable(ps, "KEY");
+		DbConnection.printTable(ps, "ROOT");
+		
 		ps.println("Locals:");
 		Services.locals.debug(ps);
 		
@@ -302,45 +308,35 @@ public class DbConnection
 	}
 	
 
-	public static void printTable(Connection c, String name)
+	public static void printTable(PrintStream ps, String name)
 	{
 		try
 		{
-			boolean created = false;
-			if (c == null)
-			{
-				c = Services.db.getConnection();
-				created = true;
-			}
-			new Exception().printStackTrace(System.out);
-			
-			System.out.println("Printing " + name);
-			System.out.println("----------------------------------------------");
+			Connection c = Services.db.getConnection();
+			new Exception().printStackTrace(ps);
+
+			ps.println("Printing " + name);
+			ps.println("----------------------------------------------");
 			ResultSet executeQuery2 = c.prepareStatement("select * from " + name + ";").executeQuery();
 			int ncols = executeQuery2.getMetaData().getColumnCount();
-			for (int i=1;i<ncols;i++)
+			for (int i = 1; i < ncols; i++)
 			{
-				System.out.print(executeQuery2.getMetaData().getColumnName(i) + ",");
+				ps.print(executeQuery2.getMetaData().getColumnName(i) + ",");
 			}
-			System.out.println();
+			ps.println();
 			while (executeQuery2.next())
 			{
-				for (int i=1;i<=ncols;i++)
+				for (int i = 1; i <= ncols; i++)
 				{
-					System.out.print(executeQuery2.getObject(i) + ",");
+					ps.print(executeQuery2.getObject(i) + ",");
 				}
-				System.out.println();
+				ps.println();
 			}
-			System.out.println("----------------------------------------------");
-			
-			if (created)
-			{
-				c.close();
-			}
+			ps.println("----------------------------------------------");
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			e.printStackTrace(ps);
 		}
 	}
 }

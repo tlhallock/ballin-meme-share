@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
@@ -12,6 +14,9 @@ import org.cnv.shr.msg.Message;
 
 public class Connection implements Runnable
 {
+	private long connectionOpened;
+	private long lastMessage;
+	
 	private Socket socket;
 	private InputStream input;
 	private OutputStream output;
@@ -21,17 +26,19 @@ public class Connection implements Runnable
 	/** Initiator **/
 	public Connection(Machine m) throws UnknownHostException, IOException
 	{
+		connectionOpened = System.currentTimeMillis();
 		socket = m.open();
-		output = socket.getOutputStream();
-		input = socket.getInputStream();
+		output = new GZIPOutputStream(socket.getOutputStream());
+		input =  new GZIPInputStream(socket.getInputStream());
 	}
 	
 	/** Receiver **/
 	public Connection(Socket socket) throws IOException
 	{
+		connectionOpened = System.currentTimeMillis();
 		this.socket = socket;
-		input = socket.getInputStream();
-		output = socket.getOutputStream();
+		input =  new GZIPInputStream(socket.getInputStream());
+		output = new GZIPOutputStream(socket.getOutputStream());
 	}
 	
 	public String getUrl()
@@ -50,10 +57,12 @@ public class Connection implements Runnable
 				{
 					return;
 				}
+				
+				lastMessage = System.currentTimeMillis();
 
 				try
 				{
-					request.perform(null);
+					request.perform(this);
 				}
 				catch (Exception e)
 				{

@@ -81,8 +81,7 @@ public class Machines
 		try (PreparedStatement stmt = c.prepareStatement(
 					"insert into ROOT(PATH, MID, LOCAL)                   " +
 					"select ?, M_ID, ?                                    " +
-					"from MACHINE where MACHINE.ip=? and MACHINE.port=?;  "
-				))
+					"from MACHINE where MACHINE.ip=? and MACHINE.port=?;  "))
 		{
 			int ndx = 1;
 			stmt.setString(ndx++, root.getCanonicalPath());

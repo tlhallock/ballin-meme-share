@@ -30,12 +30,11 @@ public class LocalDirectory extends RootDirectory
 	
 	private boolean prune()
 	{
-		boolean changed = false;
 		Iterator<SharedFile> currentLocals = Services.db.list(this);
+		boolean changed = false;
 		while (currentLocals.hasNext())
 		{
-			LocalFile local = (LocalFile) currentLocals.next();
-			changed |= local.refreshAndWriteToDb();
+			changed |= ((LocalFile) currentLocals.next()).refreshAndWriteToDb();
 		}
 		return changed;
 	}
@@ -106,7 +105,7 @@ public class LocalDirectory extends RootDirectory
 	
 	public String toString()
 	{
-		return path /* + " [" + files.size() + " files] [disk usage: " + getFileSize() + "]" */;
+		return path + " [number of files: " + totalNumFiles + "] [disk usage: " + totalFileSize + " b]";
 	}
 
 	@Override

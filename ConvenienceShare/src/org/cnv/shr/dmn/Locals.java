@@ -48,18 +48,18 @@ public class Locals
 	{
 		for (LocalDirectory d : listLocals())
 		{
-			if (d.contains(f))
+			if (!d.contains(f))
 			{
-				try
-				{
-					return d.getFile(f.getCanonicalPath());
-				}
-				catch (IOException e)
-				{
-					Services.logger.logStream.println("Unable to get file path: " + f);
-					e.printStackTrace(Services.logger.logStream);
-					return null;
-				}
+				continue;
+			}
+			try
+			{
+				return d.getFile(f.getCanonicalPath());
+			}
+			catch (IOException e)
+			{
+				Services.logger.logStream.println("Unable to get file path: " + f);
+				e.printStackTrace(Services.logger.logStream);
 			}
 		}
 		return null;

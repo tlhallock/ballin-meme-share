@@ -21,8 +21,7 @@ public class Files
 	private static void ensurePath(Connection c, String path) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-					"insert or ignore into PATH (PATH) values (?);"
-				))
+					"insert or ignore into PATH (PATH) values (?);"))
 		{
 			int ndx = 1;
 			stmt.setString(ndx++, path);
@@ -165,9 +164,9 @@ public class Files
 	private static void updateFileNoChecksum(Connection c, int rootDirectoryId, SharedFile file) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-						"update FILE                                  " +
+						"update FILE                        " +
 						"set SIZE=?,STATE=?,MODIFIED=?      " +
-						"where F_ID = ?                               "))
+						"where F_ID = ?                     "))
 		{
 			int ndx = 1;
 			stmt.setLong  (ndx++, file.getFileSize()       );

@@ -35,32 +35,40 @@ public class ChecksumManager extends Thread
 	
 	private File getNextFile()
 	{
+		File next = null;
+		
 		lock.lock();
-		while (queue.isEmpty())
+		try
 		{
-			try
+			while (queue.isEmpty())
 			{
-				condition.await();
+				try
+				{
+					condition.await();
+				}
+				catch (InterruptedException e)
+				{
+					Services.logger.logStream.println("Interrupted while waiting for condition.");
+					e.printStackTrace(Services.logger.logStream);
+				}
+				if (stop)
+				{
+					return next;
+				}
 			}
-			catch (InterruptedException e)
-			{
-				Services.logger.logStream.println("Interrupted while waiting for condition.");
-				e.printStackTrace(Services.logger.logStream);
-			}
-			if (stop)
-			{
-				return null;
-			}
+
+			Iterator<File> iterator = queue.iterator();
+			next = iterator.next();
+		}
+		finally
+		{
+			lock.unlock();
 		}
 
-		Iterator<File> iterator = queue.iterator();
-		File next = iterator.next();
-		lock.unlock();
-		
 		return next;
 	}
 
-	void updateChecksum(File f)
+	private void updateChecksum(File f)
 	{
 		long startTime = System.currentTimeMillis();
 		String checksum;
@@ -117,6 +125,7 @@ public class ChecksumManager extends Thread
 
 	public String checksumBlocking(File f) throws IOException
 	{
+		Services.logger.logStream.println("Checksumming " + f);
 		MessageDigest digest = null;
 		try
 		{
@@ -149,7 +158,8 @@ public class ChecksumManager extends Thread
 			{
 				sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
 			}
-			
+
+			Services.logger.logStream.println("Done checksumming " + f + ": " + sb.toString());
 			return sb.toString();
 		}
 	}
