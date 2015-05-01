@@ -37,8 +37,8 @@ public class Misc
 	public static byte[] format(String str)
 	{
 		byte[] returnValue = new byte[str.length() / 2];
-		
-		for (int i=0;i<returnValue.length;i++)
+
+		for (int i = 0; i < returnValue.length; i++)
 		{
 			returnValue[i] = (byte) Integer.parseInt(str.charAt(2*i) + "" + str.charAt(2*i+1), 16);
 		}
@@ -46,8 +46,7 @@ public class Misc
 		return returnValue;
 	}
 	
-	private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	
+	private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	public String getRandomString(int size)
 	{
 		StringBuilder builder = new StringBuilder(size);

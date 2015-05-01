@@ -2,7 +2,7 @@ package org.cnv.shr.dmn;
 
 public class Notifications
 {   
-	public static void localsChanged()
+	public void localsChanged()
 	{
 		if (Services.application != null)
 		{
@@ -11,7 +11,7 @@ public class Notifications
 //		Services.locals.write();
 	}
 	
-	public static void remotesChanged()
+	public void remotesChanged()
 	{
 		if (Services.application != null)
 		{

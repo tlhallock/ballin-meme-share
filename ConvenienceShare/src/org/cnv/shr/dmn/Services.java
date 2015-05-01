@@ -23,8 +23,9 @@ public class Services
 	
 	public static Settings settings;
 	public static Logger logger;
+	public static Notifications notifications;
 	public static ChecksumManager checksums;
-	public static connectionManager networkManager;
+	public static ConnectionManager networkManager;
 	public static RequestHandler handler;
 	public static Remotes remotes;
 	public static Locals locals;
@@ -41,6 +42,7 @@ public class Services
 	public static void initialize(String[] args) throws Exception
 	{
 		logger = new Logger();
+		
 		if (args.length >= 1)
 		{
 			settings = new Settings(new File(args[0]));
@@ -63,13 +65,14 @@ public class Services
 		settings.write();
 
 		logger.setLogLocation();
+		notifications = new Notifications();
 		
 		db = new DbConnection();
 
 		keyManager = new KeyManager();
-		localMachine = Machine.getLocalMachine();
+		localMachine = new Machine.LocalMachine();
 
-		networkManager = new connectionManager();
+		networkManager = new ConnectionManager();
 		msgReader = new MessageReader();
 		
 		Misc.ensureDirectory(settings.applicationDirectory, false);
@@ -95,6 +98,9 @@ public class Services
 				locals.synchronize();
 				
 			}}, settings.monitorRepeat, settings.monitorRepeat);
+		
+		// Ensure the local machine is added and that the downloads directory is shared.
+		db.addMachine(localMachine);
 		locals.share(new File(settings.downloadsDirectory));
 
 		java.awt.EventQueue.invokeLater(new Runnable()
@@ -106,6 +112,9 @@ public class Services
 					application = new Application();
 					application.refreshAll();
 					application.setVisible(true);
+					
+					locals.synchronize();
+					remotes.refresh();
 				}
 				catch (Exception ex)
 				{
@@ -139,7 +148,8 @@ public class Services
 		}
 		catch (InterruptedException e)
 		{
-			e.printStackTrace();
+			Services.logger.logStream.println("Error closing thread pools.");
+			e.printStackTrace(Services.logger.logStream);
 		}
 		
 		db.close();

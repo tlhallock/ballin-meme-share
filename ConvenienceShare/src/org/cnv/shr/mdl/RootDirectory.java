@@ -1,6 +1,6 @@
 package org.cnv.shr.mdl;
 
-import java.util.HashMap;
+import java.util.Iterator;
 
 import org.cnv.shr.dmn.Services;
 
@@ -8,8 +8,9 @@ public abstract class RootDirectory
 {
 	protected Machine machine;
 	protected String path;
-	protected long totalFileSize;
-	protected int totalNumFiles;
+	protected long totalFileSize = -1;
+	protected long totalNumFiles = -1;
+	protected Integer id;
 	
 	public RootDirectory(Machine machine, String path)
 	{
@@ -17,7 +18,7 @@ public abstract class RootDirectory
 		this.path = path;
 	}
 	
-	public String getPath()
+	public String getCanonicalPath()
 	{
 		return path;
 	}
@@ -27,16 +28,33 @@ public abstract class RootDirectory
 		return machine;
 	}
 
-	public HashMap<String, LocalFile> list()
+	public Iterator<SharedFile> list()
 	{
 		return Services.db.list(this);
 	}
+//	
+//	public SharedFile getFile(String relPath)
+//	{
+//		return Services.db.getFile(machine, this, relPath);
+//	}
 	
-	public SharedFile getFile(String relPath)
+	public final void synchronize()
 	{
-		return Services.db.getFile(machine, this, relPath);
+		synchronizeInternal();
+		totalNumFiles = Services.db.countFiles(this);
+		totalFileSize = Services.db.countFileSize(this);
+		
 	}
+	protected abstract void synchronizeInternal();
 	
-	public abstract void synchronize();
 	public abstract boolean isLocal();
+
+	public int getId()
+	{
+		if (id == null)
+		{
+			id = Services.db.getRootId(this);
+		}
+		return id;
+	}
 }

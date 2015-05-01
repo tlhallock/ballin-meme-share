@@ -1,32 +1,101 @@
 package org.cnv.shr.mdl;
 
+import org.cnv.shr.dmn.Services;
+
 public class SharedFile
 {
+	protected Integer id;
+	
 	protected String name;
 	protected String path;
 	protected RootDirectory rootDirectory;
-	protected long filesize;
+	protected long fileSize;
 	protected String checksum;
 	protected String description;
 	protected long lastUpdated;
+	
+	
+	public int getId()
+	{
+		if (id == null)
+		{
+			id = Services.db.getFile(rootDirectory, path, name).id;
+		}
+		return id;
+	}
+
+	public void setId(int int1)
+	{
+		this.id = int1;
+	}
 	
 	public String getName()
 	{
 		return name;
 	}
 
-	public String getPath()
+	public String getCanonicalPath()
 	{
 		return path;
 	}
 
-	public long getSize()
+	public void setPath(String path)
 	{
-		return filesize;
+		this.path = path;
 	}
-	
+
+	public RootDirectory getRootDirectory()
+	{
+		return rootDirectory;
+	}
+
+	public void setRootDirectory(RootDirectory rootDirectory)
+	{
+		this.rootDirectory = rootDirectory;
+	}
+
+	public long getFileSize()
+	{
+		return fileSize;
+	}
+
+	public void setFileSize(long filesize)
+	{
+		this.fileSize = filesize;
+	}
+
 	public String getChecksum()
 	{
 		return checksum;
+	}
+
+	public void setChecksum(String checksum)
+	{
+		this.checksum = checksum;
+	}
+
+	public String getDescription()
+	{
+		return description;
+	}
+
+	public void setDescription(String description)
+	{
+		this.description = description;
+	}
+
+	public long getLastUpdated()
+	{
+		return lastUpdated;
+	}
+
+	public void setLastUpdated(long lastUpdated)
+	{
+		this.lastUpdated = lastUpdated;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
 	}
 }

@@ -1,104 +1,97 @@
 package org.cnv.shr.mdl;
 
 import java.io.File;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map.Entry;
+import java.io.IOException;
+import java.util.Iterator;
 
-import org.cnv.shr.dmn.Notifications;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Find;
 
 public class LocalDirectory extends RootDirectory
 {
-	public LocalDirectory(Machine machine, File localDirectory)
+	public LocalDirectory(File localDirectory) throws IOException
 	{
-		super(machine, localDirectory.getAbsolutePath());
+		super(Services.localMachine, localDirectory.getCanonicalPath());
 	}
 	
 	public boolean contains(File f)
 	{
-		return f.getAbsolutePath().startsWith(path);
+		try
+		{
+			return f.getCanonicalPath().startsWith(path);
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Unable to get file path: " + f);
+			e.printStackTrace(Services.logger.logStream);
+			return false;
+		}
+	}
+	
+	private boolean prune()
+	{
+		boolean changed = false;
+		Iterator<SharedFile> currentLocals = Services.db.list(this);
+		while (currentLocals.hasNext())
+		{
+			LocalFile local = (LocalFile) currentLocals.next();
+			changed |= local.refreshAndWriteToDb();
+		}
+		return changed;
+	}
+	
+	private boolean search()
+	{
+		boolean changed = false;
+		Find find = new Find(new File(path));
+		while (find.hasNext())
+		{
+			File f = find.next();
+
+			Services.logger.logStream.println("Found file " + f);
+			String absolutePath;
+			try
+			{
+				absolutePath = f.getCanonicalPath();
+			}
+			catch (IOException e)
+			{
+				Services.logger.logStream.println("Unable to get file path: " + f);
+				e.printStackTrace(Services.logger.logStream);
+				continue;
+			}
+
+			if (Services.db.findLocalFile(this, f) != null)
+			{
+				continue;
+			}
+
+			Services.db.addFile(this, new LocalFile(getThis(), absolutePath));
+			changed = true;
+		}
+		return changed;
 	}
 
-	public void synchronize()
+	@Override
+	public void synchronizeInternal()
 	{
-		class LocalVars
+		if (!Services.locals.localAlreadyExists(getCanonicalPath()) && !Services.db.addRoot(Services.localMachine, this))
 		{
-			boolean changed = false;
-			long tmpFileSize = 0;
-		}
-		final LocalVars vars = new LocalVars();
-
-		// Double check to make sure this directory is here and in the db...
-		
-		final HashMap<String, LocalFile> currentLocals = Services.db.list(this);
-
-		HashSet<String> filesToRemove = new HashSet<>();
-		for (Entry<String, LocalFile> entry : currentLocals.entrySet())
-		{
-			LocalFile file = entry.getValue();
-			String path = entry.getKey();
-
-			if (!file.exists())
-			{
-				filesToRemove.add(path);
-				vars.changed = true;
-			}
-			else
-			{
-				vars.tmpFileSize += file.filesize;
-			}
-			
-			vars.changed |= file.refreshAndWriteToDb();
+			return;
 		}
 		
-		Find.find(new File(path), new Find.FileListener()
-		{	
-			LinkedList<SharedFile> list = new LinkedList<>();
-			
-			@Override
-			public synchronized void fileFound(File f)
-			{
-				String absolutePath = f.getAbsolutePath();
-				if (currentLocals.get(absolutePath) == null)
-				{
-					LocalFile newFile = new LocalFile(getThis(), absolutePath);
-					list.add(newFile);
-					vars.changed = true;
-					vars.tmpFileSize += newFile.filesize;
-					
-					if (list.size() > 50)
-					{
-						flush();
-					}
-				}
-			}
+		Services.logger.logStream.println("Synchronizing " + getCanonicalPath());
 
-			@Override
-			public synchronized void flush()
-			{
-				try
-				{
-					Services.db.addFiles(getThis(), list);
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-					return;
-				}
-				list.clear();
-			}
-		});
-		
-		totalFileSize = vars.tmpFileSize;
-		
-		if (vars.changed)
+		boolean changed = false;
+		changed |= prune();
+		changed |= search();
+
+		if (changed)
 		{
-			Notifications.localsChanged();
+			Services.notifications.localsChanged();
 		}
+		
+		Services.logger.logStream.println("Done synchronizing " + getCanonicalPath());
 	}
 	
 	private LocalDirectory getThis()
@@ -106,9 +99,9 @@ public class LocalDirectory extends RootDirectory
 		return this;
 	}
 
-	public LocalFile getFile(String path)
+	public LocalFile getFile(String fsPath)
 	{
-		return Services.db.getFile(Services.localMachine, this, new File(path).getName());
+		return Services.db.findLocalFile(this, new File(fsPath));
 	}
 	
 	public String toString()

@@ -8,7 +8,6 @@ import org.cnv.shr.util.Misc;
 
 public class Logger
 {
-	private static boolean logToFile = false;
 	public PrintStream logStream;
 
 	public Logger()
@@ -18,7 +17,7 @@ public class Logger
 
 	void setLogLocation() throws FileNotFoundException
 	{
-		if (!logToFile)
+		if (!Settings.logToFile)
 		{
 			return;
 		}

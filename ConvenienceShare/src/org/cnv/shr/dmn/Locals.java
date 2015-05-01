@@ -1,8 +1,8 @@
 package org.cnv.shr.dmn;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
-import java.sql.SQLException;
 import java.util.List;
 
 import org.cnv.shr.mdl.LocalDirectory;
@@ -10,22 +10,33 @@ import org.cnv.shr.mdl.LocalFile;
 
 public class Locals
 {
-	public synchronized void share(File localDirectory)
+	public synchronized void share(final File localDirectory)
 	{
-		final LocalDirectory local = new LocalDirectory(Services.localMachine, localDirectory);
-		try
-		{
-			Services.db.addRoot(Services.localMachine, local);
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-		
 		Services.userThreads.execute(new Runnable() { public void run()
 		{
-			local.synchronize();
+			try
+			{
+				Services.logger.logStream.println("Sharing " + localDirectory);
+				new LocalDirectory(localDirectory).synchronize();
+			}
+			catch (IOException e1)
+			{
+				Services.logger.logStream.println("Unable to get file path to share: " + localDirectory);
+				e1.printStackTrace(Services.logger.logStream);
+			}
 		}});
+	}
+	
+	public boolean localAlreadyExists(String canonicalPath)
+	{
+		for (LocalDirectory other : listLocals())
+		{
+			if (other.getCanonicalPath().equals(canonicalPath))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public synchronized List<LocalDirectory> listLocals()
@@ -39,7 +50,16 @@ public class Locals
 		{
 			if (d.contains(f))
 			{
-				return d.getFile(f.getAbsolutePath());
+				try
+				{
+					return d.getFile(f.getCanonicalPath());
+				}
+				catch (IOException e)
+				{
+					Services.logger.logStream.println("Unable to get file path: " + f);
+					e.printStackTrace(Services.logger.logStream);
+					return null;
+				}
 			}
 		}
 		return null;
@@ -51,7 +71,7 @@ public class Locals
 		{
 			localDir.synchronize();
 		}
-		Notifications.localsChanged();
+		Services.db.removeUnusedPaths();
 	}
 	
 	
@@ -87,7 +107,7 @@ public class Locals
 	{
 		for (LocalDirectory path : listLocals())
 		{
-			ps.println(path.getPath());
+			ps.println(path.getCanonicalPath());
 		}
 	}
 }

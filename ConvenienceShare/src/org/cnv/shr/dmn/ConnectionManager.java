@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 import org.cnv.shr.mdl.Machine;
 
-public class connectionManager
+public class ConnectionManager
 {
 	private HashMap<String, Connection> openConnections = new HashMap<>();
 	
@@ -41,7 +41,7 @@ public class connectionManager
 			}});
 	}
 
-	private connectionManager getThis()
+	private ConnectionManager getThis()
 	{
 		return this;
 	}

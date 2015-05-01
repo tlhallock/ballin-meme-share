@@ -20,7 +20,7 @@ public class Remotes
 		}
 	}
 
-	public void discover(String url)
+	public void discover(final String url)
 	{
 		try
 		{
@@ -38,7 +38,7 @@ public class Remotes
 
 	public List<Machine> getMachines()
 	{
-		return Services.db.getMachines();
+		return Services.db.getRemoteMachines();
 	}
 	
 	public String[] getKeys(String ip, int port)
@@ -55,9 +55,10 @@ public class Remotes
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.logStream.println("Unable to add machine.");
+			e.printStackTrace(Services.logger.logStream);
 		}
-		Notifications.remotesChanged();
+		Services.notifications.remotesChanged();
 	}
 
 	public void isAlive(Machine machine)

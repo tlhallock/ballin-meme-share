@@ -1,21 +1,31 @@
 package org.cnv.shr.mdl;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.cnv.shr.dmn.Services;
 
 public class LocalFile extends SharedFile
 {
-	public LocalFile(LocalDirectory local, String path)
+	public LocalFile() {}
+	public LocalFile(LocalDirectory local, String lpath)
 	{
 		lastUpdated = System.currentTimeMillis();
 		
-		File f = new File(path);
+		File f = new File(lpath);
 		name = f.getName();
-		filesize = f.getTotalSpace();
+		fileSize = f.getTotalSpace();
 		
-		path = f.getParentFile().getAbsolutePath().substring(
-				local.getPath().length());
+		try
+		{
+			path = f.getParentFile().getCanonicalPath().substring(
+					local.getCanonicalPath().length());
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Unable to get file path: " + f);
+			e.printStackTrace(Services.logger.logStream);
+		}
 		
 		rootDirectory = local;
 		description = null;
@@ -23,7 +33,7 @@ public class LocalFile extends SharedFile
 	
 	public String getFullPath()
 	{
-		return rootDirectory.getPath() + File.separatorChar + path + File.separatorChar + name;
+		return rootDirectory.getCanonicalPath() + File.separatorChar + path + File.separatorChar + name;
 	}
 
 	/**
@@ -35,7 +45,7 @@ public class LocalFile extends SharedFile
 		
 		if (!exists())
 		{
-			removeFromDb();
+			Services.db.removeFile(this);
 			return true;
 		}
 
@@ -46,12 +56,31 @@ public class LocalFile extends SharedFile
 		}
 		
 		lastUpdated = startTime;
-		// update info...
-		Services.checksums.checksum(fsCopy);
-		filesize = fsCopy.getTotalSpace();
+		updateChecksum(fsCopy);
 		
-		writeToDb();
+		fileSize = fsCopy.getTotalSpace();
+		Services.db.updateFile(this);
 		return true;
+	}
+
+	private void updateChecksum(File fsCopy)
+	{
+		if (fileSize > Services.settings.maxImmediateChecksum)
+		{
+			Services.checksums.checksum(fsCopy);
+			return;
+		}
+		try
+		{
+			checksum = Services.checksums.checksumBlocking(fsCopy);
+			return;
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Unable to checksum " + fsCopy);
+			e.printStackTrace(Services.logger.logStream);
+		}
+		Services.checksums.checksum(fsCopy);
 	}
 
 	public void setChecksum(long timeStamp, String checksum)
@@ -63,21 +92,12 @@ public class LocalFile extends SharedFile
 		this.checksum = checksum;
 		if (!refreshAndWriteToDb())
 		{
-			writeToDb();
+			Services.db.updateFile(this);
 		}
 	}
 	
 	public boolean exists()
 	{
 		return new File(getFullPath()).exists();
-	}
-	
-	private void writeToDb()
-	{
-		Services.db.updateFile(this);
-	}
-	private void removeFromDb()
-	{
-		Services.db.removeFile(this);
 	}
 }

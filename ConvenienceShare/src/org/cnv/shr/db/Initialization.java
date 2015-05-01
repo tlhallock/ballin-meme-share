@@ -13,7 +13,7 @@ import org.cnv.shr.dmn.Services;
 
 public class Initialization
 {
-	static void clearDb(Connection c) throws SQLException, IOException
+	static void clearDb(Connection c, HashSet<String> currentTables) throws SQLException, IOException
 	{
 		execute(c, "/clear.sql");
 	}

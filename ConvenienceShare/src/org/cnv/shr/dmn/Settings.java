@@ -21,6 +21,8 @@ public class Settings
 	private static final String LOG_FILE = File.separatorChar + "log.txt";
 	private static final String SQL_DIR = "sql";
 	private static final String DB_FILE = File.separatorChar + "files.db";
+
+	public static boolean logToFile = false;
 	
 	public String machineName = "foobar";
 	
@@ -43,6 +45,7 @@ public class Settings
 	public long monitorRepeat;
 
 	public long checksumWait;
+	public long maxImmediateChecksum = 1 * 1024 * 1024;
 	
 	private File settingsFile;
 	private String localAddress;
@@ -51,6 +54,7 @@ public class Settings
 	{
 		this.settingsFile = settingsFile;
 		localAddress = InetAddress.getLocalHost().getHostAddress();
+		Services.logger.logStream.println("Local host is " + localAddress);
 	}
 
 	private static int getInt(Properties p, String key, String defaultValue)

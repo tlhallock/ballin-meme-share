@@ -72,13 +72,14 @@ public class Connection implements Runnable
 	{
 		try
 		{
-			Services.logger.logStream.println("Sending message of type " + m.getClass()
+			Services.logger.logStream.println("Sending message of type " + m.getClass().getName()
 					+ " to " + socket.getInetAddress() + ":" + socket.getPort());
 			output.write(m.getBytes());
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.logStream.println("Unable to send message: " + m.getClass().getName());
+			e.printStackTrace(Services.logger.logStream);
 		}
 	}
 	
@@ -91,7 +92,8 @@ public class Connection implements Runnable
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.logStream.println("Unable to close output stream.");
+			e.printStackTrace(Services.logger.logStream);
 		}
 	}
 
@@ -104,7 +106,8 @@ public class Connection implements Runnable
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.logStream.println("Unable to close input stream.");
+			e.printStackTrace(Services.logger.logStream);
 		}
 	}
 }

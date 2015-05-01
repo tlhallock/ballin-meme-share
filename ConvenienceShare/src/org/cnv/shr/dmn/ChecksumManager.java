@@ -44,7 +44,8 @@ public class ChecksumManager extends Thread
 			}
 			catch (InterruptedException e)
 			{
-				e.printStackTrace();
+				Services.logger.logStream.println("Interrupted while waiting for condition.");
+				e.printStackTrace(Services.logger.logStream);
 			}
 			if (stop)
 			{
@@ -69,7 +70,8 @@ public class ChecksumManager extends Thread
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.logStream.println("Unable to calculate checksum of " + f);
+			e.printStackTrace(Services.logger.logStream);
 			return;
 		}
 		if (checksum == null)
@@ -108,7 +110,8 @@ public class ChecksumManager extends Thread
 		}
 		catch (InterruptedException e)
 		{
-			e.printStackTrace();
+			Services.logger.logStream.println("Interrupted while waiting.");
+			e.printStackTrace(Services.logger.logStream);
 		}
 	}
 
@@ -121,9 +124,8 @@ public class ChecksumManager extends Thread
 		}
 		catch (NoSuchAlgorithmException e)
 		{
-			e.printStackTrace();
-			System.out.println("No SHA1 algorithm.");
-			System.out.println("Quiting");
+			Services.logger.logStream.println("No SHA1 algorithm.\nQuitting");
+			e.printStackTrace(Services.logger.logStream);
 			Main.quit();
 			return null;
 		}

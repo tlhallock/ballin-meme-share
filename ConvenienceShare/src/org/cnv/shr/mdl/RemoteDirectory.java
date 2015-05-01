@@ -14,7 +14,7 @@ public class RemoteDirectory extends RootDirectory
 	}
 
 	@Override
-	public void synchronize()
+	public void synchronizeInternal()
 	{
 		
 	}

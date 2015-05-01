@@ -21,6 +21,7 @@ public class Machine
 	private int port;
 	
 	private String name;
+	private String identifier = "";
 	
 	private long lastActive;
 	private Boolean sharing;
@@ -61,6 +62,10 @@ public class Machine
 		Services.keyManager.getKeys();
 	}
 
+	public String getIdentifier()
+	{
+		return identifier;
+	}
 
 	public String getName()
 	{
@@ -133,6 +138,11 @@ public class Machine
 		return sharing;
 	}
 
+	public boolean isLocal()
+	{
+		return false;
+	}
+
 	public void refresh()
 	{
 		try
@@ -185,19 +195,21 @@ public class Machine
 		machines.put(machines.length(), object);
 	}
 	
-	public static Machine getLocalMachine()
+	public static class LocalMachine extends Machine
 	{
-		return new Machine()
+		public void setSharing(boolean b)
 		{
-			public void setSharing(boolean b)
-			{
-				throw new UnsupportedOperationException("This is the local machine.");
-			}
-			
-			public long getLastActive()
-			{
-				return System.currentTimeMillis();
-			}
-		};
+			throw new UnsupportedOperationException("This is the local machine.");
+		}
+
+		public long getLastActive()
+		{
+			return System.currentTimeMillis();
+		}
+
+		public boolean isLocal()
+		{
+			return true;
+		}
 	}
 }

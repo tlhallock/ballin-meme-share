@@ -6,25 +6,50 @@ public class Main
 	{
 		try
 		{
-			Services.initialize(new String[] { "/work/ballin-meme-share/runDir/settings1.props" });
-
-//			Services.remotes.getMachines().add(new Machine("20.43.98.43:032984"));
-//			Machine m = new Machine("234.234.234.234:99");
-//			Services.db.addMachine(m);
-
-//			Thread.sleep(5000);
-
-//			Services.application.showRemote(m);
+			if (args.length < 1)
+			{
+				args = new String[] { "/work/ballin-meme-share/runDir/settings1.props" };
+			}
+			
+			Services.initialize(args);
 		}
 		catch (Exception ex)
 		{
 			ex.printStackTrace();
 			quit();
 		}
+		
+		// black list
+		// larger auth in first message
+		// make standalone key server
+		// make database text size correct
+		
+		// test same number of files
+		// test file added
+		// test file removed
+		// test file downloaded
+		// test list dir
+		// test byte buffer
+		// test format
+		
+		// add setting for checksum
+		// add setting for ip address
+		// add setting for sync repeat
+		
+		// start on startup
 	}
 
+	private static boolean quitting = false;
 	public static void quit()
 	{
+		if (quitting)
+		{
+			return;
+		}
+		else
+		{
+			quitting = true;
+		}
 		try
 		{
 			Services.deInitialize();
