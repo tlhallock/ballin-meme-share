@@ -81,10 +81,10 @@ public class Services
 		
 		userThreads     = Executors.newCachedThreadPool();
 		connectionThreads  = Executors.newCachedThreadPool();
-		
+
+		checksums = new ChecksumManager();
 		locals = new Locals();
 		remotes = new Remotes();
-		checksums = new ChecksumManager();
 		handler = new RequestHandler();
 		monitorTimer = new Timer();
 
@@ -110,11 +110,9 @@ public class Services
 				try
 				{
 					application = new Application();
-					application.refreshAll();
 					application.setVisible(true);
+					application.refreshAll();
 					
-					locals.synchronize();
-					remotes.refresh();
 				}
 				catch (Exception ex)
 				{
@@ -124,6 +122,13 @@ public class Services
 				}
 			}
 		});
+		
+		monitorTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				locals.synchronize();
+				remotes.refresh();
+			}}, 1000);
 	}
 
 	public static void deInitialize()

@@ -12,7 +12,7 @@ public class SharedFile
 	protected long fileSize;
 	protected String checksum;
 	protected String description;
-	protected long lastUpdated;
+	protected long lastModified;
 	
 	
 	public int getId()
@@ -86,16 +86,16 @@ public class SharedFile
 
 	public long getLastUpdated()
 	{
-		return lastUpdated;
-	}
-
-	public void setLastUpdated(long lastUpdated)
-	{
-		this.lastUpdated = lastUpdated;
+		return lastModified;
 	}
 
 	public void setName(String name)
 	{
 		this.name = name;
+	}
+
+	public void setLastUpdated(long long1)
+	{
+		this.lastModified = long1;
 	}
 }

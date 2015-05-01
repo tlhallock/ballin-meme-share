@@ -43,7 +43,6 @@ public abstract class RootDirectory
 		synchronizeInternal();
 		totalNumFiles = Services.db.countFiles(this);
 		totalFileSize = Services.db.countFileSize(this);
-		
 	}
 	protected abstract void synchronizeInternal();
 	
@@ -56,5 +55,15 @@ public abstract class RootDirectory
 			id = Services.db.getRootId(this);
 		}
 		return id;
+	}
+
+	public long numFiles()
+	{
+		return totalNumFiles;
+	}
+
+	public long diskSpace()
+	{
+		return totalFileSize;
 	}
 }

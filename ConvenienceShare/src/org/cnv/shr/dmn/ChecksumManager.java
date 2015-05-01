@@ -90,6 +90,7 @@ public class ChecksumManager extends Thread
 		LocalFile l = Services.locals.getLocalFile(f);
 		if (l == null)
 		{
+			Services.locals.getLocalFile(f);
 			Services.logger.logStream.println("File is not part of a shared directory: " + f);
 			return;
 		}

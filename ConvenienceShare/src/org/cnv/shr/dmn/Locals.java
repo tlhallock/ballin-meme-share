@@ -72,6 +72,9 @@ public class Locals
 			localDir.synchronize();
 		}
 		Services.db.removeUnusedPaths();
+		
+		// Right now this is only for the sizes of the local dirs.
+		Services.notifications.localsChanged();
 	}
 	
 	

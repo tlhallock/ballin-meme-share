@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS  ROOT (
    TAGS           TEXT(50),
    MID            INT         NOT NULL,
    LOCAL          INT         NOT NULL,
+   SPACE          LONG,
+   NFILES         LONG,
+   
    FOREIGN KEY(MID) REFERENCES MACHINE(M_ID),
    UNIQUE (PATH, MID)
 );

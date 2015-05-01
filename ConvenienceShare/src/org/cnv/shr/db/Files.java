@@ -89,10 +89,10 @@ public class Files
 	private static void addFileWithChecksum(Connection c, int rootDirectoryId, SharedFile file) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-						"insert into FILE(NAME, SIZE, PATH, ROOT, CHKSUM) " +
-						"select ?, ?, P_ID, ?, ?                          " +
-						"from PATH                                        " +
-						"where PATH = ?                                   "
+						"insert into FILE(NAME, SIZE, PATH, ROOT, CHKSUM, MODIFIED) " +
+						"select ?, ?, P_ID, ?, ?, ?                                 " +
+						"from PATH                                                  " +
+						"where PATH = ?                                             "
 				))
 		{
 			int ndx = 1;
@@ -100,6 +100,7 @@ public class Files
 			stmt.setLong  (ndx++, file.getFileSize()       );
 			stmt.setInt   (ndx++, rootDirectoryId          );
 			stmt.setString(ndx++, file.getChecksum()       );
+			stmt.setLong  (ndx++, file.getLastUpdated()    );
 			stmt.setString(ndx++, file.getCanonicalPath()  );
 			stmt.execute();
 		}
@@ -108,16 +109,17 @@ public class Files
 	private static void addFileNoChecksum(Connection c, int rootDirectoryId, SharedFile file) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-						"insert into FILE(NAME, SIZE, ROOT, PATH) " +
-						"select ?, ?, ?, P_ID                     " +
-						"from PATH                                " +
-						"where PATH = ?;                          "
+						"insert into FILE(NAME, SIZE, ROOT, PATH, MODIFIED) " +
+						"select ?, ?, ?, P_ID, ?                            " +
+						"from PATH                                          " +
+						"where PATH = ?;                                    "
 				))
 		{
 			int ndx = 1;
 			stmt.setString(ndx++, file.getName() );
 			stmt.setLong  (ndx++, file.getFileSize() );
 			stmt.setInt   (ndx++, rootDirectoryId);
+			stmt.setLong  (ndx++, file.getLastUpdated()    );
 			stmt.setString(ndx++, file.getCanonicalPath() );
 			stmt.execute();
 		}
@@ -236,10 +238,26 @@ public class Files
 			}
 		}
 	}
+	
+	static String getPath(Connection c, int pathId) throws SQLException
+	{
+		try (PreparedStatement stmt = c.prepareStatement(
+					"select PATH from PATH where P_ID = ?;"))
+		{
+			stmt.setInt(1, pathId);
+			
+			ResultSet executeQuery = stmt.executeQuery();
+			if (executeQuery.next())
+			{
+				return executeQuery.getString("PATH");
+			}
+			return "unknown";
+		}
+	}
 
 	public static Iterator<SharedFile> list(Connection c, RootDirectory d) throws SQLException
 	{
-		PreparedStatement stmt = c.prepareStatement("select * from FILE where FILE.ROOT = ?;");
+		PreparedStatement stmt = c.prepareStatement("select F_ID, NAME, SIZE, CHKSUM, PATH, ROOT, STATE, MODIFIED from FILE where FILE.ROOT = ?;");
 		stmt.setInt(1, d.getId());
 		if (d.isLocal())
 		{

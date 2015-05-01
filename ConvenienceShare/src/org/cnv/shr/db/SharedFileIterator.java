@@ -38,14 +38,14 @@ public abstract class SharedFileIterator implements Iterator<SharedFile>
 		   // db has root
 		   // db has state
 			   
-			returnValue.setId(results.getInt("F_ID"));
-			returnValue.setName(results.getString("NAME"));
-			returnValue.setFileSize(results.getLong("SIZE"));
-			returnValue.setPath(results.getString("PATH"));
-			returnValue.setChecksum(results.getString("CHKSUM"));
-			returnValue.setDescription("");
-			returnValue.setLastUpdated(0);
-			returnValue.setRootDirectory(dir);
+			returnValue.setId(                         results.getInt   (1));
+			returnValue.setName(                       results.getString(2));
+			returnValue.setFileSize(                   results.getLong  (3));
+			returnValue.setChecksum(                   results.getString(4));
+			returnValue.setPath(Services.db.getPath(   results.getInt   (5)));
+			returnValue.setDescription(                "");
+			returnValue.setLastUpdated(                results.getLong  (8));
+			returnValue.setRootDirectory(              dir);
 			
 			return returnValue;
 		}

@@ -57,6 +57,7 @@ public class DbConnection
 	private Connection getConnection() throws SQLException
 	{
 		long id = Thread.currentThread().getId();
+		id = 0;
 		Connection returnValue = connections.get(id);
 		if (returnValue == null)
 		{
@@ -153,9 +154,17 @@ public class DbConnection
 	{
 		try
 		{
-			String base    = f.getCanonicalPath();
+			String base    = f.getParentFile().getCanonicalPath();
 			String name    = f.getName();
-			String relPath = base.substring(dir.getCanonicalPath().length());
+			String relPath;
+			if (base.length() == dir.getCanonicalPath().length())
+			{
+				relPath = ".";
+			}
+			else
+			{
+				relPath = base.substring(dir.getCanonicalPath().length());
+			}
 			return getFile(dir, relPath, name);
 		}
 		catch (IOException e)
@@ -183,6 +192,7 @@ public class DbConnection
 	{
 		try
 		{
+			Services.logger.logStream.println("Removing " + f);
 			Files.removeFile(getConnection(), f.getId());
 		}
 		catch (SQLException e)
@@ -276,6 +286,20 @@ public class DbConnection
 			Services.logger.logStream.println("Unable to get file size of " + rootDirectory);
 			e.printStackTrace(Services.logger.logStream);
 			return -1;
+		}
+	}
+	
+	public String getPath(int int1)
+	{
+		try
+		{
+			return Files.getPath(getConnection(), int1);
+		}
+		catch (SQLException e)
+		{
+			Services.logger.logStream.println("Unable to find path with id " + int1);
+			e.printStackTrace(Services.logger.logStream);
+			return "unkown";
 		}
 	}
 

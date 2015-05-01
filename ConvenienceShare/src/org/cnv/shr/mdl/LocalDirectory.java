@@ -47,7 +47,6 @@ public class LocalDirectory extends RootDirectory
 		{
 			File f = find.next();
 
-			Services.logger.logStream.println("Found file " + f);
 			String absolutePath;
 			try
 			{
@@ -64,6 +63,7 @@ public class LocalDirectory extends RootDirectory
 			{
 				continue;
 			}
+			Services.logger.logStream.println("Found file " + f);
 
 			Services.db.addFile(this, new LocalFile(getThis(), absolutePath));
 			changed = true;

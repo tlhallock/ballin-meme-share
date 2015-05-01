@@ -19,6 +19,8 @@ public class Main
 			quit();
 		}
 		
+		// Right now the locals are not showing their respective number of files and total file sizes because they are not being wrtten to the db.
+		
 		// black list
 		// larger auth in first message
 		// make standalone key server

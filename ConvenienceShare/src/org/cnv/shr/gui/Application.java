@@ -424,7 +424,7 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_DebugActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        refreshLocals();
+        Services.locals.synchronize();
     }//GEN-LAST:event_jButton4ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

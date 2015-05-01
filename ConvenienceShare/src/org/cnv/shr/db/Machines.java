@@ -92,6 +92,24 @@ public class Machines
 		}
 	}
 	
+	static void updateRoot(Connection c, Machine m, RootDirectory root) throws SQLException
+	{
+		try (PreparedStatement stmt = c.prepareStatement(
+					"insert into ROOT(PATH, MID, LOCAL, NFILES, SPACE)    " +
+					"select ?, M_ID, ?, ? , ?                             " +
+					"from MACHINE where MACHINE.ip=? and MACHINE.port=?;  "))
+		{
+			int ndx = 1;
+			stmt.setString(ndx++, root.getCanonicalPath());
+			stmt.setInt   (ndx++, root.isLocal() ? 1 : 0);
+			stmt.setLong  (ndx++, root.numFiles());
+			stmt.setLong  (ndx++, root.diskSpace());
+			stmt.setString(ndx++, m.getIp()  );
+			stmt.setInt   (ndx++, m.getPort());
+			stmt.execute();
+		}
+	}
+	
 	static List<LocalDirectory> getLocals(Connection c) throws SQLException
 	{
 		LinkedList<LocalDirectory> returnValue = new LinkedList<>();

@@ -11,6 +11,13 @@ public class Find implements Iterator<File>
 	private File next;
 	private LinkedList<Node> stack = new LinkedList<>();
 	
+	
+
+	public Find(String string)
+	{
+		this(new File(string));
+	}
+	
 	public Find(File directory)
 	{
 		if (directory.isFile())
@@ -26,6 +33,7 @@ public class Find implements Iterator<File>
 			}
 			Arrays.sort(files, FILE_COMPARATOR);
 			stack.addLast(new Node(files));
+			next = stack.getLast().findNext();
 		}
 		else
 		{
@@ -76,13 +84,15 @@ public class Find implements Iterator<File>
 					index++;
 					continue;
 				}
+				
 				Node node = new Node(children);
 				Arrays.sort(children, FILE_COMPARATOR);
-				stack.add(node);
+				stack.addLast(node);
+				index++;
+				
 				File c = stack.getLast().findNext(); 
 				if (c != null)
 				{
-					index++;
 					return c;
 				}
 			}

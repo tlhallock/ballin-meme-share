@@ -10,16 +10,28 @@ public class LocalFile extends SharedFile
 	public LocalFile() {}
 	public LocalFile(LocalDirectory local, String lpath)
 	{
-		lastUpdated = System.currentTimeMillis();
-		
 		File f = new File(lpath);
 		name = f.getName();
 		fileSize = f.getTotalSpace();
+		lastModified = f.lastModified();
 		
 		try
 		{
-			path = f.getParentFile().getCanonicalPath().substring(
-					local.getCanonicalPath().length());
+			String dir = f.getParentFile().getCanonicalPath();
+			String root = local.getCanonicalPath();
+			
+			if (!dir.startsWith(root))
+			{
+				throw new RuntimeException("File not inside root! parent=" + dir + " root=" + root);
+			}
+			if (dir.length() == root.length())
+			{
+				path = ".";
+			}
+			else
+			{
+				path = dir.substring(root.length() + 1);
+			}
 		}
 		catch (IOException e)
 		{
@@ -41,8 +53,6 @@ public class LocalFile extends SharedFile
 	 */
 	public boolean refreshAndWriteToDb()
 	{
-		long startTime = System.currentTimeMillis();
-		
 		if (!exists())
 		{
 			Services.db.removeFile(this);
@@ -50,12 +60,13 @@ public class LocalFile extends SharedFile
 		}
 
 		File fsCopy = new File(getFullPath());
-		if (fsCopy.lastModified() < lastUpdated)
+		long fsLastModified = fsCopy.lastModified();
+		if (fsLastModified <= lastModified)
 		{
 			return false;
 		}
 		
-		lastUpdated = startTime;
+		lastModified = fsLastModified;
 		updateChecksum(fsCopy);
 		
 		fileSize = fsCopy.getTotalSpace();
