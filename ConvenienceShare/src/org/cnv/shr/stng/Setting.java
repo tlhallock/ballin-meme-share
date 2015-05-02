@@ -11,7 +11,7 @@ public abstract class Setting<T>
 	protected String display;
 	protected String name;
 	protected boolean requiresRestart;
-	protected boolean userEditable;
+	protected boolean userEditable; // need to return null if this is false.
 	protected LinkedList<SettingListener> listeners;
 	
 	protected Setting(String n, T dv, boolean r, boolean u, String d) 

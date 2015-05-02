@@ -18,6 +18,7 @@ public class Settings implements SettingListener
 	public static final String encoding = "UTF8";
 	public static final String checksumAlgorithm = "SHA1";
 	public static final String encryptionAlgorithm = "RSA";
+	public static final String VERSION = "0.1";
 	
 	private static final String SQL_DIR  = "sql";
 

@@ -19,6 +19,11 @@ public class Main
 			quit();
 		}
 		
+		// look into ExtendedWatchEventModifier
+		// all syncs on the same thread
+		// monitor free space
+		
+		
 		// Right now the locals are not showing their respective number of files and total file sizes because they are not being wrtten to the db.
 		
 		// black list

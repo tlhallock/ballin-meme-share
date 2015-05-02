@@ -12,7 +12,7 @@ public class LocalFile extends SharedFile
 	{
 		File f = new File(lpath);
 		name = f.getName();
-		fileSize = f.getTotalSpace();
+		fileSize = f.length();
 		lastModified = f.lastModified();
 		
 		try
