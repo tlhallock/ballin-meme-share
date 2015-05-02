@@ -62,7 +62,23 @@ public abstract class SharedFileIterator implements Iterator<SharedFile>
 	@Override
 	public boolean hasNext()
 	{
-		return next != null;
+		if (next == null)
+		{
+			try 
+			{
+				results.getStatement().close();
+			}
+			catch (SQLException e)
+			{
+				Services.logger.logStream.println("Unable to close query.");
+				e.printStackTrace(Services.logger.logStream);
+			}
+			return false;
+		}
+		else
+		{
+			return true;
+		}
 	}
 
 	@Override
