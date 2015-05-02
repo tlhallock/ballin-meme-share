@@ -65,7 +65,7 @@ public class Machine
 	{
 		name       = Services.settings.machineName.get();
 		ip         = Services.settings.getLocalIp();
-		port       = Services.settings.defaultPort.get();
+		port       = Services.settings.servePortBegin.get();
 		identifier = Services.settings.machineIdentifier.get();
 		Services.keyManager.getKeys();
 	}

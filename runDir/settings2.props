@@ -1,14 +1,20 @@
-#Wed Apr 29 14:03:37 MDT 2015
-max.up=10
-max.str=4096
-dirs.staging=/work/ballin-meme-share/runDir/instance2/temp
-machinename=foobar
-port.end=8000
-port.begin=7990
-monitor.repeat=50000
-max.down=10
-max.port=-1
-max.threads=10
-dirs.application=/work/ballin-meme-share/runDir/instance2/app
-port.server=7989
-dirs.downloads=/work/ballin-meme-share/runDir/instance2/downloads
+#Sat May 02 01:21:25 MDT 2015
+servePortBegin=8990
+numThreads=20
+monitorRepeat=600000
+minNaunce=256
+machineIdentifier=UqqsvQCSmIi6X7qhYKnPKfvZWRDjTdZCw6uNu0e7RbqNIVGxig
+maxDownloads=20
+machineName=TkhOyaEZrX
+checksumWait=200
+logToFile=true
+maxServes=20
+maxStringSize=4096
+maxImmediateChecksum=1048576
+maxDirectorySize=-1
+applicationDirectory=/work/ballin-meme-share/runDir/instance2/app
+stagingDirectory=/work/ballin-meme-share/runDir/instance2/temp
+downloadsDirectory=/work/ballin-meme-share/runDir/instance2/downloads
+dbFile=/work/ballin-meme-share/runDir/instance2/app/files.db
+logFile=/work/ballin-meme-share/runDir/instance2/app/log.txt
+keysFile=/work/ballin-meme-share/runDir/instance2/app/keys.json

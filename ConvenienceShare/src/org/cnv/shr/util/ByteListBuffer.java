@@ -5,7 +5,7 @@ import java.util.LinkedList;
 
 import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.Settings;
+import org.cnv.shr.stng.Settings;
 
 public final class ByteListBuffer
 {

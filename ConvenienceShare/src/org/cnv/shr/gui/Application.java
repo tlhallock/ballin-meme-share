@@ -104,7 +104,7 @@ public class Application extends javax.swing.JFrame
 
 	public void refreshSettings()
 	{
-            addressLabel.setText(Services.settings.getLocalIp() + ":" + Services.settings.defaultPort);
+            addressLabel.setText(Services.settings.getLocalIp() + ":" + Services.settings.servePortBegin);
 	}
 
 	/**

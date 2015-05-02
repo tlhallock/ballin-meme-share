@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 
@@ -17,6 +18,8 @@ public class Connection implements Runnable
 	private Socket socket;
 	private InputStream input;
 	private OutputStream output;
+	
+	private Machine machine;
 	
 	private boolean done = false;
 

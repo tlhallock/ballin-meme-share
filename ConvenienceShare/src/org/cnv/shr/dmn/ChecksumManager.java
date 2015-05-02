@@ -12,6 +12,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.stng.Settings;
 
 public class ChecksumManager extends Thread
 {

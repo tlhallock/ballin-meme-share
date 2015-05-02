@@ -5,6 +5,8 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 
+import org.cnv.shr.stng.Settings;
+
 public class KeyManager
 {
 	LinkedList<KeyPair> keys = new LinkedList<>();

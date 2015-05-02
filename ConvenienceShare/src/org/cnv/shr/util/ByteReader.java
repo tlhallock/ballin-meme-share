@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.Settings;
+import org.cnv.shr.stng.Settings;
 
 public class ByteReader
 {

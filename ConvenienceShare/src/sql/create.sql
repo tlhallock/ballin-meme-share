@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS  MACHINE (
    NAME           TEXT          NOT NULL,
    IP             TEXT,
    PORT           INT,
+   NPORTS         INT           NOT NULL DEFAULT  1,
    LASTACTIVE     DATETIME,
    SHARING        INT           NOT NULL  DEFAULT 0,
    IDENT          char(50)      NOT NULL,

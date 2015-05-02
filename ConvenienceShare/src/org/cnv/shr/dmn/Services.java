@@ -6,54 +6,43 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.cnv.shr.db.DbConnection;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.MessageReader;
+import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.Misc;
 
 public class Services
 {
 	/** To take items off the AWT event thread **/
 	public static ExecutorService userThreads;
-	/** To handle network traffic **/
+	/** To handle outgoing network traffic **/
 	public static ExecutorService connectionThreads;
-	
 	public static Settings settings;
 	public static Logger logger;
+	/** delete this **/
 	public static Notifications notifications;
 	public static ChecksumManager checksums;
 	public static ConnectionManager networkManager;
-	public static RequestHandler handler;
+	public static RequestHandler[] handlers;
 	public static Remotes remotes;
 	public static Locals locals;
 	public static MessageReader msgReader;
 	public static KeyManager keyManager;
 	public static DbConnection db;
-
 	public static Timer monitorTimer;
-
 	public static Application application;
-	
 	public static Machine localMachine;
 	
 	public static void initialize(String[] args) throws Exception
 	{
 		logger = new Logger();
-		
-		if (args.length >= 1)
-		{
-			settings = new Settings(new File(args[0]));
-		}
-		else
-		{
-			settings = new Settings(new File("convencie_share_settings.props"));
-		}
-		
-		settings.setToDefaults();
-		
+		settings = new Settings(new File(args.length >= 1 ? args[0] : "convencie_share_settings.props"));
 		try
 		{
 			settings.read();
@@ -66,31 +55,34 @@ public class Services
 
 		logger.setLogLocation();
 		notifications = new Notifications();
-		
 		db = new DbConnection();
-
 		keyManager = new KeyManager();
 		localMachine = new Machine.LocalMachine();
-
 		networkManager = new ConnectionManager();
 		msgReader = new MessageReader();
-		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
 		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
 		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
-		
-		userThreads     = Executors.newCachedThreadPool();
-		connectionThreads  = Executors.newCachedThreadPool();
-
+		userThreads        = Executors.newCachedThreadPool();
+		connectionThreads  = new ThreadPoolExecutor(0, settings.maxDownloads.get(), 
+				60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
 		checksums = new ChecksumManager();
 		locals = new Locals();
 		remotes = new Remotes();
-		handler = new RequestHandler();
+		int numServeThreads = Math.min(1, settings.maxServes.get());
+		handlers = new RequestHandler[numServeThreads];
+		for (int i = 0; i < handlers.length; i++)
+		{
+			handlers[i] = new RequestHandler(settings.servePortBegin.get() + i);
+		}
 		monitorTimer = new Timer();
 
 		
 		checksums.start();
-		handler.start();
+		for (int i = 0; i < handlers.length; i++)
+		{
+			handlers[i].start();
+		}
 		monitorTimer.schedule(new TimerTask() {
 			@Override
 			public void run()
@@ -100,7 +92,7 @@ public class Services
 		
 		// Ensure the local machine is added and that the downloads directory is shared.
 		db.addMachine(localMachine);
-		locals.share(new File(settings.downloadsDirectory.get()));
+		locals.share(settings.downloadsDirectory.get());
 
 		java.awt.EventQueue.invokeLater(new Runnable()
 		{
@@ -137,8 +129,11 @@ public class Services
 		{
 			application.dispose();
 		}
-		
-		handler.quit();
+
+		for (int i = 0; i < handlers.length; i++)
+		{
+			handlers[i].quit();
+		}
 		
 		monitorTimer.cancel();
 		checksums.quit();

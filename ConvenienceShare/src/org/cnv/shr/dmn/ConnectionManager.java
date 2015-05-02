@@ -14,7 +14,8 @@ public class ConnectionManager
 		int index = url.indexOf(':');
 		if (index < 0)
 		{
-			return openConnection(url, Services.settings.defaultPort.get());
+			// Should try all other ports too...
+			return openConnection(url, Services.settings.servePortBegin.get());
 		}
 		else
 		{
@@ -24,9 +25,19 @@ public class ConnectionManager
 	
 	public synchronized Connection openConnection(String ip, int port) throws UnknownHostException, IOException
 	{
-		Connection connection = new Connection(ip, port);
+		final Connection connection = new Connection(ip, port);
 		openConnections.put(connection.getUrl(), connection);
-		run(connection);
+		Services.connectionThreads.execute(new Runnable() {
+			@Override
+			public void run()
+			{
+				connection.run();
+				
+				synchronized (getThis())
+				{
+					openConnections.remove(connection.getUrl());
+				}
+			}});
 		return connection;
 	}
 	
@@ -34,22 +45,12 @@ public class ConnectionManager
 	{
 		Connection connection = new Connection(accepted);
 		openConnections.put(connection.getUrl(), connection);
-		run(connection);
-	}
-	
-	private void run(final Connection c)
-	{
-		Services.connectionThreads.execute(new Runnable() {
-			@Override
-			public void run()
-			{
-				c.run();
-				
-				synchronized (getThis())
-				{
-					openConnections.remove(c.getUrl());
-				}
-			}});
+		connection.run();
+		
+		synchronized (getThis())
+		{
+			openConnections.remove(connection.getUrl());
+		}
 	}
 
 	private ConnectionManager getThis()

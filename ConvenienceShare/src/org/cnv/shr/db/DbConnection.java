@@ -32,7 +32,7 @@ public class DbConnection
 	{
 		Class.forName("org.sqlite.JDBC");
 		
-		Misc.ensureDirectory(Services.settings.getDbFile(), true);
+		Misc.ensureDirectory(Services.settings.dbFile.get(), true);
 		Connection c = getConnection();
 		
 		HashSet<String> currentTables = Initialization.getCurrentTables(c);
@@ -61,7 +61,7 @@ public class DbConnection
 		Connection returnValue = connections.get(id);
 		if (returnValue == null)
 		{
-			returnValue = DriverManager.getConnection("jdbc:sqlite:" + Services.settings.getDbFile());
+			returnValue = DriverManager.getConnection("jdbc:sqlite:" + Services.settings.dbFile.get());
 			connections.put(id, returnValue);
 		}
 		return returnValue;
@@ -88,7 +88,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Machines.getMachine(getConnection(), identifier);
+			return SQL.getMachine(getConnection(), identifier);
 		}
 		catch (SQLException e)
 		{
@@ -113,14 +113,14 @@ public class DbConnection
 
 	public void addMachine(Machine m) throws SQLException
 	{
-		Machines.addMachine(getConnection(), m);
+		SQL.addMachine(getConnection(), m);
 	}
 
 	public boolean addRoot(Machine m, RootDirectory root)
 	{
 		try
 		{
-			Machines.addRoot(getConnection(), m, root);
+			SQL.addRoot(getConnection(), m, root);
 			return true;
 		}
 		catch (SQLException e)
@@ -135,7 +135,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Machines.getRoot(getConnection(), machine, root.getCanonicalPath());
+			return SQL.getRoot(getConnection(), machine, root.getCanonicalPath());
 		}
 		catch (SQLException e)
 		{
@@ -149,7 +149,7 @@ public class DbConnection
 	{
 		try
 		{
-			Files.addFiles(getConnection(), directory, files);
+			SQL.addFiles(getConnection(), directory, files);
 		}
 		catch (SQLException e)
 		{
@@ -167,7 +167,7 @@ public class DbConnection
 	{
 		try
 		{
-			Files.addFile(getConnection(), localDirectory, newFile);
+			SQL.addFile(getConnection(), localDirectory, newFile);
 		}
 		catch (SQLException e)
 		{
@@ -180,7 +180,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Files.getFile(getConnection(), directory, relPath, name);
+			return SQL.getFile(getConnection(), directory, relPath, name);
 		}
 		catch (SQLException e)
 		{
@@ -219,7 +219,7 @@ public class DbConnection
 	{
 		try
 		{
-			Files.updateFile(getConnection(), f.getRootDirectory().getId(), f);
+			SQL.updateFile(getConnection(), f.getRootDirectory().getId(), f);
 		}
 		catch (SQLException e)
 		{
@@ -233,7 +233,7 @@ public class DbConnection
 		try
 		{
 			Services.logger.logStream.println("Removing " + f);
-			Files.removeFile(getConnection(), f.getId());
+			SQL.removeFile(getConnection(), f.getId());
 		}
 		catch (SQLException e)
 		{
@@ -246,7 +246,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Machines.getRemotes(getConnection());
+			return SQL.getRemotes(getConnection());
 		}
 		catch (SQLException e)
 		{
@@ -260,7 +260,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Machines.getLocals(getConnection());
+			return SQL.getLocals(getConnection());
 		}
 		catch (SQLException e)
 		{
@@ -274,7 +274,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Files.list(getConnection(), d);
+			return SQL.list(getConnection(), d);
 		}
 		catch (SQLException e)
 		{
@@ -291,7 +291,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Files.getRootDirectoryId(getConnection(), rootDirectory.getMachine(), rootDirectory.getCanonicalPath());
+			return SQL.getRootDirectoryId(getConnection(), rootDirectory.getMachine(), rootDirectory.getCanonicalPath());
 		}
 		catch (SQLException e)
 		{
@@ -305,7 +305,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Files.getNumberOfFiles(getConnection(), rootDirectory);
+			return SQL.getNumberOfFiles(getConnection(), rootDirectory);
 		}
 		catch (SQLException e)
 		{
@@ -319,7 +319,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Files.getTotalFileSize(getConnection(), rootDirectory);
+			return SQL.getTotalFileSize(getConnection(), rootDirectory);
 		}
 		catch (SQLException e)
 		{
@@ -333,7 +333,7 @@ public class DbConnection
 	{
 		try
 		{
-			return Files.getPath(getConnection(), int1);
+			return SQL.getPath(getConnection(), int1);
 		}
 		catch (SQLException e)
 		{
@@ -347,7 +347,7 @@ public class DbConnection
 	{
 		try
 		{
-			Files.removeUnusedPaths(getConnection());
+			SQL.removeUnusedPaths(getConnection());
 		}
 		catch (SQLException e)
 		{
@@ -408,7 +408,7 @@ public class DbConnection
 	{
 		try
 		{
-			Machines.updateRoot(getConnection(), machine, rootDirectory);
+			SQL.updateRoot(getConnection(), machine, rootDirectory);
 		}
 		catch (SQLException e)
 		{

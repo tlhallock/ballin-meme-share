@@ -5,7 +5,13 @@ import java.net.ServerSocket;
 
 public class RequestHandler extends Thread
 {	
-	public boolean quit;
+	private boolean quit;
+	private int port;
+	
+	public RequestHandler(int port)
+	{
+		this.port = port;
+	}
 	
 	public void quit()
 	{
@@ -17,8 +23,9 @@ public class RequestHandler extends Thread
 	{
 		while (!quit)
 		{
-			try (ServerSocket socket = new ServerSocket(Services.settings.defaultPort.get());)
+			try (ServerSocket socket = new ServerSocket(port);)
 			{
+				socket.setReuseAddress(true);
 				Services.networkManager.handleConnection(socket.accept());
 			}
 			catch(BindException ex)

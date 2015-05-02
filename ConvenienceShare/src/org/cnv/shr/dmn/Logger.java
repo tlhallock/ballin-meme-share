@@ -6,9 +6,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.cnv.shr.stng.SettingListener;
 import org.cnv.shr.util.Misc;
 
-public class Logger
+public class Logger implements SettingListener
 {
 	public PrintStream logStream;
 	private PrintStream logFile;
@@ -17,12 +18,29 @@ public class Logger
 	{
 		logStream = new PrintStream(new LogStream());
 	}
+	
+	@Override
+	public void settingChanged()
+	{
+		Services.settings.logFile.addListener(this);
+		try
+		{
+			setLogLocation();
+		}
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+		}
+	}
 
 	void setLogLocation() throws FileNotFoundException
 	{
-		File file = Services.settings.getLogFile();
-		Misc.ensureDirectory(file, true);
-		logStream = new PrintStream(file);
+		synchronized (logStream)
+		{
+			File file = Services.settings.logFile.get();
+			Misc.ensureDirectory(file, true);
+			logStream = new PrintStream(file);
+		}
 	}
 
 
