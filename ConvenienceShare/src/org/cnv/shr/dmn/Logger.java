@@ -35,11 +35,15 @@ public class Logger implements SettingListener
 
 	void setLogLocation() throws FileNotFoundException
 	{
+		if (!Services.settings.logToFile.get())
+		{
+			return;
+		}
 		synchronized (logStream)
 		{
 			File file = Services.settings.logFile.get();
 			Misc.ensureDirectory(file, true);
-			logStream = new PrintStream(file);
+			logFile = new PrintStream(file);
 		}
 	}
 

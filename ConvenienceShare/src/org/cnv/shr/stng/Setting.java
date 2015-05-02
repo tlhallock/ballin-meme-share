@@ -14,10 +14,10 @@ public abstract class Setting<T>
 	protected boolean userEditable;
 	protected LinkedList<SettingListener> listeners;
 	
-	protected Setting(String n, T dv, boolean r, boolean u, String d) {
+	protected Setting(String n, T dv, boolean r, boolean u, String d) 
+	{
 		listeners = new LinkedList<>();
-		value = defaultValue;
-		defaultValue = dv;
+		value = defaultValue = dv;
 		name = n;
 		display = d;
 		requiresRestart = r;
@@ -59,12 +59,15 @@ public abstract class Setting<T>
 	
 	public synchronized void set(T t)
 	{
-		if (t == null || value.equals(t))
+		synchronized(this)
 		{
-			return;
+			if (t == null || value.equals(t))
+			{
+				return;
+			}
+			value = t;
+			sanitize();
 		}
-		value = t;
-		sanitize();
 		notifyListeners();
 	}
 	

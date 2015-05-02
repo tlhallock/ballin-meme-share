@@ -60,9 +60,11 @@ public class Services
 		localMachine = new Machine.LocalMachine();
 		networkManager = new ConnectionManager();
 		msgReader = new MessageReader();
+		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
 		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
 		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
+		
 		userThreads        = Executors.newCachedThreadPool();
 		connectionThreads  = new ThreadPoolExecutor(0, settings.maxDownloads.get(), 
 				60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
