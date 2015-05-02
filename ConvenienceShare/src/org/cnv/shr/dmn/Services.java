@@ -75,9 +75,9 @@ public class Services
 		networkManager = new ConnectionManager();
 		msgReader = new MessageReader();
 		
-		Misc.ensureDirectory(settings.applicationDirectory, false);
-		Misc.ensureDirectory(settings.stagingDirectory, false);
-		Misc.ensureDirectory(settings.downloadsDirectory, false);
+		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
+		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
+		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
 		
 		userThreads     = Executors.newCachedThreadPool();
 		connectionThreads  = Executors.newCachedThreadPool();
@@ -96,11 +96,11 @@ public class Services
 			public void run()
 			{
 				locals.synchronize(false);
-			}}, settings.monitorRepeat, settings.monitorRepeat);
+			}}, settings.monitorRepeat.get(), settings.monitorRepeat.get());
 		
 		// Ensure the local machine is added and that the downloads directory is shared.
 		db.addMachine(localMachine);
-		locals.share(new File(settings.downloadsDirectory));
+		locals.share(new File(settings.downloadsDirectory.get()));
 
 		java.awt.EventQueue.invokeLater(new Runnable()
 		{
@@ -160,5 +160,10 @@ public class Services
 		db.close();
 
 		logger.close();
+	}
+	
+	public static void testStartUp()
+	{
+		// So far, check ip, check String.getBytes(), check sha1, check encryption, check port
 	}
 }

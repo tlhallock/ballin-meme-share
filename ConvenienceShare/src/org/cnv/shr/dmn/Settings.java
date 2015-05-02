@@ -7,49 +7,48 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.LinkedList;
 import java.util.Properties;
 
+import org.cnv.shr.dmn.Setting.BooleanSetting;
+import org.cnv.shr.dmn.Setting.IntSetting;
+import org.cnv.shr.dmn.Setting.LongSetting;
+import org.cnv.shr.dmn.Setting.StringSetting;
 import org.cnv.shr.util.Misc;
 
 public class Settings
 {
 	public static final String encoding = "UTF8";
 	public static final String checksumAlgorithm = "SHA1";
-	public static String encryptionAlgorithm = "RSA";
+	public static final String encryptionAlgorithm = "RSA";
 	
 	private static final String KEYS_FILE = File.separatorChar + "keys.json";
 	private static final String LOG_FILE = File.separatorChar + "log.txt";
-	private static final String SQL_DIR = "sql";
-	private static final String DB_FILE = File.separatorChar + "files.db";
+	private static final String SQL_DIR  = "sql";
+	private static final String DB_FILE  = File.separatorChar + "files.db";
 
-	public static boolean logToFile = false;
-	
-	public String machineName = "foobar";
-	public String machineIdentifier;
-	
-	public String downloadsDirectory;
-	public String applicationDirectory;
-	public String stagingDirectory;
-	
-	public int defaultPort;
-	public int servePortBegin;
-	public int servePortEnd;
-	
-	public int maxDownloads;
-	public int maxServes;
-	public int minNaunce;
-	
-	public int maxStringSize;
-	public int numThreads;
-	public long maxDirectorySize;
-	
-	public long monitorRepeat;
-
-	public long checksumWait;
-	public long maxImmediateChecksum = 1 * 1024 * 1024;
-	
 	private File settingsFile;
 	private String localAddress;
+	private LinkedList<Setting> settings = new LinkedList<>();
+	
+	public StringSetting  machineName              = new StringSetting ("machineName         ".trim(), Misc.getRandomName()               , false, true, "                                          "); { settings.add(machineName         );  }
+	public StringSetting  machineIdentifier        = new StringSetting ("machineIdentifier   ".trim(), Misc.getRandomString(50)           , false, true, "                                          "); { settings.add(machineIdentifier   );  }
+	public StringSetting  downloadsDirectory       = new StringSetting ("downloadsDirectory  ".trim(), "downloads"                        , false, true, "                                          "); { settings.add(downloadsDirectory  );  }
+	public StringSetting  applicationDirectory     = new StringSetting ("applicationDirectory".trim(), "app"                              , false, true, "                                          "); { settings.add(applicationDirectory);  }
+	public StringSetting  stagingDirectory         = new StringSetting ("stagingDirectory    ".trim(), "temp"                             , false, true, "                                          "); { settings.add(stagingDirectory    );  }
+	public IntSetting     defaultPort              = new IntSetting    ("defaultPort         ".trim(), 8989                               , false, true, "                                          "); { settings.add(defaultPort         );  }
+	public IntSetting     servePortBegin           = new IntSetting    ("servePortBegin      ".trim(), 8990                               , false, true, "                                          "); { settings.add(servePortBegin      );  }
+	public IntSetting     servePortEnd             = new IntSetting    ("servePortEnd        ".trim(), 9000                               , false, true, "                                          "); { settings.add(servePortEnd        );  }
+	public IntSetting     maxDownloads             = new IntSetting    ("maxDownloads        ".trim(), 20                                 , false, true, "                                          "); { settings.add(maxDownloads        );  }
+	public IntSetting     maxServes                = new IntSetting    ("maxServes           ".trim(), 20                                 , false, true, "                                          "); { settings.add(maxServes           );  }
+	public IntSetting     minNaunce                = new IntSetting    ("minNaunce           ".trim(), 256                                , false, true, "                                          "); { settings.add(minNaunce           );  }
+	public IntSetting     maxStringSize            = new IntSetting    ("maxStringSize       ".trim(), 4096                               , false, true, "                                          "); { settings.add(maxStringSize       );  }
+	public IntSetting     numThreads               = new IntSetting    ("numThreads          ".trim(), 20                                 , false, true, "                                          "); { settings.add(numThreads          );  }
+	public LongSetting    maxDirectorySize         = new LongSetting   ("maxDirectorySize    ".trim(), -1                                 , false, true, "                                          "); { settings.add(maxDirectorySize    );  }
+	public LongSetting    monitorRepeat            = new LongSetting   ("monitorRepeat       ".trim(), 10 * 60 * 1000                     , false, true, "                                          "); { settings.add(monitorRepeat       );  }
+	public LongSetting    checksumWait             = new LongSetting   ("checksumWait        ".trim(), 1 * 200                            , false, true, "                                          "); { settings.add(checksumWait        );  }
+	public LongSetting    maxImmediateChecksum     = new LongSetting   ("maxImmediateChecksum".trim(), 1 * 1024 * 1024                    , false, true, "                                          "); { settings.add(maxImmediateChecksum);  }
+	public BooleanSetting logToFile                = new BooleanSetting("logToFile           ".trim(), true                               , false, true, "                                          "); { settings.add(logToFile           );  }
 	
 	Settings(File settingsFile) throws UnknownHostException
 	{
@@ -58,42 +57,13 @@ public class Settings
 		Services.logger.logStream.println("Local host is " + localAddress);
 	}
 
-	private static int getInt(Properties p, String key, String defaultValue)
-	{
-		return (int) getLong(p, key, defaultValue);
-	}
-	private static long getLong(Properties p, String key, String defaultValue)
-	{
-		try
-		{
-			return Long.parseLong(p.getProperty(key, defaultValue));
-		}
-		catch (Exception ex)
-		{
-			return Long.parseLong(defaultValue);
-		}
-	}
-	
 	public synchronized void write() throws FileNotFoundException, IOException
 	{
 		Properties properties = new Properties();
-
-		properties.setProperty("dirs.downloads",   String.valueOf(downloadsDirectory  ));
-		properties.setProperty("dirs.application", String.valueOf(applicationDirectory));
-		properties.setProperty("dirs.staging",     String.valueOf(stagingDirectory    ));
-		properties.setProperty("machinename",      String.valueOf(machineName         ));
-		properties.setProperty("port.server",      String.valueOf(defaultPort         ));
-		properties.setProperty("port.begin",       String.valueOf(servePortBegin      ));
-		properties.setProperty("port.end",         String.valueOf(servePortEnd        ));
-		properties.setProperty("max.threads",      String.valueOf(numThreads          ));
-		properties.setProperty("max.down",         String.valueOf(maxDownloads        ));
-		properties.setProperty("max.up",           String.valueOf(maxServes           ));
-		properties.setProperty("max.str",          String.valueOf(maxStringSize       ));
-		properties.setProperty("max.port",         String.valueOf(maxDirectorySize    ));
-		properties.setProperty("min.naunce",       String.valueOf(minNaunce           ));
-		properties.setProperty("monitor.repeat",   String.valueOf(monitorRepeat       ));
-		properties.setProperty("identifier",       String.valueOf(machineIdentifier   ));
-
+		for (Setting setting : settings)
+		{
+			setting.save(properties);
+		}
 
 		Misc.ensureDirectory(settingsFile, true);
 		try (FileOutputStream outputStream = new FileOutputStream(settingsFile))
@@ -111,42 +81,23 @@ public class Settings
 		}
 		read(properties);
 	}
-	
-	public void setToDefaults() throws FileNotFoundException, IOException
-	{
-		read(new Properties());
-	}
 
 	private synchronized void read(Properties properties) throws FileNotFoundException, IOException
 	{
-		downloadsDirectory   = properties.getProperty( "dirs.downloads",             "downloads");
-		applicationDirectory = properties.getProperty( "dirs.application",                 "app");
-		stagingDirectory     = properties.getProperty( "dirs.staging",                    "temp");
-		machineName          = properties.getProperty( "machinename",                   "foobar");
-		machineIdentifier    = properties.getProperty( "identifier",    Misc.getRandomString(50));
-		defaultPort          = getInt (properties,     "port.server",                     "8989");
-		servePortBegin       = getInt (properties,     "port.begin",                      "8990");
-		servePortEnd         = getInt (properties,     "port.end",                        "9000");
-		numThreads           = getInt (properties,     "max.threads",                       "10");
-		maxDownloads         = getInt (properties,     "max.down",                          "10");
-		maxServes            = getInt (properties,     "max.up",                            "10");
-		maxStringSize        = getInt (properties,     "max.str",                         "4096");
-		minNaunce            = getInt (properties,     "min.naunce",                       "128");
-		maxDirectorySize     = getLong(properties,     "max.port",                          "-1");
-		monitorRepeat        = getLong(properties,     "monitor.repeat",                 "50000");
+		for (Setting setting : settings)
+		{
+			setting.read(properties);
+		}
 	}
 	
+	public void setToDefaults() throws FileNotFoundException, IOException
+	{
+		for (Setting setting : settings)
+		{
+			setting.resetToDefaults();
+		}
+	}
 
-	/**
-	public File getLocalsFile()
-	{
-		return new File(applicationDirectory + LOCALS_FILE);
-	}
-	public File getRemotesFile()
-	{
-		return new File(applicationDirectory + REMOTES_FILE);
-	}
-	**/
 	public File getKeysFile()
 	{
 		return new File(applicationDirectory + KEYS_FILE);

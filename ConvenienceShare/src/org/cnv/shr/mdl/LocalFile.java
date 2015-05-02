@@ -32,7 +32,7 @@ public class LocalFile extends SharedFile
 			{
 				path = dir.substring(root.length() + 1);
 			}
-			if (fileSize < Services.settings.maxImmediateChecksum)
+			if (fileSize < Services.settings.maxImmediateChecksum.get())
 			{
 				checksum = Services.checksums.checksumBlocking(f);
 			}
@@ -85,7 +85,7 @@ public class LocalFile extends SharedFile
 
 	private void updateChecksum(File fsCopy)
 	{
-		if (fileSize > Services.settings.maxImmediateChecksum)
+		if (fileSize > Services.settings.maxImmediateChecksum.get())
 		{
 			Services.checksums.checksum(fsCopy);
 			return;

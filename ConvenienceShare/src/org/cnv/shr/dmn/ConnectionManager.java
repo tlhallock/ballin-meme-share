@@ -14,7 +14,7 @@ public class ConnectionManager
 		int index = url.indexOf(':');
 		if (index < 0)
 		{
-			return openConnection(url, Services.settings.defaultPort);
+			return openConnection(url, Services.settings.defaultPort.get());
 		}
 		else
 		{

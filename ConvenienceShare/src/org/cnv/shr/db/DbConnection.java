@@ -36,7 +36,7 @@ public class DbConnection
 		Connection c = getConnection();
 		
 		HashSet<String> currentTables = Initialization.getCurrentTables(c);
-		if (true)
+		if (false)
 		{
 			Initialization.clearDb(c, currentTables);
 			Initialization.createDb(c);

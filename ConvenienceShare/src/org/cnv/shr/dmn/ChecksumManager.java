@@ -115,7 +115,7 @@ public class ChecksumManager extends Thread
 		}
 		try
 		{
-			Thread.sleep(Services.settings.checksumWait);
+			Thread.sleep(Services.settings.checksumWait.get());
 		}
 		catch (InterruptedException e)
 		{

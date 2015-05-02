@@ -17,7 +17,7 @@ public class RequestHandler extends Thread
 	{
 		while (!quit)
 		{
-			try (ServerSocket socket = new ServerSocket(Services.settings.defaultPort);)
+			try (ServerSocket socket = new ServerSocket(Services.settings.defaultPort.get());)
 			{
 				Services.networkManager.handleConnection(socket.accept());
 			}

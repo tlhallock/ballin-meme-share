@@ -63,10 +63,10 @@ public class Machine
 	/** local machine **/
 	private Machine()
 	{
-		name       = Services.settings.machineName;
+		name       = Services.settings.machineName.get();
 		ip         = Services.settings.getLocalIp();
-		port       = Services.settings.defaultPort;
-		identifier = Services.settings.machineIdentifier;
+		port       = Services.settings.defaultPort.get();
+		identifier = Services.settings.machineIdentifier.get();
 		Services.keyManager.getKeys();
 	}
 

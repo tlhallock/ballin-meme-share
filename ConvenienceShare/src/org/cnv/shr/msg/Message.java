@@ -15,7 +15,7 @@ import org.cnv.shr.util.Misc;
 public abstract class Message
 {
 	private String originatorIdentifier; 
-	private int port = Services.settings.defaultPort;
+	private int port = Services.settings.defaultPort.get();
 	private int size;
 	
 	// need to have a version
@@ -27,8 +27,8 @@ public abstract class Message
 	/** Outgoing Message **/
 	protected Message()
 	{
-		originatorIdentifier = Services.settings.machineIdentifier;
-		port = Services.settings.defaultPort;
+		originatorIdentifier = Services.settings.machineIdentifier.get();
+		port = Services.settings.defaultPort.get();
 		naunce = Misc.getNaunce();
 	}
 	

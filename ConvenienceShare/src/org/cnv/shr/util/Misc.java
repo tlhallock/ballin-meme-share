@@ -59,7 +59,7 @@ public class Misc
 	
 	public static byte[] getNaunce()
 	{
-		return getBytes(Services.settings.minNaunce);
+		return getBytes(Services.settings.minNaunce.get());
 	}
 	public static byte[] getBytes(int length)
 	{
@@ -118,5 +118,9 @@ public class Misc
 
 		totalFileSize /= 1024;
 		return String.format("%.2f Tb", totalFileSize);
+	}
+	public static String getRandomName()
+	{
+		return getRandomString(10);
 	}
 }

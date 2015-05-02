@@ -55,7 +55,7 @@ public class ByteReader
 	public static String readString(InputStream in) throws IOException
 	{
 		int size = (int) readInt(in);
-		if (size > Services.settings.maxStringSize)
+		if (size > Services.settings.maxStringSize.get())
 		{
 			throw new IOException("Received string that is way too big!! Size=" + size);
 		}

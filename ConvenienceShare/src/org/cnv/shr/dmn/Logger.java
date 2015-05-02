@@ -20,10 +20,6 @@ public class Logger
 
 	void setLogLocation() throws FileNotFoundException
 	{
-		if (!Settings.logToFile)
-		{
-			return;
-		}
 		File file = Services.settings.getLogFile();
 		Misc.ensureDirectory(file, true);
 		logStream = new PrintStream(file);
@@ -47,7 +43,7 @@ public class Logger
 			char c = (char) arg0;
 			buffer.append(Character.toString(c));
 			System.out.print(c);
-			if (logFile != null)
+			if (logFile != null && Services.settings.logToFile.get())
 			{
 				logFile.print(c);
 			}
