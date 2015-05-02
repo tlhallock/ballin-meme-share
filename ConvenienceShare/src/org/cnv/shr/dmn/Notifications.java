@@ -6,7 +6,7 @@ public class Notifications
 	{
 		if (Services.application != null)
 		{
-			Services.application.refreshLocals();
+			Services.application.refreshLocals(Services.locals.listLocals());
 		}
 //		Services.locals.write();
 	}
@@ -15,7 +15,7 @@ public class Notifications
 	{
 		if (Services.application != null)
 		{
-			Services.application.refreshRemotes();
+			Services.application.refreshRemotes(Services.db.getRemoteMachines());
 		}
 //		Services.remotes.write();
 	}

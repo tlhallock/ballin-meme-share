@@ -98,6 +98,10 @@ public class Machine
 	
 	public int getDbId()
 	{
+		if (dbId == null)
+		{
+			dbId = Services.db.getMachine(identifier).dbId;
+		}
 		return dbId;
 	}
 

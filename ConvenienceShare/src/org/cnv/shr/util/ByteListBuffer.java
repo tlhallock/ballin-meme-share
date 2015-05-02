@@ -7,55 +7,73 @@ import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.Settings;
 
-public class ByteListBuffer
+public final class ByteListBuffer
 {
 	private int length;
-	private LinkedList<byte[]> currentBytes = new LinkedList<>();
+	private LinkedList<byte[]> bytesSoFar = new LinkedList<>();
+
+	private static final int BUFFER_LENGTH = 256;
+	private byte[] currentBuffer = new byte[BUFFER_LENGTH];
+	private int offset;
 
 	public ByteListBuffer append(byte[] bytes)
 	{
-		currentBytes.add(bytes);
 		length += bytes.length;
+		if (offset + bytes.length < currentBuffer.length)
+		{
+			System.arraycopy(bytes, 0, currentBuffer, offset, bytes.length);
+			offset += bytes.length;
+			return this;
+		}
+		
+		for (int i = 0; i < bytes.length; i++)
+		{
+			checkEnd();
+			currentBuffer[offset++] = bytes[i];
+		}
 		return this;
 	}
-
+	
+	public int getLength()
+	{
+		return length;
+	}
+	
 	public ByteListBuffer append(byte i)
 	{
-		return append(new byte[] {
-				(byte) ((i >> 0) & 0xff),
-		});
+		checkEnd();
+		currentBuffer[offset++] = i;
+		length++;
+		return this;
 	}
 
 	public ByteListBuffer append(short i)
 	{
-		return append(new byte[] { 
-				(byte) ((i >> 0) & 0xff), 
-				(byte) ((i >> 8) & 0xff), 
-		});
+		append((byte) ((i >>  8L) & 0xff));
+		append((byte) ((i >>  0L) & 0xff)); 
+		return this;
 	}
 
 	public ByteListBuffer append(int i)
 	{
-		return append(new byte[] { 
-				(byte) ((i >>  0) & 0xff), 
-				(byte) ((i >>  8) & 0xff), 
-				(byte) ((i >> 16) & 0xff), 
-				(byte) ((i >> 24) & 0xff),
-		});
+		append((byte) ((i >> 24L) & 0xff));
+		append((byte) ((i >> 16L) & 0xff));
+		append((byte) ((i >>  8L) & 0xff));
+		append((byte) ((i >>  0L) & 0xff));
+		return this;
 	}
 
 	public ByteListBuffer append(long i)
 	{
-		return append(new byte[] { 
-				(byte) ((i >>  0L) & 0xff), 
-				(byte) ((i >>  8L) & 0xff), 
-				(byte) ((i >> 16L) & 0xff), 
-				(byte) ((i >> 24L) & 0xff), 
-				(byte) ((i >> 32L) & 0xff), 
-				(byte) ((i >> 40L) & 0xff), 
-				(byte) ((i >> 48L) & 0xff), 
-				(byte) ((i >> 56L) & 0xff), 
-		});
+		append((byte) ((i >> 56L) & 0xff));
+		append((byte) ((i >> 48L) & 0xff));
+		append((byte) ((i >> 40L) & 0xff));
+		append((byte) ((i >> 32L) & 0xff));
+		append((byte) ((i >> 24L) & 0xff));
+		append((byte) ((i >> 16L) & 0xff));
+		append((byte) ((i >>  8L) & 0xff));
+		append((byte) ((i >>  0L) & 0xff));
+		return this;
 	}
 
 	public ByteListBuffer append(String str)
@@ -72,33 +90,35 @@ public class ByteListBuffer
 			Main.quit();
 			return this;
 		}
-		append(bytes.length);
-		return append(bytes);
+		return append(bytes.length).append(bytes);
 	}
 
 	public byte[] getBytes()
 	{
-		if (currentBytes.isEmpty())
-		{
-			return new byte[0];
-		}
-		if (currentBytes.size() == 1)
-		{
-			return currentBytes.get(0);
-		}
-
 		byte[] allBytes = new byte[length];
 		int currentOffset = 0;
-		for (byte[] cBytes : currentBytes)
+		for (byte[] cBytes : bytesSoFar)
 		{
-			for (int i = 0; i < cBytes.length; i++)
-			{
-				allBytes[currentOffset++] = cBytes[i];
-			}
+			System.arraycopy(cBytes, 0, allBytes, currentOffset, cBytes.length);
+			currentOffset += cBytes.length;
 		}
-		currentBytes.clear();
-		currentBytes.add(allBytes);
+		System.arraycopy(currentBuffer, 0, allBytes, currentOffset, offset);
+		
+		bytesSoFar.clear();
+		bytesSoFar.add(allBytes);
+		offset = 0;
 
 		return allBytes;
+	}
+	
+	private void checkEnd()
+	{
+		if (offset < currentBuffer.length)
+		{
+			return;
+		}
+		bytesSoFar.add(currentBuffer);
+		currentBuffer = new byte[BUFFER_LENGTH];
+		offset = 0;
 	}
 }

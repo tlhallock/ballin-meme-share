@@ -95,8 +95,7 @@ public class Services
 			@Override
 			public void run()
 			{
-				locals.synchronize();
-				
+				locals.synchronize(false);
 			}}, settings.monitorRepeat, settings.monitorRepeat);
 		
 		// Ensure the local machine is added and that the downloads directory is shared.
@@ -112,7 +111,9 @@ public class Services
 					application = new Application();
 					application.setVisible(true);
 					application.refreshAll();
-					
+
+					application.refreshLocals(Services.locals.listLocals());
+					application.refreshRemotes(Services.db.getRemoteMachines());
 				}
 				catch (Exception ex)
 				{
@@ -126,7 +127,6 @@ public class Services
 		monitorTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				locals.synchronize();
 				remotes.refresh();
 			}}, 1000);
 	}

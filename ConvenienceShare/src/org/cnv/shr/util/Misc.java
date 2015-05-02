@@ -59,8 +59,64 @@ public class Misc
 	
 	public static byte[] getNaunce()
 	{
-		byte[] returnValue = new byte[Services.settings.minNaunce];
+		return getBytes(Services.settings.minNaunce);
+	}
+	public static byte[] getBytes(int length)
+	{
+		byte[] returnValue = new byte[length];
 		random.nextBytes(returnValue);
 		return returnValue;
+	}
+	
+	public static String formatNumberOfFiles(long numFiles)
+	{
+		String number = String.valueOf(numFiles);
+		if (number.length() <= 3)
+		{
+			return number;
+		}
+		StringBuilder builder = new StringBuilder();
+		
+		int offset = number.length() % 3;
+		if (offset == 0) offset = 3;
+		builder.append(number.substring(0, offset));
+		
+		while (offset + 3 <= number.length())
+		{
+			offset += 3;
+			builder.append(',').append(number.substring(offset-3, offset));
+		}
+		
+		return builder.toString();
+	}
+	
+	public static String formatDiskUsage(long bytes)
+	{
+		if (bytes < 1024)
+		{
+			return bytes + " b";
+		}
+		
+		double totalFileSize = bytes;
+		totalFileSize /= 1024;
+		if (totalFileSize < 1024.0)
+		{
+			return String.format("%.2f Kb", totalFileSize);
+		}
+
+		totalFileSize /= 1024;
+		if (totalFileSize < 1024.0)
+		{
+			return String.format("%.2f Mb", totalFileSize);
+		}
+
+		totalFileSize /= 1024;
+		if (totalFileSize < 1024.0)
+		{
+			return String.format("%.2f Gb", totalFileSize);
+		}
+
+		totalFileSize /= 1024;
+		return String.format("%.2f Tb", totalFileSize);
 	}
 }

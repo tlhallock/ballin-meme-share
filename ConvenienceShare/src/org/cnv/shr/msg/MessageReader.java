@@ -129,6 +129,7 @@ public class MessageReader
 			catch (Exception e)
 			{
 				Services.logger.logStream.println("Unable to create message type "  + name);
+				e.printStackTrace(Services.logger.logStream);
 				Main.quit();
 				return null;
 			}

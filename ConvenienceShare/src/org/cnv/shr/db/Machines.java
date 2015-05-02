@@ -71,7 +71,7 @@ public class Machines
 		try (PreparedStatement stmt = c.prepareStatement(
 					"update ROOT                         " +
 					"set NFILES=?,SPACE=?,TAGS=?,DESC=?  " +
-					"where M_ID = ? and PATH=?;          "))
+					"where MID = ? and PATH=?;           "))
 		{
 			int ndx = 1;
 			stmt.setLong  (ndx++, root.numFiles());
@@ -103,14 +103,21 @@ public class Machines
 	{
 		LinkedList<LocalDirectory> returnValue = new LinkedList<>();
 		try (PreparedStatement stmt = c.prepareStatement(
-					"select PATH, TAGS from ROOT where ROOT.LOCAL = 1;"))
+					"select R_ID, PATH, TAGS, DESC, SPACE, NFILES from ROOT where ROOT.LOCAL = 1;"))
 		{
 			ResultSet executeQuery = stmt.executeQuery();
 			while (executeQuery.next())
 			{
 				try
 				{
-					returnValue.add(new LocalDirectory(new File(executeQuery.getString(1))));
+					LocalDirectory local = new LocalDirectory(new File(executeQuery.getString(2)));
+					local.setId           (executeQuery.getInt   (1));
+					local.setPath         (executeQuery.getString(2));
+					local.setTags         (executeQuery.getString(3));
+					local.setDescription  (executeQuery.getString(4));
+					local.setTotalFileSize(executeQuery.getLong  (5));
+					local.setTotalNumFiles(executeQuery.getLong  (6));
+					returnValue.add(local);
 				}
 				catch (IOException e)
 				{
@@ -126,16 +133,23 @@ public class Machines
 	{
 		LinkedList<RemoteDirectory> returnValue = new LinkedList<>();
 		try (PreparedStatement stmt = c.prepareStatement(
-					"select PATH, TAGS, DESC from ROOT where MID = ?;"))
+					"select R_ID, PATH, TAGS, DESC, SPACE, NFILES from ROOT where MID = ?;"))
 		{
 			stmt.setInt(1, machine.getDbId());
 			ResultSet executeQuery = stmt.executeQuery();
 			while (executeQuery.next())
 			{
-				returnValue.add(new RemoteDirectory(machine, 
-						executeQuery.getString(1),
-						executeQuery.getString(2),
-						executeQuery.getString(3)));
+				String path =         (executeQuery.getString(2));
+				String tags =         (executeQuery.getString(3));
+				String desc =         (executeQuery.getString(4));
+				
+				RemoteDirectory local = new RemoteDirectory(machine, path, tags, desc);
+
+				local.setId           (executeQuery.getInt   (1));
+				local.setTotalFileSize(executeQuery.getLong  (5));
+				local.setTotalNumFiles(executeQuery.getLong  (6));
+
+				returnValue.add(local);
 			}
 		}
 		return returnValue;

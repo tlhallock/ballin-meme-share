@@ -3,9 +3,11 @@ package org.cnv.shr.mdl;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Find;
+import org.cnv.shr.util.Misc;
 
 public class LocalDirectory extends RootDirectory
 {
@@ -41,6 +43,7 @@ public class LocalDirectory extends RootDirectory
 	
 	private boolean search()
 	{
+		LinkedList<SharedFile> toAdd = new LinkedList<>();
 		boolean changed = false;
 		Find find = new Find(path);
 		while (find.hasNext())
@@ -64,10 +67,22 @@ public class LocalDirectory extends RootDirectory
 				continue;
 			}
 			Services.logger.logStream.println("Found file " + f);
-
-			Services.db.addFile(this, new LocalFile(getThis(), absolutePath));
+			toAdd.add(new LocalFile(getThis(), absolutePath));
 			changed = true;
+
+			if (toAdd.size() > 50)
+			{
+				Services.db.addFiles(this, toAdd);
+				toAdd.clear();
+
+				totalNumFiles = Services.db.countFiles(this);
+				totalFileSize = Services.db.countFileSize(this);
+				Services.db.updateDirectory(machine, this);
+				Services.notifications.localsChanged();
+			}
 		}
+		Services.db.addFiles(this, toAdd);
+		
 		return changed;
 	}
 
@@ -106,7 +121,7 @@ public class LocalDirectory extends RootDirectory
 	@Override
 	public String toString()
 	{
-		return path + " [number of files: " + totalNumFiles + "] [disk usage: " + totalFileSize + " b]";
+		return path + " [number of files: " + Misc.formatNumberOfFiles(totalNumFiles) + "] [disk usage: " + Misc.formatDiskUsage(totalFileSize) + " ]";
 	}
 
 	@Override

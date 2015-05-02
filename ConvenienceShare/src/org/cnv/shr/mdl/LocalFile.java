@@ -32,6 +32,10 @@ public class LocalFile extends SharedFile
 			{
 				path = dir.substring(root.length() + 1);
 			}
+			if (fileSize < Services.settings.maxImmediateChecksum)
+			{
+				checksum = Services.checksums.checksumBlocking(f);
+			}
 		}
 		catch (IOException e)
 		{
@@ -63,6 +67,11 @@ public class LocalFile extends SharedFile
 		long fsLastModified = fsCopy.lastModified();
 		if (fsLastModified <= lastModified)
 		{
+			if (checksum == null)
+			{
+				updateChecksum(fsCopy);
+			}
+			
 			return false;
 		}
 		

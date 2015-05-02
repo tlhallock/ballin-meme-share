@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -89,7 +90,7 @@ public class Files
 			stmt.setInt   (ndx++, rootDirectoryId          );
 			stmt.setString(ndx++, file.getChecksum()       );
 			stmt.setLong  (ndx++, file.getLastUpdated()    );
-			stmt.setString(ndx++, file.getCanonicalPath()  );
+			stmt.setString(ndx++, file.getRelativePath()  );
 			stmt.execute();
 		}
 	}
@@ -108,7 +109,7 @@ public class Files
 			stmt.setLong  (ndx++, file.getFileSize() );
 			stmt.setInt   (ndx++, rootDirectoryId);
 			stmt.setLong  (ndx++, file.getLastUpdated()    );
-			stmt.setString(ndx++, file.getCanonicalPath() );
+			stmt.setString(ndx++, file.getRelativePath() );
 			stmt.execute();
 		}
 	}
@@ -123,7 +124,7 @@ public class Files
 	}
 	private static void addFile(Connection c, int rootId, SharedFile f) throws SQLException
 	{
-		ensurePath(c, f.getCanonicalPath());
+		ensurePath(c, f.getRelativePath());
 		if (f.getChecksum() == null)
 		{
 			addFileNoChecksum(c, rootId, f);
@@ -180,20 +181,38 @@ public class Files
 	
 	static void addFiles(Connection c, RootDirectory directory, List<SharedFile> files) throws SQLException
 	{
+		if (files.isEmpty())
+		{
+			return;
+		}
+		
+		HashMap<String, Integer> pCache = new HashMap<>();
+		
 		StringBuilder sqlStmt = new StringBuilder();
 		sqlStmt.append("insert into FILE(NAME, SIZE, PATH, ROOT, CHKSUM, MODIFIED) values ");
 		Iterator<SharedFile> iterator = files.iterator();
+		
+		boolean first = true;
 		while (iterator.hasNext())
 		{
 			SharedFile f = iterator.next();
-			sqlStmt.append(", (")
-				.append(f.getName()).append(',')
+			
+			Integer pId = pCache.get(f.getRelativePath());
+			if (pId == null)
+			{
+				pId = getPath(c, f.getRelativePath());
+				pCache.put(f.getRelativePath(), pId);
+			}
+
+			if (first) { first = false; } else { sqlStmt.append(','); }
+			
+			sqlStmt.append("(")
+				.append('\'').append(f.getName()).append("',")
 				.append(f.getFileSize()).append(',')
-				.append(getPath(c, f.getCanonicalPath())).append(',')
+				.append(pId).append(',')
 				.append(directory.getId()).append(',')
-				.append(f.getChecksum()).append(',')
-				.append(f.getLastUpdated()).append(',')
-				.append(")");
+				.append('\'').append(f.getChecksum()).append("',")
+				.append(f.getLastUpdated()).append(')');
 		}
 		sqlStmt.append(";");
 		

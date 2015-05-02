@@ -34,7 +34,7 @@ public class SharedFile
 		return name;
 	}
 
-	public String getCanonicalPath()
+	public String getRelativePath()
 	{
 		return path;
 	}

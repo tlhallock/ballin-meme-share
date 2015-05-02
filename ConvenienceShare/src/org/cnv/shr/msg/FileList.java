@@ -61,7 +61,7 @@ public class FileList extends Message
 			}
 			for (SharedFile r : l.sharedFiles)
 			{
-				SharedFile file = Services.db.getFile(root, r.getCanonicalPath(), r.getName()); 
+				SharedFile file = Services.db.getFile(root, r.getRelativePath(), r.getName()); 
 				if (file == null)
 				{
 					Services.db.addFile(root, r);
@@ -123,7 +123,7 @@ public class FileList extends Message
 			for (SharedFile file : dir.sharedFiles)
 			{
 				buffer.append(file.getName());
-				buffer.append(file.getCanonicalPath());
+				buffer.append(file.getRelativePath());
 				buffer.append(file.getFileSize());
 				buffer.append(file.getDescription());
 				buffer.append(file.getChecksum());

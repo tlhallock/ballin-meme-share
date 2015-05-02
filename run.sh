@@ -1,7 +1,8 @@
 #!/bin/bash
 
-export rootDir=/work/ballin-meme-share
+ps aux | grep java | grep org.json | grep sqlite-jdbc | grep org.cnv.shr.dmn | awk ' { print $2 } ' | sed 's/^/kill /g' | bash
 
+export rootDir=/work/ballin-meme-share
 
 pushd $rootDir/ConvenienceShare/bin/
 

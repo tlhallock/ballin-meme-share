@@ -36,7 +36,7 @@ public class DbConnection
 		Connection c = getConnection();
 		
 		HashSet<String> currentTables = Initialization.getCurrentTables(c);
-		if (false)
+		if (true)
 		{
 			Initialization.clearDb(c, currentTables);
 			Initialization.createDb(c);
@@ -145,9 +145,22 @@ public class DbConnection
 		}
 	}
 
-	public void addFiles(RootDirectory directory, List<SharedFile> files) throws SQLException
+	public void addFiles(RootDirectory directory, List<SharedFile> files)
 	{
-		Files.addFiles(getConnection(), directory, files);
+		try
+		{
+			Files.addFiles(getConnection(), directory, files);
+		}
+		catch (SQLException e)
+		{
+			Services.logger.logStream.println("Unable to files. ");
+			e.printStackTrace(Services.logger.logStream);
+			
+			for (SharedFile file : files)
+			{
+				addFile(directory, file);
+			}
+		}
 	}
 
 	public void addFile(RootDirectory localDirectory, SharedFile newFile)
@@ -158,7 +171,7 @@ public class DbConnection
 		}
 		catch (SQLException e)
 		{
-			Services.logger.logStream.println("Unable to file " + newFile.getCanonicalPath());
+			Services.logger.logStream.println("Unable to file " + newFile.getRelativePath());
 			e.printStackTrace(Services.logger.logStream);
 		}
 	}
@@ -190,7 +203,7 @@ public class DbConnection
 			}
 			else
 			{
-				relPath = base.substring(dir.getCanonicalPath().length());
+				relPath = base.substring(dir.getCanonicalPath().length() + 1);
 			}
 			return getFile(dir, relPath, name);
 		}

@@ -5,10 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
-import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 
@@ -21,15 +18,15 @@ public class Connection implements Runnable
 	private InputStream input;
 	private OutputStream output;
 	
-	private boolean allDone = false;
+	private boolean done = false;
 
 	/** Initiator **/
 	public Connection(String ip, int port) throws UnknownHostException, IOException
 	{
 		lastActivity = connectionOpened = System.currentTimeMillis();
 		socket = new Socket(ip, port);
-		output = new GZIPOutputStream(socket.getOutputStream());
-		input =  new GZIPInputStream(socket.getInputStream());
+		output = socket.getOutputStream();
+		input =  socket.getInputStream();
 	}
 	
 	/** Receiver **/
@@ -37,8 +34,8 @@ public class Connection implements Runnable
 	{
 		lastActivity = connectionOpened = System.currentTimeMillis();
 		this.socket = socket;
-		input =  new GZIPInputStream(socket.getInputStream());
-		output = new GZIPOutputStream(socket.getOutputStream());
+		input =  socket.getInputStream();
+		output = socket.getOutputStream();
 	}
 	
 	public String getUrl()
@@ -50,7 +47,7 @@ public class Connection implements Runnable
 	{
 		try
 		{
-			while (!allDone)
+			while (!done)
 			{
 				Message request = Services.msgReader.readMsg(socket.getInetAddress(), input);
 				if (request == null || !request.authenticate())
@@ -66,23 +63,34 @@ public class Connection implements Runnable
 				}
 				catch (Exception e)
 				{
+					Services.logger.logStream.println("Error performing message task:");
 					e.printStackTrace(Services.logger.logStream);
 				}
 			}
 		}
 		catch (Exception ex)
 		{
-			Services.logger.logStream.println(ex);
+			Services.logger.logStream.println("Error with connection:");
+			ex.printStackTrace(Services.logger.logStream);
 		}
 		notifyDone();
+		try
+		{
+			socket.close();
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Unable to close socket.");
+			e.printStackTrace(Services.logger.logStream);
+		}
 	}
 
 	public void send(Message m)
 	{
+		Services.logger.logStream.println("Sending message of type " + m.getClass().getName()
+				+ " to " + socket.getInetAddress() + ":" + socket.getPort());
 		try
 		{
-			Services.logger.logStream.println("Sending message of type " + m.getClass().getName()
-					+ " to " + socket.getInetAddress() + ":" + socket.getPort());
 			output.write(m.getBytes());
 		}
 		catch (IOException e)
@@ -95,28 +103,28 @@ public class Connection implements Runnable
 	public void notifyDone()
 	{
 		send(new DoneMessage());
-		try
-		{
-			output.close();
-		}
-		catch (IOException e)
-		{
-			Services.logger.logStream.println("Unable to close output stream.");
-			e.printStackTrace(Services.logger.logStream);
-		}
+//		try
+//		{
+//			socket.shutdownOutput();
+//		}
+//		catch (IOException e)
+//		{
+//			Services.logger.logStream.println("Unable to close output stream.");
+//			e.printStackTrace(Services.logger.logStream);
+//		}
 	}
 
 	public void remoteIsDone()
 	{
-		allDone = true;
-		try
-		{
-			input.close();
-		}
-		catch (IOException e)
-		{
-			Services.logger.logStream.println("Unable to close input stream.");
-			e.printStackTrace(Services.logger.logStream);
-		}
+		done = true;
+//		try
+//		{
+//			socket.shutdownInput();
+//		}
+//		catch (IOException e)
+//		{
+//			Services.logger.logStream.println("Unable to close input stream.");
+//			e.printStackTrace(Services.logger.logStream);
+//		}
 	}
 }

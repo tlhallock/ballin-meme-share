@@ -3,6 +3,7 @@ package org.cnv.shr.dmn;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -13,6 +14,10 @@ import org.cnv.shr.msg.FileList;
 
 public class Locals
 {
+	// Sometimes the db can be very slow, cache these for the GUI...
+	private HashMap<String, LocalDirectory> memCache = new HashMap<>();
+	
+	
 	public synchronized void share(final File localDirectory)
 	{
 		Services.userThreads.execute(new Runnable() { public void run()
@@ -20,7 +25,7 @@ public class Locals
 			try
 			{
 				Services.logger.logStream.println("Sharing " + localDirectory);
-				new LocalDirectory(localDirectory).synchronize();
+				new LocalDirectory(localDirectory).synchronize(true);
 			}
 			catch (IOException e1)
 			{
@@ -69,12 +74,12 @@ public class Locals
 		return false;
 	}
 
-	public synchronized List<LocalDirectory> listLocals()
+	public List<LocalDirectory> listLocals()
 	{
 		return Services.db.getLocals();
 	}
 
-	public synchronized LocalFile getLocalFile(File f)
+	public LocalFile getLocalFile(File f)
 	{
 		for (LocalDirectory d : listLocals())
 		{
@@ -95,11 +100,11 @@ public class Locals
 		return null;
 	}
 
-	public void synchronize()
+	public void synchronize(boolean force)
 	{
 		for (LocalDirectory localDir : listLocals())
 		{
-			localDir.synchronize();
+			localDir.synchronize(force);
 		}
 		Services.db.removeUnusedPaths();
 		

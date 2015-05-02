@@ -37,7 +37,7 @@ public abstract class RootDirectory
 		return Services.db.list(this);
 	}
 	
-	public final void synchronize()
+	public final void synchronize(boolean force)
 	{
 		synchronizeInternal();
 		totalNumFiles = Services.db.countFiles(this);
@@ -75,5 +75,40 @@ public abstract class RootDirectory
 	public String getDescription()
 	{
 		return description;
+	}
+
+	public void setMachine(Machine machine)
+	{
+		this.machine = machine;
+	}
+
+	public void setPath(String path)
+	{
+		this.path = path;
+	}
+
+	public void setTotalFileSize(long totalFileSize)
+	{
+		this.totalFileSize = totalFileSize;
+	}
+
+	public void setTotalNumFiles(long totalNumFiles)
+	{
+		this.totalNumFiles = totalNumFiles;
+	}
+
+	public void setId(Integer id)
+	{
+		this.id = id;
+	}
+
+	public void setDescription(String description)
+	{
+		this.description = description;
+	}
+
+	public void setTags(String tags)
+	{
+		this.tags = tags;
 	}
 }
