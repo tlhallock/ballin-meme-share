@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.FileList;
 
@@ -16,6 +18,7 @@ public class Locals
 {
 	// Sometimes the db can be very slow, cache these for the GUI...
 	private HashMap<String, LocalDirectory> memCache = new HashMap<>();
+	private HashSet<String> synchronizing = new HashSet<>();
 	
 	
 	public synchronized void share(final File localDirectory)
@@ -33,6 +36,16 @@ public class Locals
 				e1.printStackTrace(Services.logger.logStream);
 			}
 		}});
+	}
+	
+	public synchronized boolean startSynchronizing(RootDirectory d)
+	{
+		return synchronizing.add(d.getCanonicalPath());
+	}
+	
+	public synchronized void stopSynchronizing(RootDirectory d)
+	{
+		synchronizing.remove(d.getCanonicalPath());
 	}
 	
 	public void share(Connection c)
@@ -102,16 +115,23 @@ public class Locals
 
 	public void synchronize(boolean force)
 	{
-		for (LocalDirectory localDir : listLocals())
+		try
 		{
-			localDir.synchronize(force);
+			for (LocalDirectory localDir : listLocals())
+			{
+				localDir.synchronize(force);
+			}
+			Services.db.removeUnusedPaths();
+
+			// Right now this is only for the sizes of the local dirs.
+			Services.notifications.localsChanged();
 		}
-		Services.db.removeUnusedPaths();
-		
-		// Right now this is only for the sizes of the local dirs.
-		Services.notifications.localsChanged();
+		catch (Exception ex)
+		{
+			Services.logger.logStream.println("Unable to synchronize.");
+			ex.printStackTrace(Services.logger.logStream);
+		}
 	}
-	
 	
 	/**
 	public void read()

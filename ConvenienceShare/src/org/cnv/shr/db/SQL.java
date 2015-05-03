@@ -37,7 +37,11 @@ public class SQL
 	static void addMachine(Connection c, Machine m) throws SQLException
 	{
 			try (PreparedStatement stmt = c.prepareStatement(
-					"insert or ignore into MACHINE(NAME, IP, PORT, LASTACTIVE, IDENT, LOCAL) values(?, ?, ?, CURRENT_TIMESTAMP, ?, ?);"))
+					DbConnection.SQLITE ?
+					"insert or ignore into MACHINE(NAME, IP, PORT, LASTACTIVE, IDENT, LOCAL) values(?, ?, ?, CURRENT_TIMESTAMP, ?, ?);" :
+						// need to check first...
+					"merge into MACHINE(NAME, IP, PORT, LASTACTIVE, IDENT, LOCAL) values(?, ?, ?, CURRENT_TIMESTAMP, ?, ?);"		
+					))
 			{
 				int ndx = 1;
 				stmt.setString(ndx++, m.getName());
@@ -134,7 +138,7 @@ public class SQL
 		return returnValue;
 	}
 	
-	static List<RemoteDirectory> getRoots(Connection c, Machine machine) throws SQLException
+	static List<RemoteDirectory> listRemotes(Connection c, Machine machine) throws SQLException
 	{
 		LinkedList<RemoteDirectory> returnValue = new LinkedList<>();
 		try (PreparedStatement stmt = c.prepareStatement(
@@ -159,10 +163,10 @@ public class SQL
 		}
 		return returnValue;
 	}
-	static RootDirectory getRoot(Connection c, Machine machine, String canonicalPath) throws SQLException
+	static RootDirectory getRoot(Connection c, Machine machine, String canonicalPath) throws SQLException, IOException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-					"select PATH, TAGS, DESC from ROOT where MID = ? and PATH = ?;"))
+					"select R_ID, PATH, TAGS, DESC, SPACE, NFILES from ROOT where ROOT.MID = ? and ROOT.PATH = ?;"))
 		{
 			stmt.setInt(1, machine.getDbId());
 			stmt.setString(2, canonicalPath);
@@ -171,10 +175,30 @@ public class SQL
 			{
 				return null;
 			}
-			return new RemoteDirectory(machine, 
-					executeQuery.getString(1),
-					executeQuery.getString(2),
-					executeQuery.getString(3));
+			if (!executeQuery.getString(2).equals(canonicalPath))
+			{
+				throw new RuntimeException("This shouldn't happen...");
+			}
+			
+			RootDirectory root = null;
+			if (machine.isLocal())
+			{
+				root = new LocalDirectory(new File(executeQuery.getString(2)));
+				root.setPath         (executeQuery.getString(2));
+				root.setTags         (executeQuery.getString(3));
+				root.setDescription  (executeQuery.getString(4));
+			}
+			else
+			{
+				root = new RemoteDirectory(machine, 
+						executeQuery.getString(2),
+						executeQuery.getString(3),
+						executeQuery.getString(4));
+			}
+			root.setId           (executeQuery.getInt   (1));
+			root.setTotalFileSize(executeQuery.getLong  (5));
+			root.setTotalNumFiles(executeQuery.getLong  (6));
+			return root;
 		}
 	}
 	
@@ -264,7 +288,7 @@ public class SQL
 	static Machine getMachine(Connection c, String identifierKey) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-				"select M_ID, name, ip, port, lastactive, sharing, ident from MACHINE where ident = ?;"))
+				"select M_ID, name, ip, port, lastactive, sharing, ident, local from MACHINE where ident = ?;"))
 		{
 			stmt.setString(1, identifierKey);
 			ResultSet resultSet = stmt.executeQuery();
@@ -272,6 +296,13 @@ public class SQL
 			{
 				return null;
 			}
+			if (resultSet.getInt("local") == 1)
+			{
+				Machine m = Services.localMachine;
+				m.setDbId(resultSet.getInt("M_ID"));
+				return m;
+			}
+			
 			String ip = resultSet.getString("ip");
 			String name = resultSet.getString("name");
 			String identifier = resultSet.getString("ident");

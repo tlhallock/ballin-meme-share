@@ -3,6 +3,7 @@ package org.cnv.shr.mdl;
 import java.util.Iterator;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.Misc;
 
 public abstract class RootDirectory
 {
@@ -39,10 +40,22 @@ public abstract class RootDirectory
 	
 	public final void synchronize(boolean force)
 	{
-		synchronizeInternal();
-		totalNumFiles = Services.db.countFiles(this);
-		totalFileSize = Services.db.countFileSize(this);
-		Services.db.updateDirectory(machine, this);
+		try
+		{
+			if (!Services.locals.startSynchronizing(this))
+			{
+				return;
+			}
+			
+			synchronizeInternal();
+			totalNumFiles = Services.db.countFiles(this);
+			totalFileSize = Services.db.countFileSize(this);
+			Services.db.updateDirectory(machine, this);
+		}
+		finally
+		{
+			Services.locals.stopSynchronizing(this);
+		}
 	}
 	protected abstract void synchronizeInternal();
 	
@@ -110,5 +123,15 @@ public abstract class RootDirectory
 	public void setTags(String tags)
 	{
 		this.tags = tags;
+	}
+	
+	public String getTotalFileSize()
+	{
+		return Misc.formatDiskUsage(totalFileSize);
+	}
+	
+	public String getTotalNumberOfFiles()
+	{
+		return Misc.formatNumberOfFiles(totalNumFiles);
 	}
 }

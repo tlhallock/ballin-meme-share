@@ -54,7 +54,7 @@ public class FileList extends Message
 		for (FilesList l : sharedDirectories)
 		{
 			RootDirectory root = l.root;
-			if (Services.db.getRoot(machine, root) == null)
+			if (Services.db.getRoot(machine, root.getCanonicalPath()) == null)
 			{
 				Services.db.addRoot(machine, root);
 				changed = true;

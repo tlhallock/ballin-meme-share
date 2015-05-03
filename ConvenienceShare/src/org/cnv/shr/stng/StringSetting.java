@@ -1,6 +1,10 @@
 package org.cnv.shr.stng;
 
-import java.awt.Container;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JTextField;
 
 public class StringSetting extends Setting<String> {
 
@@ -15,7 +19,25 @@ public class StringSetting extends Setting<String> {
 	}
 
 	@Override
-	Container createInput() {
-		return null;
+	public Component createInput() {
+		final JTextField field = new JTextField();
+		field.setText(get().toString());
+		addListener(new SettingListener()
+		{
+			@Override
+			public void settingChanged()
+			{
+				field.setText(get());
+			}
+		});
+		
+		field.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				set(field.getText());
+			}});
+		
+		return field;
 	}
 }

@@ -20,7 +20,14 @@ public class Initialization
 
 	static void createDb(Connection c) throws SQLException, IOException
 	{
-		execute(c, "/create.sql");
+		if (DbConnection.SQLITE)
+		{
+			execute(c, "/create.sql");
+		}
+		else
+		{
+			execute(c, "/create_h2.sql");
+		}
 	}
 	
 	static HashSet<String> getCurrentTables(Connection c) throws SQLException

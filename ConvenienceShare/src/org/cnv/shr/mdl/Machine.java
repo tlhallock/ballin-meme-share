@@ -122,7 +122,7 @@ public class Machine
 
 	public String toString()
 	{
-		return ip + ":" + port + "[id=" + identifier + "][keys=" + publicKeys + "]";
+		return getIp() + ":" + getPort() + "[id=" + getIdentifier() + "][keys=" + getKeys() + "]";
 	}
 
 	public int hashCode()
@@ -224,7 +224,18 @@ public class Machine
 	
 	public static class LocalMachine extends Machine
 	{
+
+		public void setLastActive(long long1)
+		{
+			throw new UnsupportedOperationException("This is the local machine.");
+		}
+		
 		public void setSharing(boolean b)
+		{
+			throw new UnsupportedOperationException("This is the local machine.");
+		}
+
+		public void setName(String string)
 		{
 			throw new UnsupportedOperationException("This is the local machine.");
 		}
@@ -233,10 +244,35 @@ public class Machine
 		{
 			return System.currentTimeMillis();
 		}
+		
+		public boolean isSharing()
+		{
+			return true;
+		}
 
 		public boolean isLocal()
 		{
 			return true;
+		}
+
+		public String getName()
+		{
+			return Services.settings.machineName.get();
+		}
+		
+		public String getIp()
+		{
+			return Services.settings.getLocalIp();
+		}
+		
+		public int getPort()
+		{
+			return Services.settings.servePortBegin.get();
+		}
+
+		public String[] getKeys()
+		{
+			return new String[0];
 		}
 	}
 }

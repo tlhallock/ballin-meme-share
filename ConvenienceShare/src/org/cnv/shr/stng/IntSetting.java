@@ -1,6 +1,11 @@
 package org.cnv.shr.stng;
 
-import java.awt.Container;
+import java.awt.Component;
+
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class IntSetting extends Setting<Integer>
 {
@@ -30,7 +35,37 @@ public class IntSetting extends Setting<Integer>
 	}
 
 	@Override
-	Container createInput() {
-		return null;
+	public Component createInput()
+	{
+		JSpinner spinner = new JSpinner();
+		final SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(get().intValue(), min, max, 1);
+		spinner.setModel(spinnerNumberModel);
+		spinner.addChangeListener(new ChangeListener()
+		{
+			@Override
+			public void stateChanged(ChangeEvent arg0)
+			{
+				int value = spinnerNumberModel.getNumber().intValue();
+				if (value == get().intValue())
+				{
+					return;
+				}
+				set(value);
+			}
+		});
+		addListener(new SettingListener()
+		{
+			@Override
+			public void settingChanged()
+			{
+				int value = spinnerNumberModel.getNumber().intValue();
+				if (value == get().intValue())
+				{
+					return;
+				}
+				spinnerNumberModel.setValue(get().intValue());
+			}
+		});
+		return spinner;
 	}
 }

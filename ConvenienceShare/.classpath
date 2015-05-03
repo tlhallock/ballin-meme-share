@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="libs/org.json-20120521.jar"/>
 	<classpathentry kind="lib" path="libs/sqlite-jdbc-3.8.7.jar"/>
+	<classpathentry kind="lib" path="libs/h2-1.4.187.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -6,22 +6,32 @@
 
 package org.cnv.shr.gui;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  *
  * @author thallock
  */
-public class RemoteViewer extends javax.swing.JFrame
+public class MachineViewer extends javax.swing.JFrame
 {
     /**
      * Creates new form RemoteViewer
      */
-    public RemoteViewer() {
+    public MachineViewer() {
         initComponents();
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+
+            @Override
+            public void run() {
+                getRemoteView().debug();
+            }
+        }, 1000, 1000);
     }
     
-    RemoteView getRemoteView()
+    MachineView getRemoteView()
     {
-        return (RemoteView) jPanel1;
+        return (MachineView) jPanel1;
     }
 
     /**
@@ -33,19 +43,21 @@ public class RemoteViewer extends javax.swing.JFrame
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new RemoteView();
+        jPanel1 = new org.cnv.shr.gui.MachineView();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+
+        jPanel1.setBackground(new java.awt.Color(51, 153, 0));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 635, Short.MAX_VALUE)
+            .addGap(0, 837, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 417, Short.MAX_VALUE)
+            .addGap(0, 501, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());

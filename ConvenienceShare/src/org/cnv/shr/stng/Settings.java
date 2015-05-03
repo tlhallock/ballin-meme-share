@@ -27,7 +27,7 @@ public class Settings implements SettingListener
 	private LinkedList<Setting> settings = new LinkedList<>();
 	private boolean reading;
 	
-	public StringSetting     machineName              = new StringSetting    ("machineName         ".trim(), Misc.getRandomName()                                                         , false, true, "The name to display.                                                        ".trim()); { settings.add(machineName         );  }
+	public StringSetting     machineName              = new StringSetting    ("machineName         ".trim(), Misc.getRandomName()                                                         , false, true, "The name to display for this machine.                                       ".trim()); { settings.add(machineName         );  }
 	public StringSetting     machineIdentifier        = new StringSetting    ("machineIdentifier   ".trim(), Misc.getRandomString(50)                                                     , false, true, "A unique identifer for this machine.                                        ".trim()); { settings.add(machineIdentifier   );  }
 	public IntSetting        servePortBegin           = new IntSetting       ("servePortBegin      ".trim(), 8990                                          , 1, Integer.MAX_VALUE         , false, true, "Smallest port to use for listening for other machines.                      ".trim()); { settings.add(servePortBegin      );  }
 	public IntSetting        maxDownloads             = new IntSetting       ("maxDownloads        ".trim(), 20                                            , 1, Integer.MAX_VALUE         , false, true, "Maximum number of concurrent downloads.                                     ".trim()); { settings.add(maxDownloads        );  }
@@ -143,4 +143,8 @@ public class Settings implements SettingListener
 			e.printStackTrace(Services.logger.logStream);
 		}
 	}
+
+    public Setting[] getUserSettings() {
+        return settings.toArray(new Setting[0]);
+    }
 }

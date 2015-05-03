@@ -1,6 +1,8 @@
 package org.cnv.shr.stng;
 
+import java.awt.Component;
 import java.awt.Container;
+import java.awt.PopupMenu;
 import java.util.LinkedList;
 import java.util.Properties;
 
@@ -104,5 +106,20 @@ public abstract class Setting<T>
 	}
 
 	abstract T parse(String vString);
-	abstract Container createInput();
+	public abstract Component createInput();
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public String getDescription()
+    {
+        return String.valueOf(display);
+    }
+
+    public boolean requiresReboot()
+    {
+        return requiresRestart;
+    }
 }

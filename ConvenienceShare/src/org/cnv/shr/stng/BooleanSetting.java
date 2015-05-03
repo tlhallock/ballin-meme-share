@@ -1,6 +1,13 @@
 package org.cnv.shr.stng;
 
+import java.awt.Component;
 import java.awt.Container;
+
+import javax.swing.JCheckBox;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class BooleanSetting extends Setting<Boolean>
 {
@@ -15,8 +22,37 @@ public class BooleanSetting extends Setting<Boolean>
 	}
 
 	@Override
-	Container createInput() {
-		return null;
+	public Component createInput()
+	{
+		final JCheckBox spinner = new JCheckBox();
+		spinner.setSelected(get());
+		spinner.addChangeListener(new ChangeListener()
+		{
+			@Override
+			public void stateChanged(ChangeEvent arg0)
+			{
+				boolean value = spinner.isSelected();
+				if (value == get().booleanValue())
+				{
+					return;
+				}
+				set(value);
+			}
+		});
+		addListener(new SettingListener()
+		{
+			@Override
+			public void settingChanged()
+			{
+				boolean value = spinner.isSelected();
+				if (value == get().booleanValue())
+				{
+					return;
+				}
+				spinner.setSelected(get().booleanValue());
+			}
+		});
+		return spinner;
 	}
 	
 }

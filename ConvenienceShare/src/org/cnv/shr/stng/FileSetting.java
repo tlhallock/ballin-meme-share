@@ -1,7 +1,11 @@
 package org.cnv.shr.stng;
 
-import java.awt.Container;
+import java.awt.Component;
 import java.io.File;
+
+import javax.swing.JFileChooser;
+
+import org.cnv.shr.gui.ChangeFile;
 
 public class FileSetting extends Setting<File> 
 {
@@ -17,8 +21,7 @@ public class FileSetting extends Setting<File>
 	}
 
 	@Override
-	Container createInput()
-	{
-		return null;
+	public Component createInput() {
+		return new ChangeFile(this, JFileChooser.FILES_ONLY);
 	}
 }

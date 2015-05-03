@@ -1,9 +1,14 @@
 package org.cnv.shr.dmn;
 
+import java.sql.DriverManager;
+
 public class Main
 {
 	public static void main(String[] args) throws Exception
 	{
+        
+        
+        
 		try
 		{
 			if (args.length < 1)
@@ -22,6 +27,8 @@ public class Main
 		// look into ExtendedWatchEventModifier
 		// all syncs on the same thread
 		// monitor free space
+		// ad temp
+		// make sure downloaded files are in a mirror...
 		
 		
 		// Right now the locals are not showing their respective number of files and total file sizes because they are not being wrtten to the db.

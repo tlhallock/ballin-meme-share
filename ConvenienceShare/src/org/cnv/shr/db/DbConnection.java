@@ -18,6 +18,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.Misc;
@@ -27,31 +28,34 @@ public class DbConnection
 	
 	private HashMap<Long, Connection> connections = new HashMap<>();
 	
+	
+	static boolean SQLITE = false;
+	
 	// Should be based on thread...
 	public DbConnection() throws ClassNotFoundException, SQLException, IOException
 	{
-		Class.forName("org.sqlite.JDBC");
-		
+		if (SQLITE)
+		{
+			Class.forName("org.sqlite.JDBC");
+		}
+		else
+		{
+			Class.forName("org.h2.Driver");
+		}
 		Misc.ensureDirectory(Services.settings.dbFile.get(), true);
 		Connection c = getConnection();
 		
-		HashSet<String> currentTables = Initialization.getCurrentTables(c);
-		if (false)
-		{
-			Initialization.clearDb(c, currentTables);
-			Initialization.createDb(c);
-			return;
-		}
-		
-		if (	!currentTables.contains("FILE") ||
-				!currentTables.contains("PATH") ||
-				!currentTables.contains("ROOT") ||
-				!currentTables.contains("MACHINE") ||
-				!currentTables.contains("KEY"))
-		{
+//		HashSet<String> currentTables = Initialization.getCurrentTables(c);
+//		
+//		if (	!currentTables.contains("FILE") ||
+//				!currentTables.contains("PATH") ||
+//				!currentTables.contains("ROOT") ||
+//				!currentTables.contains("MACHINE") ||
+//				!currentTables.contains("KEY"))
+//		{
 			Services.logger.logStream.println("Creating database.");
 			Initialization.createDb(c);
-		}
+//		}
 	}
 	
 	private Connection getConnection() throws SQLException
@@ -61,7 +65,16 @@ public class DbConnection
 		Connection returnValue = connections.get(id);
 		if (returnValue == null)
 		{
-			returnValue = DriverManager.getConnection("jdbc:sqlite:" + Services.settings.dbFile.get());
+	        Connection conn;
+	        if (SQLITE) 
+	        {
+	        	returnValue = DriverManager.getConnection("jdbc:sqlite:" + Services.settings.dbFile.get());
+	        }
+	        else
+	        {
+	        	returnValue = DriverManager.getConnection("jdbc:h2:~/test.db", "sa", "");
+	        }
+			
 			connections.put(id, returnValue);
 		}
 		return returnValue;
@@ -131,15 +144,21 @@ public class DbConnection
 		}
 	}
 	
-	public RootDirectory getRoot(Machine machine, RootDirectory root)
+	public RootDirectory getRoot(Machine machine, String path)
 	{
 		try
 		{
-			return SQL.getRoot(getConnection(), machine, root.getCanonicalPath());
+			return SQL.getRoot(getConnection(), machine, path);
 		}
 		catch (SQLException e)
 		{
-			Services.logger.logStream.println("Unable to get root " + root);
+			Services.logger.logStream.println("Unable to get root " + path);
+			e.printStackTrace(Services.logger.logStream);
+			return null;
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Db contains path not in filesystem: " + path);
 			e.printStackTrace(Services.logger.logStream);
 			return null;
 		}
@@ -269,7 +288,33 @@ public class DbConnection
 			return new LinkedList<LocalDirectory>();
 		}
 	}
+
+	public List<RemoteDirectory> getRemoteRoots(Machine machine)
+	{
+		try
+		{
+			return SQL.listRemotes(getConnection(), machine);
+		}
+		catch (SQLException e)
+		{
+			Services.logger.logStream.println("Unable to get locals.");
+			e.printStackTrace(Services.logger.logStream);
+			return new LinkedList<RemoteDirectory>();
+		}
+	}
 	
+	public List<? extends RootDirectory> listRoots(Machine machine)
+	{
+		if (machine.isLocal())
+		{
+			return getLocals();
+		}
+		else
+		{
+			return getRemoteRoots(machine);
+		}
+	}
+
 	public Iterator<SharedFile> list(RootDirectory d)
 	{
 		try
@@ -356,6 +401,21 @@ public class DbConnection
 		}
 	}
 	
+	public String[] getIgnores(RootDirectory root)
+	{
+		return new String[] {"This feature not supported yet." };
+	}
+	public void setIgnores(RootDirectory root, String[] ignores)
+	{
+		for (String s : ignores)
+		{
+			if (s.trim().length() == 0)
+			{
+				continue;
+			}
+		}
+	}
+	
 	public void debug(PrintStream ps)
 	{
 		DbConnection.printTable(ps, "PATH");
@@ -363,6 +423,8 @@ public class DbConnection
 		DbConnection.printTable(ps, "MACHINE");
 		DbConnection.printTable(ps, "KEY");
 		DbConnection.printTable(ps, "ROOT");
+		DbConnection.printTable(System.out, "PENDING");
+		DbConnection.printTable(System.out, "IGNOREPATTERN");
 		
 		ps.println("Locals:");
 		Services.locals.debug(ps);
@@ -377,7 +439,7 @@ public class DbConnection
 		try
 		{
 			Connection c = Services.db.getConnection();
-			new Exception().printStackTrace(ps);
+//			new Exception().printStackTrace(ps);
 
 			ps.println("Printing " + name);
 			ps.println("----------------------------------------------");
@@ -417,4 +479,24 @@ public class DbConnection
 		}
 	}
 
+    public void deleteDb()
+	{
+    	Services.logger.logStream.println("Removing all data from database!!!!");
+		try (Connection c = getConnection())
+		{
+			connections.clear();
+			Initialization.clearDb(c, null);
+			connections.clear();
+			Initialization.createDb(c);
+			connections.clear();
+
+			addMachine(Services.localMachine);
+			Services.locals.share(Services.settings.downloadsDirectory.get());
+		}
+		catch (SQLException | IOException e)
+		{
+			Services.logger.logStream.println("Unable to delete database.");
+			e.printStackTrace(Services.logger.logStream);
+		}
+	}
 }

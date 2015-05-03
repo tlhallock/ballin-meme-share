@@ -67,7 +67,16 @@ public class LocalDirectory extends RootDirectory
 				continue;
 			}
 			Services.logger.logStream.println("Found file " + f);
-			toAdd.add(new LocalFile(getThis(), absolutePath));
+			try
+			{
+				toAdd.add(new LocalFile(getThis(), absolutePath));
+			}
+			catch(Exception ex)
+			{
+				Services.logger.logStream.println("Skipping file: " + f);
+				ex.printStackTrace(Services.logger.logStream);
+				continue;
+			}
 			changed = true;
 
 			if (toAdd.size() > 50)

@@ -1,10 +1,15 @@
 package org.cnv.shr.util;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import org.cnv.shr.dmn.Services;
 
 public class Find implements Iterator<File>
 {
@@ -18,9 +23,13 @@ public class Find implements Iterator<File>
 	
 	public Find(File directory)
 	{
+		if (Files.isSymbolicLink(Paths.get(directory.getAbsolutePath())))
+		{
+			throw new RuntimeException("Symbolic link: " + directory + ". Skipping");
+		}
 		if (directory.isFile())
 		{
-			stack.addLast(new Node(new File[]{ directory }));
+			stack.addLast(new Node(null, new File[]{ directory }));
 		}
 		else if (directory.isDirectory())
 		{
@@ -30,7 +39,7 @@ public class Find implements Iterator<File>
 				throw new RuntimeException("Unable to create a file iterator of file " + directory);
 			}
 			Arrays.sort(files, FILE_COMPARATOR);
-			stack.addLast(new Node(files));
+			stack.addLast(new Node(directory, files));
 			next = stack.getLast().findNext();
 		}
 		else
@@ -43,7 +52,11 @@ public class Find implements Iterator<File>
 	public File next()
 	{
 		File returnValue = next;
-		next = stack.getLast().findNext();
+		do
+		{
+			next = stack.getLast().findNext();
+		}
+		while (next == null && !stack.isEmpty());
 		return returnValue;
 	}
 
@@ -55,18 +68,27 @@ public class Find implements Iterator<File>
 
 	private class Node
 	{
+		private File file;
 		private File[] files;
 		private int index;
 		
-		Node(File[] files)
+		Node(File file, File[] files)
 		{
+			this.file = file;
 			this.files = files;
 		}
 		
+		
 		private File findNext()
 		{
-			while (index < files.length - 1)
+			while (index < files.length)
 			{
+				if (Files.isSymbolicLink(Paths.get(files[index].getAbsolutePath())))
+				{
+					Services.logger.logStream.println("Skipping symbolic link: " + files[index]);
+					index++;
+					continue;
+				}
 				if (files[index].isFile())
 				{
 					return files[index++];
@@ -83,26 +105,23 @@ public class Find implements Iterator<File>
 					continue;
 				}
 				
-				Node node = new Node(children);
+				Node node = new Node(files[index], children);
 				Arrays.sort(children, FILE_COMPARATOR);
 				stack.addLast(node);
 				index++;
-				
-				File c = stack.getLast().findNext(); 
+
+				File c = node.findNext(); 
 				if (c != null)
 				{
 					return c;
 				}
 			}
-			if (!stack.removeLast().equals(this))
+			Node last = stack.removeLast();
+			if (!last.equals(this))
 			{
 				throw new RuntimeException("This should be the last element on the stack.");
 			}
-			if (stack.isEmpty())
-			{
-				return null;
-			}
-			return stack.getLast().findNext();
+			return null;
 		}
 	}
 	
