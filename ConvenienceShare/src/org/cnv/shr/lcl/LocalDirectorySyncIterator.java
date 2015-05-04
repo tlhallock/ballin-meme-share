@@ -3,20 +3,11 @@ package org.cnv.shr.lcl;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
-import org.cnv.shr.mdl.RootDirectory;
 
 public class LocalDirectorySyncIterator
 {
@@ -29,7 +20,21 @@ public class LocalDirectorySyncIterator
 		{
 			String path = directory.getCanonicalPath();
 			root = directory;
-			
+			File f = new File(path);
+
+			if (Files.isSymbolicLink(Paths.get(f.getAbsolutePath()))
+				|| !f.isDirectory())
+			{
+				throw new RuntimeException("Symbolic link: " + directory + ". Skipping");
+			}
+
+			PathElement pathElement = DbPaths.getPathElement(root, path);
+			if (pathElement == null)
+			{
+				throw new RuntimeException("Unable to get path of " + path);
+			}
+			stack.addLast(new Node(new Pair(f, pathElement), new SynchronizationTask(
+					pathElement.getId(), root, f.listFiles(), DbPaths.ROOT)));
 			
 			
 //			if (Files.isSymbolicLink(Paths.get(directory.getAbsolutePath())))
@@ -55,7 +60,14 @@ public class LocalDirectorySyncIterator
 
 		public SynchronizationTask next()
 		{
-			while (!stack.getLast().findNext() && !stack.isEmpty())
+			do
+			{
+				if (stack.isEmpty())
+				{
+					return null;
+				}
+			}
+			while (!stack.getLast().findNext())
 				;
 			return stack.getLast().sync;
 		}
@@ -97,8 +109,8 @@ public class LocalDirectorySyncIterator
 						continue;
 					}
 					
-					Node node = new Node(sync.synchronizedResults[index], new SynchronizationTask(grandChildren, dbDir));
-					stack.addLast(node);
+					stack.addLast(new Node(sync.synchronizedResults[index], new SynchronizationTask(
+							this.current.dbCopy.getId(), root, grandChildren, dbDir)));
 					index++;
 					return true;
 				}

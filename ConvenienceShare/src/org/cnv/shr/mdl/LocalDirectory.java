@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
+import org.cnv.shr.db.h2.DbFiles;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.lcl.LocalSynchronizer;
 import org.cnv.shr.util.Misc;
@@ -132,7 +134,7 @@ public class LocalDirectory extends RootDirectory
 
 	public LocalFile getFile(String fsPath)
 	{
-		return Services.db.findLocalFile(this, new File(fsPath));
+		return DbFiles.getFile(this, DbPaths.getPathElement(this, fsPath));
 	}
 
 	@Override

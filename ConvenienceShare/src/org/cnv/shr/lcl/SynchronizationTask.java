@@ -17,10 +17,10 @@ public class SynchronizationTask
 	Pair[] synchronizedResults;
 	public int parentId;
 	
-	SynchronizationTask(int parentId, Connection c, LocalDirectory local, File[] listed, PathElement parent)
+	SynchronizationTask(int parentId, LocalDirectory local, File[] listed, PathElement parent)
 	{
 		this.parentId = parentId;
-		dbPaths = DbPaths.listPathElements(c, local, parent);
+		dbPaths = DbPaths.listPathElements(local, parent);
 		for (File f : listed)
 			files.add(f);
 //		split(listed);

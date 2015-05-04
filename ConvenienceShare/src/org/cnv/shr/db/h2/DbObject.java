@@ -40,6 +40,15 @@ public abstract class DbObject
 	
 	public final void update(Connection c) throws SQLException
 	{
+		try (PreparedStatement stmt = createPreparedUpdateStatement(c);)
+		{
+			stmt.executeUpdate();
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getInt(1);
+			}
+		}
 	}
 	
 	public final void delete(Connection c) throws SQLException

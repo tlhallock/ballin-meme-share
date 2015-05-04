@@ -33,7 +33,7 @@ public class DbIterator<T extends DbObject> implements Iterator<T>
 		this.locals = locals;
 		next = findNext();
 	}
-	protected DbIterator() {}
+	private DbIterator() {}
 
 	@Override
 	public T next()

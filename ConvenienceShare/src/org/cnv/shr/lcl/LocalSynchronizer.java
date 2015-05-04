@@ -72,7 +72,7 @@ public class LocalSynchronizer
 				try
 				{
 					// remove directory from database
-					DbPaths.pathDoesNotLieIn(connection, element, local);
+					DbPaths.pathDoesNotLieIn(element, local);
 				}
 				catch (SQLException e)
 				{
@@ -90,7 +90,7 @@ public class LocalSynchronizer
 						
 						try
 						{
-							lFile.add(connection);
+							lFile.add();
 						}
 						catch (SQLException e)
 						{
@@ -100,16 +100,21 @@ public class LocalSynchronizer
 					else
 					{
 						// update file
-						dbVersion.refreshAndWriteToDb();
+						try
+						{
+							dbVersion.refreshAndWriteToDb();
+						}
+						catch (SQLException e)
+						{
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				}
 				else if (fsCopy.isDirectory())
 				{
 					// nothing to be done
-					Pair pair = new Pair();
-					pair.dbCopy = element;
-					pair.fsCopy = fsCopy;
-					subDirectories.add(pair);
+					subDirectories.add(new Pair(fsCopy, element));
 				}
 			}
 		}
@@ -126,8 +131,8 @@ public class LocalSynchronizer
 			PathElement element = new PathElement(task.parentId, name);
 			try
 			{
-				element.add(connection);
-				DbPaths.pathLiesIn(connection, element, local);
+				element.add();
+				DbPaths.pathLiesIn(element, local);
 			}
 			catch (SQLException e1)
 			{
@@ -137,7 +142,7 @@ public class LocalSynchronizer
 			
 			try
 			{
-				element.add(connection);
+				element.add();
 			}
 			catch (SQLException e)
 			{
@@ -150,10 +155,7 @@ public class LocalSynchronizer
 			}
 			else
 			{
-				Pair pair = new Pair();
-				pair.dbCopy = element;
-				pair.fsCopy = f;
-				subDirectories.add(pair);
+				subDirectories.add(new Pair(f, element));
 			}
 		}
 		

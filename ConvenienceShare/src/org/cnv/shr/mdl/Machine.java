@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbLocals;
@@ -29,6 +30,9 @@ public class Machine extends DbObject
 	
 	private long lastActive;
 	private Boolean sharing;
+	
+	private int nports;
+	private boolean allowsMessages;
 	
 	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
 
@@ -54,6 +58,7 @@ public class Machine extends DbObject
 			String name, String identifier,
 			String[] keys)
 	{
+		super(null);
 		this.ip = ip;
 		this.port = port;
 		this.name = name;
@@ -64,11 +69,11 @@ public class Machine extends DbObject
 		}
 	}
 	
-	public Machine() {}
+	protected Machine() { super(null); }
 
 	public Machine(int int1)
 	{
-		// TODO Auto-generated constructor stub
+		super(int1);
 	}
 
 	@Override
@@ -78,11 +83,39 @@ public class Machine extends DbObject
 			name           = row.getString("MNAME");        
 			ip             = row.getString("DESCR");    
 			port		   = row.getInt   ("PORT");
-//			nports         = row.getInt   ("NPORTS");
+			nports         = row.getInt   ("NPORTS");
 		    lastActive     = row.getLong  ("LAST_ACTIVE");
 		    sharing        = row.getBoolean("SHARING");
 		    identifier     = row.getString ("IDENT");
-//		    allowsMessages = row.getBoolean("MESSAGES");
+		    allowsMessages = row.getBoolean("MESSAGES");
+	}
+	@Override
+	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
+	{
+		PreparedStatement stmt = c.prepareStatement(
+				 "merge into MACHINE key(IDENT) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+				, Statement.RETURN_GENERATED_KEYS);
+		int ndx = 1;
+		stmt.setString(ndx++,  getName());
+		stmt.setString(ndx++,  getIp());
+		stmt.setInt(ndx++,     getPort());
+		stmt.setInt(ndx++,     getNumberOfPorts());
+		stmt.setLong(ndx++,    System.currentTimeMillis());
+		stmt.setBoolean(ndx++, isSharing());
+		stmt.setString(ndx++,  getIdentifier());
+		stmt.setBoolean(ndx++, isLocal());
+		stmt.setBoolean(ndx++, getAllowsMessages());
+		return stmt;
+	}
+	
+	public int getNumberOfPorts()
+	{
+		return nports;
+	}
+	
+	public boolean getAllowsMessages()
+	{
+		return allowsMessages;
 	}
 
 
@@ -227,10 +260,6 @@ public class Machine extends DbObject
 	{
 		public LocalMachine()
 		{
-			name       = Services.settings.machineName.get();
-			ip         = Services.settings.getLocalIp();
-			port       = Services.settings.servePortBegin.get();
-			identifier = Services.settings.machineIdentifier.get();
 			Services.keyManager.getKeys();
 		}
 
@@ -283,22 +312,20 @@ public class Machine extends DbObject
 		{
 			return new String[0];
 		}
-	}
-	
-	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
-	{
-		PreparedStatement stmt = c.prepareStatement(
-				  "update MACHINE"
-				+ "set MNAME=?, IP=?, PORT=?, LASTACTIVE=?,ISLOCAL=? "
-			    + "where MACHINE.IDENT = ?;");
-		int ndx = 1;
-		stmt.setString(ndx++, getName());
-		stmt.setString(ndx++, getIp());
-		stmt.setInt(ndx++, getPort());
-		stmt.setString(ndx++, getIdentifier());
-		stmt.setBoolean(ndx++, isLocal());
-		stmt.setString(ndx++, getIdentifier());
-		return stmt;
+		
+		public String getIdentifier()
+		{
+			return Services.settings.machineIdentifier.get();
+		}
+		
+		public int getNumberOfPorts()
+		{
+			return Services.settings.maxServes.get();
+		}
+		
+		public boolean getAllowsMessages()
+		{
+			return true;
+		}
 	}
 }

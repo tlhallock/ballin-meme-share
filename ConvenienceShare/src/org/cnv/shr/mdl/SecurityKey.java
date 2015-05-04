@@ -1,6 +1,7 @@
 package org.cnv.shr.mdl;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -16,13 +17,7 @@ public class SecurityKey extends DbObject
 	
 	public SecurityKey(int int1)
 	{
-		// TODO Auto-generated constructor stub
-	}
-
-	@Override
-	public String getTableName()
-	{
-		return "PUBLIC_KEY";
+		super(int1);
 	}
 	
 	@Override
@@ -30,5 +25,12 @@ public class SecurityKey extends DbObject
 	{
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

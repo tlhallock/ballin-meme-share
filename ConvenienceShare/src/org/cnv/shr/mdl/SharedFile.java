@@ -1,5 +1,6 @@
 package org.cnv.shr.mdl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +12,7 @@ import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.ByteReader;
 
 public class SharedFile extends DbObject implements NetworkObject
 {
@@ -92,7 +94,7 @@ public class SharedFile extends DbObject implements NetworkObject
 	{
 		id = row.getInt("F_ID");
 		
-		String path     = DbPaths.getPath(c, row.getInt("PELEM"));
+		String path     = DbPaths.getPathElement(row.getInt("PELEM")).getFullPath();
 		// get the root...
 		
 		
@@ -110,15 +112,25 @@ public class SharedFile extends DbObject implements NetworkObject
 	}
 
 	@Override
-	public void read(InputStream input) {
-		// TODO Auto-generated method stub
-		
+	public void read(InputStream bytes) throws IOException
+	{
+		name =         (ByteReader.readString(bytes));
+		path =         (ByteReader.readString(bytes));
+		fileSize =     (ByteReader.readLong  (bytes));
+		tags =         (ByteReader.readString(bytes));
+		checksum =     (ByteReader.readString(bytes));
+		lastModified = (ByteReader.readLong  (bytes));
 	}
 
 	@Override
-	public void write(ByteListBuffer buffer) {
-		// TODO Auto-generated method stub
-		
+	public void write(ByteListBuffer buffer)
+	{
+		buffer.append(getName());
+		buffer.append(getRelativePath());
+		buffer.append(getFileSize());
+		buffer.append(getTags());
+		buffer.append(getChecksum());
+		buffer.append(getLastUpdated());
 	}
 
 	public String getTags()

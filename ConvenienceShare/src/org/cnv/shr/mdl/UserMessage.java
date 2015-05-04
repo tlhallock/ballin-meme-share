@@ -1,6 +1,7 @@
 package org.cnv.shr.mdl;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -11,7 +12,7 @@ public class UserMessage extends DbObject
 {
 	public UserMessage(int int1)
 	{
-		// TODO Auto-generated constructor stub
+		super(int1);
 	}
 
 	@Override
@@ -22,8 +23,8 @@ public class UserMessage extends DbObject
 	}
 
 	@Override
-	public String getTableName()
+	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
 	{
-		return "MESSAGES";
+		return null;
 	}
 }

@@ -51,28 +51,28 @@ public class FileList extends Message
 	{
 		boolean changed = false;
 		Machine machine = getMachine();
-		for (FilesList l : sharedDirectories)
-		{
-			RootDirectory root = l.root;
-			if (Services.db.getRoot(machine, root.getCanonicalPath()) == null)
-			{
-				Services.db.addRoot(machine, root);
-				changed = true;
-			}
-			for (SharedFile r : l.sharedFiles)
-			{
-				SharedFile file = Services.db.getFile(root, r.getRelativePath(), r.getName()); 
-				if (file == null)
-				{
-					Services.db.addFile(root, r);
-					changed = true;
-				}
-				else
-				{
-					Services.db.updateFile(r);
-				}
-			}
-		}
+//		for (FilesList l : sharedDirectories)
+//		{
+//			RootDirectory root = l.root;
+//			if (Services.db.getRoot(machine, root.getCanonicalPath()) == null)
+//			{
+//				Services.db.addRoot(machine, root);
+//				changed = true;
+//			}
+//			for (SharedFile r : l.sharedFiles)
+//			{
+//				SharedFile file = Services.db.getFile(root, r.getRelativePath(), r.getName()); 
+//				if (file == null)
+//				{
+//					Services.db.addFile(root, r);
+//					changed = true;
+//				}
+//				else
+//				{
+//					Services.db.updateFile(r);
+//				}
+//			}
+//		}
 
 		if (changed)
 		{
@@ -95,16 +95,7 @@ public class FileList extends Message
 			int nFiles         = ByteReader.readInt(bytes);
 			for (int j = 0; j < nFiles; j++)
 			{
-				SharedFile file = new RemoteFile();
-				
-				file.setName       (ByteReader.readString(bytes));
-				file.setPath       (ByteReader.readString(bytes));
-				file.setFileSize   (ByteReader.readLong  (bytes));
-				file.setDescription(ByteReader.readString(bytes));
-				file.setChecksum   (ByteReader.readString(bytes));
-				file.setLastUpdated(ByteReader.readLong  (bytes));
-				
-				list.sharedFiles.add(file);
+				list.sharedFiles.add(new RemoteFile(machine, (RemoteDirectory) list.root, bytes));
 			}
 		}
 	}
@@ -122,12 +113,7 @@ public class FileList extends Message
 			buffer.append(dir.sharedFiles.size());
 			for (SharedFile file : dir.sharedFiles)
 			{
-				buffer.append(file.getName());
-				buffer.append(file.getRelativePath());
-				buffer.append(file.getFileSize());
-				buffer.append(file.getDescription());
-				buffer.append(file.getChecksum());
-				buffer.append(file.getLastUpdated());
+				file.write(buffer);
 			}
 		}
 	}

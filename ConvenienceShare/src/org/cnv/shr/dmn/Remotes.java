@@ -2,21 +2,21 @@ package org.cnv.shr.dmn;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.sql.SQLException;
-import java.util.List;
 
+import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
-import org.json.JSONArray;
 
 public class Remotes
 {
 	public void refresh()
 	{
-		for (Machine machine : getMachines())
+		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
+		while (listRemoteMachines.hasNext())
 		{
-			machine.refresh();
+			listRemoteMachines.next().refresh();
 		}
 	}
 
@@ -36,31 +36,11 @@ public class Remotes
 		}
 	}
 
-	public List<Machine> getMachines()
-	{
-		return Services.db.getRemoteMachines();
-	}
-	
 	public String[] getKeys(String ip, int port)
 	{
 		return null;
 	}
 	
-	public void addMachine(Machine m)
-	{
-		Services.logger.logStream.println("Adding remote " + m.getIp() + ":" + m.getPort());
-		try
-		{
-			Services.db.addMachine(m);
-		}
-		catch (SQLException e)
-		{
-			Services.logger.logStream.println("Unable to add machine.");
-			e.printStackTrace(Services.logger.logStream);
-		}
-		Services.notifications.remotesChanged();
-	}
-
 	public void isAlive(Machine machine)
 	{
 		
@@ -69,21 +49,21 @@ public class Remotes
 	
 	public void debug(PrintStream ps)
 	{
-		try
-		{
-			JSONArray arr = new JSONArray();
-			for (Machine machine : getMachines())
-			{
-				machine.append(arr);
-			}
-			ps.println(arr.toString(8));
-		}
-		catch (Exception e)
-		{
-			Services.logger.logStream.println("Unable to save Remotes.");
-			Services.logger.logStream.println("This is expected on first run.");
-			e.printStackTrace(Services.logger.logStream);
-		}
+//		try
+//		{
+//			JSONArray arr = new JSONArray();
+//			for (Machine machine : getMachines())
+//			{
+//				machine.append(arr);
+//			}
+//			ps.println(arr.toString(8));
+//		}
+//		catch (Exception e)
+//		{
+//			Services.logger.logStream.println("Unable to save Remotes.");
+//			Services.logger.logStream.println("This is expected on first run.");
+//			e.printStackTrace(Services.logger.logStream);
+//		}
 	}
 	
 	/**

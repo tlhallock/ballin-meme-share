@@ -46,7 +46,7 @@ public class MachineFound extends Message
 	{
 		Machine newMachine = new Machine(ip, port, name, ident, keys);
 		newMachine.setLastActive(lastActive);
-		Services.remotes.addMachine(newMachine);
+		newMachine.add();
 	}
 
 	@Override

@@ -49,7 +49,7 @@ public class DbTables
 		
 		public void delete(Connection c) throws SQLException
 		{
-			try (PreparedStatement stmt = c.prepareStatement("drop table " + getTableName() + ";"))
+			try (PreparedStatement stmt = c.prepareStatement("drop table if exists " + getTableName() + ";"))
 			{
 				stmt.execute();
 			}
@@ -135,13 +135,13 @@ public class DbTables
 		DbObjects.LMACHINE        ,
 	};
 
-	public void debugDb(PrintStream ps)
+	public static void debugDb(PrintStream ps)
 	{
 		for (DbObjects table : ALL_TABLES)
 		{
 			try
 			{
-				table.debug(null, ps);
+				table.debug(Services.h2DbCache.getConnection(), ps);
 			}
 			catch (SQLException e)
 			{
@@ -174,6 +174,8 @@ public class DbTables
 	static void createDb(Connection c) throws SQLException, IOException
 	{
 		execute(c, "/create_h2.sql");
+		c.prepareStatement("INSERT INTO PELEM VALUES (0, 0, FALSE, '          ');").execute();
+		c.prepareStatement("ALTER TABLE PELEM ADD FOREIGN KEY (PARENT) REFERENCES PELEM(P_ID);").execute();
 	}
 	
 	private static void execute(Connection c, String file) throws SQLException, IOException

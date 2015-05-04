@@ -8,11 +8,17 @@ package org.cnv.shr.gui;
 
 import java.util.Date;
 import java.util.Iterator;
+
 import javax.swing.DefaultListModel;
 import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
+
+import org.cnv.shr.db.h2.DbFiles;
+import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.Misc;
@@ -65,7 +71,7 @@ public class MachineView extends javax.swing.JPanel
 						{
 							try
 							{
-								view(Services.db.getRoot(machine, mId));
+//								view(Services.db.getRoot(machine, mId));
 							}
 							catch(Exception ex)
 							{
@@ -108,9 +114,10 @@ public class MachineView extends javax.swing.JPanel
         {
         	model.removeRow(0);
         }
-        for (RootDirectory root : Services.db.listRoots(machine))
+        DbIterator<RemoteDirectory> listRemoteDirectories = DbRoots.listRemoteDirectories(machine);
+        while (listRemoteDirectories.hasNext())
         {
-        	model.addRow(new String[] {root.getCanonicalPath()});
+        	model.addRow(new String[] {listRemoteDirectories.next().getCanonicalPath()});
         }
         
         viewNoDirectory();
@@ -177,7 +184,7 @@ public class MachineView extends javax.swing.JPanel
     private void listFiles()
     {
     	DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
-    	Iterator<SharedFile> list = Services.db.list(directory);
+    	Iterator<SharedFile> list = DbRoots.list(directory);
     	while (list.hasNext())
     	{
     		SharedFile next = list.next();

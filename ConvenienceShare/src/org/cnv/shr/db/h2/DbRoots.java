@@ -4,17 +4,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Iterator;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.mdl.SharedFile;
 
 public class DbRoots
 {
 
-	static long getTotalFileSize(RootDirectory d)
+	public static long getTotalFileSize(RootDirectory d)
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement("select sum(SIZE) as totalsize from FILE where ROOT = ?;"))
@@ -38,7 +40,7 @@ public class DbRoots
 		}
 	}
 
-	static long getNumberOfFiles(RootDirectory d) throws SQLException
+	public static long getNumberOfFiles(RootDirectory d)
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement("select count(F_ID) as number from FILE where ROOT = ?;"))
@@ -112,8 +114,9 @@ public class DbRoots
 //		}
 //	}
 	
-	public static DbIterator<RemoteDirectory> listRemoteDirectories(Connection c, Machine machine)
+	public static DbIterator<RemoteDirectory> listRemoteDirectories(Machine machine)
 	{
+		Connection c = Services.h2DbCache.getConnection();
 		try
 		{
 			return new DbIterator<RemoteDirectory>(c, 
@@ -128,8 +131,9 @@ public class DbRoots
 		}
 	}
 	
-	public static DbIterator<LocalDirectory> listLocals(Connection c)
+	public static DbIterator<LocalDirectory> listLocals()
 	{
+		Connection c = Services.h2DbCache.getConnection();
 		try
 		{
 			return new DbIterator<LocalDirectory>(c, 
@@ -142,5 +146,11 @@ public class DbRoots
 			e.printStackTrace();
 			return new DbIterator.NullIterator<LocalDirectory>();
 		}
+	}
+
+	public static Iterator<SharedFile> list(RootDirectory directory)
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

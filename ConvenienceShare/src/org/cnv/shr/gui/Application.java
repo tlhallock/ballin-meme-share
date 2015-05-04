@@ -20,6 +20,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
+import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.TableListener.TableRowListener;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -63,7 +65,7 @@ public class Application extends javax.swing.JFrame
 				{
 					return;
 				}
-				final RootDirectory root = Services.db.getRoot(Services.localMachine, mId);
+				final RootDirectory root = null;//DbRoots.getServices.db.getRoot(Services.localMachine, mId);
 				if (root == null)
 				{
 					Services.logger.logStream.println("Unable to find local directory " + mId);
@@ -120,7 +122,7 @@ public class Application extends javax.swing.JFrame
 					@Override
 					public void run()
 					{
-						showRemote(Services.db.getMachine(mId));
+						showRemote(DbMachines.getMachine(mId));
 					}
 				});
 			}
@@ -783,7 +785,7 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void DebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DebugActionPerformed
-        Services.db.debug(System.out);
+//        Services.db.debug(System.out);
     }//GEN-LAST:event_DebugActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
@@ -797,7 +799,7 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        Services.db.deleteDb();
+//        Services.db.deleteDb();
     }//GEN-LAST:event_jButton3ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

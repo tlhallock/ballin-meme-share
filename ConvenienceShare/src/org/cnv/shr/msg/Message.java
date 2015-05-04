@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
@@ -42,7 +43,7 @@ public abstract class Message
 	
 	public Machine getMachine()
 	{
-		return Services.db.getMachine(originatorIdentifier);
+		return DbMachines.getMachine(originatorIdentifier);
 	}
 
 	public void read(InputStream stream) throws IOException

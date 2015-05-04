@@ -90,18 +90,41 @@ public class DbPaths
 		}
 	}
 	
-	public static DbIterator<PathElement> listPathElements(Connection c, RootDirectory root, PathElement parent)
+	public static DbIterator<PathElement> listPathElements(RootDirectory root, PathElement parent)
 	{
 		return null;
 	}
 
 
-	public static void pathLiesIn(Connection c, PathElement element, LocalDirectory local) throws SQLException
+	public static void pathLiesIn(PathElement element, LocalDirectory local) throws SQLException
 	{
 		
 	}
-	public static void pathDoesNotLieIn(Connection c, PathElement element, LocalDirectory local) throws SQLException
+	public static void pathDoesNotLieIn(PathElement element, LocalDirectory local) throws SQLException
 	{
 		
+	}
+
+	public static PathElement getPathElement(LocalDirectory local, String fsPath)
+	{
+		String relPath = fsPath.substring(local.getCanonicalPath().length());
+
+		System.err.println("'" + relPath + "'");
+		if (relPath.length() == 0 || relPath.equals(".") || relPath.equals("./"))
+		{
+			return ROOT;
+		}
+		
+		PathElement[] paths = PathBreaker.breakPath(relPath);
+		
+		System.err.println(PathBreaker.join(paths));
+		System.err.flush();
+		
+		return null;
+	}
+
+	public static PathElement getPathElement(int pathId)
+	{
+		return null;
 	}
 }

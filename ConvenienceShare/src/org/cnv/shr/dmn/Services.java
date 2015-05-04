@@ -12,7 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.cnv.shr.db.DbConnection;
 import org.cnv.shr.db.h2.DbConnectionCache;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.MessageReader;
@@ -58,7 +60,6 @@ public class Services
 
 		logger.setLogLocation();
 		notifications = new Notifications();
-//		db = new DbConnection();
 		h2DbCache = new DbConnectionCache();
 		keyManager = new KeyManager();
 		localMachine = new Machine.LocalMachine();
@@ -97,7 +98,7 @@ public class Services
 			}}, settings.monitorRepeat.get(), settings.monitorRepeat.get());
 		
 		// Ensure the local machine is added and that the downloads directory is shared.
-		db.addMachine(localMachine);
+		localMachine.update();
 		locals.share(settings.downloadsDirectory.get());
 
 		java.awt.EventQueue.invokeLater(new Runnable()
@@ -110,8 +111,8 @@ public class Services
 					application.setVisible(true);
 					application.refreshAll();
 
-					application.refreshLocals(DbRoots.listLocals(null));
-					application.refreshRemotes(Services.db.getRemoteMachines());
+//					application.refreshLocals(DbRoots.listLocals(null));
+//					application.refreshRemotes(Services.db.getRemoteMachines());
 				}
 				catch (Exception ex)
 				{
@@ -158,7 +159,7 @@ public class Services
 			e.printStackTrace(Services.logger.logStream);
 		}
 		
-		db.close();
+//		db.close();
 
 		logger.close();
 	}

@@ -1,11 +1,8 @@
 package org.cnv.shr.stng;
 
 import java.awt.Component;
-import java.awt.Container;
 
 import javax.swing.JCheckBox;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 

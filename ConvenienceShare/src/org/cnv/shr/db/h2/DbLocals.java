@@ -36,6 +36,6 @@ public class DbLocals
 	
 	private static String getLocalsCache(DbTables.DbObjects type, int id)
 	{
-		return type.name() + ":" + id;
+		return type.getTableName() + ":" + id;
 	}
 }

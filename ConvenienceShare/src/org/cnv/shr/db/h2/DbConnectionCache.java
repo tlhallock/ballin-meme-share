@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.Hashtable;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 
 public class DbConnectionCache
 {
-	private HashMap<Long, Connection> connections = new HashMap<>();
+	private Hashtable<Long, Connection> connections = new Hashtable<>();
 
 	public DbConnectionCache() throws SQLException, IOException, ClassNotFoundException
 	{
@@ -20,6 +20,7 @@ public class DbConnectionCache
 		
 		Connection c = getConnection();
 		Services.logger.logStream.println("Creating database.");
+		org.cnv.shr.db.h2.DbTables.deleteDb(c);
 		DbTables.createDb(c);
 	}
 

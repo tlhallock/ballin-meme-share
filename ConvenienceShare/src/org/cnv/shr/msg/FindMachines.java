@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-import org.cnv.shr.dmn.Connection;
-import org.cnv.shr.dmn.Services;
+import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
 
@@ -33,12 +34,13 @@ public class FindMachines extends Message
 	protected void write(ByteListBuffer buffer) {}
 	
 	@Override
-	public void perform(Connection connection) throws Exception
+	public void perform(Communication connection) throws Exception
 	{
 		connection.send(new MachineFound());
-		for (Machine machine : Services.remotes.getMachines())
+		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
+		while (listRemoteMachines.hasNext())
 		{
-			connection.send(new MachineFound(machine));
+			connection.send(new MachineFound(listRemoteMachines.next()));
 		}
 	}
 }

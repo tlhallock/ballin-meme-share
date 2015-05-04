@@ -6,6 +6,8 @@
 
 package org.cnv.shr.gui;
 
+import java.sql.SQLException;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.RootDirectory;
 
@@ -38,10 +40,10 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		descriptionString.setText(root.getDescription());
 		
 		StringBuilder builder = new StringBuilder();
-		for (String string : Services.db.getIgnores(root))
-		{
-			builder.append(string).append('\n');
-		}
+//		for (String string : Services.db.getIgnores(root))
+//		{
+//			builder.append(string).append('\n');
+//		}
 		ignoreTextArea.setText(builder.toString());
 		
 		return;
@@ -57,8 +59,15 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		r.setDescription(descriptionString.getText());
 		r.setTags(tagsString.getText());
 		
-		Services.db.updateDirectory(Services.localMachine, r);
-		Services.db.setIgnores(r, ignoreTextArea.getText().split("\n"));
+		try
+		{
+			r.update();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+//		Services.db.setIgnores(r, ignoreTextArea.getText().split("\n"));
 	}
 
     /**

@@ -5,18 +5,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.stng.Settings;
 
 public class ChecksumManager extends Thread
 {
-	private HashSet<String> queue = new HashSet<>();
+	private HashMap<String, LocalDirectory> queue = new HashMap<>();
 	
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
@@ -26,15 +27,15 @@ public class ChecksumManager extends Thread
 	@Override
 	public void run()
 	{
-		File f;
+		Entry<String, LocalDirectory> f;
 		while ((f = getNextFile()) != null)
 		{
-			updateChecksum(f);
+			updateChecksum(f.getKey(), f.getValue());
 			beNice();
 		}
 	}
 	
-	private File getNextFile()
+	private Entry<String, LocalDirectory> getNextFile()
 	{
 		File next = null;
 		
@@ -54,32 +55,29 @@ public class ChecksumManager extends Thread
 				}
 				if (stop)
 				{
-					return next;
+					return null;
 				}
 			}
 
-			Iterator<String> iterator = queue.iterator();
-			next = new File(iterator.next());
+			return queue.entrySet().iterator().next();
 		}
 		finally
 		{
 			lock.unlock();
 		}
-
-		return next;
 	}
 
-	private void updateChecksum(File f)
+	private void updateChecksum(String file, LocalDirectory l)
 	{
 		long startTime = System.currentTimeMillis();
 		String checksum;
 		try
 		{
-			checksum = checksumBlocking(f);
+			checksum = checksumBlocking(l, new File(file));
 		}
 		catch (IOException e)
 		{
-			Services.logger.logStream.println("Unable to calculate checksum of " + f);
+			Services.logger.logStream.println("Unable to calculate checksum of " + file);
 			e.printStackTrace(Services.logger.logStream);
 			return;
 		}
@@ -88,19 +86,17 @@ public class ChecksumManager extends Thread
 			return;
 		}
 
-		LocalFile l = Services.locals.getLocalFile(f);
-		if (l == null)
+		SharedFile sf = l.getFile(file);
+		if (sf == null)
 		{
-			Services.locals.getLocalFile(f);
-			Services.logger.logStream.println("File is not part of a shared directory: " + f);
-			return;
+			Services.logger.logStream.println("File went missing: " + file);
 		}
-		l.setChecksum(startTime, checksum);
+		sf.setChecksum(checksum);
 
 		lock.lock();
 		try
 		{
-			queue.remove(f);
+			queue.remove(file);
 		}
 		finally
 		{
@@ -125,7 +121,7 @@ public class ChecksumManager extends Thread
 		}
 	}
 
-	public String checksumBlocking(File f) throws IOException
+	public String checksumBlocking(LocalDirectory l, File f) throws IOException
 	{
 		Services.logger.logStream.println("Checksumming " + f);
 		MessageDigest digest = null;
@@ -174,18 +170,18 @@ public class ChecksumManager extends Thread
 		lock.unlock();
 	}
 
-	public void checksum(File f)
+	public void checksum(LocalDirectory local, File f)
 	{
 		lock.lock();
 		try
 		{
 			try
 			{
-				queue.add(f.getCanonicalPath());
+				queue.put(f.getCanonicalPath(), local);
 			}
 			catch (IOException e)
 			{
-				queue.add(f.getAbsolutePath());
+				queue.put(f.getAbsolutePath(), local);
 				e.printStackTrace();
 			}
 			condition.signalAll();

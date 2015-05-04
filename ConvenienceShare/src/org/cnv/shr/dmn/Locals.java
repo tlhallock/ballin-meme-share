@@ -83,7 +83,7 @@ public class Locals
 
 	public LocalFile getLocalFile(String canonicalPath)
 	{
-		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals(null);
+		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
 		while (listLocals.hasNext())
 		{
 			LocalDirectory d = listLocals.next();
@@ -100,11 +100,13 @@ public class Locals
 	{
 		try
 		{
-			for (LocalDirectory localDir : listLocals())
+			
+			DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
+			while (listLocals.hasNext())
 			{
-				localDir.synchronize(force);
+				listLocals.next().synchronize(force);
 			}
-			Services.db.removeUnusedPaths();
+//			Services.db.removeUnusedPaths();
 
 			// Right now this is only for the sizes of the local dirs.
 			Services.notifications.localsChanged();
@@ -146,9 +148,10 @@ public class Locals
 	
 	public void debug(PrintStream ps)
 	{
-		for (LocalDirectory path : listLocals())
+		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
+		while (listLocals.hasNext())
 		{
-			ps.println(path.getCanonicalPath());
+			ps.println(listLocals.next().getCanonicalPath());
 		}
 	}
 }

@@ -2,6 +2,7 @@ package org.cnv.shr.mdl;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.cnv.shr.dmn.Services;
 
@@ -39,7 +40,7 @@ public class LocalFile extends SharedFile
 			}
 			if (fileSize < Services.settings.maxImmediateChecksum.get())
 			{
-				checksum = Services.checksums.checksumBlocking(f);
+				checksum = Services.checksums.checksumBlocking((LocalDirectory) rootDirectory, f);
 			}
 		}
 		catch (IOException e)
@@ -52,6 +53,11 @@ public class LocalFile extends SharedFile
 		tags = null;
 	}
 	
+	public LocalDirectory getRootDirectory()
+	{
+		return (LocalDirectory) rootDirectory;
+	}
+	
 	public String getFullPath()
 	{
 		return rootDirectory.getCanonicalPath() + File.separatorChar + path + File.separatorChar + name;
@@ -59,12 +65,13 @@ public class LocalFile extends SharedFile
 
 	/**
 	 * @return true if something has changed.
+	 * @throws SQLException 
 	 */
-	public boolean refreshAndWriteToDb()
+	public boolean refreshAndWriteToDb() throws SQLException
 	{
 		if (!exists())
 		{
-			Services.db.removeFile(this);
+			delete();
 			return true;
 		}
 
@@ -84,7 +91,7 @@ public class LocalFile extends SharedFile
 		updateChecksum(fsCopy);
 		
 		fileSize = fsCopy.getTotalSpace();
-		Services.db.updateFile(this);
+		update();
 		return true;
 	}
 
@@ -92,12 +99,12 @@ public class LocalFile extends SharedFile
 	{
 		if (fileSize > Services.settings.maxImmediateChecksum.get())
 		{
-			Services.checksums.checksum(fsCopy);
+			Services.checksums.checksum(getRootDirectory(), fsCopy);
 			return;
 		}
 		try
 		{
-			checksum = Services.checksums.checksumBlocking(fsCopy);
+			checksum = Services.checksums.checksumBlocking(getRootDirectory(), fsCopy);
 			return;
 		}
 		catch (IOException e)
@@ -105,7 +112,7 @@ public class LocalFile extends SharedFile
 			Services.logger.logStream.println("Unable to checksum " + fsCopy);
 			e.printStackTrace(Services.logger.logStream);
 		}
-		Services.checksums.checksum(fsCopy);
+		Services.checksums.checksum(getRootDirectory(), fsCopy);
 	}
 
 	public void setChecksum(long timeStamp, String checksum)
@@ -115,9 +122,17 @@ public class LocalFile extends SharedFile
 			return;
 		}
 		this.checksum = checksum;
-		if (!refreshAndWriteToDb())
+		try
 		{
-			Services.db.updateFile(this);
+			//
+			if (!refreshAndWriteToDb())
+			{
+				update();
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
 		}
 	}
 	

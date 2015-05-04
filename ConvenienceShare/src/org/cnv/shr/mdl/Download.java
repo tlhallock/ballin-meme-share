@@ -31,12 +31,6 @@ public class Download extends DbObject
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public String getTableName()
-	{
-		return "PENDING_DOWNLOAD";
-	}
 	
 	public enum DownloadState
 	{

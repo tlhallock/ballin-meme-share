@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-import org.cnv.shr.dmn.Connection;
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class FileRequest extends Message
@@ -14,12 +14,6 @@ public class FileRequest extends Message
 	public FileRequest(InetAddress a, InputStream i) throws IOException
 	{
 		super(a, i);
-	}
-
-	@Override
-	public void perform(Connection connection)
-	{
-
 	}
 
 	@Override
@@ -40,5 +34,12 @@ public class FileRequest extends Message
 	protected int getType()
 	{
 		return TYPE;
+	}
+
+	@Override
+	public void perform(Communication connection) throws Exception
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

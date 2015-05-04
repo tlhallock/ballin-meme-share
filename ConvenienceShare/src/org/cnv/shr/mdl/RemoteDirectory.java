@@ -1,5 +1,9 @@
 package org.cnv.shr.mdl;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 public class RemoteDirectory extends RootDirectory
 {
 	public RemoteDirectory(Machine machine, String path, String tags, String description)
@@ -9,7 +13,7 @@ public class RemoteDirectory extends RootDirectory
 
 	public RemoteDirectory(int int1)
 	{
-		// TODO Auto-generated constructor stub
+		super(int1);
 	}
 
 	@Override
@@ -22,5 +26,12 @@ public class RemoteDirectory extends RootDirectory
 	public void synchronizeInternal()
 	{
 		
+	}
+
+	@Override
+	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

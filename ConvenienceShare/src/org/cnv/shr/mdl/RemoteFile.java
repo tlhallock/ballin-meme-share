@@ -1,9 +1,11 @@
 package org.cnv.shr.mdl;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.ByteReader;
 
 public class RemoteFile extends SharedFile
 {
@@ -15,11 +17,10 @@ public class RemoteFile extends SharedFile
 		super(int1);
 	}
 
-	public RemoteFile(Machine machine, RemoteDirectory remote, InputStream input)
+	public RemoteFile(Machine machine, RemoteDirectory remote, InputStream bytes) throws IOException
 	{
 		super(null);
-		
-		
+		read(bytes);
 	}
 	
 	public enum SharedFileState
