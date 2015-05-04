@@ -8,6 +8,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RootDirectory;
@@ -50,65 +53,45 @@ public class Locals
 	
 	public void share(Connection c)
 	{
-		FileList msg = new FileList();
-		int count = 0;
-		for (LocalDirectory local : listLocals())
-		{
-			Iterator<SharedFile> list = local.list();
-			while (list.hasNext())
-			{
-				SharedFile file = list.next();
-				count++;
-				msg.add(local, file);
-				
-				if (count > 50)
-				{
-					c.send(msg);
-					count = 0;
-					msg = new FileList();
-				}
-			}
-		}
-		if (count > 1)
-		{
-			c.send(msg);
-		}
-	}
-	
-	public boolean localAlreadyExists(String canonicalPath)
-	{
-		for (LocalDirectory other : listLocals())
-		{
-			if (other.getCanonicalPath().equals(canonicalPath))
-			{
-				return true;
-			}
-		}
-		return false;
+//		FileList msg = new FileList();
+//		int count = 0;
+//		
+//		
+//			DbIterator<LocalDirectory> listLocals = DbRoots.listLocals(null);
+//			while (listLocals.hasNext())
+//			{
+//				while (list.hasNext())
+//				{
+//					SharedFile file = list.next();
+//					count++;
+//					msg.add(local, file);
+//					
+//					if (count > 50)
+//					{
+//						c.send(msg);
+//						count = 0;
+//						msg = new FileList();
+//					}
+//				}
+//			}
+//		}
+//		if (count > 1)
+//		{
+//			c.send(msg);
+//		}
 	}
 
-	public List<LocalDirectory> listLocals()
+	public LocalFile getLocalFile(String canonicalPath)
 	{
-		return Services.db.getLocals();
-	}
-
-	public LocalFile getLocalFile(File f)
-	{
-		for (LocalDirectory d : listLocals())
+		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals(null);
+		while (listLocals.hasNext())
 		{
-			if (!d.contains(f))
+			LocalDirectory d = listLocals.next();
+			if (!d.contains(canonicalPath))
 			{
 				continue;
 			}
-			try
-			{
-				return d.getFile(f.getCanonicalPath());
-			}
-			catch (IOException e)
-			{
-				Services.logger.logStream.println("Unable to get file path: " + f);
-				e.printStackTrace(Services.logger.logStream);
-			}
+				return d.getFile(canonicalPath);
 		}
 		return null;
 	}

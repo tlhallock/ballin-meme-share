@@ -1,28 +1,25 @@
 package org.cnv.shr.mdl;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.cnv.shr.db.h2.DbLocals;
+import org.cnv.shr.db.h2.DbObject;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
 
-public class SharedFile
+public class SharedFile extends DbObject
 {
-	protected Integer id;
-	
 	protected String name;
 	protected String path;
 	protected RootDirectory rootDirectory;
 	protected long fileSize;
 	protected String checksum;
-	protected String description;
+	protected String tags;
 	protected long lastModified;
 	
-	
-	public int getId()
-	{
-		if (id == null)
-		{
-			id = Services.db.getFile(rootDirectory, path, name).id;
-		}
-		return id;
-	}
 
 	public void setId(int int1)
 	{
@@ -74,16 +71,6 @@ public class SharedFile
 		this.checksum = checksum;
 	}
 
-	public String getDescription()
-	{
-		return description;
-	}
-
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
-
 	public long getLastUpdated()
 	{
 		return lastModified;
@@ -97,5 +84,27 @@ public class SharedFile
 	public void setLastUpdated(long long1)
 	{
 		this.lastModified = long1;
+	}
+
+	@Override
+	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+	{
+		id = row.getInt("F_ID");
+		
+		String path     = DbPaths.getPath(c, row.getInt("PELEM"));
+		// get the root...
+		
+		
+		tags = row.getString("TAGS");
+		fileSize = row.getLong("FSIZE");
+		checksum = row.getString("CHKSUM");
+		// description row.getString("");
+		lastModified = row.getLong("MODIFIED");
+	}
+
+	@Override
+	protected PreparedStatement createPreparedUpdateStatement(Connection c)
+	{
+		return null;
 	}
 }

@@ -4,6 +4,12 @@ import org.cnv.shr.dmn.Services;
 
 public class RemoteFile extends SharedFile
 {
+	public RemoteFile(int int1)
+	{
+		// TODO Auto-generated constructor stub
+	}
+
+
 	RemoteDirectory d;
 	String localCopy;
 	

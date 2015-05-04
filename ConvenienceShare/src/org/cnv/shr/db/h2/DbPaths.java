@@ -6,11 +6,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.cnv.shr.db.DbConnection;
+import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.mdl.RootDirectory;
 
 public class DbPaths
 {
 	public static int ROOT_ID = 0;
 
+	
+	
+	
+	
 	public static String getPath(Connection c, int pid) throws SQLException {
 		RStringBuilder builder = new RStringBuilder();
 		try (PreparedStatement stmt = c.prepareStatement("select PELEMENT, PARENT from PATH where PELEMENT = ?;"))
@@ -27,7 +34,7 @@ public class DbPaths
 	}
 	
 	
-	public static int getPathId(Connection c, String[] pathElems) throws SQLException
+	public static PathElement getPathElement(Connection c, PathElement[] pathElems) throws SQLException
 	{
 		int pid = ROOT_ID;
 		boolean exists = true;
@@ -59,5 +66,20 @@ public class DbPaths
 			}
 		}
 		return pid;
+	}
+	
+	public static DbIterator<PathElement> listPathElements(Connection c, RootDirectory root, PathElement parent)
+	{
+		return null;
+	}
+
+
+	public static void pathLiesIn(Connection c, PathElement element, LocalDirectory local) throws SQLException
+	{
+		
+	}
+	public static void pathDoesNotLieIn(Connection c, PathElement element, LocalDirectory local) throws SQLException
+	{
+		
 	}
 }

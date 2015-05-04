@@ -2,7 +2,6 @@ package org.cnv.shr.util;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -86,6 +85,7 @@ public class Find implements Iterator<File>
 				if (Files.isSymbolicLink(Paths.get(files[index].getAbsolutePath())))
 				{
 					Services.logger.logStream.println("Skipping symbolic link: " + files[index]);
+					
 					index++;
 					continue;
 				}
@@ -125,7 +125,7 @@ public class Find implements Iterator<File>
 		}
 	}
 	
-	private Comparator<File> FILE_COMPARATOR = new Comparator<File>() {
+	static Comparator<File> FILE_COMPARATOR = new Comparator<File>() {
 		@Override
 		public int compare(File arg0, File arg1)
 		{

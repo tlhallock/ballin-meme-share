@@ -2,6 +2,8 @@ package org.cnv.shr.mdl;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -11,40 +13,72 @@ import org.cnv.shr.util.Misc;
 
 public class LocalDirectory extends RootDirectory
 {
+	protected Machine machine;
+	protected String path;
+	protected long totalFileSize = -1;
+	protected long totalNumFiles = -1;
+	protected Integer id;
+	protected String description;
+	protected String tags;
+	
+	
 	public LocalDirectory(File localDirectory) throws IOException
 	{
-		super(Services.localMachine, localDirectory.getCanonicalPath(), "", "");
+		super(null);
+		machine = Services.localMachine;
+		path = localDirectory.getCanonicalPath();
+		totalFileSize = -1;
+		totalNumFiles = -1;
+		id = null;
+		description = "";
+		tags = "";
 	}
 	
-	public boolean contains(File f)
+	public LocalDirectory(Integer id)
 	{
-		try
-		{
-			return f.getCanonicalPath().startsWith(path);
-		}
-		catch (IOException e)
-		{
-			Services.logger.logStream.println("Unable to get file path: " + f);
-			e.printStackTrace(Services.logger.logStream);
-			return false;
-		}
+		super(id);
 	}
 	
-	private boolean prune()
+	public void ensureExistsInDb()
 	{
+		/// Needs to be reworked
+		if (!Services.locals.localAlreadyExists(getCanonicalPath()) && !Services.db.addRoot(Services.localMachine, this))
+		{
+			return;
+		}
+
+		id = null;
+	}
+
+	@Override
+	protected PreparedStatement createPreparedUpdateStatement(Connection c)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public boolean contains(String canonicalPath)
+	{
+		return canonicalPath.startsWith(path);
+	}
+
+	@Override
+	public void synchronizeInternal()
+	{
+		/// Needs to be reworked
+		if (!Services.locals.localAlreadyExists(getCanonicalPath()) && !Services.db.addRoot(Services.localMachine, this))
+		{
+			return;
+		}
+
 		Iterator<SharedFile> currentLocals = Services.db.list(this);
 		boolean changed = false;
 		while (currentLocals.hasNext())
 		{
 			changed |= ((LocalFile) currentLocals.next()).refreshAndWriteToDb();
 		}
-		return changed;
-	}
 	
-	private boolean search()
-	{
 		LinkedList<SharedFile> toAdd = new LinkedList<>();
-		boolean changed = false;
 		Find find = new Find(path);
 		while (find.hasNext())
 		{
@@ -92,16 +126,6 @@ public class LocalDirectory extends RootDirectory
 		}
 		Services.db.addFiles(this, toAdd);
 		
-		return changed;
-	}
-
-	@Override
-	public void synchronizeInternal()
-	{
-		if (!Services.locals.localAlreadyExists(getCanonicalPath()) && !Services.db.addRoot(Services.localMachine, this))
-		{
-			return;
-		}
 		
 		Services.logger.logStream.println("Synchronizing " + getCanonicalPath());
 

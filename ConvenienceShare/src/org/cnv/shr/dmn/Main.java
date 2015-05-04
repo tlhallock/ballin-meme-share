@@ -31,6 +31,10 @@ public class Main
 		// make sure downloaded files are in a mirror...
 		
 		
+		// test file goes to directory
+		// test directory goes to file
+		
+		
 		// Right now the locals are not showing their respective number of files and total file sizes because they are not being wrtten to the db.
 		
 		// black list

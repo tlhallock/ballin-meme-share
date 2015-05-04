@@ -7,6 +7,11 @@ public class RemoteDirectory extends RootDirectory
 		super(machine, path, tags, description);
 	}
 
+	public RemoteDirectory(int int1)
+	{
+		// TODO Auto-generated constructor stub
+	}
+
 	@Override
 	public boolean isLocal()
 	{

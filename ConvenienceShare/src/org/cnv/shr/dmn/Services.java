@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.cnv.shr.db.DbConnection;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.MessageReader;
@@ -106,7 +107,7 @@ public class Services
 					application.setVisible(true);
 					application.refreshAll();
 
-					application.refreshLocals(Services.locals.listLocals());
+					application.refreshLocals(DbRoots.listLocals(null));
 					application.refreshRemotes(Services.db.getRemoteMachines());
 				}
 				catch (Exception ex)

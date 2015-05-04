@@ -1,26 +1,50 @@
 package org.cnv.shr.mdl;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Iterator;
 
+import org.cnv.shr.db.h2.DbLocals;
+import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbObject;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 
-public abstract class RootDirectory
+public abstract class RootDirectory extends DbObject
 {
 	protected Machine machine;
 	protected String path;
 	protected long totalFileSize = -1;
 	protected long totalNumFiles = -1;
-	protected Integer id;
 	protected String description;
 	protected String tags;
 	
-	public RootDirectory(Machine machine, String path, String description, String tags)
+	protected RootDirectory(Integer id)
 	{
-		this.machine = machine;
-		this.path = path;
-		this.description = description;
-		this.tags = tags;
+		super(id);
+	}
+
+	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+	{
+		id                               = row.getInt   ("R_ID"           );
+		tags                             = row.getString("TAGS"           );
+		description                      = row.getString("DESCR"          );
+		totalFileSize                    = row.getLong  ("TSPACE"         );
+		totalNumFiles                    = row.getLong  ("NFILES"         );
+		
+		machine = (Machine) locals.getObject(DbLocals.DbCacheTypes.MACHINE, row.getInt("MID"));
+		if (machine == null)
+		{
+			machine = DbMachines.getMachine(c, row.getInt("MID"  ));
+		}
+		path = (String) locals.getObject(DbLocals.DbCacheTypes.PATH, row.getInt("PELEM"));
+		if (machine == null)
+		{
+			path = DbPaths.getPath(c,       row.getInt("PELEM"));
+		}
 	}
 	
 	public String getCanonicalPath()
@@ -31,11 +55,6 @@ public abstract class RootDirectory
 	public Machine getMachine()
 	{
 		return machine;
-	}
-
-	public Iterator<SharedFile> list()
-	{
-		return Services.db.list(this);
 	}
 	
 	public final void synchronize(boolean force)
@@ -133,5 +152,12 @@ public abstract class RootDirectory
 	public String getTotalNumberOfFiles()
 	{
 		return Misc.formatNumberOfFiles(totalNumFiles);
+	}
+
+
+	@Override
+	public String getTableName()
+	{
+		return "ROOT";
 	}
 }

@@ -16,7 +16,7 @@ import org.cnv.shr.stng.Settings;
 
 public class ChecksumManager extends Thread
 {
-	private HashSet<File> queue = new HashSet<>();
+	private HashSet<String> queue = new HashSet<>();
 	
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
@@ -58,8 +58,8 @@ public class ChecksumManager extends Thread
 				}
 			}
 
-			Iterator<File> iterator = queue.iterator();
-			next = iterator.next();
+			Iterator<String> iterator = queue.iterator();
+			next = new File(iterator.next());
 		}
 		finally
 		{
@@ -179,7 +179,15 @@ public class ChecksumManager extends Thread
 		lock.lock();
 		try
 		{
-			queue.add(f);
+			try
+			{
+				queue.add(f.getCanonicalPath());
+			}
+			catch (IOException e)
+			{
+				queue.add(f.getAbsolutePath());
+				e.printStackTrace();
+			}
 			condition.signalAll();
 		}
 		finally

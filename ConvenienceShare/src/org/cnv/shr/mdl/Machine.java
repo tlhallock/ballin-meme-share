@@ -2,8 +2,12 @@ package org.cnv.shr.mdl;
 
 import java.io.IOException;
 import java.security.PublicKey;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedList;
 
+import org.cnv.shr.db.h2.DbLocals;
+import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.dmn.Connection;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.FindMachines;
@@ -13,7 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Machine
+public class Machine extends DbObject
 {
 	private String ip;
 	private int port;
@@ -24,8 +28,6 @@ public class Machine
 	private long lastActive;
 	private Boolean sharing;
 	
-	private Integer dbId;
-
 	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
 
 	/*
@@ -60,21 +62,27 @@ public class Machine
 		}
 	}
 	
-	/** local machine **/
-	private Machine()
+	public Machine() {}
+
+	public Machine(int int1)
 	{
-		name       = Services.settings.machineName.get();
-		ip         = Services.settings.getLocalIp();
-		port       = Services.settings.servePortBegin.get();
-		identifier = Services.settings.machineIdentifier.get();
-		Services.keyManager.getKeys();
+		// TODO Auto-generated constructor stub
 	}
 
-
-	public void setDbId(int int1)
+	@Override
+	public void fill(java.sql.Connection c, ResultSet row, DbLocals locals) throws SQLException
 	{
-		dbId = int1;
+			id             = row.getInt   ("M_ID");        
+			name           = row.getString("MNAME");        
+			ip             = row.getString("DESCR");    
+			port		   = row.getInt   ("PORT");
+//			nports         = row.getInt   ("NPORTS");
+		    lastActive     = row.getLong  ("LAST_ACTIVE");
+		    sharing        = row.getBoolean("SHARING");
+		    identifier     = row.getString ("IDENT");
+//		    allowsMessages = row.getBoolean("MESSAGES");
 	}
+
 
 	public void setIp(String string)
 	{
@@ -96,15 +104,6 @@ public class Machine
 		return identifier;
 	}
 	
-	public int getDbId()
-	{
-		if (dbId == null)
-		{
-			dbId = Services.db.getMachine(identifier).dbId;
-		}
-		return dbId;
-	}
-
 	public String getName()
 	{
 		return name;
@@ -224,6 +223,14 @@ public class Machine
 	
 	public static class LocalMachine extends Machine
 	{
+		public LocalMachine()
+		{
+			name       = Services.settings.machineName.get();
+			ip         = Services.settings.getLocalIp();
+			port       = Services.settings.servePortBegin.get();
+			identifier = Services.settings.machineIdentifier.get();
+			Services.keyManager.getKeys();
+		}
 
 		public void setLastActive(long long1)
 		{
@@ -274,5 +281,17 @@ public class Machine
 		{
 			return new String[0];
 		}
+	}
+	
+	public void update(Connection connection) throws SQLException
+	{
+		// override this...
+	}
+
+	@Override
+	public String getTableName()
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
