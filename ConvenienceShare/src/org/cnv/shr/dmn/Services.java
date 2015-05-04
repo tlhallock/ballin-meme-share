@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.cnv.shr.db.DbConnection;
+import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.mdl.Machine;
@@ -39,6 +40,7 @@ public class Services
 	public static Timer monitorTimer;
 	public static Application application;
 	public static Machine localMachine;
+	public static DbConnectionCache h2DbCache;
 	
 	public static void initialize(String[] args) throws Exception
 	{
@@ -56,7 +58,8 @@ public class Services
 
 		logger.setLogLocation();
 		notifications = new Notifications();
-		db = new DbConnection();
+//		db = new DbConnection();
+		h2DbCache = new DbConnectionCache();
 		keyManager = new KeyManager();
 		localMachine = new Machine.LocalMachine();
 		networkManager = new ConnectionManager();

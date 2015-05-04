@@ -2,13 +2,15 @@ package org.cnv.shr.mdl;
 
 import java.io.IOException;
 import java.security.PublicKey;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
-import org.cnv.shr.dmn.Connection;
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.ListFiles;
@@ -173,7 +175,7 @@ public class Machine extends DbObject
 	{
 		try
 		{
-			Connection openConnection = Services.networkManager.openConnection(ip, port);
+			Communication openConnection = Services.networkManager.openConnection(ip, port);
 			openConnection.send(new FindMachines());
 			openConnection.send(new ListFiles());
 			openConnection.notifyDone();
@@ -283,15 +285,20 @@ public class Machine extends DbObject
 		}
 	}
 	
-	public void update(Connection connection) throws SQLException
-	{
-		// override this...
-	}
-
 	@Override
-	public String getTableName()
+	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		PreparedStatement stmt = c.prepareStatement(
+				  "update MACHINE"
+				+ "set MNAME=?, IP=?, PORT=?, LASTACTIVE=?,ISLOCAL=? "
+			    + "where MACHINE.IDENT = ?;");
+		int ndx = 1;
+		stmt.setString(ndx++, getName());
+		stmt.setString(ndx++, getIp());
+		stmt.setInt(ndx++, getPort());
+		stmt.setString(ndx++, getIdentifier());
+		stmt.setBoolean(ndx++, isLocal());
+		stmt.setString(ndx++, getIdentifier());
+		return stmt;
 	}
 }

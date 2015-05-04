@@ -6,7 +6,7 @@ import java.net.InetAddress;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.cnv.shr.dmn.Connection;
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
@@ -47,7 +47,7 @@ public class FileList extends Message
 	}
 
 	@Override
-	public void perform(Connection connection)
+	public void perform(Communication connection)
 	{
 		boolean changed = false;
 		Machine machine = getMachine();

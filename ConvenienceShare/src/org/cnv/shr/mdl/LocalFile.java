@@ -7,9 +7,15 @@ import org.cnv.shr.dmn.Services;
 
 public class LocalFile extends SharedFile
 {
-	public LocalFile() {}
+	public LocalFile(int int1)
+	{
+		super(int1);
+	}
+	
 	public LocalFile(LocalDirectory local, File f)
 	{
+		super(null);
+		
 		name = f.getName();
 		fileSize = f.length();
 		lastModified = f.lastModified();
@@ -43,13 +49,9 @@ public class LocalFile extends SharedFile
 		}
 		
 		rootDirectory = local;
-		description = null;
+		tags = null;
 	}
 	
-	public LocalFile(int int1)
-	{
-		// TODO Auto-generated constructor stub
-	}
 	public String getFullPath()
 	{
 		return rootDirectory.getCanonicalPath() + File.separatorChar + path + File.separatorChar + name;

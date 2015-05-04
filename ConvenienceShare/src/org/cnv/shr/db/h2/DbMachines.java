@@ -4,23 +4,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 
 public class DbMachines
 {
-	public static void addMachine(Connection c, Machine m) throws SQLException
+	public static void addMachine(Machine m) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement(
-				"merge into MACHINE(NAME, IP, PORT, LASTACTIVE, IDENT, LOCAL) values(?, ?, ?, CURRENT_TIMESTAMP, ?, ?);"))
-		{
-			int ndx = 1;
-			stmt.setString(ndx++, m.getName());
-			stmt.setString(ndx++, m.getIp());
-			stmt.setInt(   ndx++, m.getPort());
-			stmt.setString(ndx++, m.getIdentifier());
-			stmt.setInt(   ndx++, m.isLocal() ? 1 : 0);
-			stmt.execute();
-		}
+		Connection c = Services.h2DbCache.getConnection();
 
 //		int machineId = getMachineId(c, m.getIp(), m.getPort());
 //		for (String publicKey : m.getKeys())

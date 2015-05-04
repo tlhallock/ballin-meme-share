@@ -38,6 +38,11 @@ public class PathElement extends DbObject
 	{
 		return value;
 	}
+	
+	public String[] getDbValues()
+	{
+		return new String[] {value};
+	}
 
 
 	@Override

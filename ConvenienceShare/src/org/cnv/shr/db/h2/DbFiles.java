@@ -9,7 +9,7 @@ import org.cnv.shr.mdl.PathElement;
 public class DbFiles
 {
 
-	public static LocalFile getFile(Connection connection, LocalDirectory local, PathElement element)
+	public static LocalFile getFile(LocalDirectory local, PathElement element)
 	{
 		return null;
 	}

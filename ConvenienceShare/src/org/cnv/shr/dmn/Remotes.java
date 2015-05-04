@@ -24,7 +24,7 @@ public class Remotes
 	{
 		try
 		{
-			Connection openConnection = Services.networkManager.openConnection(url);
+			Communication openConnection = Services.networkManager.openConnection(url);
 			openConnection.send(new MachineFound());
 			openConnection.send(new FindMachines());
 			openConnection.notifyDone();

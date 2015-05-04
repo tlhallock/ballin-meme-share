@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-import org.cnv.shr.dmn.Connection;
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class DoneMessage extends Message
@@ -30,7 +30,7 @@ public class DoneMessage extends Message
 	}
 
 	@Override
-	public void perform(Connection connection) throws Exception
+	public void perform(Communication connection) throws Exception
 	{
 		connection.remoteIsDone();
 	}

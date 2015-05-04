@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.dmn.Services;
+
 public abstract class DbObject
 {
 	protected Integer id;
@@ -15,13 +17,21 @@ public abstract class DbObject
 	}
 	
 	public abstract void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException;
-	protected abstract PreparedStatement createPreparedUpdateStatement(Connection c);
+	protected abstract PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException;
+	
+	public final void setId(int i)
+	{
+		throw new RuntimeException("Fix this.");
+	}
 	
 	public Integer getId()
 	{
 		return id;
 	}
-	
+
+	public final void add()    throws SQLException {    add(Services.h2DbCache.getConnection()); }
+	public final void update() throws SQLException { update(Services.h2DbCache.getConnection()); }
+	public final void delete() throws SQLException { delete(Services.h2DbCache.getConnection()); }
 
 	public final void add(Connection c) throws SQLException
 	{

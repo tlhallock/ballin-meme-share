@@ -196,7 +196,7 @@ public class MachineView extends javax.swing.JPanel
     	    		String.valueOf(next.getName()        ),
     	    		new FileSize(  next.getFileSize()    ),
     	    		String.valueOf(next.getChecksum()    ),
-    	    		String.valueOf(next.getDescription() ),
+    	    		String.valueOf(next.getTags()        ),
     	    		new Date(      next.getLastUpdated() ),
     	    		String.valueOf(ext),
     		});

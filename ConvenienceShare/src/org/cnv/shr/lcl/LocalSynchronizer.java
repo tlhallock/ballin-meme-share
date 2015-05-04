@@ -24,9 +24,8 @@ public class LocalSynchronizer
 {
 	LocalDirectorySyncIterator iterator;
 	LocalDirectory local;
-	Connection connection;
 	
-	LocalSynchronizer(LocalDirectory dir, Connection connection)
+	public LocalSynchronizer(LocalDirectory dir)
 	{
 		iterator = new LocalDirectorySyncIterator(dir);
 	}
@@ -53,7 +52,7 @@ public class LocalSynchronizer
 			accountedFor.add(element.getName());
 			
 			File fsCopy = files.get(element.getName());
-			LocalFile dbVersion = DbFiles.getFile(connection, local, element);
+			LocalFile dbVersion = DbFiles.getFile(local, element);
 			
 			if (fsCopy == null)
 			{
@@ -62,7 +61,7 @@ public class LocalSynchronizer
 					// delete stale file
 					try
 					{
-						dbVersion.delete(connection);
+						dbVersion.delete();
 					}
 					catch (SQLException e)
 					{

@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-import org.cnv.shr.dmn.Connection;
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
@@ -89,6 +89,6 @@ public abstract class Message
 	protected abstract void parse(InputStream bytes) throws IOException;
 	protected abstract void write(ByteListBuffer buffer);
 	protected abstract int getType();
-	public abstract void perform(Connection connection) throws Exception;
+	public abstract void perform(Communication connection) throws Exception;
 	
 }

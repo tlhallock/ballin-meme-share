@@ -51,7 +51,7 @@ public class Locals
 		synchronizing.remove(d.getCanonicalPath());
 	}
 	
-	public void share(Connection c)
+	public void share(Communication c)
 	{
 //		FileList msg = new FileList();
 //		int count = 0;

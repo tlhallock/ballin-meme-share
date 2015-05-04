@@ -2,8 +2,8 @@ package org.cnv.shr.db.h2;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -13,6 +13,55 @@ import org.cnv.shr.mdl.RootDirectory;
 
 public class DbRoots
 {
+
+	static long getTotalFileSize(RootDirectory d)
+	{
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement stmt = c.prepareStatement("select sum(SIZE) as totalsize from FILE where ROOT = ?;"))
+		{
+			stmt.setInt(1, d.getId());
+			ResultSet executeQuery = stmt.executeQuery();
+			if (executeQuery.next())
+			{
+				return executeQuery.getLong("totalsize");
+			}
+			else
+			{
+				return -1;
+			}
+		}
+		catch (SQLException e)
+		{
+			Services.logger.logStream.println("Unable to get file size of " + d);
+			e.printStackTrace(Services.logger.logStream);
+			return -1;
+		}
+	}
+
+	static long getNumberOfFiles(RootDirectory d) throws SQLException
+	{
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement stmt = c.prepareStatement("select count(F_ID) as number from FILE where ROOT = ?;"))
+		{
+			stmt.setInt(1, d.getId());
+			ResultSet executeQuery = stmt.executeQuery();
+			if (executeQuery.next())
+			{
+				return executeQuery.getLong("number");
+			}
+			else
+			{
+				return -1;
+			}
+		}
+		catch (SQLException e)
+		{
+			Services.logger.logStream.println("Unable to count files in " + d);
+			e.printStackTrace(Services.logger.logStream);
+			return -1;
+		}
+	}
+
 //	public static void addRoot(Connection c, RootDirectory root) throws SQLException
 //	{
 //		try (PreparedStatement stmt = c.prepareStatement(

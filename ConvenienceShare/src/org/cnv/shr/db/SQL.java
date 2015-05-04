@@ -367,41 +367,6 @@ public class SQL
 		}
 	}
 	
-	static long getTotalFileSize(Connection c, RootDirectory d) throws SQLException
-	{
-		try (PreparedStatement stmt = c.prepareStatement(
-						"select sum(SIZE) as totalsize from FILE where ROOT = ?;"))
-		{
-			stmt.setInt(1, d.getId());
-			ResultSet executeQuery = stmt.executeQuery();
-			if (executeQuery.next())
-			{
-				return executeQuery.getLong("totalsize");
-			}
-			else
-			{
-				return -1;
-			}
-		}
-	}
-	
-	static long getNumberOfFiles(Connection c, RootDirectory d) throws SQLException
-	{
-		try (PreparedStatement stmt = c.prepareStatement(
-						"select count(F_ID) as number from FILE where ROOT = ?;"))
-		{
-			stmt.setInt(1, d.getId());
-			ResultSet executeQuery = stmt.executeQuery();
-			if (executeQuery.next())
-			{
-				return executeQuery.getLong("number");
-			}
-			else
-			{
-				return -1;
-			}
-		}
-	}
 
 	private static void addFileWithChecksum(Connection c, int rootDirectoryId, SharedFile file) throws SQLException
 	{
@@ -560,29 +525,29 @@ public class SQL
 		addFile(c, rootId, file);
 	}
 
-	public static LocalFile getFile(Connection c, RootDirectory directory, String relPath, String name) throws SQLException
-	{
-		try (PreparedStatement stmt = c.prepareStatement(
-				"select * from FILE                                       " +
-				"join PATH on FILE.PATH = PATH.P_ID                       " +
-				" where FILE.ROOT = ? and FILE.NAME = ? and PATH.PATH = ?;");)
-		{
-			int ndx = 1;
-			stmt.setInt(ndx++, directory.getId());
-			stmt.setString(ndx++, name);
-			stmt.setString(ndx++, relPath);
-			
-			LocalFileIterator localFileIterator = new SharedFileIterator.LocalFileIterator(  (LocalDirectory) directory, stmt.executeQuery());
-			if (localFileIterator.hasNext())
-			{
-				return (LocalFile) localFileIterator.next();
-			}
-			else
-			{
-				return null;
-			}
-		}
-	}
+//	public static LocalFile getFile(Connection c, RootDirectory directory, String relPath, String name) throws SQLException
+//	{
+//		try (PreparedStatement stmt = c.prepareStatement(
+//				"select * from FILE                                       " +
+//				"join PATH on FILE.PATH = PATH.P_ID                       " +
+//				" where FILE.ROOT = ? and FILE.NAME = ? and PATH.PATH = ?;");)
+//		{
+//			int ndx = 1;
+//			stmt.setInt(ndx++, directory.getId());
+//			stmt.setString(ndx++, name);
+//			stmt.setString(ndx++, relPath);
+//			
+//			LocalFileIterator localFileIterator = new SharedFileIterator.LocalFileIterator(  (LocalDirectory) directory, stmt.executeQuery());
+//			if (localFileIterator.hasNext())
+//			{
+//				return (LocalFile) localFileIterator.next();
+//			}
+//			else
+//			{
+//				return null;
+//			}
+//		}
+//	}
 	
 	private static void ensurePath(Connection c, String path) throws SQLException
 	{

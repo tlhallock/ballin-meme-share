@@ -1,5 +1,6 @@
 package org.cnv.shr.mdl;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,8 +10,9 @@ import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.ByteListBuffer;
 
-public class SharedFile extends DbObject
+public class SharedFile extends DbObject implements NetworkObject
 {
 	protected String name;
 	protected String path;
@@ -21,11 +23,10 @@ public class SharedFile extends DbObject
 	protected long lastModified;
 	
 
-	public void setId(int int1)
-	{
-		this.id = int1;
+	public SharedFile(Integer int1) {
+		super(int1);
 	}
-	
+
 	public String getName()
 	{
 		return name;
@@ -106,5 +107,22 @@ public class SharedFile extends DbObject
 	protected PreparedStatement createPreparedUpdateStatement(Connection c)
 	{
 		return null;
+	}
+
+	@Override
+	public void read(InputStream input) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void write(ByteListBuffer buffer) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public String getTags()
+	{
+		return tags;
 	}
 }

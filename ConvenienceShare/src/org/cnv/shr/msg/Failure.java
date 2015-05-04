@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-import org.cnv.shr.dmn.Connection;
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class Failure extends Message
@@ -16,7 +16,7 @@ public class Failure extends Message
 	}
 	
 	@Override
-	public void perform(Connection connection)
+	public void perform(Communication connection)
 	{
 		System.out.println("Unable to perform request.");
 	}

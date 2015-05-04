@@ -7,9 +7,9 @@ import java.util.HashMap;
 
 public class ConnectionManager
 {
-	private HashMap<String, Connection> openConnections = new HashMap<>();
+	private HashMap<String, Communication> openConnections = new HashMap<>();
 	
-	public Connection openConnection(String url) throws UnknownHostException, IOException
+	public Communication openConnection(String url) throws UnknownHostException, IOException
 	{
 		int index = url.indexOf(':');
 		if (index < 0)
@@ -23,9 +23,9 @@ public class ConnectionManager
 		}
 	}
 	
-	public synchronized Connection openConnection(String ip, int port) throws UnknownHostException, IOException
+	public synchronized Communication openConnection(String ip, int port) throws UnknownHostException, IOException
 	{
-		final Connection connection = new Connection(ip, port);
+		final Communication connection = new Communication(ip, port);
 		openConnections.put(connection.getUrl(), connection);
 		Services.connectionThreads.execute(new Runnable() {
 			@Override
@@ -43,7 +43,7 @@ public class ConnectionManager
 	
 	public synchronized void handleConnection(Socket accepted) throws IOException
 	{
-		Connection connection = new Connection(accepted);
+		Communication connection = new Communication(accepted);
 		openConnections.put(connection.getUrl(), connection);
 		connection.run();
 		

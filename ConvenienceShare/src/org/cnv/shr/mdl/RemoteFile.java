@@ -1,18 +1,26 @@
 package org.cnv.shr.mdl;
 
+import java.io.InputStream;
+
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.ByteListBuffer;
 
 public class RemoteFile extends SharedFile
 {
-	public RemoteFile(int int1)
-	{
-		// TODO Auto-generated constructor stub
-	}
-
-
 	RemoteDirectory d;
 	String localCopy;
-	
+
+	public RemoteFile(int int1)
+	{
+		super(int1);
+	}
+
+	public RemoteFile(Machine machine, RemoteDirectory remote, InputStream input)
+	{
+		super(null);
+		
+		
+	}
 	
 	public enum SharedFileState
 	{
@@ -50,5 +58,4 @@ public class RemoteFile extends SharedFile
 			return null;
 		}
 	}
-	
 }

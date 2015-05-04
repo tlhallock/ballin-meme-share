@@ -10,7 +10,7 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 
-public class Connection implements Runnable
+public class Communication implements Runnable
 {
 	private long connectionOpened;
 	private long lastActivity;
@@ -24,7 +24,7 @@ public class Connection implements Runnable
 	private boolean done = false;
 
 	/** Initiator **/
-	public Connection(String ip, int port) throws UnknownHostException, IOException
+	public Communication(String ip, int port) throws UnknownHostException, IOException
 	{
 		lastActivity = connectionOpened = System.currentTimeMillis();
 		socket = new Socket(ip, port);
@@ -33,7 +33,7 @@ public class Connection implements Runnable
 	}
 	
 	/** Receiver **/
-	public Connection(Socket socket) throws IOException
+	public Communication(Socket socket) throws IOException
 	{
 		lastActivity = connectionOpened = System.currentTimeMillis();
 		this.socket = socket;

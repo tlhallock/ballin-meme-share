@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-import org.cnv.shr.dmn.Connection;
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
@@ -42,7 +42,7 @@ public class MachineFound extends Message
 	}
 	
 	@Override
-	public void perform(Connection connection) throws Exception
+	public void perform(Communication connection) throws Exception
 	{
 		Machine newMachine = new Machine(ip, port, name, ident, keys);
 		newMachine.setLastActive(lastActive);
