@@ -87,11 +87,14 @@ public class ChecksumManager extends Thread
 		}
 
 		SharedFile sf = l.getFile(file);
-		if (sf == null)
+		if (sf != null)
+		{
+			sf.setChecksum(checksum);
+		}
+		else
 		{
 			Services.logger.logStream.println("File went missing: " + file);
 		}
-		sf.setChecksum(checksum);
 
 		lock.lock();
 		try
@@ -123,7 +126,7 @@ public class ChecksumManager extends Thread
 
 	public String checksumBlocking(LocalDirectory l, File f) throws IOException
 	{
-		Services.logger.logStream.println("Checksumming " + f);
+//		Services.logger.logStream.println("Checksumming " + f);
 		MessageDigest digest = null;
 		try
 		{
@@ -157,7 +160,7 @@ public class ChecksumManager extends Thread
 				sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
 			}
 
-			Services.logger.logStream.println("Done checksumming " + f + ": " + sb.toString());
+//			Services.logger.logStream.println("Done checksumming " + f + ": " + sb.toString());
 			return sb.toString();
 		}
 	}

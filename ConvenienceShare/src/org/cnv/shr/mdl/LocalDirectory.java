@@ -1,9 +1,6 @@
 package org.cnv.shr.mdl;
 
-import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
@@ -13,11 +10,14 @@ import org.cnv.shr.util.Misc;
 
 public class LocalDirectory extends RootDirectory
 {
-	public LocalDirectory(File localDirectory) throws IOException
+	private PathElement path;
+	
+	public LocalDirectory(PathElement path) throws IOException
 	{
 		super(null);
 		machine = Services.localMachine;
-		path = localDirectory.getCanonicalPath();
+		name = path.getName();
+		this.path = path;
 		totalFileSize = -1;
 		totalNumFiles = -1;
 		id = null;
@@ -35,16 +35,14 @@ public class LocalDirectory extends RootDirectory
 		throw new RuntimeException("Implement me!");
 	}
 
-	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c)
+	public void setPath(PathElement pathElement)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		path = pathElement;
 	}
 
 	public boolean contains(String canonicalPath)
 	{
-		return canonicalPath.startsWith(path);
+		return canonicalPath.startsWith(path.getFullPath());
 	}
 
 	@Override
@@ -147,5 +145,11 @@ public class LocalDirectory extends RootDirectory
 	public boolean isLocal()
 	{
 		return true;
+	}
+
+	@Override
+	public PathElement getCanonicalPath()
+	{
+		return path;
 	}
 }

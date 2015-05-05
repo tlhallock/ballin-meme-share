@@ -87,11 +87,11 @@ public class FileList extends Message
 		int numFolders = ByteReader.readInt(bytes);
 		for (int i = 0; i < numFolders; i++)
 		{
-			String path        = ByteReader.readString(bytes);
+			String name        = ByteReader.readString(bytes);
 			String tags        = ByteReader.readString(bytes);
 			String description = ByteReader.readString(bytes);
 
-			FilesList list = getList(new RemoteDirectory(machine, path, tags, description));
+			FilesList list = getList(new RemoteDirectory(machine, name, tags, description));
 			int nFiles         = ByteReader.readInt(bytes);
 			for (int j = 0; j < nFiles; j++)
 			{
@@ -106,7 +106,7 @@ public class FileList extends Message
 		buffer.append(sharedDirectories.size());
 		for (FilesList dir : sharedDirectories)
 		{
-			buffer.append(dir.root.getCanonicalPath());
+			buffer.append(dir.root.getName());
 			buffer.append(dir.root.getTags());
 			buffer.append(dir.root.getDescription());
 

@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbLocals;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
@@ -93,9 +94,10 @@ public class Machine extends DbObject
 	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
 	{
 		PreparedStatement stmt = c.prepareStatement(
-				 "merge into MACHINE key(IDENT) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+				 "merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where MACHINE.IDENT = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?);"
 				, Statement.RETURN_GENERATED_KEYS);
 		int ndx = 1;
+		stmt.setString(ndx++,  getIdentifier());
 		stmt.setString(ndx++,  getName());
 		stmt.setString(ndx++,  getIp());
 		stmt.setInt(ndx++,     getPort());
@@ -262,7 +264,7 @@ public class Machine extends DbObject
 		{
 			Services.keyManager.getKeys();
 		}
-
+		
 		public void setLastActive(long long1)
 		{
 			throw new UnsupportedOperationException("This is the local machine.");
@@ -326,6 +328,11 @@ public class Machine extends DbObject
 		public boolean getAllowsMessages()
 		{
 			return true;
+		}
+
+		public void setId()
+		{
+			id = DbMachines.getMachineId(getIdentifier());
 		}
 	}
 }

@@ -15,6 +15,7 @@ import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.Machine.LocalMachine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
@@ -63,7 +64,7 @@ public class DbTables
 			ps.println("----------------------------------------------");
 			ResultSet executeQuery2 = c.prepareStatement("select * from " + tableName + ";").executeQuery();
 			int ncols = executeQuery2.getMetaData().getColumnCount();
-			for (int i = 1; i < ncols; i++)
+			for (int i = 1; i <= ncols; i++)
 			{
 				ps.print(executeQuery2.getMetaData().getColumnName(i) + ",");
 			}
@@ -99,6 +100,22 @@ public class DbTables
 			}
 		}
 		
+		public static DbObjects get(DbObject object)
+		{
+			if (object instanceof SecurityKey    ) return PUBLIC_KEY      ;   
+			if (object instanceof PathElement    ) return PELEM           ;           
+			if (object instanceof IgnorePattern  ) return IGNORE_PATTERN  ;       
+			if (object instanceof Download       ) return PENDING_DOWNLOAD;
+			if (object instanceof UserMessage    ) return MESSAGES        ;  
+			if (object instanceof LocalDirectory ) return LROOT           ;        
+			if (object instanceof RemoteDirectory) return RROOT           ;  
+			if (object instanceof LocalFile      ) return LFILE           ; 
+			if (object instanceof RemoteFile     ) return RFILE           ; 
+			if (object instanceof LocalMachine   ) return LMACHINE        ;
+			if (object instanceof Machine        ) return RMACHINE        ;
+			return null;
+		}
+		
 		public String getTableName()
 		{
 			return tableName;
@@ -106,8 +123,27 @@ public class DbTables
 		
 		public DbObject find(Connection c, int id, DbLocals locals)
 		{
-			try (PreparedStatement stmt = c.prepareStatement("select * from " + getTableName() + " where " + pKey + " = " + id + ";"))
+			switch (this)
 			{
+			case RMACHINE:
+			case LMACHINE:
+				if (id == Services.localMachine.getId())
+				{
+					return Services.localMachine;
+				}
+				break;
+			case PELEM:
+				if (id == DbPaths.ROOT.getId())
+				{
+					return DbPaths.ROOT;
+				}
+				break;
+			default:
+			}
+			System.out.println("select * from " + getTableName() + " where " + pKey + " = ?;");
+			try (PreparedStatement stmt = c.prepareStatement("select * from " + getTableName() + " where " + pKey + " = ?;"))
+			{
+				stmt.setInt(1,  id);
 				ResultSet executeQuery = stmt.executeQuery();
 				DbObject object = allocate(executeQuery);
 				object.fill(c, executeQuery, locals);
@@ -133,6 +169,7 @@ public class DbTables
 		DbObjects.LROOT           ,
 		DbObjects.LFILE           ,
 		DbObjects.LMACHINE        ,
+		DbObjects.ROOT_CONTAINS   ,
 	};
 
 	public static void debugDb(PrintStream ps)
@@ -174,8 +211,15 @@ public class DbTables
 	static void createDb(Connection c) throws SQLException, IOException
 	{
 		execute(c, "/create_h2.sql");
-		c.prepareStatement("INSERT INTO PELEM VALUES (0, 0, FALSE, '          ');").execute();
-		c.prepareStatement("ALTER TABLE PELEM ADD FOREIGN KEY (PARENT) REFERENCES PELEM(P_ID);").execute();
+		try
+		{
+			c.prepareStatement("INSERT INTO PELEM VALUES (0, 0, FALSE, '          ');").execute();
+			c.prepareStatement("ALTER TABLE PELEM ADD FOREIGN KEY (PARENT) REFERENCES PELEM(P_ID);").execute();
+		}
+		catch(SQLException ex)
+		{
+			Services.logger.logStream.println("Unable to create constraint in initialization");
+		}
 	}
 	
 	private static void execute(Connection c, String file) throws SQLException, IOException

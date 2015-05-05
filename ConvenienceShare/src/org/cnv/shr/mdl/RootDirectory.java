@@ -1,25 +1,23 @@
 package org.cnv.shr.mdl;
 
-import org.cnv.shr.db.h2.DbTables;
-
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.sql.Statement;
 
 import org.cnv.shr.db.h2.DbLocals;
-import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 
 public abstract class RootDirectory extends DbObject
 {
 	protected Machine machine;
-	protected String path;
+	protected String name;
 	protected long totalFileSize = -1;
 	protected long totalNumFiles = -1;
 	protected String description;
@@ -30,11 +28,11 @@ public abstract class RootDirectory extends DbObject
 		super(id);
 	}
 
-	public RootDirectory(Machine machine2, String path2, String tags2, String description2)
+	public RootDirectory(Machine machine2, String name, String tags2, String description2)
 	{
 		super(null);
 		this.machine = machine2;
-		this.path = path2;
+		this.name = name;
 		this.tags = tags2;
 		this.description = description2;
 	}
@@ -46,15 +44,41 @@ public abstract class RootDirectory extends DbObject
 		description                      = row.getString("DESCR"          );
 		totalFileSize                    = row.getLong  ("TSPACE"         );
 		totalNumFiles                    = row.getLong  ("NFILES"         );
+		name                             = row.getString("RNAME");
 		
 		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.RMACHINE, row.getInt("MID"));
-		path = ((PathElement) locals.getObject(c, DbTables.DbObjects.PELEM,    row.getInt("PELEM"))).getFullPath();
+		setPath((PathElement) locals.getObject(c, DbTables.DbObjects.PELEM,    row.getInt("PELEM")));
+	}
+
+	protected abstract void setPath(PathElement object);
+
+	@Override
+	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
+	{
+		PreparedStatement stmt;
+		int ndx = 1;
+		
+		if (id == null)
+		{
+			stmt = c.prepareStatement("merge into ROOT key(PELEM) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
+		}
+		else
+		{
+			stmt = c.prepareStatement("merge into ROOT key(R_ID)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
+			stmt.setInt(ndx++, getId());
+		}
+		stmt.setInt(ndx++, getCanonicalPath().getId());
+		stmt.setString(ndx++, getTags());
+		stmt.setString(ndx++, getDescription());
+		stmt.setInt(ndx++, machine.getId());
+		stmt.setBoolean(ndx++, isLocal());
+		stmt.setLong(ndx++, totalFileSize);
+		stmt.setLong(ndx++, totalNumFiles);
+		stmt.setString(ndx++, name);
+		return stmt;
 	}
 	
-	public String getCanonicalPath()
-	{
-		return path;
-	}
+	public abstract PathElement getCanonicalPath();
 
 	public Machine getMachine()
 	{
@@ -73,7 +97,7 @@ public abstract class RootDirectory extends DbObject
 			synchronizeInternal();
 			totalNumFiles = DbRoots.getNumberOfFiles(this);
 			totalFileSize = DbRoots.getTotalFileSize(this);
-			update();
+			save();
 		}
 		catch (SQLException e)
 		{
@@ -113,11 +137,6 @@ public abstract class RootDirectory extends DbObject
 		this.machine = machine;
 	}
 
-	public void setPath(String path)
-	{
-		this.path = path;
-	}
-
 	public void setTotalFileSize(long totalFileSize)
 	{
 		this.totalFileSize = totalFileSize;
@@ -151,5 +170,10 @@ public abstract class RootDirectory extends DbObject
 	public String getTotalNumberOfFiles()
 	{
 		return Misc.formatNumberOfFiles(totalNumFiles);
+	}
+
+	public String getName()
+	{
+		return name;
 	}
 }

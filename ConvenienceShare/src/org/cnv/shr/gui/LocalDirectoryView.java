@@ -8,7 +8,6 @@ package org.cnv.shr.gui;
 
 import java.sql.SQLException;
 
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.RootDirectory;
 
 /**
@@ -34,8 +33,8 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		{
 			return;
 		}
-		setTitle(root.getCanonicalPath());
-		pathLabel.setText(root.getCanonicalPath());
+		setTitle(root.getCanonicalPath().getFullPath());
+		pathLabel.setText(root.getCanonicalPath().getFullPath());
 		tagsString.setText(root.getTags());
 		descriptionString.setText(root.getDescription());
 		
@@ -61,7 +60,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		
 		try
 		{
-			r.update();
+			r.save();
 		}
 		catch (SQLException e)
 		{

@@ -11,16 +11,15 @@ import org.cnv.shr.mdl.PathElement;
 
 public class LocalDirectorySyncIterator
 {
-	private SynchronizationTask next;
+	private boolean first;
 	private LinkedList<Node> stack = new LinkedList<>();
 	private LocalDirectory root;
 		
 		
 		public LocalDirectorySyncIterator(LocalDirectory directory)
 		{
-			String path = directory.getCanonicalPath();
 			root = directory;
-			File f = new File(path);
+			File f = new File(directory.getCanonicalPath().getFullPath());
 
 			if (Files.isSymbolicLink(Paths.get(f.getAbsolutePath()))
 				|| !f.isDirectory())
@@ -28,13 +27,9 @@ public class LocalDirectorySyncIterator
 				throw new RuntimeException("Symbolic link: " + directory + ". Skipping");
 			}
 
-			PathElement pathElement = DbPaths.getPathElement(root, path);
-			if (pathElement == null)
-			{
-				throw new RuntimeException("Unable to get path of " + path);
-			}
-			stack.addLast(new Node(new Pair(f, pathElement), new SynchronizationTask(
-					pathElement.getId(), root, f.listFiles(), DbPaths.ROOT)));
+			stack.addLast(new Node(new Pair(f, DbPaths.ROOT), new SynchronizationTask(
+					DbPaths.ROOT, root, f.listFiles())));
+			first = true;
 			
 			
 //			if (Files.isSymbolicLink(Paths.get(directory.getAbsolutePath())))
@@ -60,6 +55,11 @@ public class LocalDirectorySyncIterator
 
 		public SynchronizationTask next()
 		{
+			if (first)
+			{
+				first = false;
+				return stack.getLast().sync;
+			}
 			do
 			{
 				if (stack.isEmpty())
@@ -110,7 +110,7 @@ public class LocalDirectorySyncIterator
 					}
 					
 					stack.addLast(new Node(sync.synchronizedResults[index], new SynchronizationTask(
-							this.current.dbCopy.getId(), root, grandChildren, dbDir)));
+							dbDir, root, grandChildren)));
 					index++;
 					return true;
 				}

@@ -17,6 +17,7 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.Machine.LocalMachine;
 import org.cnv.shr.msg.MessageReader;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.Misc;
@@ -41,7 +42,7 @@ public class Services
 	public static DbConnection db;
 	public static Timer monitorTimer;
 	public static Application application;
-	public static Machine localMachine;
+	public static LocalMachine localMachine;
 	public static DbConnectionCache h2DbCache;
 	
 	public static void initialize(String[] args) throws Exception
@@ -60,11 +61,16 @@ public class Services
 
 		logger.setLogLocation();
 		notifications = new Notifications();
-		h2DbCache = new DbConnectionCache();
 		keyManager = new KeyManager();
+		h2DbCache = new DbConnectionCache();
 		localMachine = new Machine.LocalMachine();
+		if (!localMachine.save())
+		{
+			localMachine.setId();
+		}
 		networkManager = new ConnectionManager();
 		msgReader = new MessageReader();
+		
 		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
 		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
@@ -98,7 +104,6 @@ public class Services
 			}}, settings.monitorRepeat.get(), settings.monitorRepeat.get());
 		
 		// Ensure the local machine is added and that the downloads directory is shared.
-		localMachine.update();
 		locals.share(settings.downloadsDirectory.get());
 
 		java.awt.EventQueue.invokeLater(new Runnable()

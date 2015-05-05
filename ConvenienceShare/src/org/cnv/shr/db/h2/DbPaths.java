@@ -4,10 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
+import java.sql.Statement;
+import java.util.ArrayList;
 
-import org.cnv.shr.db.DbConnection;
+import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
@@ -15,23 +15,33 @@ import org.cnv.shr.mdl.RootDirectory;
 
 public class DbPaths
 {
-	public static PathElement ROOT = new PathElement(0, "");
+	public static PathElement ROOT = new PathElement(null, 0, "")
+	{
+		public PathElement getParent()
+		{
+			return ROOT;
+		}
+		@Override
+		public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException {}
+	};
 
-	
-	
-	
-	public static String getPath(int pid)
+	public static PathElement getPathElement(int pid)
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		RStringBuilder builder = new RStringBuilder();
-		try (PreparedStatement stmt = c.prepareStatement("select PELEMENT, PARENT from PATH where PELEMENT = ?;"))
+		
+		
+		ArrayList<Integer> ids   = new ArrayList<>();
+		ArrayList<String> values = new ArrayList<>();
+		
+		try (PreparedStatement stmt = c.prepareStatement("select PARENT, PELEM from PATH where P_ID = ?;"))
 		{
 			do
 			{
 				stmt.setInt(1, pid);
 				ResultSet executeQuery = stmt.executeQuery();
-				builder.preppend(executeQuery.getString(1));
-				pid = executeQuery.getInt(2);
+				values.add(executeQuery.getString(1));
+				ids.add(pid = executeQuery.getInt(2));
 			}
 			while (pid != ROOT.getId());
 		}
@@ -39,92 +49,161 @@ public class DbPaths
 		{
 			e.printStackTrace();
 		}
-		return builder.toString();
+		
+		PathElement current = ROOT;
+		for (int i = 0; i < ids.size(); i++)
+		{
+			current = new PathElement(current, ids.get(i), values.get(i));
+		}
+		
+		return current;
 	}
 	
-	public static void getPathElementIds(PathElement[] pathElems)
+	public static void setPathElementIds(PathElement root, PathElement[] pathElems)
 	{
 		Connection c = Services.h2DbCache.getConnection();
-		LinkedList<PathElement> elems = new LinkedList<>();
-		int pid = ROOT.getId();
+		int pid = root.getId();
 		boolean exists = true;
+		int elemsIdx = 0;
 
-		try (PreparedStatement existsStmt = c.prepareStatement("select P_ID from PATH where PARENT=? and PELEMENT=?;");
-			 PreparedStatement createStmt = c.prepareStatement("insert into PATH(PARENT, PELEMENT) values(?, ?);"))
+		try (PreparedStatement existsStmt = c.prepareStatement("select P_ID from PELEM where PARENT=? and PELEM=?;");
+			 PreparedStatement createStmt = c.prepareStatement("insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);", Statement.RETURN_GENERATED_KEYS))
 		{
-			for (PathElement ele : pathElems)
+			while (elemsIdx < pathElems.length)
 			{
-				String[] dbEles = ele.getDbValues();
-				int elemsIdx = 0;
-				while (elemsIdx < dbEles.length)
+				if (exists)
 				{
-					if (exists)
+					existsStmt.setInt(1, pid);
+					existsStmt.setString(2, pathElems[elemsIdx].getName());
+					ResultSet results = existsStmt.executeQuery();
+					if (!results.next())
 					{
-						existsStmt.setInt(1, pid);
-						existsStmt.setString(2, dbEles[elemsIdx]);
-						ResultSet results = existsStmt.executeQuery();
-						if (!results.next())
-						{
-							exists = false;
-							continue;
-						}
+						exists = false;
+						continue;
+					}
 
-						pid = results.getInt(1);
-						elemsIdx++;
+					pathElems[elemsIdx].setId(pid = results.getInt(1));
+					elemsIdx++;
+				}
+				else
+				{
+					createStmt.setInt(1, pid);
+					createStmt.setBoolean(2, pathElems[elemsIdx].isBroken());
+					createStmt.setString(3, pathElems[elemsIdx].getName());
+					createStmt.executeUpdate();
+					ResultSet generatedKeys = createStmt.getGeneratedKeys();
+					if (generatedKeys.next())
+					{
+						pathElems[elemsIdx].setId(pid = generatedKeys.getInt(1));
 					}
 					else
 					{
-						createStmt.setInt(1, pid);
-						createStmt.setString(2, dbEles[elemsIdx]);
-						createStmt.executeUpdate();
-
-						pid = createStmt.getGeneratedKeys().getInt(1);
+						if (pathElems[elemsIdx].getId() == null)
+						{
+							throw new RuntimeException("Unable to create path: " + PathBreaker.join(pathElems) + "[" + pathElems[elemsIdx].getName() + "]");
+						}
 					}
+					elemsIdx++;
 				}
 			}
 		}
 		catch (SQLException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
 	public static DbIterator<PathElement> listPathElements(RootDirectory root, PathElement parent)
 	{
-		return null;
+		Connection c = Services.h2DbCache.getConnection();
+		try
+		{
+			PreparedStatement stmt = c.prepareStatement(
+				"select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
+				"join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID " + 
+				"where PELEM.PARENT = ?;                                                        ");
+			stmt.setInt(1, root.getId());
+			stmt.setInt(2, parent.getId());
+			return new DbIterator<PathElement>(c, stmt.executeQuery(), DbObjects.PELEM, new DbLocals()
+				.setObject(root)
+				.setObject(parent)
+			);
+		}
+		catch (SQLException ex)
+		{
+			ex.printStackTrace();
+			return new DbIterator.NullIterator<PathElement>();
+		}
 	}
 
 
-	public static void pathLiesIn(PathElement element, LocalDirectory local) throws SQLException
+	public static void pathLiesIn(PathElement element, LocalDirectory local)
 	{
-		
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement stmt = c.prepareStatement("merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?);");)
+		{
+			while (element.getParent() != element)
+			{
+				stmt.setInt(1, local.getId());
+				stmt.setInt(2, element.getId());
+				stmt.execute();
+				element = element.getParent();
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 	}
-	public static void pathDoesNotLieIn(PathElement element, LocalDirectory local) throws SQLException
+	public static void pathDoesNotLieIn(PathElement element, LocalDirectory local)
 	{
-		
+		if (!element.isBroken() && element.getName().equals("/") && element.getParent() == DbPaths.ROOT)
+		{
+			return;
+		}
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement stmt = c.prepareStatement("delete ROOT_CONTAINS where RID=? and PELEM=?;");)
+		{
+			while (element.getParent() != element)
+			{
+				stmt.setInt(1, local.getId());
+				stmt.setInt(2, element.getId());
+				stmt.execute();
+				
+				element = element.getParent();
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
+	public static PathElement getPathElement(String daPath)
+	{
+		PathElement[] paths = PathBreaker.breakPath(daPath);
+		setPathElementIds(ROOT, paths);
+		return paths[paths.length - 1];
+	}
 	public static PathElement getPathElement(LocalDirectory local, String fsPath)
 	{
-		String relPath = fsPath.substring(local.getCanonicalPath().length());
+		String relPath = fsPath.substring(local.getCanonicalPath().getFullPath().length());
 
-		System.err.println("'" + relPath + "'");
 		if (relPath.length() == 0 || relPath.equals(".") || relPath.equals("./"))
 		{
 			return ROOT;
 		}
 		
 		PathElement[] paths = PathBreaker.breakPath(relPath);
+		setPathElementIds(ROOT, paths);
 		
-		System.err.println(PathBreaker.join(paths));
-		System.err.flush();
-		
-		return null;
+		return paths[paths.length - 1];
 	}
 
-	public static PathElement getPathElement(int pathId)
+	public static PathElement createPathElement(PathElement parentId, String name)
 	{
-		return null;
+		PathElement[] broken = PathBreaker.breakPath(parentId, name);
+		setPathElementIds(parentId, broken);
+		return broken[broken.length-1];
 	}
 }

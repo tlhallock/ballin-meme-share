@@ -22,6 +22,7 @@ import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.TableListener.TableRowListener;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -200,7 +201,7 @@ public class Application extends javax.swing.JFrame
             for (LocalDirectory local : newLocals)
             {
                 model.addRow(new String[] {
-                    local.getCanonicalPath(),
+                    local.getCanonicalPath().getFullPath(),
                     local.getDescription(),
                     local.getTags(),
                     local.getTotalNumberOfFiles(),
@@ -785,7 +786,7 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void DebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DebugActionPerformed
-//        Services.db.debug(System.out);
+    	DbTables.debugDb(Services.logger.logStream);
     }//GEN-LAST:event_DebugActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed

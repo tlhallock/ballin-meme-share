@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.FileOutsideOfRootException;
 
 public class LocalFile extends SharedFile
 {
@@ -13,44 +14,37 @@ public class LocalFile extends SharedFile
 		super(int1);
 	}
 	
-	public LocalFile(LocalDirectory local, File f)
+	public LocalFile(LocalDirectory local, PathElement element) throws IOException
 	{
 		super(null);
+		rootDirectory = local;
+		path = element;
+		tags = null;
 		
-		name = f.getName();
+		File f = new File(local.getCanonicalPath().getFullPath() + "/" + element.getFullPath());
+
 		fileSize = f.length();
 		lastModified = f.lastModified();
-		
+
+		String dir = f.getParentFile().getCanonicalPath();
+		String root = local.getCanonicalPath().getFullPath();
+
+		if (!dir.startsWith(root))
+		{
+			throw new FileOutsideOfRootException(dir, root);
+		}
+
 		try
 		{
-			String dir = f.getParentFile().getCanonicalPath();
-			String root = local.getCanonicalPath();
-			
-			if (!dir.startsWith(root))
-			{
-				throw new RuntimeException("File not inside root! parent=" + dir + " root=" + root);
-			}
-			if (dir.length() == root.length())
-			{
-				path = ".";
-			}
-			else
-			{
-				path = dir.substring(root.length() + 1);
-			}
 			if (fileSize < Services.settings.maxImmediateChecksum.get())
 			{
 				checksum = Services.checksums.checksumBlocking((LocalDirectory) rootDirectory, f);
 			}
 		}
-		catch (IOException e)
+		catch (IOException ex)
 		{
-			Services.logger.logStream.println("Unable to get file path: " + f);
-			e.printStackTrace(Services.logger.logStream);
+			ex.printStackTrace();
 		}
-		
-		rootDirectory = local;
-		tags = null;
 	}
 	
 	public LocalDirectory getRootDirectory()
@@ -60,7 +54,7 @@ public class LocalFile extends SharedFile
 	
 	public String getFullPath()
 	{
-		return rootDirectory.getCanonicalPath() + File.separatorChar + path + File.separatorChar + name;
+		return rootDirectory.getCanonicalPath().getFullPath() + File.separatorChar + path.getFullPath();
 	}
 
 	/**
@@ -91,7 +85,7 @@ public class LocalFile extends SharedFile
 		updateChecksum(fsCopy);
 		
 		fileSize = fsCopy.getTotalSpace();
-		update();
+		save();
 		return true;
 	}
 
@@ -127,7 +121,7 @@ public class LocalFile extends SharedFile
 			//
 			if (!refreshAndWriteToDb())
 			{
-				update();
+				save();
 			}
 		}
 		catch (SQLException e)

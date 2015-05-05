@@ -5,17 +5,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 
 import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RootDirectory;
-import org.cnv.shr.mdl.SharedFile;
-import org.cnv.shr.msg.FileList;
 
 public class Locals
 {
@@ -31,7 +26,7 @@ public class Locals
 			try
 			{
 				Services.logger.logStream.println("Sharing " + localDirectory);
-				new LocalDirectory(localDirectory).synchronize(true);
+				DbRoots.getLocal(localDirectory.getCanonicalPath()).synchronize(true);
 			}
 			catch (IOException e1)
 			{
@@ -43,7 +38,7 @@ public class Locals
 	
 	public synchronized boolean startSynchronizing(RootDirectory d)
 	{
-		return synchronizing.add(d.getCanonicalPath());
+		return synchronizing.add(d.getCanonicalPath().getFullPath());
 	}
 	
 	public synchronized void stopSynchronizing(RootDirectory d)

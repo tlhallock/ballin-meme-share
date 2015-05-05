@@ -2,7 +2,7 @@
 package org.cnv.shr.lcl;
 
 import java.io.File;
-import java.sql.Connection;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,9 +11,11 @@ import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.util.FileOutsideOfRootException;
 
 /**
  * I realize this would have been simpler with a method that recursively descended into subdirectories.
@@ -22,12 +24,15 @@ import org.cnv.shr.mdl.PathElement;
  */
 public class LocalSynchronizer
 {
+	private static final Pair[] dummy = new Pair[0];
+	
 	LocalDirectorySyncIterator iterator;
 	LocalDirectory local;
 	
 	public LocalSynchronizer(LocalDirectory dir)
 	{
 		iterator = new LocalDirectorySyncIterator(dir);
+		this.local = dir;
 	}
 	
 	public void run()
@@ -44,14 +49,31 @@ public class LocalSynchronizer
 		HashMap<String, File> files = key(task.files);
 		HashSet<String> accountedFor = new HashSet<>();
 		
+//		Services.logger.logStream.println("Synchronizing " + task.current.getFullPath());
+//		Services.logger.logStream.println("FS: " + task.files);
+//		Services.logger.logStream.println("DB: " + task.dbPaths);
+		
 		LinkedList<Pair> subDirectories = new LinkedList<>();
 		
-		while (task.dbPaths.hasNext())
+		for (PathElement element : task.dbPaths)
 		{
-			PathElement element = task.dbPaths.next();
-			accountedFor.add(element.getName());
+			accountedFor.add(element.getUnbrokenName());
 			
-			File fsCopy = files.get(element.getName());
+			File fsCopy = files.get(element.getUnbrokenName());
+			String fsPath = null;
+			try
+			{
+				if (fsCopy != null)
+				{
+					fsPath = fsCopy.getCanonicalPath();
+				}
+			}
+			catch (IOException e1)
+			{
+				e1.printStackTrace();
+				continue;
+			}
+			
 			LocalFile dbVersion = DbFiles.getFile(local, element);
 			
 			if (fsCopy == null)
@@ -68,16 +90,9 @@ public class LocalSynchronizer
 						e.printStackTrace();
 					}
 				}
-				
-				try
-				{
-					// remove directory from database
-					DbPaths.pathDoesNotLieIn(element, local);
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
+
+				// remove directory from database
+				DbPaths.pathDoesNotLieIn(element, local);
 			}
 			else
 			{
@@ -86,16 +101,7 @@ public class LocalSynchronizer
 					if (dbVersion == null)
 					{
 						// add File
-						LocalFile lFile = new LocalFile(local, fsCopy);
-						
-						try
-						{
-							lFile.add();
-						}
-						catch (SQLException e)
-						{
-							e.printStackTrace();
-						}
+						addFile(element, fsCopy);
 					}
 					else
 					{
@@ -106,12 +112,11 @@ public class LocalSynchronizer
 						}
 						catch (SQLException e)
 						{
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
 				}
-				else if (fsCopy.isDirectory())
+				else if (fsCopy.isDirectory() && local.contains(fsPath))
 				{
 					// nothing to be done
 					subDirectories.add(new Pair(fsCopy, element));
@@ -122,42 +127,43 @@ public class LocalSynchronizer
 		for (File f : files.values())
 		{
 			String name = f.getName();
+			String fsPath = null;
+			try
+			{
+				fsPath = f.getCanonicalPath();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			
 			if (accountedFor.contains(f.getName()))
 			{
 				continue;
 			}
 			
+			if (f.isDirectory())
+			{
+				name = name + "/";
+			}
+			
 			// add path to database
-			PathElement element = new PathElement(task.parentId, name);
-			try
-			{
-				element.add();
-				DbPaths.pathLiesIn(element, local);
-			}
-			catch (SQLException e1)
-			{
-				e1.printStackTrace();
-			}
-			
-			
-			try
-			{
-				element.add();
-			}
-			catch (SQLException e)
-			{
-				e.printStackTrace();
-			}
+			PathElement element = DbPaths.createPathElement(task.current, name);
+			DbPaths.pathLiesIn(element, local);
 			
 			if (f.isFile())
 			{
 				// add file
+				addFile(element, f);
 			}
-			else
+			else if (f.isDirectory() && local.contains(fsPath))
 			{
 				subDirectories.add(new Pair(f, element));
 			}
 		}
+		
+		
+		task.synchronizedResults = subDirectories.toArray(dummy);
 		
 //		LinkedList<SharedFile> toAdd = new LinkedList<>();
 //		Find find = new Find(path);
@@ -222,12 +228,42 @@ public class LocalSynchronizer
 //		Services.logger.logStream.println("Done synchronizing " + getCanonicalPath());
 	}
 
+	private void addFile(PathElement element, File fsCopy)
+	{
+//		Services.logger.logStream.println("Found new file " + fsCopy);
+		try
+		{
+			LocalFile lFile = new LocalFile(local, element);
+			lFile.save();
+		}
+		catch (FileOutsideOfRootException ex)
+		{
+			Services.logger.logStream.println("Skipping symbolic link: "  + fsCopy);
+		}
+		catch (IOException ex)
+		{
+			Services.logger.logStream.println("Unable to get path of file: " + fsCopy);
+			ex.printStackTrace();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
 	private static HashMap<String, File> key(ArrayList<File> subDirectories)
 	{
 		HashMap<String, File> returnValue = new HashMap<>();
 		for (File file : subDirectories)
 		{
-			returnValue.put(file.getName(), file);
+			if (file.isFile())
+			{
+				returnValue.put(file.getName(), file);
+			}
+			else if (file.isDirectory())
+			{
+				returnValue.put(file.getName() + "/", file);
+			}
 		}
 		return returnValue;
 	}

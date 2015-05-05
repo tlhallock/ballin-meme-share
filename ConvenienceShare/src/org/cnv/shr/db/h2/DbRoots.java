@@ -1,5 +1,7 @@
 package org.cnv.shr.db.h2;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,6 +11,7 @@ import java.util.Iterator;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
@@ -19,7 +22,7 @@ public class DbRoots
 	public static long getTotalFileSize(RootDirectory d)
 	{
 		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select sum(SIZE) as totalsize from FILE where ROOT = ?;"))
+		try (PreparedStatement stmt = c.prepareStatement("select sum(FSIZE) as totalsize from SFILE where ROOT = ?;"))
 		{
 			stmt.setInt(1, d.getId());
 			ResultSet executeQuery = stmt.executeQuery();
@@ -43,7 +46,7 @@ public class DbRoots
 	public static long getNumberOfFiles(RootDirectory d)
 	{
 		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select count(F_ID) as number from FILE where ROOT = ?;"))
+		try (PreparedStatement stmt = c.prepareStatement("select count(F_ID) as number from SFILE where ROOT = ?;"))
 		{
 			stmt.setInt(1, d.getId());
 			ResultSet executeQuery = stmt.executeQuery();
@@ -122,7 +125,7 @@ public class DbRoots
 			return new DbIterator<RemoteDirectory>(c, 
 					c.prepareStatement("select * from ROOT where ROOT.MID = " + machine.getId() + ";").executeQuery(),
 					DbTables.DbObjects.LROOT, 
-					new DbLocals().setObject(DbTables.DbObjects.RMACHINE, machine.getId(), machine));
+					new DbLocals().setObject(machine));
 		}
 		catch (SQLException e)
 		{
@@ -137,9 +140,9 @@ public class DbRoots
 		try
 		{
 			return new DbIterator<LocalDirectory>(c, 
-					c.prepareStatement("select * from ROOT where ROOT.LOCAL = 1;").executeQuery(),
+					c.prepareStatement("select * from ROOT where ROOT.IS_LOCAL = 1;").executeQuery(),
 					DbTables.DbObjects.LROOT, 
-					new DbLocals().setObject(DbTables.DbObjects.LMACHINE, Services.localMachine.getId(), Services.localMachine));
+					new DbLocals().setObject(Services.localMachine));
 		}
 		catch (SQLException e)
 		{
@@ -152,5 +155,31 @@ public class DbRoots
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public static LocalDirectory getLocal(String path)
+	{
+		PathElement pathElement = DbPaths.getPathElement(path);
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement prepareStatement = c.prepareStatement("select * from ROOT where PELEM=?;");)
+		{
+			prepareStatement.setInt(1, pathElement.getId());
+			ResultSet executeQuery = prepareStatement.executeQuery();
+			if (executeQuery.next())
+			{
+				LocalDirectory local = (LocalDirectory) DbTables.DbObjects.LROOT.allocate(executeQuery);
+				local.fill(c, executeQuery, new DbLocals().setObject(Services.localMachine).setObject(pathElement));
+				return local;
+			}
+			LocalDirectory local = new LocalDirectory(pathElement);
+			local.save();
+			DbPaths.pathLiesIn(pathElement, local);
+			return local;
+		}
+		catch (SQLException | IOException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package org.cnv.shr.db.h2;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -34,5 +35,28 @@ public class DbMachines
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		return null;
+	}
+
+	public static Integer getMachineId(String identifier)
+	{
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement stmt = c.prepareStatement("select M_ID from MACHINE where IDENT = ?"))
+		{
+			stmt.setString(1, identifier);
+			ResultSet executeQuery = stmt.executeQuery();
+			if (executeQuery.next())
+			{
+				return executeQuery.getInt(1);
+			}
+			else
+			{
+				return null;
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

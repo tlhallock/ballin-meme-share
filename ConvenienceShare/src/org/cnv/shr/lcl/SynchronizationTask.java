@@ -1,26 +1,25 @@
 package org.cnv.shr.lcl;
 
 import java.io.File;
-import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
-import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
 
 public class SynchronizationTask
 {
 	ArrayList<File> files = new ArrayList<>();
-	DbIterator<PathElement> dbPaths;
+	LinkedList<PathElement> dbPaths;
 	
 	Pair[] synchronizedResults;
-	public int parentId;
 	
-	SynchronizationTask(int parentId, LocalDirectory local, File[] listed, PathElement parent)
+	PathElement current;
+	
+	SynchronizationTask(PathElement current, LocalDirectory local, File[] listed)
 	{
-		this.parentId = parentId;
-		dbPaths = DbPaths.listPathElements(local, parent);
+		this.current = current;
+		dbPaths = current.list(local);
 		for (File f : listed)
 			files.add(f);
 //		split(listed);

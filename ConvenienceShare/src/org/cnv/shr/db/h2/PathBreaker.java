@@ -9,8 +9,8 @@ public class PathBreaker
 	public static int PATH_ELEMENT_LENGTH = 10;
 	
 	private static final PathElement[] dummy = new PathElement[0];
-	
-	public static PathElement[] breakPath(String path)
+
+	public static PathElement[] breakPath(PathElement parent, String path)
 	{
 		LinkedList<PathElement> returnValue = new LinkedList<>();
 		
@@ -21,22 +21,33 @@ public class PathBreaker
 		outer:
 		while (idx < path.length())
 		{
-			for (int i = 0; i < PATH_ELEMENT_LENGTH; i++)
+			for (int i = 0; i < PATH_ELEMENT_LENGTH && idx < path.length(); i++)
 			{
 				char c = path.charAt(idx++);
 				builder.append(c);
 				if (c == '/')
 				{
-					returnValue.add(new PathElement(builder.toString(), false));
+					returnValue.add(parent = new PathElement(parent, builder.toString(), false));
 					builder.setLength(0);
 					continue outer;
 				}
 			}
-			returnValue.add(new PathElement(builder.toString(), true));
+			if (idx == path.length())
+			{
+				returnValue.add(parent = new PathElement(parent, builder.toString(), false));
+				builder.setLength(0);
+				return returnValue.toArray(dummy);
+			}
+			returnValue.add(parent = new PathElement(parent, builder.toString(), true));
 			builder.setLength(0);
 		}
 		
 		return returnValue.toArray(dummy);
+	}
+	
+	public static PathElement[] breakPath(String path)
+	{
+		return breakPath(DbPaths.ROOT, path);
 	}
 
 	public static String join(PathElement[] eles)
@@ -45,9 +56,24 @@ public class PathBreaker
 		
 		for (PathElement ele : eles)
 		{
+//			builder.append("[");
 			builder.append(ele.getName());
+//			if (ele.isBroken())
+//			{
+//				builder.append("...");
+//			}
+//			builder.append("]");
 		}
 		
 		return builder.toString();
+	}
+	
+	public static void main(String[] args0)
+	{
+//		String str = "Combinatorial optimization.. theory and algorithms.pdf";
+		String str = "/home/thallock/Documents/Combinatorial optimization.. theory and algorithms.pdf";
+		System.out.println(str);
+		System.out.println(join(breakPath(str)));
+		System.out.println(breakPath(str)[breakPath(str).length-1].getUnbrokenName());
 	}
 }

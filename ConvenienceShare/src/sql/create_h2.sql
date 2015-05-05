@@ -2,12 +2,12 @@
 CREATE TABLE IF NOT EXISTS  MACHINE (
    M_ID INTEGER PRIMARY KEY     AUTO_INCREMENT,
    MNAME          TEXT          NOT NULL,
-   IP             char(50),
+   IP             varchar(50),
    PORT           INT,
    NPORTS         INT           NOT NULL DEFAULT  1,
    LAST_ACTIVE    LONG,
    SHARING        BOOLEAN       NOT NULL  DEFAULT TRUE,
-   IDENT          char(50)      NOT NULL,
+   IDENT          varchar(50)   NOT NULL,
    IS_LOCAL       BOOLEAN       NOT NULL  DEFAULT 0,
    MESSAGES       BOOLEAN       NOT NULL  DEFAULT TRUE,
 
@@ -30,24 +30,26 @@ CREATE TABLE IF NOT EXISTS  PELEM (
    P_ID           INTEGER       PRIMARY KEY   AUTO_INCREMENT,
    PARENT         INTEGER       NOT NULL,
    BROKEN         BOOLEAN       NOT NULL,
-   PELEM          char(50)      NOT NULL,
+   PELEM          varchar(50)   NOT NULL,
 
-   UNIQUE(PELEM, P_ID)
+   UNIQUE(PELEM, PARENT)
 );
 
 CREATE TABLE IF NOT EXISTS  ROOT (
    R_ID           INTEGER PRIMARY KEY   AUTO_INCREMENT,
-   PELEM          INTEGER     NOT NULL,
-   TAGS           char( 64),
-   DESCR          char(256),
+   PELEM          INTEGER,
+   TAGS           varchar( 64),
+   DESCR          varchar(256),
    MID            INT         NOT NULL,
    ISLOCAL        BOOLEAN     NOT NULL,
    TSPACE         LONG,
    NFILES         LONG,
+   RNAME          char(50)    NOT NULL,
    
    FOREIGN KEY(MID  ) REFERENCES MACHINE(M_ID),
    FOREIGN KEY(PELEM) REFERENCES   PELEM(P_ID),
-   UNIQUE (PELEM, MID)
+   UNIQUE (PELEM, MID),
+   UNIQUE (RNAME, MID)
 );
 
 -- Tells which remote this path exists in;
@@ -63,7 +65,7 @@ CREATE TABLE IF NOT EXISTS ROOT_CONTAINS (
 CREATE TABLE IF NOT EXISTS IGNORE_PATTERN (
    I_ID           INTEGER   PRIMARY KEY    AUTO_INCREMENT,
    RID            INT            NOT NULL,
-   PATTERN        char(256)      NOT NULL,
+   PATTERN        varchar(256)   NOT NULL,
    
    FOREIGN KEY(RID) REFERENCES ROOT(R_ID),
    UNIQUE(RID, PATTERN)
@@ -72,8 +74,8 @@ CREATE TABLE IF NOT EXISTS IGNORE_PATTERN (
 CREATE TABLE IF NOT EXISTS SFILE (
    F_ID           INTEGER       PRIMARY KEY     AUTO_INCREMENT,
    FSIZE          INT           NOT NULL,
-   TAGS           char( 64),
-   CHKSUM         CHAR(40),
+   TAGS           varchar(64),
+   CHKSUM         char(40),
    PELEM          INTEGER       NOT NULL,
    ROOT           INTEGER       NOT NULL,
    RSTATE         INTEGER       NOT NULL DEFAULT 0,

@@ -18,6 +18,7 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
@@ -117,7 +118,7 @@ public class MachineView extends javax.swing.JPanel
         DbIterator<RemoteDirectory> listRemoteDirectories = DbRoots.listRemoteDirectories(machine);
         while (listRemoteDirectories.hasNext())
         {
-        	model.addRow(new String[] {listRemoteDirectories.next().getCanonicalPath()});
+        	model.addRow(new String[] {listRemoteDirectories.next().getCanonicalPath().getFullPath()});
         }
         
         viewNoDirectory();
@@ -147,7 +148,7 @@ public class MachineView extends javax.swing.JPanel
     {
     	Services.logger.logStream.println("Showing directory " + directory.getCanonicalPath());
         this.directory = directory;
-    	this.pathLabel.setText(directory.getCanonicalPath());
+    	this.pathLabel.setText(directory.getCanonicalPath().getFullPath());
         this.descriptionLabel.setText(directory.getDescription());
         this.tagsLabel.setText(directory.getTags());
         this.nFilesLabel.setText(directory.getTotalNumberOfFiles());
@@ -188,19 +189,32 @@ public class MachineView extends javax.swing.JPanel
     	while (list.hasNext())
     	{
     		SharedFile next = list.next();
-    		String ext;
-    		int index = next.getName().lastIndexOf('.');
-    		if (index > 0)
+    		
+    		String path = next.getPath().getFullPath();
+    		int index;
+    		
+    		String name;
+    		if ((index = path.lastIndexOf('/')) < 0)
     		{
-    			ext = next.getName().substring(index);
+    			name = path.substring(index + 1);
     		}
     		else
     		{
+    			name = path;
+    		}
+    		
+    		String ext;
+    		if ((index = path.lastIndexOf('.')) < 0)
+    		{
     			ext = "";
+    		}
+    		else
+    		{
+    			ext = name.substring(index);
     		}
     		model.addRow(new Object[] {
     				String.valueOf(next.getRelativePath()),
-    	    		String.valueOf(next.getName()        ),
+    	    		String.valueOf(name                  ),
     	    		new FileSize(  next.getFileSize()    ),
     	    		String.valueOf(next.getChecksum()    ),
     	    		String.valueOf(next.getTags()        ),

@@ -1,14 +1,16 @@
 package org.cnv.shr.mdl;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import org.cnv.shr.db.h2.DbPaths;
+
 
 public class RemoteDirectory extends RootDirectory
 {
-	public RemoteDirectory(Machine machine, String path, String tags, String description)
+	PathElement path;
+	
+	public RemoteDirectory(Machine machine, String name, String tags, String description)
 	{
-		super(machine, path, tags, description);
+		super(machine, name, tags, description);
+		path = DbPaths.getPathElement("remote:" + machine.getIdentifier() + "//" + name);
 	}
 
 	public RemoteDirectory(int int1)
@@ -21,17 +23,23 @@ public class RemoteDirectory extends RootDirectory
 	{
 		return false;
 	}
+	
 
 	@Override
 	public void synchronizeInternal()
 	{
 		
 	}
+	
+	@Override
+	public PathElement getCanonicalPath()
+	{
+		return path;
+	}
 
 	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
+	protected void setPath(PathElement object)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		this.path = object;
 	}
 }
