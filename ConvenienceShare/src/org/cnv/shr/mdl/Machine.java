@@ -82,7 +82,7 @@ public class Machine extends DbObject
 	{
 			id             = row.getInt   ("M_ID");        
 			name           = row.getString("MNAME");        
-			ip             = row.getString("DESCR");    
+			ip             = row.getString("IP");    
 			port		   = row.getInt   ("PORT");
 			nports         = row.getInt   ("NPORTS");
 		    lastActive     = row.getLong  ("LAST_ACTIVE");

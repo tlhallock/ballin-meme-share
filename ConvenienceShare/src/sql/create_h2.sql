@@ -1,7 +1,7 @@
 
 CREATE TABLE IF NOT EXISTS  MACHINE (
    M_ID INTEGER PRIMARY KEY     AUTO_INCREMENT,
-   MNAME          TEXT          NOT NULL,
+   MNAME          varchar(50)   NOT NULL,
    IP             varchar(50),
    PORT           INT,
    NPORTS         INT           NOT NULL DEFAULT  1,
@@ -37,11 +37,11 @@ CREATE TABLE IF NOT EXISTS  PELEM (
 
 CREATE TABLE IF NOT EXISTS  ROOT (
    R_ID           INTEGER PRIMARY KEY   AUTO_INCREMENT,
-   PELEM          INTEGER,
+   PELEM          INTEGER     NOT NULL,
    TAGS           varchar( 64),
    DESCR          varchar(256),
    MID            INT         NOT NULL,
-   ISLOCAL        BOOLEAN     NOT NULL,
+   IS_LOCAL       BOOLEAN     NOT NULL,
    TSPACE         LONG,
    NFILES         LONG,
    RNAME          char(50)    NOT NULL,

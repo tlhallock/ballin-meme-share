@@ -6,12 +6,17 @@
 
 package org.cnv.shr.gui;
 
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Date;
 import java.util.Iterator;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JTree;
 import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
@@ -52,7 +57,7 @@ public class MachineView extends javax.swing.JPanel
         filesTable.setAutoCreateRowSorter(true);
         
 		final TableListener tableListener = new TableListener(pathsTable);
-		tableListener.setDoubleClick(new TableListener.TableRowListener()
+		tableListener.addListener(new TableListener.TableRowListener()
 		{
 			@Override
 			public void run(int row)
@@ -72,7 +77,7 @@ public class MachineView extends javax.swing.JPanel
 						{
 							try
 							{
-//								view(Services.db.getRoot(machine, mId));
+								view(DbRoots.getLocal(/*machine,*/ mId));
 							}
 							catch(Exception ex)
 							{
@@ -94,8 +99,59 @@ public class MachineView extends javax.swing.JPanel
 			{
 				return "Show";
 			}
-		});
+		}, true);
+		
+		filesTree.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				if (e.getClickCount() < 2)
+				{
+					return;
+				}
+				
+				TreePath pathForLocation = filesTree.getPathForLocation(e.getPoint().x, e.getPoint().y);
+				for (Object o : pathForLocation.getPath())
+				{
+					System.out.println(o);
+					// set files list...
+				}
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e)
+			{
+				// TODO Auto-generated method stub
+				
+			}});
 	}
+    
+    private TreeModel getRoot()
+    {
+    	return new PathTreeModel();
+    }
     
     public void setMachine(Machine machine)
     {
@@ -115,12 +171,13 @@ public class MachineView extends javax.swing.JPanel
         {
         	model.removeRow(0);
         }
-        DbIterator<RemoteDirectory> listRemoteDirectories = DbRoots.listRemoteDirectories(machine);
+        
+        DbIterator<? extends RootDirectory> listRemoteDirectories; 
+        if (machine.isLocal()) listRemoteDirectories = DbRoots.listLocals(); else listRemoteDirectories = DbRoots.listRemoteDirectories(machine);
         while (listRemoteDirectories.hasNext())
         {
         	model.addRow(new String[] {listRemoteDirectories.next().getCanonicalPath().getFullPath()});
         }
-        
         viewNoDirectory();
     }
     
@@ -153,6 +210,7 @@ public class MachineView extends javax.swing.JPanel
         this.tagsLabel.setText(directory.getTags());
         this.nFilesLabel.setText(directory.getTotalNumberOfFiles());
         this.sizeLabel.setText(directory.getTotalFileSize());
+        ((PathTreeModel) filesTree.getModel()).setRoot(directory);
         
         while (filesTable.getModel().getRowCount() > 0)
         {
@@ -186,6 +244,10 @@ public class MachineView extends javax.swing.JPanel
     {
     	DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
     	Iterator<SharedFile> list = DbRoots.list(directory);
+    	if (list == null)
+    	{
+    		return;
+    	}
     	while (list.hasNext())
     	{
     		SharedFile next = list.next();
@@ -254,8 +316,9 @@ public class MachineView extends javax.swing.JPanel
         jPanel3 = new javax.swing.JPanel();
         filterText = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
+        jScrollPane5 = new javax.swing.JScrollPane();
         jScrollPane1 = new javax.swing.JScrollPane();
-        filesTree = new javax.swing.JTree();
+        filesTree = new JTree(getRoot());
         jPanel4 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         filesTable = new javax.swing.JTable();
@@ -296,7 +359,10 @@ public class MachineView extends javax.swing.JPanel
         ));
         jScrollPane2.setViewportView(jTable3);
 
+        setPreferredSize(new java.awt.Dimension(5, 5));
+
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Machine Info"));
+        jPanel1.setMinimumSize(new java.awt.Dimension(5, 5));
 
         jLabel1.setText("Machine:");
 
@@ -385,16 +451,20 @@ public class MachineView extends javax.swing.JPanel
                 return canEdit [columnIndex];
             }
         });
+        pathsTable.setMinimumSize(new java.awt.Dimension(15, 5));
         jScrollPane4.setViewportView(pathsTable);
 
         jSplitPane2.setLeftComponent(jScrollPane4);
 
         jSplitPane1.setDividerLocation(200);
+        jSplitPane1.setPreferredSize(new java.awt.Dimension(5, 5));
 
         jButton1.setText("Filter");
 
         filesTree.setPreferredSize(new java.awt.Dimension(0, 0));
         jScrollPane1.setViewportView(filesTree);
+
+        jScrollPane5.setViewportView(jScrollPane1);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -406,7 +476,7 @@ public class MachineView extends javax.swing.JPanel
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton1)
                 .addContainerGap())
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addComponent(jScrollPane5, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -416,7 +486,7 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton1)
                     .addComponent(filterText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE))
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
         );
 
         jSplitPane1.setLeftComponent(jPanel3);
@@ -439,6 +509,7 @@ public class MachineView extends javax.swing.JPanel
         });
         filesTable.setEnabled(false);
         filesTable.setMinimumSize(new java.awt.Dimension(0, 0));
+        filesTable.setPreferredSize(new java.awt.Dimension(20, 0));
         jScrollPane3.setViewportView(filesTable);
 
         jButton2.setText("Filter");
@@ -468,7 +539,7 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton2)
                     .addComponent(tablseFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
         );
 
         jSplitPane1.setRightComponent(jPanel4);
@@ -477,11 +548,11 @@ public class MachineView extends javax.swing.JPanel
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Files", jPanel6);
@@ -570,7 +641,7 @@ public class MachineView extends javax.swing.JPanel
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(tagsLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                .addGap(0, 223, Short.MAX_VALUE)
+                                .addGap(0, 0, Short.MAX_VALUE)
                                 .addComponent(jCheckBox2)
                                 .addGap(18, 18, 18)
                                 .addComponent(jButton4)
@@ -626,7 +697,7 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton5))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton9)
-                .addContainerGap(108, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Settings", jPanel2);
@@ -645,7 +716,7 @@ public class MachineView extends javax.swing.JPanel
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE))
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 304, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -697,6 +768,7 @@ public class MachineView extends javax.swing.JPanel
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JTabbedPane jTabbedPane1;

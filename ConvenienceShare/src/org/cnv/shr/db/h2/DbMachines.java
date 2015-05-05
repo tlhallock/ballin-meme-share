@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 
@@ -29,7 +30,26 @@ public class DbMachines
 	public static Machine getMachine(String identifier)
 	{
 		Connection c = Services.h2DbCache.getConnection();
-		return null;
+		try (PreparedStatement stmt = c.prepareStatement("select * from MACHINE where IDENT = ?"))
+		{
+			stmt.setString(1, identifier);
+			ResultSet executeQuery = stmt.executeQuery();
+			if (executeQuery.next())
+			{
+				Machine machine = (Machine) DbObjects.RMACHINE.allocate(executeQuery);
+				machine.fill(c, executeQuery, new DbLocals());
+				return machine;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
 	}
 	public static Machine getMachine(int machineId)
 	{

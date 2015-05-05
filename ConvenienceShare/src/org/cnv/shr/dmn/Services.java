@@ -116,8 +116,8 @@ public class Services
 					application.setVisible(true);
 					application.refreshAll();
 
-//					application.refreshLocals(DbRoots.listLocals(null));
-//					application.refreshRemotes(Services.db.getRemoteMachines());
+					application.refreshLocals();
+					application.refreshRemotes();
 				}
 				catch (Exception ex)
 				{

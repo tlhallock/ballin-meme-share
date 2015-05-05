@@ -9,6 +9,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.mdl.RootDirectory;
 
 public class DbFiles
 {

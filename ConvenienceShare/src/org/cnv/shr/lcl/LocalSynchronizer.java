@@ -11,6 +11,7 @@ import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.dmn.Notifications;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
@@ -26,6 +27,7 @@ public class LocalSynchronizer
 {
 	private static final Pair[] dummy = new Pair[0];
 	
+	int changeCount;
 	LocalDirectorySyncIterator iterator;
 	LocalDirectory local;
 	
@@ -57,180 +59,117 @@ public class LocalSynchronizer
 		
 		for (PathElement element : task.dbPaths)
 		{
-			accountedFor.add(element.getUnbrokenName());
-			
-			File fsCopy = files.get(element.getUnbrokenName());
-			String fsPath = null;
 			try
 			{
-				if (fsCopy != null)
-				{
-					fsPath = fsCopy.getCanonicalPath();
-				}
+				testOnFs(files, accountedFor, subDirectories, element);
 			}
-			catch (IOException e1)
+			catch (Exception e)
 			{
-				e1.printStackTrace();
-				continue;
-			}
-			
-			LocalFile dbVersion = DbFiles.getFile(local, element);
-			
-			if (fsCopy == null)
-			{
-				if (dbVersion != null)
-				{
-					// delete stale file
-					try
-					{
-						dbVersion.delete();
-					}
-					catch (SQLException e)
-					{
-						e.printStackTrace();
-					}
-				}
-
-				// remove directory from database
-				DbPaths.pathDoesNotLieIn(element, local);
-			}
-			else
-			{
-				if (fsCopy.isFile())
-				{
-					if (dbVersion == null)
-					{
-						// add File
-						addFile(element, fsCopy);
-					}
-					else
-					{
-						// update file
-						try
-						{
-							dbVersion.refreshAndWriteToDb();
-						}
-						catch (SQLException e)
-						{
-							e.printStackTrace();
-						}
-					}
-				}
-				else if (fsCopy.isDirectory() && local.contains(fsPath))
-				{
-					// nothing to be done
-					subDirectories.add(new Pair(fsCopy, element));
-				}
+				e.printStackTrace();
 			}
 		}
 		
 		for (File f : files.values())
 		{
-			String name = f.getName();
-			String fsPath = null;
 			try
 			{
-				fsPath = f.getCanonicalPath();
+				testInDb(task, accountedFor, subDirectories, f);
 			}
 			catch (IOException e)
 			{
 				e.printStackTrace();
 			}
-			
-			if (accountedFor.contains(f.getName()))
-			{
-				continue;
-			}
-			
-			if (f.isDirectory())
-			{
-				name = name + "/";
-			}
-			
-			// add path to database
-			PathElement element = DbPaths.createPathElement(task.current, name);
-			DbPaths.pathLiesIn(element, local);
-			
-			if (f.isFile())
-			{
-				// add file
-				addFile(element, f);
-			}
-			else if (f.isDirectory() && local.contains(fsPath))
-			{
-				subDirectories.add(new Pair(f, element));
-			}
+		}
+		
+		if (changeCount > 50)
+		{
+			changeCount = 0;
+			Services.notifications.localsChanged();
 		}
 		
 		
 		task.synchronizedResults = subDirectories.toArray(dummy);
+	}
+
+	private void testInDb(SynchronizationTask task, HashSet<String> accountedFor, LinkedList<Pair> subDirectories, File f) throws IOException
+	{
+		String name = PathElement.sanitizeFilename(f);
+		if (name == null 
+				|| accountedFor.contains(f.getName())
+				|| !local.contains(f.getCanonicalPath()))
+		{
+			return;
+		}
 		
-//		LinkedList<SharedFile> toAdd = new LinkedList<>();
-//		Find find = new Find(path);
-//		while (find.hasNext())
-//		{
-//			File f = find.next();
-//
-//			String absolutePath;
-//			try
-//			{
-//				absolutePath = f.getCanonicalPath();
-//			}
-//			catch (IOException e)
-//			{
-//				Services.logger.logStream.println("Unable to get file path: " + f);
-//				e.printStackTrace(Services.logger.logStream);
-//				continue;
-//			}
-//
-//			if (Services.db.findLocalFile(this, f) != null)
-//			{
-//				continue;
-//			}
-//			Services.logger.logStream.println("Found file " + f);
-//			try
-//			{
-//				toAdd.add(new LocalFile(getThis(), absolutePath));
-//			}
-//			catch(Exception ex)
-//			{
-//				Services.logger.logStream.println("Skipping file: " + f);
-//				ex.printStackTrace(Services.logger.logStream);
-//				continue;
-//			}
-//			changed = true;
-//
-//			if (toAdd.size() > 50)
-//			{
-//				Services.db.addFiles(this, toAdd);
-//				toAdd.clear();
-//
-//				totalNumFiles = Services.db.countFiles(this);
-//				totalFileSize = Services.db.countFileSize(this);
-//				Services.db.updateDirectory(machine, this);
-//				Services.notifications.localsChanged();
-//			}
-//		}
-//		Services.db.addFiles(this, toAdd);
-//		
-//		
-//		Services.logger.logStream.println("Synchronizing " + getCanonicalPath());
-//
-//		boolean changed = false;
-//		changed |= prune();
-//		changed |= search();
-//
-//		if (changed)
-//		{
-//			Services.notifications.localsChanged();
-//		}
-//		
-//		Services.logger.logStream.println("Done synchronizing " + getCanonicalPath());
+		// add path to database
+		PathElement element = DbPaths.createPathElement(task.current, name);
+		DbPaths.pathLiesIn(element, local);
+		
+		if (f.isFile())
+		{
+			// add file
+			addFile(element, f);
+			changeCount++;
+		}
+		else if (f.isDirectory())
+		{
+			subDirectories.add(new Pair(f, element));
+		}
+	}
+
+	private void testOnFs(HashMap<String, File> files, HashSet<String> accountedFor, LinkedList<Pair> subDirectories, PathElement element) throws IOException, SQLException
+	{
+		accountedFor.add(element.getUnbrokenName());
+
+		File fsCopy = files.get(element.getUnbrokenName());
+		LocalFile dbVersion = DbFiles.getFile(local, element);
+		if (fsCopy == null)
+		{
+			if (dbVersion != null)
+			{
+				// delete stale file
+				dbVersion.delete();
+				changeCount++;
+			}
+			
+			// remove directory from database
+			DbPaths.pathDoesNotLieIn(element, local);
+			
+			return;
+		}
+		
+		if (!local.contains(fsCopy.getCanonicalPath()))
+		{
+			return;
+		}
+		
+		if (fsCopy.isDirectory())
+		{
+			// nothing to be done
+			subDirectories.add(new Pair(fsCopy, element));
+			return;
+		}
+		if (!fsCopy.isFile())
+		{
+			return;
+		}
+		if (dbVersion == null)
+		{
+			// add File
+			addFile(element, fsCopy);
+			changeCount++;
+			return;
+		}
+		// update file
+		if (dbVersion.refreshAndWriteToDb())
+		{
+			changeCount++;
+		}
 	}
 
 	private void addFile(PathElement element, File fsCopy)
 	{
-//		Services.logger.logStream.println("Found new file " + fsCopy);
+		// Services.logger.logStream.println("Found new file " + fsCopy);
 		try
 		{
 			LocalFile lFile = new LocalFile(local, element);
@@ -256,13 +195,10 @@ public class LocalSynchronizer
 		HashMap<String, File> returnValue = new HashMap<>();
 		for (File file : subDirectories)
 		{
-			if (file.isFile())
+			String name = PathElement.sanitizeFilename(file);
+			if (name != null)
 			{
-				returnValue.put(file.getName(), file);
-			}
-			else if (file.isDirectory())
-			{
-				returnValue.put(file.getName() + "/", file);
+				returnValue.put(name, file);
 			}
 		}
 		return returnValue;

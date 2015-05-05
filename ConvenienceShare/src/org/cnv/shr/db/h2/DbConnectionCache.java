@@ -20,7 +20,7 @@ public class DbConnectionCache
 		
 		Connection c = getConnection();
 		Services.logger.logStream.println("Creating database.");
-//		org.cnv.shr.db.h2.DbTables.deleteDb(c);
+		org.cnv.shr.db.h2.DbTables.deleteDb(c);
 		DbTables.createDb(c);
 	}
 

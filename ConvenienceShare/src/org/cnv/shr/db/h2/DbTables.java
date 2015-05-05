@@ -140,11 +140,14 @@ public class DbTables
 				break;
 			default:
 			}
-			System.out.println("select * from " + getTableName() + " where " + pKey + " = ?;");
 			try (PreparedStatement stmt = c.prepareStatement("select * from " + getTableName() + " where " + pKey + " = ?;"))
 			{
 				stmt.setInt(1,  id);
 				ResultSet executeQuery = stmt.executeQuery();
+				if (!executeQuery.next())
+				{
+					return null;
+				}
 				DbObject object = allocate(executeQuery);
 				object.fill(c, executeQuery, locals);
 				return object;

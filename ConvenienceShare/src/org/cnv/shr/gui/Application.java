@@ -20,6 +20,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
+import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
@@ -190,16 +191,18 @@ public class Application extends javax.swing.JFrame
 		refreshSettings();
 	}
         
-	public void refreshLocals(List<LocalDirectory> newLocals)
+	public void refreshLocals()
 	{
-            DefaultTableModel model = (DefaultTableModel) localsView.getModel();
-            while (model.getRowCount() > 0)
-            {
-                model.removeRow(0);
-            }
-            
-            for (LocalDirectory local : newLocals)
-            {
+		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
+		DefaultTableModel model = (DefaultTableModel) localsView.getModel();
+		while (model.getRowCount() > 0)
+		{
+			model.removeRow(0);
+		}
+
+		while (listLocals.hasNext())
+		{
+            	LocalDirectory local = listLocals.next();
                 model.addRow(new String[] {
                     local.getCanonicalPath().getFullPath(),
                     local.getDescription(),
@@ -207,17 +210,17 @@ public class Application extends javax.swing.JFrame
                     local.getTotalNumberOfFiles(),
                     local.getTotalFileSize(),
                 });
-            }
+		}
 	}
 
-	public void refreshRemotes(List<Machine> newRemotes)
+	public void refreshRemotes()
 	{
-            DefaultTableModel model = (DefaultTableModel) machinesList.getModel();
-            while (model.getRowCount() > 0)
-            {
-                model.removeRow(0);
-            }
-            
+		DefaultTableModel model = (DefaultTableModel) machinesList.getModel();
+		while (model.getRowCount() > 0)
+		{
+			model.removeRow(0);
+		}
+
                 model.addRow(new String[] {
                     Services.localMachine.getName() + " (Local machine)",
                     Services.localMachine.getIp() + ":" + Services.localMachine.getPort(),
@@ -225,9 +228,11 @@ public class Application extends javax.swing.JFrame
                     String.valueOf(Services.localMachine.isSharing()),
                     "0", "0"
                 });
-            
-            for (Machine remote : newRemotes)
-            {
+
+		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
+		while (listRemoteMachines.hasNext())
+		{
+            	Machine remote = listRemoteMachines.next();
                 model.addRow(new String[] {
                     remote.getName(),
                     remote.getIp() + ":" + remote.getPort(),
@@ -235,7 +240,7 @@ public class Application extends javax.swing.JFrame
                     String.valueOf(remote.isSharing()),
                     "(Not yet supported)", "(Not yet supported)"
                 });
-            }
+		}
 	}
 
 	public void showRemote(Machine machine)

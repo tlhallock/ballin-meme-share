@@ -1,5 +1,6 @@
 package org.cnv.shr.mdl;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,7 +24,7 @@ public class PathElement extends DbObject
 	
 	String fullPath;
 	
-	public PathElement(int id)
+	public PathElement(Integer id)
 	{
 		super(id);
 	}
@@ -141,14 +142,14 @@ public class PathElement extends DbObject
 		return fullPath = builder.toString();
 	}
 	
-	public LinkedList<PathElement> list(LocalDirectory local)
+	public LinkedList<PathElement> list(RootDirectory local)
 	{
 		LinkedList<PathElement> returnValue = new LinkedList<>();
 		LinkedList<PathElement> broken = new LinkedList<PathElement>();
 		
 		DbIterator<PathElement> iterator = DbPaths.listPathElements(local, this);
 
-		// as simple as the recursive call, but only opens one statement at a time...
+		// not as simple as the recursive call, but only opens one statement at a time...
 		for (;;)
 		{
 			while (iterator.hasNext())
@@ -176,5 +177,29 @@ public class PathElement extends DbObject
 	public boolean isBroken()
 	{
 		return broken;
+	}
+	
+	public static String sanitizeFilename(File file)
+	{
+		String name = file.getName();
+		if (file.isDirectory())
+		{
+			if (name.charAt(name.length() - 1) != '/')
+			{
+				name = name + "/";
+			}
+			return name;
+		}
+		else if (file.isFile())
+		{
+			return name;
+		}
+		
+		return null;
+	}
+	
+	public boolean equals(PathElement other)
+	{
+		return id == other.id;
 	}
 }

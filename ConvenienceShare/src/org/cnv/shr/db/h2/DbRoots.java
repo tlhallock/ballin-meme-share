@@ -140,7 +140,7 @@ public class DbRoots
 		try
 		{
 			return new DbIterator<LocalDirectory>(c, 
-					c.prepareStatement("select * from ROOT where ROOT.IS_LOCAL = 1;").executeQuery(),
+					c.prepareStatement("select * from ROOT where ROOT.IS_LOCAL = true;").executeQuery(),
 					DbTables.DbObjects.LROOT, 
 					new DbLocals().setObject(Services.localMachine));
 		}
