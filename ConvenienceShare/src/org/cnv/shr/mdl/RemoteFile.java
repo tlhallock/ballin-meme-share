@@ -1,11 +1,6 @@
 package org.cnv.shr.mdl;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.util.ByteListBuffer;
-import org.cnv.shr.util.ByteReader;
 
 public class RemoteFile extends SharedFile
 {
@@ -27,6 +22,12 @@ public class RemoteFile extends SharedFile
 		this.checksum = checksum;
 		this.tags = tags;
 		this.lastModified = lastModified;
+	}
+
+	@Override
+	public boolean isLocal()
+	{
+		return false;
 	}
 
 	public enum SharedFileState

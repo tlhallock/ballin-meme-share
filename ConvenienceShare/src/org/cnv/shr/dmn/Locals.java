@@ -63,7 +63,7 @@ public class Locals
 			{
 				continue;
 			}
-				return d.getFile(canonicalPath);
+			return d.getFile(canonicalPath);
 		}
 		return null;
 	}

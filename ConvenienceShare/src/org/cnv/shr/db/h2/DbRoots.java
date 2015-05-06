@@ -5,15 +5,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
 
+import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
-import org.cnv.shr.mdl.SharedFile;
 
 public class DbRoots
 {
@@ -65,76 +63,29 @@ public class DbRoots
 			return -1;
 		}
 	}
-
-//	public static void addRoot(Connection c, RootDirectory root) throws SQLException
-//	{
-//		try (PreparedStatement stmt = c.prepareStatement(
-//				"insert into ROOT(PATH, MID, LOCAL, TAGS, DESC)       " +
-//				"values (?, ?, ?, ?, ?);                              "))
-//		{
-//			int ndx = 1;
-//			stmt.setString(ndx++, root.getCanonicalPath());
-//			stmt.setInt	  (ndx++, root.getMachine().getDbId());
-//			stmt.setInt   (ndx++, root.isLocal() ? 1 : 0);
-//			stmt.setString(ndx++, root.getTags());
-//			stmt.setString(ndx++, root.getDescription());
-//			stmt.execute();
-//		}
-//	}
-//	
-//	public static void updateRoot(Connection c, RootDirectory root) throws SQLException
-//	{
-//		try (PreparedStatement stmt = c.prepareStatement(
-//					"update ROOT                         " +
-//					"set NFILES=?,SPACE=?,TAGS=?,DESC=?  " +
-//					"where MID = ? and PATH=?;           "))
-//		{
-//			int ndx = 1;
-//			stmt.setLong  (ndx++, root.numFiles());
-//			stmt.setLong  (ndx++, root.diskSpace());
-//			stmt.setString(ndx++, root.getTags());
-//			stmt.setString(ndx++, root.getDescription());
-//			
-//			stmt.setInt   (ndx++, root.getMachine().getDbId());
-//			stmt.setString(ndx++, root.getCanonicalPath());
-//			stmt.execute();
-//		}
-//	}
-//	
-//	public static void removeRoot(Connection c, RootDirectory root) throws SQLException
-//	{
-//		try (PreparedStatement stmt = c.prepareStatement(
-//				"delete from ROOT           " +
-//				"where MID = ? and PATH=?;  "))
-//		{
-//			int ndx = 1;
-//			stmt.setLong  (ndx++, root.numFiles());
-//			stmt.setLong  (ndx++, root.diskSpace());
-//			stmt.setInt   (ndx++, root.getMachine().getDbId());
-//			stmt.setString(ndx++, root.getCanonicalPath());
-//			stmt.execute();
-//		}
-//	}
 	
-	public static DbIterator<RemoteDirectory> listRemoteDirectories(Machine machine)
+	public static DbIterator<RootDirectory> list(Machine machine)
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		try
 		{
-			return new DbIterator<RemoteDirectory>(c, 
-					c.prepareStatement("select * from ROOT where ROOT.MID = " + machine.getId() + ";").executeQuery(),
-					DbTables.DbObjects.LROOT, 
+			PreparedStatement prepareStatement = c.prepareStatement("select * from ROOT where ROOT.MID = ?;");
+			prepareStatement.setInt(1,  machine.getId());
+			return new DbIterator<RootDirectory>(c, 
+					prepareStatement.executeQuery(),
+					machine.isLocal() ? DbTables.DbObjects.LROOT : DbTables.DbObjects.RROOT, 
 					new DbLocals().setObject(machine));
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
-			return new DbIterator.NullIterator<RemoteDirectory>();
+			return new DbIterator.NullIterator<>();
 		}
 	}
 	
 	public static DbIterator<LocalDirectory> listLocals()
 	{
+		// return list(Services.localMachine));
 		Connection c = Services.h2DbCache.getConnection();
 		try
 		{
@@ -146,14 +97,8 @@ public class DbRoots
 		catch (SQLException e)
 		{
 			e.printStackTrace();
-			return new DbIterator.NullIterator<LocalDirectory>();
+			return new DbIterator.NullIterator<>();
 		}
-	}
-
-	public static Iterator<SharedFile> list(RootDirectory directory)
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public static LocalDirectory getLocal(String path)
@@ -184,12 +129,32 @@ public class DbRoots
 
 	public static LocalDirectory getLocalByName(String rootName)
 	{
-		return null;
+		return (LocalDirectory) getRoot(Services.localMachine, rootName);
 	}
 
-	public static RemoteDirectory getRemote(Machine machine, String name)
+	public static RootDirectory getRoot(Machine machine, String name)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement prepareStatement = c.prepareStatement("select * from ROOT where RNAME=? and MID=?;");)
+		{
+			prepareStatement.setString(1, name);
+			prepareStatement.setInt(2, machine.getId());
+			ResultSet executeQuery = prepareStatement.executeQuery();
+
+			DbObjects o = machine.isLocal() ? DbTables.DbObjects.LROOT : DbTables.DbObjects.RROOT;
+			
+			if (!executeQuery.next())
+			{
+				return null;
+			}
+			DbObject allocate = o.allocate(executeQuery);
+			allocate.fill(c, executeQuery, new DbLocals().setObject(machine));
+			return (RootDirectory) allocate;
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

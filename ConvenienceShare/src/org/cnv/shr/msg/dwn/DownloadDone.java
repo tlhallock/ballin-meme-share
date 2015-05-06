@@ -13,7 +13,7 @@ public class DownloadDone extends Message
 {
 	public DownloadDone() {}
 	
-	protected DownloadDone(InetAddress address, InputStream stream) throws IOException
+	public DownloadDone(InetAddress address, InputStream stream) throws IOException
 	{
 		super(address, stream);
 	}

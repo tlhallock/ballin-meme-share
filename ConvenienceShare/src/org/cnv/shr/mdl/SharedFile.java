@@ -13,7 +13,7 @@ import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.util.ByteListBuffer;
 
-public class SharedFile extends DbObject implements NetworkObject
+public abstract class SharedFile extends DbObject implements NetworkObject
 {
 	protected RootDirectory rootDirectory;
 	protected PathElement path;
@@ -140,4 +140,6 @@ public class SharedFile extends DbObject implements NetworkObject
 	{
 		return tags;
 	}
+
+	public abstract boolean isLocal();
 }

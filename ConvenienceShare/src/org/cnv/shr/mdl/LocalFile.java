@@ -46,7 +46,7 @@ public class LocalFile extends SharedFile
 			ex.printStackTrace();
 		}
 	}
-	
+
 	public LocalDirectory getRootDirectory()
 	{
 		return (LocalDirectory) rootDirectory;
@@ -146,5 +146,11 @@ public class LocalFile extends SharedFile
 		{
 			checksum = Services.checksums.checksumBlocking(getFsFile());
 		}
+	}
+
+	@Override
+	public boolean isLocal()
+	{
+		return true;
 	}
 }

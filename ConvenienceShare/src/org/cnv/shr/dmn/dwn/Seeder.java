@@ -7,8 +7,6 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.dwn.ChunkRequest;
-import org.cnv.shr.msg.dwn.CompletionStatus;
-import org.cnv.shr.msg.dwn.FileRequest;
 
 public class Seeder
 {

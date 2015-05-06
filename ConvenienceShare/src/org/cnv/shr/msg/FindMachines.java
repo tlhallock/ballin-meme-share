@@ -40,7 +40,13 @@ public class FindMachines extends Message
 		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
 		while (listRemoteMachines.hasNext())
 		{
-			connection.send(new MachineFound(listRemoteMachines.next()));
+			MachineFound m = new MachineFound(listRemoteMachines.next());
+			if (m.equals(connection.getMachine()))
+			{
+				continue;
+			}
+			
+			connection.send(m);
 		}
 	}
 }

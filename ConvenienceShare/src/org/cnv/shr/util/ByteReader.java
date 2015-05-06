@@ -18,8 +18,8 @@ public class ByteReader
 	{
 		int i = 0;
 
-		i |= (readByte(in)) << 0;
 		i |= (readByte(in)) << 8;
+		i |= (readByte(in)) << 0;
 
 		return i;
 	}
@@ -28,10 +28,10 @@ public class ByteReader
 	{
 		long i = 0;
 
-		i |= (readByte(in)) <<  0L;
-		i |= (readByte(in)) <<  8L;
-		i |= (readByte(in)) << 16L;
 		i |= (readByte(in)) << 24L;
+		i |= (readByte(in)) << 16L;
+		i |= (readByte(in)) <<  8L;
+		i |= (readByte(in)) <<  0L;
 
 		return (int) i;
 	}
@@ -40,14 +40,14 @@ public class ByteReader
 	{
 		long i = 0;
 
-		i |= (readByte(in)) <<  0L;
-		i |= (readByte(in)) <<  8L;
-		i |= (readByte(in)) << 16L;
-		i |= (readByte(in)) << 24L;
-		i |= (readByte(in)) << 32L;
-		i |= (readByte(in)) << 40L;
-		i |= (readByte(in)) << 48L;
 		i |= (readByte(in)) << 56L;
+		i |= (readByte(in)) << 48L;
+		i |= (readByte(in)) << 40L;
+		i |= (readByte(in)) << 32L;
+		i |= (readByte(in)) << 24L;
+		i |= (readByte(in)) << 16L;
+		i |= (readByte(in)) <<  8L;
+		i |= (readByte(in)) <<  0L;
 
 		return i;
 	}

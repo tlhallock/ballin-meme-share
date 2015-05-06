@@ -1,8 +1,6 @@
 package org.cnv.shr.stng;
 
 import java.awt.Component;
-import java.awt.Container;
-import java.awt.PopupMenu;
 import java.util.LinkedList;
 import java.util.Properties;
 

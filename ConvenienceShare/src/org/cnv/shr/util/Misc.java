@@ -1,6 +1,8 @@
 package org.cnv.shr.util;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Random;
 
 import org.cnv.shr.dmn.Services;
@@ -122,5 +124,28 @@ public class Misc
 	public static String getRandomName()
 	{
 		return getRandomString(10);
+	}
+	public static String getIp(byte[] address)
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append(address[0]);
+		for (int i=1;i<address.length;i++)
+		{
+			sb.append(".").append(address[i]);
+		}
+		return sb.toString();
+	}
+	public static String getJarPath()
+	{
+		String path = Services.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		try
+		{
+			return URLDecoder.decode(path, "UTF-8");
+		}
+		catch (UnsupportedEncodingException e)
+		{
+			e.printStackTrace();
+			return path;
+		}
 	}
 }

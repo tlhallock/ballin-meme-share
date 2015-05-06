@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.LinkedList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -100,6 +99,7 @@ public class Communication implements Runnable
 	{
 		Services.logger.logStream.println("Sending message of type " + m.getClass().getName()
 				+ " to " + socket.getInetAddress() + ":" + socket.getPort());
+		
 		try
 		{
 			synchronized (output)
@@ -112,6 +112,11 @@ public class Communication implements Runnable
 			Services.logger.logStream.println("Unable to send message: " + m.getClass().getName());
 			e.printStackTrace(Services.logger.logStream);
 		}
+	}
+
+	public boolean isClosed()
+	{
+		return socket.isClosed();
 	}
 	
 	public void notifyDone()
@@ -149,5 +154,10 @@ public class Communication implements Runnable
 	public InputStream getIn()
 	{
 		return input;
+	}
+
+	public Machine getMachine()
+	{
+		return machine;
 	}
 }

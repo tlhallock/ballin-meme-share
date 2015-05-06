@@ -12,7 +12,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class CompletionStatus extends Message
 {
-	public static int TYPE = 11;
+	public static int TYPE = 12;
 	
 	double percentComplete;
 	

@@ -9,7 +9,7 @@ import org.cnv.shr.mdl.SecurityKey;
 
 public class DbKeys
 {
-	public static DbIterator<SecurityKey> getKys(Machine machine) throws SQLException
+	public static DbIterator<SecurityKey> getKeys(Machine machine) throws SQLException
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		return null;

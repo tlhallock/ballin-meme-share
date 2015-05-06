@@ -25,7 +25,7 @@ public class FileRequest extends Message
 	private String checksum;
 	private long numChunks;
 
-	public static int TYPE = 11;
+	public static int TYPE = 13;
 
 	public FileRequest(RemoteFile remoteFile, long d)
 	{
@@ -73,7 +73,7 @@ public class FileRequest extends Message
 	{
 		PathElement pathElement = DbPaths.getPathElement(path);
 		LocalDirectory local = DbRoots.getLocalByName(rootName);
-		LocalFile localFile = DbFiles.getFile(local, pathElement);
+		LocalFile localFile = (LocalFile) DbFiles.getFile(local, pathElement);
 		ServeInstance serve = Services.server.serve((LocalFile) localFile, connection);
 		serve.sendChunks(numChunks);
 	}

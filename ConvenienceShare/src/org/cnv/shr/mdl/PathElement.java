@@ -1,6 +1,5 @@
 package org.cnv.shr.mdl;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,7 +14,7 @@ import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.db.h2.RStringBuilder;
-import org.cnv.shr.lcl.FileSource;
+import org.cnv.shr.sync.FileSource;
 
 public class PathElement extends DbObject
 {

@@ -1,13 +1,12 @@
 package org.cnv.shr.dmn;
 
-import java.sql.DriverManager;
+import org.cnv.shr.util.Misc;
 
 public class Main
 {
 	public static void main(String[] args) throws Exception
 	{
-        
-        
+        System.out.println("Starting from " + Misc.getJarPath());
         
 		try
 		{

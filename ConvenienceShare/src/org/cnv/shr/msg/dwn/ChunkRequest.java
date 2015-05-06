@@ -14,7 +14,7 @@ public class ChunkRequest extends Message
 {
 	private Chunk chunk;
 
-	public static int TYPE = 11;
+	public static int TYPE = 16;
 	public ChunkRequest(Chunk removeFirst)
 	{
 		this.chunk = removeFirst;

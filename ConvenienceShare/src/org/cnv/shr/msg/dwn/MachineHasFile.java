@@ -11,9 +11,9 @@ import org.cnv.shr.util.ByteListBuffer;
 public class MachineHasFile extends Message
 {
 	boolean hasFile;
-	public static int TYPE = 11;
+	public static int TYPE = 17;
 
-	MachineHasFile(InetAddress address, InputStream stream) throws IOException
+	public MachineHasFile(InetAddress address, InputStream stream) throws IOException
 	{
 		super(address, stream);
 	}

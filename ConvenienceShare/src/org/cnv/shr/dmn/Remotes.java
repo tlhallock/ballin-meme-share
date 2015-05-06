@@ -6,8 +6,8 @@ import java.io.PrintStream;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.msg.FindMachines;
+import org.cnv.shr.msg.ListFiles;
 import org.cnv.shr.msg.MachineFound;
 
 public class Remotes
@@ -47,11 +47,21 @@ public class Remotes
 		
 	}
 	
-	public void synchronize(Machine m, RemoteDirectory root)
+	public void synchronizeRoots(Machine m)
 	{
-		
+		String url = m.getUrl();
+		try
+		{
+			Communication openConnection = Services.networkManager.openConnection(url);
+			openConnection.send(new ListFiles());
+			openConnection.notifyDone();
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Unable to discover " + url);
+			e.printStackTrace(Services.logger.logStream);
+		}
 	}
-	
 	
 	public void debug(PrintStream ps)
 	{

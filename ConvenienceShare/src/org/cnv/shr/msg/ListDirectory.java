@@ -44,7 +44,7 @@ public class ListDirectory extends Message
 		buffer.append(path);
 	}
 	
-	public static int TYPE = 23;
+	public static int TYPE = 10;
 
 	@Override
 	protected int getType()
@@ -56,7 +56,7 @@ public class ListDirectory extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
-		PathElement pathElement = DbPaths.getRelPathElement(localByName, path);
+		PathElement pathElement = DbPaths.getPathElement(path);
 		connection.send(new DirectoryList(localByName, pathElement));
 	}
 	

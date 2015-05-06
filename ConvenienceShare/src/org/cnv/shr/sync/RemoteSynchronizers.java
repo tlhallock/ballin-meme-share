@@ -1,8 +1,9 @@
-package org.cnv.shr.lcl;
+package org.cnv.shr.sync;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -14,15 +15,14 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.msg.DirectoryList;
 import org.cnv.shr.msg.ListDirectory;
 
 public class RemoteSynchronizers
 {
-	public Hashtable<String, RemoteSynchronizer> synchronizers = new Hashtable<>();
+	public Hashtable<String, RemoteSynchronizerQueue> synchronizers = new Hashtable<>();
 	
-	private String getKey(RemoteSynchronizer s)
+	private String getKey(RemoteSynchronizerQueue s)
 	{
 		return getKey(s.communication, s.root);
 	}
@@ -31,33 +31,38 @@ public class RemoteSynchronizers
 		return c.getUrl() + "::" + r.getName();
 	}
 	
-	public RemoteSynchronizer getSynchronizer(Communication c, RemoteDirectory r)
+	public RemoteSynchronizerQueue getSynchronizer(Communication c, RemoteDirectory r)
 	{
 		return synchronizers.get(getKey(c, r));
 	}
 
-	public RemoteSynchronizer createRemoteSynchronizer(Machine remote, RemoteDirectory root) throws UnknownHostException, IOException
+	public RemoteSynchronizerQueue createRemoteSynchronizer(Machine remote, RemoteDirectory root) throws UnknownHostException, IOException
 	{
 		Communication c = Services.networkManager.openConnection(remote.getIp(), remote.getPort());
-		RemoteSynchronizer returnValue = new RemoteSynchronizer(c, root);
+		RemoteSynchronizerQueue returnValue = new RemoteSynchronizerQueue(c, root);
 		synchronizers.put(getKey(returnValue), returnValue);
 		return returnValue;
 	}
 	
-	public void done(RemoteSynchronizer sync)
+	public void done(RemoteSynchronizerQueue sync)
 	{
 		synchronizers.remove(getKey(sync));
 	}
 
-	public class RemoteSynchronizer
+	public class RemoteSynchronizerQueue
 	{
+		private int errorCount = 0;
+		private long MAX_TIME_TO_WAIT = 2 * 60 * 1000;
+		private long lastCommunication;
+		
 		private Lock lock = new ReentrantLock();
 		private Condition condition = lock.newCondition();
 		private HashMap<String, DirectoryList> directories = new HashMap<>();
 		Communication communication;
 		RemoteDirectory root;
+		private HashSet<String> queue = new HashSet<>();
 		
-		public RemoteSynchronizer(Communication c, RemoteDirectory root)
+		public RemoteSynchronizerQueue(Communication c, RemoteDirectory root)
 		{
 			communication = c;
 			this.root = root;
@@ -69,7 +74,13 @@ public class RemoteSynchronizers
 			{
 				try
 				{
-					condition.await(60, TimeUnit.SECONDS);
+					condition.await(20, TimeUnit.SECONDS);
+					if (communication.isClosed()
+							|| System.currentTimeMillis() - lastCommunication > MAX_TIME_TO_WAIT)
+					{
+						errorCount++;
+						return null;
+					}
 				}
 				catch (InterruptedException e)
 				{
@@ -78,16 +89,23 @@ public class RemoteSynchronizers
 				DirectoryList directoryList = directories.get(path);
 				if (directoryList != null)
 				{
+					directories.remove(path);
 					return directoryList;
 				}
 			}
 		}
 		
-		DirectoryList getDirectoryList(String path)
+		DirectoryList getDirectoryList(PathElement pathElement)
 		{
+			String path = pathElement.getFullPath();
 			lock.lock();
 			try
 			{
+				if (communication.isClosed())
+				{
+					return null;
+				}
+				ensureQueued(pathElement);
 				return waitForDirectory(path);
 			}
 			finally
@@ -102,7 +120,9 @@ public class RemoteSynchronizers
 			try
 			{
 				directories.put(list.getCurrentPath(), list);
-				condition.notifyAll();
+				queue.remove(list.getCurrentPath());
+				lastCommunication = System.currentTimeMillis();
+				condition.signalAll();
 			}
 			finally
 			{
@@ -110,9 +130,32 @@ public class RemoteSynchronizers
 			}
 		}
 		
-		void queueDirectoryList(RemoteDirectory remote, PathElement path)
+		private void ensureQueued(PathElement path)
 		{
-			communication.send(new ListDirectory(remote, path));
+			if (queue.contains(path.getFullPath()))
+			{
+				return;
+			}
+			if (communication.isClosed())
+			{
+				return;
+			}
+			lastCommunication = System.currentTimeMillis();
+			communication.send(new ListDirectory(root, path));
+			queue.add(path.getFullPath());
+		}
+		
+		public void queueDirectoryList(PathElement path)
+		{
+			lock.lock();
+			try
+			{
+				ensureQueued(path);
+			}
+			finally
+			{
+				lock.unlock();
+			}
 		}
 	}
 }

@@ -13,7 +13,7 @@ public class RequestCompletionStatus extends Message
 {
 	public RequestCompletionStatus() {}
 	
-	protected RequestCompletionStatus(InetAddress address, InputStream stream) throws IOException
+	public RequestCompletionStatus(InetAddress address, InputStream stream) throws IOException
 	{
 		super(address, stream);
 	}
@@ -30,7 +30,7 @@ public class RequestCompletionStatus extends Message
 		Services.downloads.getDownloadInstance(connection).sendCompletionStatus();
 	}
 
-	public int TYPE = 20;
+	public static int TYPE = 20;
 	@Override
 	protected int getType()
 	{

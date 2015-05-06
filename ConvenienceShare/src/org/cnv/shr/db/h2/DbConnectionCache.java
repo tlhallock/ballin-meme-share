@@ -32,7 +32,7 @@ public class DbConnectionCache
 		{
 			try
 			{
-				returnValue = DriverManager.getConnection("jdbc:h2:~/test.db", "sa", "");
+				returnValue = DriverManager.getConnection("jdbc:h2:./test_" + Services.settings.servePortBegin.get() + ".db", "sa", "");
 			} catch (SQLException e)
 			{
 				e.printStackTrace();

@@ -1,4 +1,4 @@
-package org.cnv.shr.db.mdl;
+package org.cnv.shr.mdl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

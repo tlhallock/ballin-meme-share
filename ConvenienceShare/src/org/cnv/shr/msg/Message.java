@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.sql.SQLException;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Communication;
@@ -15,8 +16,11 @@ import org.cnv.shr.util.Misc;
 
 public abstract class Message
 {
-	private String originatorIdentifier; 
-	private int port = Services.settings.servePortBegin.get();
+	private static final int VERSION = 1;
+	
+	private String originatorIdentifier;
+	private int port;
+	private int nports;
 	private int size;
 	
 	// need to have a version
@@ -25,11 +29,14 @@ public abstract class Message
 	private byte[] naunce;
 	private byte[] encrypted;
 	
+	String ip;
+	
 	/** Outgoing Message **/
 	protected Message()
 	{
 		originatorIdentifier = Services.settings.machineIdentifier.get();
 		port = Services.settings.servePortBegin.get();
+		nports = Services.settings.maxServes.get();   
 		naunce = Misc.getNaunce();
 	}
 	
@@ -37,13 +44,37 @@ public abstract class Message
 	 * @throws IOException **/
 	protected Message(InetAddress address, InputStream stream) throws IOException
 	{
-		port = (int) ByteReader.readInt(stream);
-		size = (int) ByteReader.readInt(stream);
+		originatorIdentifier = ByteReader.readString(stream);
+		port    = ByteReader.readInt(stream);
+		nports  = ByteReader.readInt(stream);
+		size    = ByteReader.readInt(stream);
+		
+		ip = Misc.getIp(address.getAddress());
 	}
 	
 	public Machine getMachine()
 	{
-		return DbMachines.getMachine(originatorIdentifier);
+		Machine m = DbMachines.getMachine(originatorIdentifier);
+		if (m == null)
+		{
+			return null;
+		}
+		if (m.getPort() != port || !m.getIp().equals(ip) || m.getNumberOfPorts() != nports)
+		{
+			m.setPort(port);
+			m.setIp(ip);
+			m.setNumberOfPorts(nports);
+			try
+			{
+				m.save();
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		return m;
 	}
 
 	public void read(InputStream stream) throws IOException
@@ -74,8 +105,12 @@ public abstract class Message
 		// encrypt
 
 		ByteListBuffer header = new ByteListBuffer();
+
 		header.append(getType());
-		header.append(port);
+		
+		header.append(originatorIdentifier);
+		header.append(port                );
+		header.append(nports              );
 		header.append(bytes.length);
 		header.append(bytes);
 		
@@ -84,7 +119,8 @@ public abstract class Message
 
 	public boolean authenticate()
 	{
-		return getMachine().isSharing();
+		return true;
+//		return getMachine().isSharing();
 	}
 
 	protected abstract void parse(InputStream bytes) throws IOException;

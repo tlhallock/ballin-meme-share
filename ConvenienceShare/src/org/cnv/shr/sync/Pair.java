@@ -1,4 +1,4 @@
-package org.cnv.shr.lcl;
+package org.cnv.shr.sync;
 
 import org.cnv.shr.mdl.PathElement;
 

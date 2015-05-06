@@ -65,6 +65,7 @@ public class Machine extends DbObject
 		this.name = name;
 		this.identifier = identifier;
 		this.nports = nports;
+		this.sharing = false;
 		for (String key : keys)
 		{
 			
@@ -207,6 +208,11 @@ public class Machine extends DbObject
 		return false;
 	}
 
+	public void setNumberOfPorts(int nports2)
+	{
+		nports = nports2;
+	}
+
 	public void refresh()
 	{
 		try
@@ -221,6 +227,11 @@ public class Machine extends DbObject
 			Services.logger.logStream.println("Unable to discover refresh " + this);
 			e.printStackTrace(Services.logger.logStream);
 		}
+	}
+
+	public String getUrl()
+	{
+		return getIp() + ":" + getPort();
 	}
 	
 	

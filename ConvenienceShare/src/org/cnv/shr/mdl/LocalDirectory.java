@@ -1,16 +1,12 @@
 package org.cnv.shr.mdl;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Timer;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.lcl.FileSource;
-import org.cnv.shr.lcl.RootSynchronizer;
-import org.cnv.shr.lcl.FileSource.FileFileSource;
-import org.cnv.shr.lcl.LocalSynchronizer;
+import org.cnv.shr.sync.LocalSynchronizer;
+import org.cnv.shr.sync.RootSynchronizer;
 import org.cnv.shr.util.Misc;
 
 public class LocalDirectory extends RootDirectory
@@ -49,20 +45,10 @@ public class LocalDirectory extends RootDirectory
 	{
 		return canonicalPath.startsWith(path.getFullPath());
 	}
-
-	@Override
-	protected void synchronizeInternal() throws IOException
-	{
-		Timer t = new Timer();
-		RootSynchronizer localSynchronizer = new LocalSynchronizer(this);
-		t.scheduleAtFixedRate(localSynchronizer, RootSynchronizer.DEBUG_REPEAT, RootSynchronizer.DEBUG_REPEAT);
-		localSynchronizer.synchronize();
-		t.cancel();
-	}
 	
 	public LocalFile getFile(String fsPath)
 	{
-		return DbFiles.getFile(this, DbPaths.getPathElement(this, fsPath));
+		return (LocalFile) DbFiles.getFile(this, DbPaths.getPathElement(this, fsPath));
 	}
 
 	@Override
@@ -81,5 +67,11 @@ public class LocalDirectory extends RootDirectory
 	public PathElement getCanonicalPath()
 	{
 		return path;
+	}
+
+	@Override
+	protected RootSynchronizer createSynchronizer() throws IOException
+	{
+		return new LocalSynchronizer(this);
 	}
 }

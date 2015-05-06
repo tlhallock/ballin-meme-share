@@ -12,7 +12,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class MachineFound extends Message
 {
-	public static int TYPE = 1;
+	public static int TYPE = 18;
 	
 	private String ip;
 	private int port;
@@ -46,9 +46,14 @@ public class MachineFound extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
+		if (ident.equals(Services.localMachine.getIdentifier()))
+		{
+			return;
+		}
 		Machine newMachine = new Machine(ip, port, nports, name, ident, keys);
 		newMachine.setLastActive(lastActive);
 		newMachine.save();
+		Services.notifications.remotesChanged();
 	}
 
 	@Override
@@ -76,6 +81,7 @@ public class MachineFound extends Message
 		buffer.append(name);
 		buffer.append(ident);
 		buffer.append(lastActive);
+		buffer.append(nports);
 		buffer.append(keys.length);
 		for (String key : keys)
 		{

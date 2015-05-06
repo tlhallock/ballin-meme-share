@@ -10,19 +10,15 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.cnv.shr.db.DbConnection;
 import org.cnv.shr.db.h2.DbConnectionCache;
-import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.dwn.DownloadManager;
 import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.gui.Application;
-import org.cnv.shr.lcl.RemoteSynchronizers;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.Machine.LocalMachine;
 import org.cnv.shr.msg.MessageReader;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.sync.RemoteSynchronizers;
 import org.cnv.shr.util.Misc;
 
 public class Services
@@ -42,7 +38,6 @@ public class Services
 	public static Locals locals;
 	public static MessageReader msgReader;
 	public static KeyManager keyManager;
-	public static DbConnection db;
 	public static Timer monitorTimer;
 	public static Application application;
 	public static LocalMachine localMachine;

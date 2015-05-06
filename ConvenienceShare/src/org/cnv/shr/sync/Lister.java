@@ -1,4 +1,4 @@
-package org.cnv.shr.lcl;
+package org.cnv.shr.sync;
 
 public interface Lister
 {

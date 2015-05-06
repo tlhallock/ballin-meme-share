@@ -11,7 +11,6 @@ import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 
 public class DbPaths
@@ -139,7 +138,6 @@ public class DbPaths
 		}
 	}
 
-
 	public static void pathLiesIn(PathElement element, RootDirectory local)
 	{
 		Connection c = Services.h2DbCache.getConnection();
@@ -189,35 +187,25 @@ public class DbPaths
 		}
 	}
 
-	public static PathElement getPathElement(String daPath)
-	{
-		PathElement[] paths = PathBreaker.breakPath(daPath);
-		setPathElementIds(ROOT, paths);
-		return paths[paths.length - 1];
-	}
 	public static PathElement getPathElement(LocalDirectory local, String fsPath)
 	{
 		String relPath = fsPath.substring(local.getCanonicalPath().getFullPath().length());
-		return getRelPathElement(local, relPath);
+		return getPathElement(relPath);
 	}
 
-	public static PathElement createPathElement(PathElement parentId, String name)
+	public static PathElement getPathElement(String relPath)
 	{
-		PathElement[] broken = PathBreaker.breakPath(parentId, name);
-		setPathElementIds(parentId, broken);
-		return broken[broken.length-1];
+		return getPathElement(ROOT, relPath);
 	}
 
-	public static PathElement getRelPathElement(RootDirectory localByName, String relPath)
+	public static PathElement getPathElement(PathElement parentId, String relPath)
 	{
-		if (relPath.length() == 0 || relPath.equals(".") || relPath.equals("./"))
+		if (relPath.length() == 0 || relPath.equals(".") || relPath.equals("./") || relPath.equals("/"))
 		{
 			return ROOT;
 		}
-		
-		PathElement[] paths = PathBreaker.breakPath(relPath);
-		setPathElementIds(ROOT, paths);
-		
-		return paths[paths.length - 1];
+		PathElement[] broken = PathBreaker.breakPath(parentId, relPath);
+		setPathElementIds(parentId, broken);
+		return broken[broken.length-1];
 	}
 }

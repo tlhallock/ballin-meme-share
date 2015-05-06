@@ -8,6 +8,15 @@ import java.util.HashMap;
 
 import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.msg.dwn.ChunkList;
+import org.cnv.shr.msg.dwn.ChunkRequest;
+import org.cnv.shr.msg.dwn.ChunkResponse;
+import org.cnv.shr.msg.dwn.CompletionStatus;
+import org.cnv.shr.msg.dwn.DownloadDone;
+import org.cnv.shr.msg.dwn.FileRequest;
+import org.cnv.shr.msg.dwn.MachineHasFile;
+import org.cnv.shr.msg.dwn.RequestCompletionStatus;
+import org.cnv.shr.util.ByteReader;
 
 public class MessageReader
 {
@@ -15,18 +24,26 @@ public class MessageReader
 	
 	public MessageReader()
 	{
-		add(new MessageIdentifier(DoneMessage.class));
-		add(new MessageIdentifier(Failure.class));
-		add(new MessageIdentifier(PathList.class));
-		//add(new MessageIdentifier(FileUrl.class));
-		add(new MessageIdentifier(FindMachines.class));
-		//add(new MessageIdentifier(FoundUser.class));
-		add(new MessageIdentifier(HeartBeat.class));
-		add(new MessageIdentifier(ListFiles.class));
-		//add(new MessageIdentifier(ListUsers.class));
-		add(new MessageIdentifier(RequestAccess.class));
-		add(new MessageIdentifier(UpdateCode.class));
-		add(new MessageIdentifier(Wait.class));
+		add(new MessageIdentifier(ChunkList.class                  ));
+		add(new MessageIdentifier(DownloadDone.class               ));
+		add(new MessageIdentifier(CompletionStatus.class           ));
+		add(new MessageIdentifier(FileRequest.class                ));
+		add(new MessageIdentifier(ChunkResponse.class              ));
+		add(new MessageIdentifier(RequestCompletionStatus.class    ));
+		add(new MessageIdentifier(ChunkRequest.class               ));
+		add(new MessageIdentifier(MachineHasFile.class             ));
+		add(new MessageIdentifier(ListFiles.class                  ));
+		add(new MessageIdentifier(ListDirectory.class              ));
+		add(new MessageIdentifier(MachineFound.class               ));
+		add(new MessageIdentifier(UpdateCode.class                 ));
+		add(new MessageIdentifier(DoneMessage.class                ));
+		add(new MessageIdentifier(DirectoryList.class              ));
+		add(new MessageIdentifier(PathList.class                   ));
+		add(new MessageIdentifier(FindMachines.class               ));
+		add(new MessageIdentifier(RequestAccess.class              ));
+		add(new MessageIdentifier(Failure.class                    ));
+		add(new MessageIdentifier(Wait.class                       ));
+		add(new MessageIdentifier(HeartBeat.class                  ));
 
 		Services.logger.logStream.println("Message map:\n" + this);
 	}
@@ -54,7 +71,14 @@ public class MessageReader
 	
 	public Message readMsg(InetAddress address, InputStream inputStream) throws IOException
 	{
-		int msgType = inputStream.read();
+//		int read;
+//		do
+//		{
+//			read = inputStream.read();
+//			System.out.println(read);
+//		} while (read >= 0);
+		
+		int msgType = ByteReader.readInt(inputStream);
 
 		MessageIdentifier messageIdentifier = identifiers.get(msgType);
 		if (messageIdentifier == null)

@@ -16,7 +16,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class ChunkList extends Message
 {
-	LinkedList<Chunk> chunks = new LinkedList<>();
+	private LinkedList<Chunk> chunks = new LinkedList<>();
 
 	public static int TYPE = 11;
 	public ChunkList(HashMap<String, Chunk> chunks2)
@@ -27,7 +27,7 @@ public class ChunkList extends Message
 		}
 	}
 	
-	protected ChunkList(InetAddress address, InputStream stream) throws IOException
+	public ChunkList(InetAddress address, InputStream stream) throws IOException
 	{
 		super(address, stream);
 	}

@@ -2,6 +2,7 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
@@ -14,12 +15,16 @@ public class ChunkResponse extends Message
 {
 	private Chunk chunk;
 	
-	public static int TYPE = 11;
-	
+	public static int TYPE = 14;
 	
 	public ChunkResponse(Chunk c)
 	{
 		chunk = c;
+	}
+	
+	public ChunkResponse(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
 	}
 	
 	@Override

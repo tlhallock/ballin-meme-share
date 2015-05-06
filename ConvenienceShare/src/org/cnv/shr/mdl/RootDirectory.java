@@ -1,19 +1,19 @@
 package org.cnv.shr.mdl;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Timer;
 
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.sync.RootSynchronizer;
 import org.cnv.shr.util.Misc;
 
 public abstract class RootDirectory extends DbObject
@@ -96,10 +96,14 @@ public abstract class RootDirectory extends DbObject
 
 		try
 		{
-			synchronizeInternal();
+			Timer t = new Timer();
+			RootSynchronizer localSynchronizer = createSynchronizer();
+			t.scheduleAtFixedRate(localSynchronizer, RootSynchronizer.DEBUG_REPEAT, RootSynchronizer.DEBUG_REPEAT);
+			localSynchronizer.synchronize();
+			t.cancel();
 			setStats();
 		}
-		catch(Exception ex)
+		catch (Exception ex)
 		{
 			ex.printStackTrace();
 		}
@@ -123,7 +127,7 @@ public abstract class RootDirectory extends DbObject
 		}
 	}
 	
-	protected abstract void synchronizeInternal() throws IOException;
+	protected abstract RootSynchronizer createSynchronizer() throws IOException;
 	
 	public abstract boolean isLocal();
 

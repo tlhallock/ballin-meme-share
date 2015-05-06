@@ -1,5 +1,5 @@
 
-package org.cnv.shr.lcl;
+package org.cnv.shr.sync;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -12,9 +12,7 @@ import java.util.TimerTask;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.FileOutsideOfRootException;
@@ -112,7 +110,7 @@ public abstract class RootSynchronizer extends TimerTask
 		}
 		
 		// add path to database
-		PathElement element = DbPaths.createPathElement(task.current, name);
+		PathElement element = DbPaths.getPathElement(task.current, name);
 		DbPaths.pathLiesIn(element, local);
 		
 		if (f.isFile())
@@ -131,7 +129,7 @@ public abstract class RootSynchronizer extends TimerTask
 		accountedFor.add(element.getUnbrokenName());
 
 		FileSource fsCopy = files.get(element.getUnbrokenName());
-		LocalFile dbVersion = DbFiles.getFile(local, element);
+		SharedFile dbVersion = DbFiles.getFile(local, element);
 		if (fsCopy == null)
 		{
 			if (dbVersion != null)
@@ -170,7 +168,7 @@ public abstract class RootSynchronizer extends TimerTask
 		update(dbVersion);
 	}
 
-	private void remove(LocalFile dbVersion) throws SQLException
+	private void remove(SharedFile dbVersion) throws SQLException
 	{
 		// delete stale file
 		dbVersion.delete();
@@ -178,10 +176,11 @@ public abstract class RootSynchronizer extends TimerTask
 		filesRemoved++;
 	}
 
-	private void update(LocalFile dbVersion) throws SQLException
+	protected abstract boolean updateFile(SharedFile file) throws SQLException;
+	private void update(SharedFile dbVersion) throws SQLException
 	{
 		// update file
-		if (dbVersion.refreshAndWriteToDb())
+		if (updateFile(dbVersion))
 		{
 			changeCount++;
 		}
@@ -193,7 +192,7 @@ public abstract class RootSynchronizer extends TimerTask
 		// Services.logger.logStream.println("Found new file " + fsCopy);
 		try
 		{
-			SharedFile lFile = create(local, element);
+			SharedFile lFile = fsCopy.create(local, element);
 			if (lFile.save())
 			{
 				changeCount++;
@@ -260,8 +259,6 @@ public abstract class RootSynchronizer extends TimerTask
 		filesRemoved = 0;
 		bytesAdded = 0;
 	}
-	
 
-	protected abstract SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException;
 	protected abstract void notifyChanged();
 }

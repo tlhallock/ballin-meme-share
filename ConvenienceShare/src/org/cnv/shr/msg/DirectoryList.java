@@ -3,21 +3,19 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.lcl.RemoteSynchronizers;
 import org.cnv.shr.mdl.LocalDirectory;
-import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
+import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.sync.RemoteSynchronizers;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
 
@@ -34,7 +32,7 @@ public class DirectoryList extends Message
 		currentPath = pathElement.getFullPath();
 		for (PathElement element : pathElement.list(localByName))
 		{
-			LocalFile local = DbFiles.getFile(localByName, element);
+			SharedFile local = DbFiles.getFile(localByName, element);
 			if (local == null)
 			{
 				subDirs.add(element.getUnbrokenName());
@@ -46,7 +44,7 @@ public class DirectoryList extends Message
 		}
 	}
 
-	protected DirectoryList(InetAddress address, InputStream stream) throws IOException
+	public DirectoryList(InetAddress address, InputStream stream) throws IOException
 	{
 		super(address, stream);
 	}
@@ -85,17 +83,17 @@ public class DirectoryList extends Message
 		}
 	}
 
+	public static int TYPE = 19;
 	@Override
 	protected int getType()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return TYPE;
 	}
 
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		RemoteSynchronizers.RemoteSynchronizer sync = Services.syncs.getSynchronizer(connection, getRoot());
+		RemoteSynchronizers.RemoteSynchronizerQueue sync = Services.syncs.getSynchronizer(connection, getRoot());
 		if (sync == null)
 		{
 			Services.logger.logStream.println("Lost synchronizer?");
@@ -116,7 +114,7 @@ public class DirectoryList extends Message
 		{
 			return rootCache;
 		}
-		return rootCache = DbRoots.getRemote(getMachine(), name);
+		return rootCache = (RemoteDirectory) DbRoots.getRoot(getMachine(), name);
 	}
 	
 	PathElement elemCache;
@@ -126,7 +124,7 @@ public class DirectoryList extends Message
 		{
 			return elemCache;
 		}
-		return elemCache = DbPaths.getRelPathElement(getRoot(), currentPath);
+		return elemCache = DbPaths.getPathElement(currentPath);
 	}
 	
 	public class Child
@@ -137,7 +135,7 @@ public class DirectoryList extends Message
 		String tags;
 		long lastModified;
 		
-		Child(LocalFile l)
+		Child(SharedFile l)
 		{
 			this.name = l.getPath().getUnbrokenName();
 			this.size = l.getFileSize();
@@ -166,7 +164,7 @@ public class DirectoryList extends Message
 		
 		public RemoteFile create() 
 		{
-			PathElement pathElement = DbPaths.getRelPathElement(getRoot(), name);
+			PathElement pathElement = DbPaths.getPathElement(getPath(), name);
 			return new RemoteFile(getRoot(), pathElement,
 					size, checksum, tags, lastModified);
 		}
