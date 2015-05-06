@@ -17,12 +17,18 @@ public class RemoteFile extends SharedFile
 		super(int1);
 	}
 
-	public RemoteFile(Machine machine, RemoteDirectory remote, InputStream bytes) throws IOException
+	public RemoteFile(RemoteDirectory root, PathElement pathElement,
+			long fileSize, String checksum, String tags, long lastModified)
 	{
 		super(null);
-		read(bytes);
+		rootDirectory = root;
+		path = pathElement;
+		this.fileSize = fileSize;
+		this.checksum = checksum;
+		this.tags = tags;
+		this.lastModified = lastModified;
 	}
-	
+
 	public enum SharedFileState
 	{
 		LOCAL          (0),

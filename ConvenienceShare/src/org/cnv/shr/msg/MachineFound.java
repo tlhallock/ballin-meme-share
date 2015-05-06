@@ -16,6 +16,7 @@ public class MachineFound extends Message
 	
 	private String ip;
 	private int port;
+	private int nports;
 	private String[] keys;
 	private String name;
 	private String ident;
@@ -39,14 +40,15 @@ public class MachineFound extends Message
 		name       = m.getName();
 		ident      = m.getIdentifier();
 		lastActive = m.getLastActive();
+		nports     = m.getNumberOfPorts();
 	}
 	
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		Machine newMachine = new Machine(ip, port, name, ident, keys);
+		Machine newMachine = new Machine(ip, port, nports, name, ident, keys);
 		newMachine.setLastActive(lastActive);
-		newMachine.add();
+		newMachine.save();
 	}
 
 	@Override
@@ -57,6 +59,7 @@ public class MachineFound extends Message
 		name        = ByteReader.readString(bytes);
 		ident       = ByteReader.readString(bytes);
 		lastActive  = ByteReader.readLong(bytes);
+		nports      = ByteReader.readInt(bytes);
 		int numKeys = ByteReader.readInt(bytes);
 		keys = new String[numKeys];
 		for (int i = 0; i < numKeys; i++)

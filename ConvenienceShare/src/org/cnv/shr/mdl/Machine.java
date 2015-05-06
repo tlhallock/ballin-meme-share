@@ -55,7 +55,7 @@ public class Machine extends DbObject
 	*/
 	
 	public Machine(
-			String ip, int port,
+			String ip, int port, int nports,
 			String name, String identifier,
 			String[] keys)
 	{
@@ -64,6 +64,7 @@ public class Machine extends DbObject
 		this.port = port;
 		this.name = name;
 		this.identifier = identifier;
+		this.nports = nports;
 		for (String key : keys)
 		{
 			

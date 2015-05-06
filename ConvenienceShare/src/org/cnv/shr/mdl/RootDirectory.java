@@ -1,6 +1,7 @@
 package org.cnv.shr.mdl;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -98,6 +99,10 @@ public abstract class RootDirectory extends DbObject
 			synchronizeInternal();
 			setStats();
 		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
 		finally
 		{
 			Services.locals.stopSynchronizing(this);
@@ -118,7 +123,7 @@ public abstract class RootDirectory extends DbObject
 		}
 	}
 	
-	protected abstract void synchronizeInternal();
+	protected abstract void synchronizeInternal() throws IOException;
 	
 	public abstract boolean isLocal();
 
@@ -185,5 +190,10 @@ public abstract class RootDirectory extends DbObject
 	public String getName()
 	{
 		return name;
+	}
+
+	public boolean contains(String canonicalPath)
+	{
+		return false;
 	}
 }

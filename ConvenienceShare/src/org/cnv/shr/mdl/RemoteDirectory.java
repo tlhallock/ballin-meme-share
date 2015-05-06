@@ -1,9 +1,15 @@
 package org.cnv.shr.mdl;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Timer;
 
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.lcl.FileSource;
+import org.cnv.shr.lcl.RootSynchronizer;
+import org.cnv.shr.lcl.FileSource.FileFileSource;
+import org.cnv.shr.lcl.RemoteSynchronizer;
 
 
 public class RemoteDirectory extends RootDirectory
@@ -31,7 +37,20 @@ public class RemoteDirectory extends RootDirectory
 	@Override
 	public void synchronizeInternal()
 	{
-		
+		Timer t = new Timer();
+		RootSynchronizer localSynchronizer;
+		try
+		{
+			localSynchronizer = new RemoteSynchronizer(this);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			return;
+		}
+		t.scheduleAtFixedRate(localSynchronizer, RootSynchronizer.DEBUG_REPEAT, RootSynchronizer.DEBUG_REPEAT);
+		localSynchronizer.synchronize();
+		t.cancel();
 	}
 	
 	@Override

@@ -14,7 +14,7 @@ import org.cnv.shr.mdl.RootDirectory;
 
 public class DbFiles
 {
-	public static LocalFile getFile(LocalDirectory local, PathElement element)
+	public static LocalFile getFile(RootDirectory local, PathElement element)
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement(

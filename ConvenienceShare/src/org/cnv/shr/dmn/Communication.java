@@ -5,6 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.LinkedList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
@@ -22,6 +26,10 @@ public class Communication implements Runnable
 	private Machine machine;
 	
 	private boolean done = false;
+	
+
+	private Lock lock = new ReentrantLock();
+	private Condition condition = lock.newCondition();
 
 	/** Initiator **/
 	public Communication(String ip, int port) throws UnknownHostException, IOException

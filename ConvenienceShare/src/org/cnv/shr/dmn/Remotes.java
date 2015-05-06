@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
 
@@ -42,6 +43,11 @@ public class Remotes
 	}
 	
 	public void isAlive(Machine machine)
+	{
+		
+	}
+	
+	public void synchronize(Machine m, RemoteDirectory root)
 	{
 		
 	}

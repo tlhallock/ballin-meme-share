@@ -171,6 +171,7 @@ public class PathTreeModel implements TreeModel
 		private void expand()
 		{
 			System.out.println("Expanding " + element.getFullPath());
+			System.out.println("Expanding " + element.getId());
 			if (rootDirectory == null)
 			{
 				children = new Node[0];

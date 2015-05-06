@@ -186,4 +186,10 @@ public class DbRoots
 	{
 		return null;
 	}
+
+	public static RemoteDirectory getRemote(Machine machine, String name)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

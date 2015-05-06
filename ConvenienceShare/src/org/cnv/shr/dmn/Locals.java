@@ -12,6 +12,7 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.msg.PathList;
 
 public class Locals
 {
@@ -49,32 +50,7 @@ public class Locals
 	
 	public void share(Communication c)
 	{
-//		FileList msg = new FileList();
-//		int count = 0;
-//		
-//		
-//			DbIterator<LocalDirectory> listLocals = DbRoots.listLocals(null);
-//			while (listLocals.hasNext())
-//			{
-//				while (list.hasNext())
-//				{
-//					SharedFile file = list.next();
-//					count++;
-//					msg.add(local, file);
-//					
-//					if (count > 50)
-//					{
-//						c.send(msg);
-//						count = 0;
-//						msg = new FileList();
-//					}
-//				}
-//			}
-//		}
-//		if (count > 1)
-//		{
-//			c.send(msg);
-//		}
+		c.send(new PathList());
 	}
 
 	public LocalFile getLocalFile(String canonicalPath)

@@ -15,6 +15,7 @@ import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.db.h2.RStringBuilder;
+import org.cnv.shr.lcl.FileSource;
 
 public class PathElement extends DbObject
 {
@@ -179,10 +180,10 @@ public class PathElement extends DbObject
 		return broken;
 	}
 	
-	public static String sanitizeFilename(File file)
+	public static String sanitizeFilename(FileSource f)
 	{
-		String name = file.getName();
-		if (file.isDirectory())
+		String name = f.getName();
+		if (f.isDirectory())
 		{
 			if (name.charAt(name.length() - 1) != '/')
 			{
@@ -190,7 +191,7 @@ public class PathElement extends DbObject
 			}
 			return name;
 		}
-		else if (file.isFile())
+		else if (f.isFile())
 		{
 			return name;
 		}

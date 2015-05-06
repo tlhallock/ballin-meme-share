@@ -18,6 +18,7 @@ import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.dwn.DownloadManager;
 import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.gui.Application;
+import org.cnv.shr.lcl.RemoteSynchronizers;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.Machine.LocalMachine;
 import org.cnv.shr.msg.MessageReader;
@@ -48,6 +49,7 @@ public class Services
 	public static DbConnectionCache h2DbCache;
 	public static ServeManager server;
 	public static DownloadManager downloads;
+	public static RemoteSynchronizers syncs;
 	
 	public static void initialize(String[] args) throws Exception
 	{
@@ -76,6 +78,7 @@ public class Services
 		msgReader = new MessageReader();
 		server = new ServeManager();
 		downloads = new DownloadManager();
+		syncs = new RemoteSynchronizers();
 		
 		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
