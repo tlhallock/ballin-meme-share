@@ -67,7 +67,7 @@ public class Application extends javax.swing.JFrame
 				{
 					return;
 				}
-				final RootDirectory root = null;//DbRoots.getServices.db.getRoot(Services.localMachine, mId);
+				final RootDirectory root = DbRoots.getLocal(mId);
 				if (root == null)
 				{
 					Services.logger.logStream.println("Unable to find local directory " + mId);
@@ -103,6 +103,37 @@ public class Application extends javax.swing.JFrame
 			public String getString()
 			{
 				return "Delete";
+			}
+		}).addListener(new TableRowListener()
+		{
+			@Override
+			public void run(int row)
+			{
+				final String mId = tableListener.getTableValue("Path", row);
+				if (mId == null)
+				{
+					return;
+				}
+				final LocalDirectory root = DbRoots.getLocal(mId);
+				if (root == null)
+				{
+					Services.logger.logStream.println("Unable to find local directory " + mId);
+					return;
+				}
+				Services.userThreads.execute(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						root.synchronize(true);
+					}
+				});
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Synchronize";
 			}
 		});
 	}
@@ -191,15 +222,15 @@ public class Application extends javax.swing.JFrame
 		refreshSettings();
 	}
         
-	public void refreshLocals()
+	public synchronized void refreshLocals()
 	{
-		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
 		DefaultTableModel model = (DefaultTableModel) localsView.getModel();
 		while (model.getRowCount() > 0)
 		{
 			model.removeRow(0);
 		}
 
+		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
 		while (listLocals.hasNext())
 		{
             	LocalDirectory local = listLocals.next();
@@ -212,8 +243,55 @@ public class Application extends javax.swing.JFrame
                 });
 		}
 	}
+	
+	public synchronized void refreshLocal(LocalDirectory local)
+	{
+		DefaultTableModel model = (DefaultTableModel) localsView.getModel();
+		removeIfExists(local, model);
+		
+        model.addRow(new String[] {
+            local.getCanonicalPath().getFullPath(),
+            local.getDescription(),
+            local.getTags(),
+            local.getTotalNumberOfFiles(),
+            local.getTotalFileSize(),
+        });
+	}
 
-	public void refreshRemotes()
+	private void removeIfExists(LocalDirectory local, DefaultTableModel model)
+	{
+		int column = -1;
+		for (int i = 0; i < model.getColumnCount(); i++)
+		{
+			if (localsView.getColumnName(i).equals("Path"))
+			{
+				column = i;
+				break;
+			}
+		}
+		if (column < 0)
+		{
+			return;
+		}
+
+		int row = -1;
+		String fullPath = local.getCanonicalPath().getFullPath();
+		for (int i = 0; i < model.getRowCount(); i++)
+		{
+			if (model.getValueAt(i, column).equals(fullPath))
+			{
+				row = i;
+				break;
+			}
+		}
+		if (row < 0)
+		{
+			return;
+		}
+		model.removeRow(row);
+	}
+
+	public synchronized void refreshRemotes()
 	{
 		DefaultTableModel model = (DefaultTableModel) machinesList.getModel();
 		while (model.getRowCount() > 0)
@@ -795,17 +873,11 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_DebugActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        Services.userThreads.execute(new Runnable() {
-            @Override
-            public void run()
-            {
-                Services.locals.synchronize(true);
-            }
-        });
+    	Services.locals.synchronize(true);
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-//        Services.db.deleteDb();
+    	DbTables.deleteDb(Services.h2DbCache.getConnection());
     }//GEN-LAST:event_jButton3ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

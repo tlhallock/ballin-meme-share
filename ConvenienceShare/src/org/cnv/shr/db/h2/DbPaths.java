@@ -100,7 +100,9 @@ public class DbPaths
 					{
 						if (pathElems[elemsIdx].getId() == null)
 						{
-							throw new RuntimeException("Unable to create path: " + PathBreaker.join(pathElems) + "[" + pathElems[elemsIdx].getName() + "]");
+							throw new RuntimeException("Unable to create path: " 
+									+ PathBreaker.join(pathElems) 
+									+ "[" + pathElems[elemsIdx].getName() + "]");
 						}
 					}
 					elemsIdx++;
@@ -140,14 +142,21 @@ public class DbPaths
 	public static void pathLiesIn(PathElement element, LocalDirectory local)
 	{
 		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?);");)
+		try (PreparedStatement select = c.prepareStatement("select count(RID) from ROOT_CONTAINS where RID=? and PELEM=?;");
+		     PreparedStatement update = c.prepareStatement("insert into ROOT_CONTAINS values (?, ?);");)
 		{
 			while (element.getParent() != element)
 			{
-				stmt.setInt(1, local.getId());
-				stmt.setInt(2, element.getId());
-				stmt.execute();
-				element = element.getParent();
+				select.setInt(1, local.getId());
+				select.setInt(2, element.getId());
+				if (select.executeQuery().next())
+				{
+					element = element.getParent();
+					continue;
+				}
+				update.setInt(1, local.getId());
+				update.setInt(2, element.getId());
+				update.execute();
 			}
 		}
 		catch (SQLException e)

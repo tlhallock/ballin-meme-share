@@ -9,6 +9,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
 
 public class DbFiles
@@ -36,5 +37,10 @@ public class DbFiles
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public static RemoteFile getRemoteFile(RootDirectory directory, String path)
+	{
+		return null;
 	}
 }

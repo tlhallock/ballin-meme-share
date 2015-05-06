@@ -12,6 +12,7 @@ import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.mdl.SharedFile;
 
 public class PathTreeModel implements TreeModel
 {
@@ -95,7 +96,27 @@ public class PathTreeModel implements TreeModel
 		listeners.remove(l);
 	}
 	
-	private class Node
+	public LinkedList<SharedFile> getList(Node n)
+	{
+		LinkedList<SharedFile> list = new LinkedList<>();
+		
+		if (n.children == null)
+		{
+			return list;
+		}
+		
+		for (Node child : n.children)
+		{
+			SharedFile file = child.getFile();
+			if (file != null)
+			{
+				list.add(file);
+			}
+		}
+		return list;
+	}
+	
+	class Node
 	{
 		PathElement element;
 		Node[] children;
@@ -113,7 +134,7 @@ public class PathTreeModel implements TreeModel
 			{
 				return true;
 			}
-			return DbFiles.getFile((LocalDirectory) rootDirectory, element) != null;
+			return getFile() != null;
 		}
 
 		public int getIndexOfChild(Node child)
@@ -172,8 +193,13 @@ public class PathTreeModel implements TreeModel
 				children[ndx++] = new Node(e);
 			}
 		}
-		
+
+		public SharedFile getFile()
+		{
+			return DbFiles.getFile((LocalDirectory) rootDirectory, element);
+		}
 	}
+	
 	public static class NoPath extends PathElement
 	{
 		public NoPath()

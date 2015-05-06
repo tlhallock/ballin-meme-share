@@ -3,6 +3,7 @@ package org.cnv.shr.lcl;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbPaths;
@@ -24,6 +25,14 @@ public class LocalDirectorySyncIterator
 			if (Files.isSymbolicLink(Paths.get(f.getAbsolutePath()))
 				|| !f.isDirectory())
 			{
+				try
+				{
+					directory.delete();
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
 				throw new RuntimeException("Symbolic link: " + directory + ". Skipping");
 			}
 

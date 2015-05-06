@@ -18,7 +18,6 @@ public class MessageReader
 		add(new MessageIdentifier(DoneMessage.class));
 		add(new MessageIdentifier(Failure.class));
 		add(new MessageIdentifier(FileList.class));
-		add(new MessageIdentifier(FileRequest.class));
 		//add(new MessageIdentifier(FileUrl.class));
 		add(new MessageIdentifier(FindMachines.class));
 		//add(new MessageIdentifier(FoundUser.class));

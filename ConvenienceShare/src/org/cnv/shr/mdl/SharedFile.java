@@ -35,7 +35,7 @@ public class SharedFile extends DbObject implements NetworkObject
 		{
 			fpath = fpath.substring(index + 1);
 		}
-		return fpath;
+		return "";
 	}
 
 	public PathElement getPath()

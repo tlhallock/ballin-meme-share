@@ -34,7 +34,6 @@ public class Download extends DbObject
 	
 	public enum DownloadState
 	{
-		
 		;
 		
 		int getDbState()

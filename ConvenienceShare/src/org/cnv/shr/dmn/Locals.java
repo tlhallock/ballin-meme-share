@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
@@ -43,7 +44,7 @@ public class Locals
 	
 	public synchronized void stopSynchronizing(RootDirectory d)
 	{
-		synchronizing.remove(d.getCanonicalPath());
+		synchronizing.remove(d.getCanonicalPath().getFullPath());
 	}
 	
 	public void share(Communication c)
@@ -91,20 +92,28 @@ public class Locals
 		return null;
 	}
 
-	public void synchronize(boolean force)
+	public void synchronize(final boolean force)
 	{
 		try
 		{
-			
-			DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
+			LinkedList<LocalDirectory> locals = new LinkedList<>();
+			final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
 			while (listLocals.hasNext())
 			{
-				listLocals.next().synchronize(force);
+				locals.add(listLocals.next());
+				
+			}
+			for (final LocalDirectory local : locals)
+			{
+				Services.userThreads.execute(new Runnable() {
+		            @Override
+		            public void run()
+		            {
+		            	local.synchronize(force);
+		            }
+				});
 			}
 //			Services.db.removeUnusedPaths();
-
-			// Right now this is only for the sizes of the local dirs.
-			Services.notifications.localsChanged();
 		}
 		catch (Exception ex)
 		{

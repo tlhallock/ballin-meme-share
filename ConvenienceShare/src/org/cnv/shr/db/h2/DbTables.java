@@ -191,7 +191,7 @@ public class DbTables
 		}
 	}
 
-	public static void deleteDb(Connection c) throws SQLException
+	public static void deleteDb(Connection c)
 	{
 		for (DbObjects table : ALL_TABLES)
 		{

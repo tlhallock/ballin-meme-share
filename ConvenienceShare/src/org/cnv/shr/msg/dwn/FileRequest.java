@@ -1,0 +1,80 @@
+package org.cnv.shr.msg.dwn;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+
+import org.cnv.shr.db.h2.DbFiles;
+import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.dwn.ServeInstance;
+import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.mdl.RemoteFile;
+import org.cnv.shr.msg.Message;
+import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.ByteReader;
+
+public class FileRequest extends Message
+{
+	private String rootName;
+	private String path;
+	private String checksum;
+	private long numChunks;
+
+	public static int TYPE = 11;
+
+	public FileRequest(RemoteFile remoteFile, long d)
+	{
+		rootName = remoteFile.getRootDirectory().getName();
+		path = remoteFile.getPath().getFullPath();
+		checksum = remoteFile.getChecksum();
+		if (checksum == null)
+		{
+			checksum = "";
+		}
+		this.numChunks = d;
+	}
+	
+	public FileRequest(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
+	}
+
+	@Override
+	protected void parse(InputStream bytes) throws IOException
+	{
+		rootName  = ByteReader.readString(bytes);
+		path      = ByteReader.readString(bytes);
+		checksum  = ByteReader.readString(bytes);
+		numChunks = ByteReader.readLong(bytes);
+	}
+
+	@Override
+	protected void write(ByteListBuffer buffer)
+	{
+		buffer.append(rootName );
+		buffer.append(path     );
+		buffer.append(checksum );
+		buffer.append(numChunks);
+	}
+	
+	@Override
+	protected int getType()
+	{
+		return TYPE;
+	}
+
+	@Override
+	public void perform(Communication connection) throws Exception
+	{
+		PathElement pathElement = DbPaths.getPathElement(path);
+		LocalDirectory local = DbRoots.getLocalByName(rootName);
+		LocalFile localFile = DbFiles.getFile(local, pathElement);
+		ServeInstance serve = Services.server.serve((LocalFile) localFile, connection);
+		serve.sendChunks(numChunks);
+	}
+}

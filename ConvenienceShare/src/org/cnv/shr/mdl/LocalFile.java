@@ -21,7 +21,7 @@ public class LocalFile extends SharedFile
 		path = element;
 		tags = null;
 		
-		File f = new File(local.getCanonicalPath().getFullPath() + "/" + element.getFullPath());
+		File f = getFsFile();
 
 		fileSize = f.length();
 		lastModified = f.lastModified();
@@ -38,7 +38,7 @@ public class LocalFile extends SharedFile
 		{
 			if (fileSize < Services.settings.maxImmediateChecksum.get())
 			{
-				checksum = Services.checksums.checksumBlocking((LocalDirectory) rootDirectory, f);
+				checksum = Services.checksums.checksumBlocking(f);
 			}
 		}
 		catch (IOException ex)
@@ -93,12 +93,12 @@ public class LocalFile extends SharedFile
 	{
 		if (fileSize > Services.settings.maxImmediateChecksum.get())
 		{
-			Services.checksums.checksum(getRootDirectory(), fsCopy);
+			Services.checksums.checksum(this, fsCopy);
 			return;
 		}
 		try
 		{
-			checksum = Services.checksums.checksumBlocking(getRootDirectory(), fsCopy);
+			checksum = Services.checksums.checksumBlocking(fsCopy);
 			return;
 		}
 		catch (IOException e)
@@ -106,7 +106,7 @@ public class LocalFile extends SharedFile
 			Services.logger.logStream.println("Unable to checksum " + fsCopy);
 			e.printStackTrace(Services.logger.logStream);
 		}
-		Services.checksums.checksum(getRootDirectory(), fsCopy);
+		Services.checksums.checksum(this, fsCopy);
 	}
 
 	public void setChecksum(long timeStamp, String checksum)
@@ -133,5 +133,18 @@ public class LocalFile extends SharedFile
 	public boolean exists()
 	{
 		return new File(getFullPath()).exists();
+	}
+
+	public File getFsFile()
+	{
+		return new File(getRootDirectory().getCanonicalPath().getFullPath() + "/" + path.getFullPath());
+	}
+
+	public void ensureChecksummed() throws IOException
+	{
+		if (checksum == null)
+		{
+			checksum = Services.checksums.checksumBlocking(getFsFile());
+		}
 	}
 }

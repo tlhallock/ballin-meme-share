@@ -121,4 +121,9 @@ public final class ByteListBuffer
 		currentBuffer = new byte[BUFFER_LENGTH];
 		offset = 0;
 	}
+
+	public ByteListBuffer append(double percentComplete)
+	{
+		return append(String.valueOf(percentComplete));
+	}
 }

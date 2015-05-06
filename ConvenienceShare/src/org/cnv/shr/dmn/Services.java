@@ -15,6 +15,8 @@ import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
+import org.cnv.shr.dmn.dwn.DownloadManager;
+import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.Machine.LocalMachine;
@@ -44,6 +46,8 @@ public class Services
 	public static Application application;
 	public static LocalMachine localMachine;
 	public static DbConnectionCache h2DbCache;
+	public static ServeManager server;
+	public static DownloadManager downloads;
 	
 	public static void initialize(String[] args) throws Exception
 	{
@@ -70,6 +74,8 @@ public class Services
 		}
 		networkManager = new ConnectionManager();
 		msgReader = new MessageReader();
+		server = new ServeManager();
+		downloads = new DownloadManager();
 		
 		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);

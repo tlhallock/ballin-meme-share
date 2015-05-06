@@ -8,10 +8,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.TimerTask;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.dmn.Notifications;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
@@ -23,13 +24,19 @@ import org.cnv.shr.util.FileOutsideOfRootException;
  * Instead, this keeps a stack inside the LocalDirectorySyncIterator of synchronization tasks to be performed.
  *
  */
-public class LocalSynchronizer
+public class LocalSynchronizer extends TimerTask
 {
 	private static final Pair[] dummy = new Pair[0];
 	
 	int changeCount;
 	LocalDirectorySyncIterator iterator;
 	LocalDirectory local;
+
+	int filesAdded;
+	long filesRefresh;
+	long filesRemoved;
+	long bytesAdded;
+	String currentFile;
 	
 	public LocalSynchronizer(LocalDirectory dir)
 	{
@@ -37,23 +44,32 @@ public class LocalSynchronizer
 		this.local = dir;
 	}
 	
-	public void run()
+	public void synchronize()
 	{
 		SynchronizationTask task = null;
 		while ((task = iterator.next()) != null)
 		{
 			synchronize(task);
 		}
+		if (changeCount > 0)
+		{
+			Services.notifications.localsChanged();
+		}
 	}
 	
-	public void synchronize(SynchronizationTask task)
+	private void synchronize(SynchronizationTask task)
 	{
 		HashMap<String, File> files = key(task.files);
 		HashSet<String> accountedFor = new HashSet<>();
 		
-//		Services.logger.logStream.println("Synchronizing " + task.current.getFullPath());
-//		Services.logger.logStream.println("FS: " + task.files);
-//		Services.logger.logStream.println("DB: " + task.dbPaths);
+		currentFile = task.current.getFullPath();
+
+		if (local.getCanonicalPath().getFullPath().equals("/home/thallock/Applications"))
+		{
+			Services.logger.logStream.println("Synchronizing " + task.current.getFullPath());
+			Services.logger.logStream.println("FS: " + task.files);
+			Services.logger.logStream.println("DB: " + task.dbPaths);
+		}
 		
 		LinkedList<Pair> subDirectories = new LinkedList<>();
 		
@@ -81,14 +97,8 @@ public class LocalSynchronizer
 			}
 		}
 		
-		if (changeCount > 50)
-		{
-			changeCount = 0;
-			Services.notifications.localsChanged();
-		}
-		
-		
 		task.synchronizedResults = subDirectories.toArray(dummy);
+		Thread.yield();
 	}
 
 	private void testInDb(SynchronizationTask task, HashSet<String> accountedFor, LinkedList<Pair> subDirectories, File f) throws IOException
@@ -109,7 +119,6 @@ public class LocalSynchronizer
 		{
 			// add file
 			addFile(element, f);
-			changeCount++;
 		}
 		else if (f.isDirectory())
 		{
@@ -127,9 +136,7 @@ public class LocalSynchronizer
 		{
 			if (dbVersion != null)
 			{
-				// delete stale file
-				dbVersion.delete();
-				changeCount++;
+				remove(dbVersion);
 			}
 			
 			// remove directory from database
@@ -156,15 +163,29 @@ public class LocalSynchronizer
 		if (dbVersion == null)
 		{
 			// add File
+			DbPaths.pathLiesIn(element, local);
 			addFile(element, fsCopy);
-			changeCount++;
 			return;
 		}
+		update(dbVersion);
+	}
+
+	private void remove(LocalFile dbVersion) throws SQLException
+	{
+		// delete stale file
+		dbVersion.delete();
+		changeCount++;
+		filesRemoved++;
+	}
+
+	private void update(LocalFile dbVersion) throws SQLException
+	{
 		// update file
 		if (dbVersion.refreshAndWriteToDb())
 		{
 			changeCount++;
 		}
+		filesRefresh++;
 	}
 
 	private void addFile(PathElement element, File fsCopy)
@@ -173,7 +194,12 @@ public class LocalSynchronizer
 		try
 		{
 			LocalFile lFile = new LocalFile(local, element);
-			lFile.save();
+			if (lFile.save())
+			{
+				changeCount++;
+				filesAdded++;
+				bytesAdded += fsCopy.length();
+			}
 		}
 		catch (FileOutsideOfRootException ex)
 		{
@@ -202,5 +228,36 @@ public class LocalSynchronizer
 			}
 		}
 		return returnValue;
+	}
+
+	public static long DEBUG_REPEAT = 5000;
+	private long lastDebug = System.currentTimeMillis();
+	@Override
+	public void run()
+	{
+		long now = System.currentTimeMillis();
+		double seconds = (now - lastDebug) / 1000;
+
+		synchronized (Services.logger.logStream)
+		{
+			Services.logger.logStream.println("-------------------------------------------------------");
+			Services.logger.logStream.println("Synchronizing: " + local.getCanonicalPath().getFullPath());
+			Services.logger.logStream.println("Current file: " + currentFile);
+			Services.logger.logStream.println("File refresh rate: " + filesRefresh / seconds + "/s");
+			Services.logger.logStream.println("File add rate: " + filesAdded / seconds + "/s");
+			Services.logger.logStream.println("File remove rate: " + filesRemoved / seconds + "/s");
+			Services.logger.logStream.println("-------------------------------------------------------");
+		}
+		changeCount = 0;
+		
+		local.setTotalFileSize(local.diskSpace() + bytesAdded);
+		local.setTotalNumFiles(local.numFiles() + filesAdded - filesRemoved);
+		Services.notifications.localChanged(local);
+		
+		lastDebug = now;
+		filesRefresh = 0;
+		filesAdded = 0;
+		filesRemoved = 0;
+		bytesAdded = 0;
 	}
 }

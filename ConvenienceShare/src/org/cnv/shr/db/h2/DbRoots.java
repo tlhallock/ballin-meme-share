@@ -1,6 +1,5 @@
 package org.cnv.shr.db.h2;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -181,5 +180,10 @@ public class DbRoots
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public static LocalDirectory getLocalByName(String rootName)
+	{
+		return null;
 	}
 }

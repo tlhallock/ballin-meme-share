@@ -6,25 +6,24 @@
 
 package org.cnv.shr.gui;
 
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
+import java.util.List;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JTree;
-import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.PathTreeModel.Node;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.PathElement;
-import org.cnv.shr.mdl.RemoteDirectory;
+import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.Misc;
@@ -37,6 +36,7 @@ public class MachineView extends javax.swing.JPanel
 {
     private Machine machine;
     private RootDirectory directory;
+    private PathTreeModel model;
     
     public void debug()
     {
@@ -56,6 +56,89 @@ public class MachineView extends javax.swing.JPanel
         pathsTable.setAutoCreateRowSorter(true);
         filesTable.setAutoCreateRowSorter(true);
         
+		addPathsListener();
+		addFilesListener();
+		
+		filesTree.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				filesTree.setVisibleRowCount(filesTree.getRowCount());
+				if (e.getClickCount() < 2)
+				{
+					return;
+				}
+				
+				TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
+				Node n = (Node) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+				if (getRoot().isLeaf(n))
+				{
+					listFiles(Collections.singletonList(n.getFile()));
+				}
+				else
+				{
+					listFiles(getRoot().getList(n));
+				}
+			}});
+		filesTree.setScrollsOnExpand(true);
+		filesTree.setLargeModel(true);
+	}
+
+	private void addFilesListener()
+	{
+		final TableListener tableListener = new TableListener(filesTable);
+		tableListener.addListener(new TableListener.TableRowListener()
+		{
+			@Override
+			public void run(int row)
+			{
+				try
+				{
+					final String path = tableListener.getTableValue("Path", row);
+					if (path == null)
+					{
+						Services.logger.logStream.println("Unable to find machine " + path);
+						return;
+					}
+					Services.userThreads.execute(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							RemoteFile remoteFile = DbFiles.getRemoteFile(directory, path);
+							if (remoteFile == null)
+							{
+								Services.logger.logStream.println("Unable to get remote file " + path);
+							}
+							
+							try
+							{
+								Services.downloads.download(remoteFile);
+							}
+							catch (IOException e)
+							{
+								e.printStackTrace();
+							}
+						}
+					});
+				}
+				catch (Exception ex)
+				{
+					Services.logger.logStream.println("Unable to show machine at index " + row);
+					ex.printStackTrace(Services.logger.logStream);
+				}
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Download";
+			}
+		}, true);
+	}
+
+	private void addPathsListener()
+	{
 		final TableListener tableListener = new TableListener(pathsTable);
 		tableListener.addListener(new TableListener.TableRowListener()
 		{
@@ -100,57 +183,15 @@ public class MachineView extends javax.swing.JPanel
 				return "Show";
 			}
 		}, true);
-		
-		filesTree.addMouseListener(new MouseListener() {
-
-			@Override
-			public void mouseClicked(MouseEvent e)
-			{
-				if (e.getClickCount() < 2)
-				{
-					return;
-				}
-				
-				TreePath pathForLocation = filesTree.getPathForLocation(e.getPoint().x, e.getPoint().y);
-				for (Object o : pathForLocation.getPath())
-				{
-					System.out.println(o);
-					// set files list...
-				}
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mouseReleased(MouseEvent e)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e)
-			{
-				// TODO Auto-generated method stub
-				
-			}});
 	}
     
-    private TreeModel getRoot()
+    private PathTreeModel getRoot()
     {
-    	return new PathTreeModel();
+    	if (model == null)
+    	{
+    		model = new PathTreeModel();
+    	}
+    	return model;
     }
     
     public void setMachine(Machine machine)
@@ -176,7 +217,7 @@ public class MachineView extends javax.swing.JPanel
         if (machine.isLocal()) listRemoteDirectories = DbRoots.listLocals(); else listRemoteDirectories = DbRoots.listRemoteDirectories(machine);
         while (listRemoteDirectories.hasNext())
         {
-        	model.addRow(new String[] {listRemoteDirectories.next().getCanonicalPath().getFullPath()});
+        	model.addRow(new String[] { listRemoteDirectories.next().getCanonicalPath().getFullPath() });
         }
         viewNoDirectory();
     }
@@ -211,12 +252,6 @@ public class MachineView extends javax.swing.JPanel
         this.nFilesLabel.setText(directory.getTotalNumberOfFiles());
         this.sizeLabel.setText(directory.getTotalFileSize());
         ((PathTreeModel) filesTree.getModel()).setRoot(directory);
-        
-        while (filesTable.getModel().getRowCount() > 0)
-        {
-        	((DefaultTableModel) filesTable.getModel()).removeRow(0);
-        }
-        listFiles();
     }
     
     static final class FileSize implements Comparable<FileSize>
@@ -240,48 +275,32 @@ public class MachineView extends javax.swing.JPanel
 		}
     }
     
-    private void listFiles()
+    private synchronized void listFiles(List<SharedFile> files)
     {
     	DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
-    	Iterator<SharedFile> list = DbRoots.list(directory);
-    	if (list == null)
+        while (model.getRowCount() > 0)
+        {
+        	model.removeRow(0);
+        }
+    	for (SharedFile next : files)
     	{
-    		return;
-    	}
-    	while (list.hasNext())
-    	{
-    		SharedFile next = list.next();
+    		String path  = next.getPath().getFullPath();
     		
-    		String path = next.getPath().getFullPath();
-    		int index;
+    		int indexSlh = path.lastIndexOf('/');
+    		String name    = indexSlh < 0 ? path : path.substring(indexSlh + 1);
+    		String relPath = indexSlh < 0 ? path : path.substring(0, indexSlh + 1);
+
+    		int indexExt = name.lastIndexOf('.');
+    		String ext     = indexExt < 0 ?  ""  : name.substring(indexExt);
     		
-    		String name;
-    		if ((index = path.lastIndexOf('/')) < 0)
-    		{
-    			name = path.substring(index + 1);
-    		}
-    		else
-    		{
-    			name = path;
-    		}
-    		
-    		String ext;
-    		if ((index = path.lastIndexOf('.')) < 0)
-    		{
-    			ext = "";
-    		}
-    		else
-    		{
-    			ext = name.substring(index);
-    		}
     		model.addRow(new Object[] {
-    				String.valueOf(next.getRelativePath()),
+    				String.valueOf(relPath               ),
     	    		String.valueOf(name                  ),
-    	    		new FileSize(  next.getFileSize()    ),
+    	    		new FileSize  (next.getFileSize()    ),
     	    		String.valueOf(next.getChecksum()    ),
     	    		String.valueOf(next.getTags()        ),
-    	    		new Date(      next.getLastUpdated() ),
-    	    		String.valueOf(ext),
+    	    		new Date      (next.getLastUpdated() ),
+    	    		String.valueOf(ext                   ),
     		});
     	}
     }
@@ -359,6 +378,7 @@ public class MachineView extends javax.swing.JPanel
         ));
         jScrollPane2.setViewportView(jTable3);
 
+        setMinimumSize(new java.awt.Dimension(5, 5));
         setPreferredSize(new java.awt.Dimension(5, 5));
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Machine Info"));
@@ -486,10 +506,12 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton1)
                     .addComponent(filterText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 232, Short.MAX_VALUE))
         );
 
         jSplitPane1.setLeftComponent(jPanel3);
+
+        jPanel4.setPreferredSize(new java.awt.Dimension(616, 200));
 
         filesTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -508,8 +530,6 @@ public class MachineView extends javax.swing.JPanel
             }
         });
         filesTable.setEnabled(false);
-        filesTable.setMinimumSize(new java.awt.Dimension(0, 0));
-        filesTable.setPreferredSize(new java.awt.Dimension(20, 0));
         jScrollPane3.setViewportView(filesTable);
 
         jButton2.setText("Filter");
@@ -529,7 +549,7 @@ public class MachineView extends javax.swing.JPanel
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton2)
                 .addContainerGap())
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 560, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 616, Short.MAX_VALUE)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -539,7 +559,7 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton2)
                     .addComponent(tablseFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 232, Short.MAX_VALUE))
         );
 
         jSplitPane1.setRightComponent(jPanel4);
@@ -552,7 +572,7 @@ public class MachineView extends javax.swing.JPanel
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Files", jPanel6);
@@ -709,14 +729,14 @@ public class MachineView extends javax.swing.JPanel
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 987, Short.MAX_VALUE)
+            .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 935, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 304, Short.MAX_VALUE))
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 306, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 

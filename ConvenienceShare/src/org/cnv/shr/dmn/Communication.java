@@ -94,7 +94,10 @@ public class Communication implements Runnable
 				+ " to " + socket.getInetAddress() + ":" + socket.getPort());
 		try
 		{
-			output.write(m.getBytes());
+			synchronized (output)
+			{
+				output.write(m.getBytes());
+			}
 		}
 		catch (IOException e)
 		{
@@ -129,5 +132,14 @@ public class Communication implements Runnable
 //			Services.logger.logStream.println("Unable to close input stream.");
 //			e.printStackTrace(Services.logger.logStream);
 //		}
+	}
+
+	public OutputStream getOut()
+	{
+		return output;
+	}
+	public InputStream getIn()
+	{
+		return input;
 	}
 }

@@ -1,6 +1,7 @@
 package org.cnv.shr.mdl;
 
 import java.io.IOException;
+import java.util.Timer;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
@@ -46,90 +47,15 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	public void synchronizeInternal()
+	protected void synchronizeInternal()
 	{
-		new LocalSynchronizer(this).run();
-//		/// Needs to be reworked
-//		if (!Services.locals.localAlreadyExists(getCanonicalPath()) && !Services.db.addRoot(Services.localMachine, this))
-//		{
-//			return;
-//		}
-//
-//		Iterator<SharedFile> currentLocals = Services.db.list(this);
-//		boolean changed = false;
-//		while (currentLocals.hasNext())
-//		{
-//			changed |= ((LocalFile) currentLocals.next()).refreshAndWriteToDb();
-//		}
-//	
-//		LinkedList<SharedFile> toAdd = new LinkedList<>();
-//		Find find = new Find(path);
-//		while (find.hasNext())
-//		{
-//			File f = find.next();
-//
-//			String absolutePath;
-//			try
-//			{
-//				absolutePath = f.getCanonicalPath();
-//			}
-//			catch (IOException e)
-//			{
-//				Services.logger.logStream.println("Unable to get file path: " + f);
-//				e.printStackTrace(Services.logger.logStream);
-//				continue;
-//			}
-//
-//			if (Services.db.findLocalFile(this, f) != null)
-//			{
-//				continue;
-//			}
-//			Services.logger.logStream.println("Found file " + f);
-//			try
-//			{
-//				toAdd.add(new LocalFile(getThis(), absolutePath));
-//			}
-//			catch(Exception ex)
-//			{
-//				Services.logger.logStream.println("Skipping file: " + f);
-//				ex.printStackTrace(Services.logger.logStream);
-//				continue;
-//			}
-//			changed = true;
-//
-//			if (toAdd.size() > 50)
-//			{
-//				Services.db.addFiles(this, toAdd);
-//				toAdd.clear();
-//
-//				totalNumFiles = Services.db.countFiles(this);
-//				totalFileSize = Services.db.countFileSize(this);
-//				Services.db.updateDirectory(machine, this);
-//				Services.notifications.localsChanged();
-//			}
-//		}
-//		Services.db.addFiles(this, toAdd);
-//		
-//		
-//		Services.logger.logStream.println("Synchronizing " + getCanonicalPath());
-//
-//		boolean changed = false;
-//		changed |= prune();
-//		changed |= search();
-//
-//		if (changed)
-//		{
-//			Services.notifications.localsChanged();
-//		}
-//		
-//		Services.logger.logStream.println("Done synchronizing " + getCanonicalPath());
+		Timer t = new Timer();
+		LocalSynchronizer localSynchronizer = new LocalSynchronizer(this);
+		t.scheduleAtFixedRate(localSynchronizer, LocalSynchronizer.DEBUG_REPEAT, LocalSynchronizer.DEBUG_REPEAT);
+		localSynchronizer.synchronize();
+		t.cancel();
 	}
 	
-	private LocalDirectory getThis()
-	{
-		return this;
-	}
-
 	public LocalFile getFile(String fsPath)
 	{
 		return DbFiles.getFile(this, DbPaths.getPathElement(this, fsPath));

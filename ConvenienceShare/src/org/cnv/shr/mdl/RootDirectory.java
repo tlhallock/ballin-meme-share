@@ -1,5 +1,6 @@
 package org.cnv.shr.mdl;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -87,14 +88,26 @@ public abstract class RootDirectory extends DbObject
 	
 	public final void synchronize(boolean force)
 	{
+		if (!Services.locals.startSynchronizing(this))
+		{
+			return;
+		}
+
 		try
 		{
-			if (!Services.locals.startSynchronizing(this))
-			{
-				return;
-			}
-			
 			synchronizeInternal();
+			setStats();
+		}
+		finally
+		{
+			Services.locals.stopSynchronizing(this);
+		}
+	}
+
+	public void setStats()
+	{
+		try
+		{
 			totalNumFiles = DbRoots.getNumberOfFiles(this);
 			totalFileSize = DbRoots.getTotalFileSize(this);
 			save();
@@ -103,11 +116,8 @@ public abstract class RootDirectory extends DbObject
 		{
 			e.printStackTrace();
 		}
-		finally
-		{
-			Services.locals.stopSynchronizing(this);
-		}
 	}
+	
 	protected abstract void synchronizeInternal();
 	
 	public abstract boolean isLocal();

@@ -69,4 +69,9 @@ public class ByteReader
 
 		return new String(returnValue, Settings.encoding);
 	}
+
+	public static double readDouble(InputStream bytes) throws IOException
+	{
+		return Double.parseDouble(readString(bytes));
+	}
 }
