@@ -3,6 +3,7 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.util.HashSet;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.mdl.Machine;
@@ -11,6 +12,10 @@ import org.cnv.shr.util.ByteListBuffer;
 public class RequestAccess extends Message
 {
 	public static int TYPE = 7;
+	
+	private boolean share;
+	private boolean message;
+	private HashSet<String> roots;
 	
 	public RequestAccess(Machine m)
 	{
@@ -29,19 +34,24 @@ public class RequestAccess extends Message
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		// TODO Auto-generated method stub
-		
 	}
 	@Override
 	protected void write(ByteListBuffer buffer)
 	{
-		// TODO Auto-generated method stub
 		
 	}
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		// TODO Auto-generated method stub
 		
+	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Please give me access.");
+		
+		return builder.toString();
 	}
 }

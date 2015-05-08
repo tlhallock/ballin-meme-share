@@ -8,10 +8,10 @@ import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.ByteListBuffer;
 
-public class ListFiles extends Message
+public class ListRoots extends Message
 {
-	public ListFiles() {}
-	public ListFiles(InetAddress address, InputStream stream) throws IOException
+	public ListRoots() {}
+	public ListRoots(InetAddress address, InputStream stream) throws IOException
 	{
 		super(address, stream);
 	}
@@ -32,5 +32,15 @@ public class ListFiles extends Message
 	protected int getType()
 	{
 		return TYPE;
+	}
+
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("List your root directories.");
+		
+		return builder.toString();
 	}
 }

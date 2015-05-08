@@ -100,6 +100,8 @@ public class Communication implements Runnable
 		Services.logger.logStream.println("Sending message of type " + m.getClass().getName()
 				+ " to " + socket.getInetAddress() + ":" + socket.getPort());
 		
+		Services.logger.logStream.println("The message is " + m);
+		
 		try
 		{
 			synchronized (output)

@@ -34,5 +34,14 @@ public class HeartBeat extends Message
 	{
 		return TYPE;
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("My heart is beating.");
+		
+		return builder.toString();
+	}
 
 }

@@ -20,22 +20,31 @@ public class Wait extends Message
 	{
 		return TYPE;
 	}
+	
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		// TODO Auto-generated method stub
 		
 	}
+	
 	@Override
 	protected void write(ByteListBuffer buffer)
 	{
-		// TODO Auto-generated method stub
 		
 	}
+	
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		// TODO Auto-generated method stub
 		
+	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Just a sec...");
+		
+		return builder.toString();
 	}
 }

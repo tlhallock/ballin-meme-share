@@ -36,4 +36,15 @@ public class RequestCompletionStatus extends Message
 	{
 		return TYPE;
 	}
+	
+
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Are you done yet?");
+		
+		return builder.toString();
+	}
 }

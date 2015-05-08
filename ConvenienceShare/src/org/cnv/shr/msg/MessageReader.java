@@ -32,13 +32,13 @@ public class MessageReader
 		add(new MessageIdentifier(RequestCompletionStatus.class    ));
 		add(new MessageIdentifier(ChunkRequest.class               ));
 		add(new MessageIdentifier(MachineHasFile.class             ));
-		add(new MessageIdentifier(ListFiles.class                  ));
-		add(new MessageIdentifier(ListDirectory.class              ));
+		add(new MessageIdentifier(ListRoots.class                  ));
+		add(new MessageIdentifier(ListPath.class              ));
 		add(new MessageIdentifier(MachineFound.class               ));
 		add(new MessageIdentifier(UpdateCode.class                 ));
 		add(new MessageIdentifier(DoneMessage.class                ));
 		add(new MessageIdentifier(DirectoryList.class              ));
-		add(new MessageIdentifier(PathList.class                   ));
+		add(new MessageIdentifier(RootList.class                   ));
 		add(new MessageIdentifier(FindMachines.class               ));
 		add(new MessageIdentifier(RequestAccess.class              ));
 		add(new MessageIdentifier(Failure.class                    ));
@@ -96,6 +96,8 @@ public class MessageReader
 		}
 		
 		message.read(inputStream);
+		
+		System.out.println("Msg: " + message);
 
 		return message;
 	}

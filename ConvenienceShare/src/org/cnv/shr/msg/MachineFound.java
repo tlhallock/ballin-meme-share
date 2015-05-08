@@ -98,4 +98,14 @@ public class MachineFound extends Message
 	{
 		return TYPE;
 	}
+
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("There is a machine with ident=" + ident + " at " + ip + ":" + port);
+		
+		return builder.toString();
+	}
 }

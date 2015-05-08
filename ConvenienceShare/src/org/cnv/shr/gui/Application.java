@@ -26,6 +26,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.TableListener.TableRowListener;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.stng.Setting;
 
@@ -245,7 +246,7 @@ public class Application extends javax.swing.JFrame
 	public synchronized void refreshLocal(LocalDirectory local)
 	{
 		DefaultTableModel model = (DefaultTableModel) localsView.getModel();
-		removeIfExists(local, model);
+		TableListener.removeIfExists(model, "Path", local.getCanonicalPath().getFullPath());
 		
         model.addRow(new String[] {
             local.getCanonicalPath().getFullPath(),
@@ -256,37 +257,29 @@ public class Application extends javax.swing.JFrame
         });
 	}
 
-	private void removeIfExists(LocalDirectory local, DefaultTableModel model)
+	public void refreshRemote(Machine machine)
 	{
-		int column = -1;
-		for (int i = 0; i < model.getColumnCount(); i++)
-		{
-			if (localsView.getColumnName(i).equals("Path"))
-			{
-				column = i;
-				break;
-			}
-		}
-		if (column < 0)
-		{
-			return;
-		}
+		DefaultTableModel model = (DefaultTableModel) machinesList.getModel();
+		TableListener.removeIfExists(model, "Id", machine.getIdentifier());
+        model.addRow(new String[] {
+        		machine.getName(),
+        		machine.getIp() + ":" + machine.getPort(),
+        		machine.getIdentifier(),
+                String.valueOf(machine.isSharing()),
+                "(Not yet supported)", "(Not yet supported)"
+            });
+	}
 
-		int row = -1;
-		String fullPath = local.getCanonicalPath().getFullPath();
-		for (int i = 0; i < model.getRowCount(); i++)
+	public void refreshRemote(RemoteDirectory remote)
+	{
+		refreshRemote(remote.getMachine());
+		for (MachineView view : remoteViewers)
 		{
-			if (model.getValueAt(i, column).equals(fullPath))
+			if (view.getMachine().equals(remote.getMachine()))
 			{
-				row = i;
-				break;
+				view.refreshRoot(remote);
 			}
 		}
-		if (row < 0)
-		{
-			return;
-		}
-		model.removeRow(row);
 	}
 
 	public synchronized void refreshRemotes()
@@ -319,7 +312,7 @@ public class Application extends javax.swing.JFrame
 		}
 	}
 
-	public void showRemote(Machine machine)
+	public void showRemote(final Machine machine)
 	{
 		final JFrame frame = new JFrame();
 		frame.setBounds(getBounds());
@@ -340,8 +333,8 @@ public class Application extends javax.swing.JFrame
 		
 		frame.getRootPane().setLayout(null);
 		frame.getRootPane().add(viewer);
-		
 		remoteViewers.add(viewer);
+		
 		frame.addWindowListener(new WindowAdapter()
 		{
 			@Override
@@ -351,7 +344,6 @@ public class Application extends javax.swing.JFrame
 			}
 		});
 		frame.setVisible(true);
-		viewer.setMachine(machine);
 		Services.logger.logStream.println("Showing remote " + machine.getName());
 
 		java.awt.EventQueue.invokeLater(new Runnable()
@@ -361,6 +353,7 @@ public class Application extends javax.swing.JFrame
 				viewer.setBounds(0, 0, 
 						frame.getRootPane().getWidth(), 
 						frame.getRootPane().getHeight());
+				viewer.setMachine(machine);
 			}
 		});
 	}
@@ -845,11 +838,11 @@ public class Application extends javax.swing.JFrame
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        JFileChooser fc = new JFileChooser();
+        final JFileChooser fc = new JFileChooser();
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-            Services.locals.share(fc.getSelectedFile());
+        	Services.userThreads.execute(new Runnable() { public void run() { Services.locals.share(fc.getSelectedFile()); }});
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -867,15 +860,15 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void DebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DebugActionPerformed
-    	DbTables.debugDb(Services.logger.logStream);
+    	Services.userThreads.execute(new Runnable() { public void run() { DbTables.debugDb(Services.logger.logStream); }} );
     }//GEN-LAST:event_DebugActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-    	Services.locals.synchronize(true);
+    	Services.userThreads.execute(new Runnable() { public void run() { Services.locals.synchronize(true); }});
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-    	DbTables.deleteDb(Services.h2DbCache.getConnection());
+    	Services.userThreads.execute(new Runnable() { public void run() { DbTables.deleteDb(Services.h2DbCache.getConnection()); }});
     }//GEN-LAST:event_jButton3ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

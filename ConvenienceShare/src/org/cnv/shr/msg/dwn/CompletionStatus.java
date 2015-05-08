@@ -46,4 +46,13 @@ public class CompletionStatus extends Message
 	{
 		Services.server.getServeInstance(connection).setPercentComplete(percentComplete);
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("remote is " + percentComplete + " done.");
+		
+		return builder.toString();
+	}
 }

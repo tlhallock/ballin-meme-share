@@ -62,14 +62,14 @@ public abstract class RootSynchronizer extends TimerTask
 		
 		currentFile = task.current.getFullPath();
 
-		if (local.getCanonicalPath().getFullPath().equals("/home/thallock/Applications"))
+		if (true)
 		{
 			Services.logger.logStream.println("Synchronizing " + task.current.getFullPath());
 			Services.logger.logStream.println("FS: " + task.files);
 			Services.logger.logStream.println("DB: " + task.dbPaths);
 		}
 		
-		LinkedList<Pair> subDirectories = new LinkedList<>();
+		LinkedList<Pair<? extends FileSource>> subDirectories = new LinkedList<>();
 		
 		for (PathElement element : task.dbPaths)
 		{
@@ -99,12 +99,12 @@ public abstract class RootSynchronizer extends TimerTask
 		Thread.yield();
 	}
 
-	private void testInDb(SynchronizationTask task, HashSet<String> accountedFor, LinkedList<Pair> subDirectories, FileSource f) throws IOException
+	private void testInDb(SynchronizationTask task, HashSet<String> accountedFor, LinkedList<Pair<? extends FileSource>> subDirectories, FileSource f) throws IOException
 	{
 		String name = PathElement.sanitizeFilename(f);
 		if (name == null 
 				|| accountedFor.contains(f.getName())
-				|| !local.contains(f.getCanonicalPath()))
+				|| !local.pathIsSecure(f.getCanonicalPath()))
 		{
 			return;
 		}
@@ -124,7 +124,7 @@ public abstract class RootSynchronizer extends TimerTask
 		}
 	}
 
-	private void testOnFs(HashMap<String, FileSource> files, HashSet<String> accountedFor, LinkedList<Pair> subDirectories, PathElement element) throws IOException, SQLException
+	private void testOnFs(HashMap<String, FileSource> files, HashSet<String> accountedFor, LinkedList<Pair<? extends FileSource>> subDirectories, PathElement element) throws IOException, SQLException
 	{
 		accountedFor.add(element.getUnbrokenName());
 
@@ -143,7 +143,7 @@ public abstract class RootSynchronizer extends TimerTask
 			return;
 		}
 		
-		if (!local.contains(fsCopy.getCanonicalPath()))
+		if (!local.pathIsSecure(fsCopy.getCanonicalPath()))
 		{
 			return;
 		}

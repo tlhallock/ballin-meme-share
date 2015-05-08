@@ -15,7 +15,7 @@ import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.FindMachines;
-import org.cnv.shr.msg.ListFiles;
+import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.util.Misc;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -219,7 +219,7 @@ public class Machine extends DbObject
 		{
 			Communication openConnection = Services.networkManager.openConnection(ip, port);
 			openConnection.send(new FindMachines());
-			openConnection.send(new ListFiles());
+			openConnection.send(new ListRoots());
 			openConnection.notifyDone();
 		}
 		catch (IOException e)

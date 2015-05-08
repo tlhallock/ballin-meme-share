@@ -8,6 +8,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 public class TableListener extends MouseAdapter
 {
@@ -102,5 +103,40 @@ public class TableListener extends MouseAdapter
 			}
 		}
 		return null;
+	}
+
+	public static void removeIfExists(
+			DefaultTableModel model,
+			String columnName,
+			String value)
+	{
+		int column = -1;
+		for (int i = 0; i < model.getColumnCount(); i++)
+		{
+			if (model.getColumnName(i).equals(columnName))
+			{
+				column = i;
+				break;
+			}
+		}
+		if (column < 0)
+		{
+			return;
+		}
+
+		int row = -1;
+		for (int i = 0; i < model.getRowCount(); i++)
+		{
+			if (model.getValueAt(i, column).equals(value))
+			{
+				row = i;
+				break;
+			}
+		}
+		if (row < 0)
+		{
+			return;
+		}
+		model.removeRow(row);
 	}
 }

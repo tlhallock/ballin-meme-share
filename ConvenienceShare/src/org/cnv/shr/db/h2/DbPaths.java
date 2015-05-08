@@ -148,14 +148,15 @@ public class DbPaths
 			{
 				select.setInt(1, local.getId());
 				select.setInt(2, element.getId());
-				if (select.executeQuery().next())
+				ResultSet results = select.executeQuery();
+				if (results.next() && results.getInt(1) > 0)
 				{
-					element = element.getParent();
-					continue;
+					return;
 				}
 				update.setInt(1, local.getId());
 				update.setInt(2, element.getId());
 				update.execute();
+//				element = element.getParent();
 			}
 		}
 		catch (SQLException e)

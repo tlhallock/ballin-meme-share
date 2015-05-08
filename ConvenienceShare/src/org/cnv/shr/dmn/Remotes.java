@@ -7,7 +7,7 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.FindMachines;
-import org.cnv.shr.msg.ListFiles;
+import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.msg.MachineFound;
 
 public class Remotes
@@ -53,7 +53,7 @@ public class Remotes
 		try
 		{
 			Communication openConnection = Services.networkManager.openConnection(url);
-			openConnection.send(new ListFiles());
+			openConnection.send(new ListRoots());
 			openConnection.notifyDone();
 		}
 		catch (IOException e)

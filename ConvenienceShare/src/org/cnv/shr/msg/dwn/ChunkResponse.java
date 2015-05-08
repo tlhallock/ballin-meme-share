@@ -50,4 +50,13 @@ public class ChunkResponse extends Message
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(connection);
 		downloadInstance.download(chunk, connection);
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Giving you chunk " + chunk);
+		
+		return builder.toString();
+	}
 }

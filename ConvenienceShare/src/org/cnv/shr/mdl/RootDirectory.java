@@ -196,8 +196,5 @@ public abstract class RootDirectory extends DbObject
 		return name;
 	}
 
-	public boolean contains(String canonicalPath)
-	{
-		return false;
-	}
+	public abstract boolean pathIsSecure(String canonicalPath);
 }

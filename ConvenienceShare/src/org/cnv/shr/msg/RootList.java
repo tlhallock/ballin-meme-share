@@ -18,11 +18,11 @@ import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
 
-public class PathList extends Message
+public class RootList extends Message
 {
 	private List<RootDirectory> sharedDirectories = new LinkedList<>();
 
-	public PathList()
+	public RootList()
 	{
 		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
 		while (listLocals.hasNext())
@@ -31,7 +31,7 @@ public class PathList extends Message
 		}
 	}
 	
-	public PathList(InetAddress a, InputStream i) throws IOException
+	public RootList(InetAddress a, InputStream i) throws IOException
 	{
 		super(a, i);
 	}
@@ -77,6 +77,7 @@ public class PathList extends Message
 			sharedDirectories.add(new RemoteDirectory(machine, name, tags, description));
 		}
 	}
+	
 
 	@Override
 	protected void write(ByteListBuffer buffer)
@@ -94,5 +95,19 @@ public class PathList extends Message
 	protected int getType()
 	{
 		return TYPE;
+	}
+
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Root directories are: ");
+		for (RootDirectory directory : sharedDirectories)
+		{
+			builder.append(directory.getName()).append(':');
+		}
+		
+		return builder.toString();
 	}
 }

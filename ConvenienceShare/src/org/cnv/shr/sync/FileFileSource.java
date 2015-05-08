@@ -26,6 +26,11 @@ public class FileFileSource implements FileSource
 	{
 		this.f = f;
 	}
+	
+	public String toString()
+	{
+		return f.toString();
+	}
 
 	@Override
 	public boolean exists()

@@ -6,8 +6,6 @@
 
 package org.cnv.shr.gui;
 
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  *
@@ -20,13 +18,6 @@ public class MachineViewer extends javax.swing.JFrame
      */
     public MachineViewer() {
         initComponents();
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-
-            @Override
-            public void run() {
-                getRemoteView().debug();
-            }
-        }, 1000, 1000);
     }
     
     MachineView getRemoteView()

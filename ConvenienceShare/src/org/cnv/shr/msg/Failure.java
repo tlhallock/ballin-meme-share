@@ -6,10 +6,16 @@ import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.ByteReader;
 
 public class Failure extends Message
 {
-	public Failure() {}
+	String message;
+	
+	public Failure(String message)
+	{
+		this.message = message;
+	}
 	public Failure(InetAddress address, InputStream stream) throws IOException
 	{
 		super(address, stream);
@@ -18,21 +24,28 @@ public class Failure extends Message
 	@Override
 	public void perform(Communication connection)
 	{
-		System.out.println("Unable to perform request.");
+		System.out.println("Unable to perform request:" + message);
 	}
 
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		// TODO Auto-generated method stub
-		
+		message = ByteReader.readString(bytes);
 	}
 
 	@Override
 	protected void write(ByteListBuffer buffer)
 	{
-		// TODO Auto-generated method stub
+		buffer.append(message);
+	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
 		
+		builder.append("Failure message:" + message);
+		
+		return builder.toString();
 	}
 	
 	public static int TYPE = 2;

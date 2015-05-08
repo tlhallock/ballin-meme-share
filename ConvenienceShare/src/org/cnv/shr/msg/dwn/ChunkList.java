@@ -61,4 +61,18 @@ public class ChunkList extends Message
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(connection);
 		downloadInstance.foundChunks(chunks);
 	}
+
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Listing chunks:");
+		for (Chunk c : chunks)
+		{
+			builder.append(c);
+		}
+		
+		return builder.toString();
+	}
 }

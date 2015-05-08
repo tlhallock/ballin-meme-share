@@ -122,6 +122,15 @@ public abstract class Message
 		return true;
 //		return getMachine().isSharing();
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Please implement toString() in class " + getClass().getName());
+		
+		return builder.toString();
+	}
 
 	protected abstract void parse(InputStream bytes) throws IOException;
 	protected abstract void write(ByteListBuffer buffer);

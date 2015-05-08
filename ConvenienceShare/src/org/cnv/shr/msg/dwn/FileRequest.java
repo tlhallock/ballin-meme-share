@@ -67,6 +67,15 @@ public class FileRequest extends Message
 	{
 		return TYPE;
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Find machines");
+		
+		return builder.toString();
+	}
 
 	@Override
 	public void perform(Communication connection) throws Exception

@@ -10,7 +10,9 @@ import org.cnv.shr.util.ByteListBuffer;
 
 public class MachineHasFile extends Message
 {
-	boolean hasFile;
+	private boolean hasFile;
+	private String path;
+	
 	public static int TYPE = 17;
 
 	public MachineHasFile(InetAddress address, InputStream stream) throws IOException
@@ -23,22 +25,31 @@ public class MachineHasFile extends Message
 	{
 		return TYPE;
 	}
+	
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		// TODO Auto-generated method stub
 		
 	}
+	
 	@Override
 	protected void write(ByteListBuffer buffer)
 	{
-		// TODO Auto-generated method stub
 		
 	}
+	
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		// TODO Auto-generated method stub
 		
+	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("I got it! ").append(hasFile).append(":").append(path);
+		
+		return builder.toString();
 	}
 }

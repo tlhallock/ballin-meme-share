@@ -34,4 +34,13 @@ public class DoneMessage extends Message
 	{
 		connection.remoteIsDone();
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("done.");
+		
+		return builder.toString();
+	}
 }

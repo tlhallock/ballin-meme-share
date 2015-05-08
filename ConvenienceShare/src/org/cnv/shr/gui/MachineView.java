@@ -24,6 +24,7 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.PathTreeModel.Node;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.Misc;
@@ -37,15 +38,6 @@ public class MachineView extends javax.swing.JPanel
     private Machine machine;
     private RootDirectory directory;
     private PathTreeModel model;
-    
-    public void debug()
-    {
-        System.out.println(keysLabel.getSize());
-        System.out.println(jLabel1.getBounds());
-        System.out.println(isVisible());
-        System.out.println(jLabel1.isVisible());
-        System.out.println(getBounds());
-    }
     
     /**
      * Creates new form RemoteView
@@ -82,6 +74,18 @@ public class MachineView extends javax.swing.JPanel
 			}});
 		filesTree.setScrollsOnExpand(true);
 		filesTree.setLargeModel(true);
+	}
+    
+	public Machine getMachine()
+	{
+		return machine;
+	}
+
+	public void refreshRoot(RemoteDirectory remote)
+	{
+		DefaultTableModel model2 = (DefaultTableModel) pathsTable.getModel();
+		TableListener.removeIfExists(model2, "Name", remote.getName());
+		model2.addRow(new String[] { remote.getName() });
 	}
 
 	private void addFilesListener()
@@ -760,11 +764,11 @@ public class MachineView extends javax.swing.JPanel
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
-        this.directory.synchronize(true);
+    	Services.userThreads.execute(new Runnable() { public void run() { directory.synchronize(true); } } );
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-        Services.remotes.synchronizeRoots(machine);
+        Services.userThreads.execute(new Runnable() { public void run() { Services.remotes.synchronizeRoots(machine); setMachine(machine); } } );
     }//GEN-LAST:event_jButton8ActionPerformed
 
 

@@ -17,7 +17,7 @@ public class LocalDirectory extends RootDirectory
 	{
 		super(null);
 		machine = Services.localMachine;
-		name = path.getName();
+		name = path.getUnbrokenName();
 		this.path = path;
 		totalFileSize = -1;
 		totalNumFiles = -1;
@@ -34,6 +34,11 @@ public class LocalDirectory extends RootDirectory
 	public void ensureExistsInDb()
 	{
 		throw new RuntimeException("Implement me!");
+	}
+	
+	public boolean pathIsSecure(String canonicalPath)
+	{
+		return contains(canonicalPath);
 	}
 
 	public void setPath(PathElement pathElement)

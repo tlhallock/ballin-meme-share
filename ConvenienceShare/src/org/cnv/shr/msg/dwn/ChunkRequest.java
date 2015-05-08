@@ -52,4 +52,13 @@ public class ChunkRequest extends Message
 	{
 		return chunk;
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Give me chunk " + chunk);
+		
+		return builder.toString();
+	}
 }

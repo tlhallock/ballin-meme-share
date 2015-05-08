@@ -49,4 +49,13 @@ public class FindMachines extends Message
 			connection.send(m);
 		}
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Find machines");
+		
+		return builder.toString();
+	}
 }

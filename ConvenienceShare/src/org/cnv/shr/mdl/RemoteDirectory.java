@@ -52,4 +52,9 @@ public class RemoteDirectory extends RootDirectory
 	{
 		return new RemoteSynchronizer(this);
 	}
+	
+	public boolean pathIsSecure(String canonicalPath)
+	{
+		return true;
+	}
 }

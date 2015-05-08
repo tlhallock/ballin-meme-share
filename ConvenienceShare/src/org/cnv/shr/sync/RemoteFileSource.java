@@ -39,6 +39,11 @@ public class RemoteFileSource implements FileSource
 		sync = s;
 		e = DbPaths.getPathElement(p, name);
 	}
+	
+	public String toString()
+	{
+		return e.getFullPath();
+	}
 
 	@Override
 	public boolean exists()
@@ -124,7 +129,7 @@ public class RemoteFileSource implements FileSource
 	@Override
 	public String getCanonicalPath()
 	{
-		return r.getPath().getFullPath();
+		return e.getFullPath();
 	}
 
 	@Override

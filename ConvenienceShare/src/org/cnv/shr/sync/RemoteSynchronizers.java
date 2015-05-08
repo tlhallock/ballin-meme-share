@@ -16,7 +16,7 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.msg.DirectoryList;
-import org.cnv.shr.msg.ListDirectory;
+import org.cnv.shr.msg.ListPath;
 
 public class RemoteSynchronizers
 {
@@ -72,6 +72,12 @@ public class RemoteSynchronizers
 		{
 			for (;;)
 			{
+				DirectoryList directoryList = directories.get(path);
+				if (directoryList != null)
+				{
+					directories.remove(path);
+					return directoryList;
+				}
 				try
 				{
 					condition.await(20, TimeUnit.SECONDS);
@@ -85,12 +91,6 @@ public class RemoteSynchronizers
 				catch (InterruptedException e)
 				{
 					e.printStackTrace();
-				}
-				DirectoryList directoryList = directories.get(path);
-				if (directoryList != null)
-				{
-					directories.remove(path);
-					return directoryList;
 				}
 			}
 		}
@@ -141,7 +141,7 @@ public class RemoteSynchronizers
 				return;
 			}
 			lastCommunication = System.currentTimeMillis();
-			communication.send(new ListDirectory(root, path));
+			communication.send(new ListPath(root, path));
 			queue.add(path.getFullPath());
 		}
 		

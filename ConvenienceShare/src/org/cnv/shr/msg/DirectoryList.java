@@ -48,6 +48,24 @@ public class DirectoryList extends Message
 	{
 		super(address, stream);
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		System.out.println("[" + name + ":" + currentPath + "]:");
+		for (String subdir : subDirs)
+		{
+			builder.append(subdir).append(":");
+		}
+		builder.append("=");
+		for (Child c : children)
+		{
+			builder.append(c.name).append(":");
+		}
+		
+		return builder.toString();
+	}
 
 	@Override
 	protected void parse(InputStream bytes) throws IOException
@@ -55,12 +73,12 @@ public class DirectoryList extends Message
 		name = ByteReader.readString(bytes);
 		currentPath = ByteReader.readString(bytes);
 		int numDirs = ByteReader.readInt(bytes);
-		for (int i=0;i<numDirs;i++)
+		for (int i = 0; i < numDirs; i++)
 		{
 			subDirs.add(ByteReader.readString(bytes));
 		}
 		int numFiles = ByteReader.readInt(bytes);
-		for (int i=0;i<numFiles;i++)
+		for (int i = 0; i < numFiles; i++)
 		{
 			children.add(new Child(bytes));
 		}
@@ -158,7 +176,7 @@ public class DirectoryList extends Message
 			buffer.append(name);
 			buffer.append(size);
 			buffer.append(checksum);
-			buffer.append(tags);
+			buffer.append(tags == null ? "" : tags);
 			buffer.append(lastModified);
 		}
 		

@@ -10,6 +10,8 @@ import org.cnv.shr.util.ByteListBuffer;
 public class UpdateCode extends Message
 {
 	public static int TYPE = 9;
+	
+	private String url;
 
 	public UpdateCode(InetAddress a, InputStream i) throws IOException
 	{
@@ -38,5 +40,14 @@ public class UpdateCode extends Message
 	{
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Can I update your code.");
+		
+		return builder.toString();
 	}
 }

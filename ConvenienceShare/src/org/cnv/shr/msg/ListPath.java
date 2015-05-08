@@ -13,18 +13,18 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
 
-public class ListDirectory extends Message
+public class ListPath extends Message
 {
-	String rootName;
-	String path;
+	private String rootName;
+	private String path;
 	
-	public ListDirectory(RemoteDirectory remote, PathElement path)
+	public ListPath(RemoteDirectory remote, PathElement path)
 	{
 		rootName = remote.getName();
 		this.path = path.getFullPath();
 	}
 	
-	public ListDirectory(InetAddress address, InputStream stream) throws IOException
+	public ListPath(InetAddress address, InputStream stream) throws IOException
 	{
 		super(address, stream);
 	}
@@ -57,7 +57,12 @@ public class ListDirectory extends Message
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
 		PathElement pathElement = DbPaths.getPathElement(path);
-		connection.send(new DirectoryList(localByName, pathElement));
+		DirectoryList msg = new DirectoryList(localByName, pathElement);
+
+		System.out.println("Listing " + rootName + ":" + path);
+		System.out.println("Msg: " + msg);
+		
+		connection.send(msg);
 	}
 	
 }

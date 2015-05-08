@@ -36,4 +36,13 @@ public class DownloadDone extends Message
 	{
 		Services.server.getServeInstance(connection).quit();
 	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Download done.");
+		
+		return builder.toString();
+	}
 }

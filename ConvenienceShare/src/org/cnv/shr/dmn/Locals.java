@@ -12,7 +12,7 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RootDirectory;
-import org.cnv.shr.msg.PathList;
+import org.cnv.shr.msg.RootList;
 
 public class Locals
 {
@@ -23,19 +23,16 @@ public class Locals
 	
 	public synchronized void share(final File localDirectory)
 	{
-		Services.userThreads.execute(new Runnable() { public void run()
+		try
 		{
-			try
-			{
-				Services.logger.logStream.println("Sharing " + localDirectory);
-				DbRoots.getLocal(localDirectory.getCanonicalPath()).synchronize(true);
-			}
-			catch (IOException e1)
-			{
-				Services.logger.logStream.println("Unable to get file path to share: " + localDirectory);
-				e1.printStackTrace(Services.logger.logStream);
-			}
-		}});
+			Services.logger.logStream.println("Sharing " + localDirectory);
+			DbRoots.getLocal(localDirectory.getCanonicalPath()).synchronize(true);
+		}
+		catch (IOException e1)
+		{
+			Services.logger.logStream.println("Unable to get file path to share: " + localDirectory);
+			e1.printStackTrace(Services.logger.logStream);
+		}
 	}
 	
 	public synchronized boolean startSynchronizing(RootDirectory d)
@@ -50,7 +47,7 @@ public class Locals
 	
 	public void share(Communication c)
 	{
-		c.send(new PathList());
+		c.send(new RootList());
 	}
 
 	public LocalFile getLocalFile(String canonicalPath)
