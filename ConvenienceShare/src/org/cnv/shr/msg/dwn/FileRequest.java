@@ -18,16 +18,18 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
 
+import sun.net.www.http.Hurryable;
+
 public class FileRequest extends Message
 {
 	private String rootName;
 	private String path;
 	private String checksum;
-	private long numChunks;
+	private int chunkSize;
 
 	public static int TYPE = 13;
 
-	public FileRequest(RemoteFile remoteFile, long d)
+	public FileRequest(RemoteFile remoteFile, int chunkSize)
 	{
 		rootName = remoteFile.getRootDirectory().getName();
 		path = remoteFile.getPath().getFullPath();
@@ -36,7 +38,7 @@ public class FileRequest extends Message
 		{
 			checksum = "";
 		}
-		this.numChunks = d;
+		this.chunkSize = chunkSize;
 	}
 	
 	public FileRequest(InetAddress address, InputStream stream) throws IOException
@@ -50,7 +52,7 @@ public class FileRequest extends Message
 		rootName  = ByteReader.readString(bytes);
 		path      = ByteReader.readString(bytes);
 		checksum  = ByteReader.readString(bytes);
-		numChunks = ByteReader.readLong(bytes);
+		chunkSize = ByteReader.readInt(bytes);
 	}
 
 	@Override
@@ -59,7 +61,7 @@ public class FileRequest extends Message
 		buffer.append(rootName );
 		buffer.append(path     );
 		buffer.append(checksum );
-		buffer.append(numChunks);
+		buffer.append(chunkSize);
 	}
 	
 	@Override
@@ -72,7 +74,7 @@ public class FileRequest extends Message
 	{
 		StringBuilder builder = new StringBuilder();
 		
-		builder.append("Find machines");
+		builder.append("I wanna download " + rootName + ":" + path);
 		
 		return builder.toString();
 	}
@@ -83,7 +85,7 @@ public class FileRequest extends Message
 		PathElement pathElement = DbPaths.getPathElement(path);
 		LocalDirectory local = DbRoots.getLocalByName(rootName);
 		LocalFile localFile = (LocalFile) DbFiles.getFile(local, pathElement);
-		ServeInstance serve = Services.server.serve((LocalFile) localFile, connection);
-		serve.sendChunks(numChunks);
+		ServeInstance serve = Services.server.serve((LocalFile) localFile, connection, chunkSize);
+		serve.sendChunks();
 	}
 }

@@ -36,7 +36,7 @@ class PathSecurity
 		File prev = new File(root);
 		for (String pathElem : pathElems)
 		{
-			File next = new File(prev.getPath() + pathElem);
+			File next = new File(prev.getPath() + File.separator + pathElem);
 			if (!next.exists())
 			{
 				next.mkdirs();
@@ -45,9 +45,10 @@ class PathSecurity
 			{
 				return null;
 			}
+			prev = next;
 		}
 
-		File next = new File(prev.getPath() + filename);
+		File next = new File(prev.getPath() + File.separator + filename);
 		if (!next.exists())
 		{
 			try
@@ -84,7 +85,7 @@ class PathSecurity
 			e.printStackTrace();
 			return false;
 		}
-		if (!root.startsWith(canonicalPath))
+		if (!canonicalPath.startsWith(root))
 		{
 			return false;
 		}

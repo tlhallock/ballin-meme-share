@@ -33,7 +33,7 @@ public class FileFileSource implements FileSource
 	}
 
 	@Override
-	public boolean exists()
+	public boolean stillExists()
 	{
 		return f.toFile().exists();
 	}
@@ -103,4 +103,6 @@ public class FileFileSource implements FileSource
 	{
 		return new LocalFile((LocalDirectory) local2, element);
 	}
+	@Override
+	public void close() throws IOException {}
 }

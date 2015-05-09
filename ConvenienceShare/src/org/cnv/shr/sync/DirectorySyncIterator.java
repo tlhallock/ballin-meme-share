@@ -1,5 +1,6 @@
 package org.cnv.shr.sync;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -8,17 +9,18 @@ import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 
-public class DirectorySyncIterator
+public class DirectorySyncIterator implements Closeable
 {
 	private boolean first;
 	private LinkedList<Node> stack = new LinkedList<>();
 	private RootDirectory root;
+	FileSource source;
 		
 	public DirectorySyncIterator(RootDirectory remoteDirectory, FileSource f) throws IOException
 	{
 		root = remoteDirectory;
-
-		stack.addLast(new Node(/*new Pair<>(f, DbPaths.ROOT),*/ new SynchronizationTask(DbPaths.ROOT, root, f.listFiles())));
+		source = f;
+		stack.addLast(new Node(new SynchronizationTask(DbPaths.ROOT, root, f.listFiles())));
 		first = true;
 	}
 
@@ -41,20 +43,16 @@ public class DirectorySyncIterator
 
 	public class Node
 	{
-//		private Pair<? extends FileSource> current;
 		private SynchronizationTask sync;
 		private int index = 0;
 
-		Node(/*Pair<? extends FileSource> current, */SynchronizationTask sync)
+		Node(SynchronizationTask sync)
 		{
-//			this.current = current;
 			this.sync = sync;
 			this.index = 0;
 
 			// Collections.sort(files, Find.FILE_COMPARATOR);
 			// Collections.sort(subDirectories, Find.FILE_COMPARATOR);
-
-			// make sure the path element is set.
 		}
 
 		private boolean findNext()
@@ -63,7 +61,7 @@ public class DirectorySyncIterator
 			{
 				FileSource childFile = sync.synchronizedResults[index].getFsCopy();
 				PathElement dbDir = sync.synchronizedResults[index].getPathElement();
-				if (!childFile.exists())
+				if (!childFile.stillExists())
 				{
 					// make sure it is not in the database...
 					index++;
@@ -97,5 +95,11 @@ public class DirectorySyncIterator
 			}
 			return false;
 		}
+	}
+
+	@Override
+	public void close() throws IOException
+	{
+		source.close();
 	}
 }

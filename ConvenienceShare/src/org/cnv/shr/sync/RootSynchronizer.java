@@ -1,6 +1,7 @@
 
 package org.cnv.shr.sync;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -9,8 +10,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.TimerTask;
 
+import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
@@ -22,7 +25,7 @@ import org.cnv.shr.util.FileOutsideOfRootException;
  * Instead, this keeps a stack inside the LocalDirectorySyncIterator of synchronization tasks to be performed.
  *
  */
-public abstract class RootSynchronizer extends TimerTask
+public abstract class RootSynchronizer extends TimerTask implements Closeable
 {
 	private static final Pair[] dummy = new Pair[0];
 	
@@ -190,11 +193,15 @@ public abstract class RootSynchronizer extends TimerTask
 	private void addFile(PathElement element, FileSource fsCopy)
 	{
 		// Services.logger.logStream.println("Found new file " + fsCopy);
+
+		//DbTables.DbObjects.LFILE.debug(Services.h2DbCache.getConnection(), Services.logger.logStream);
+		//DbTables.DbObjects.ROOT_CONTAINS.debug(Services.h2DbCache.getConnection(), Services.logger.logStream);
 		try
 		{
 			SharedFile lFile = fsCopy.create(local, element);
 			if (lFile.save())
 			{
+				//DbTables.DbObjects.LFILE.debug(Services.h2DbCache.getConnection(), Services.logger.logStream);
 				changeCount++;
 				filesAdded++;
 				bytesAdded += fsCopy.getFileSize();
@@ -258,6 +265,11 @@ public abstract class RootSynchronizer extends TimerTask
 		filesAdded = 0;
 		filesRemoved = 0;
 		bytesAdded = 0;
+	}
+	
+	public void close() throws IOException
+	{
+		iterator.close();
 	}
 
 	protected abstract void notifyChanged();

@@ -1,6 +1,8 @@
 package org.cnv.shr.sync;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,7 +51,7 @@ public class RemoteSynchronizers
 		synchronizers.remove(getKey(sync));
 	}
 
-	public class RemoteSynchronizerQueue
+	public class RemoteSynchronizerQueue implements Closeable
 	{
 		private int errorCount = 0;
 		private long MAX_TIME_TO_WAIT = 2 * 60 * 1000;
@@ -151,6 +153,21 @@ public class RemoteSynchronizers
 			try
 			{
 				ensureQueued(path);
+			}
+			finally
+			{
+				lock.unlock();
+			}
+		}
+		
+		public void close()
+		{
+			lock.lock();
+			try
+			{
+				done(this);
+				condition.signalAll();
+				communication.notifyDone();
 			}
 			finally
 			{

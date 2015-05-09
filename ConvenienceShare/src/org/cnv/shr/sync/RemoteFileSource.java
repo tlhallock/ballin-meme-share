@@ -33,6 +33,7 @@ public class RemoteFileSource implements FileSource
 	{
 		sync = s;
 		r = f;
+		e = f.getPath();
 	}
 	private RemoteFileSource(RemoteSynchronizerQueue s, PathElement p, String name)
 	{
@@ -46,9 +47,10 @@ public class RemoteFileSource implements FileSource
 	}
 
 	@Override
-	public boolean exists()
+	public boolean stillExists()
 	{
-		return false;
+		// We have no way of checking...
+		return true;
 	}
 
 	@Override
@@ -142,5 +144,10 @@ public class RemoteFileSource implements FileSource
 	public SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException
 	{
 		return r;
+	}
+	@Override
+	public void close()
+	{
+		sync.close();
 	}
 }

@@ -28,7 +28,7 @@ public class DownloadInstance
 {
 	static final Random random = new Random();
 	static int NUM_PENDING_CHUNKS = 10;
-	static long CHUNK_SIZE = 1024 * 1024;
+	static int CHUNK_SIZE = 1024 * 1024; // long numChunks = (remoteFile.getFileSize() / CHUNK_SIZE) + 1;
 	static long COMPLETION_REFRESH_RATE = 5 * 1000;
 	
 	private DownloadState state;
@@ -61,7 +61,7 @@ public class DownloadInstance
 	public Communication begin() throws UnknownHostException, IOException
 	{
 		state = DownloadState.GETTING_META_DATA;
-		FileRequest request = new FileRequest(remoteFile, (remoteFile.getFileSize() / CHUNK_SIZE) + 1);
+		FileRequest request = new FileRequest(remoteFile, CHUNK_SIZE);
 		Machine machine = remoteFile.getRootDirectory().getMachine();
 		Communication openConnection = Services.networkManager.openConnection(machine.getIp() + ":" + machine.getPort());
 		Seeder seeder = new Seeder(machine, openConnection);

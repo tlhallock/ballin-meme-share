@@ -65,4 +65,10 @@ public class ListPath extends Message
 		connection.send(msg);
 	}
 	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		builder.append("What files are under ").append(rootName).append(":").append(path);
+		return builder.toString();
+	}
 }

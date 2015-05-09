@@ -17,6 +17,7 @@ import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.util.FileOutsideOfRootException;
 
 public class ServeInstance
 {
@@ -30,18 +31,26 @@ public class ServeInstance
 	// This should be stored on file...
 	private HashMap<String, Chunk> chunks = new HashMap<>();
 	
-	ServeInstance(Communication communication, LocalFile local)
+	ServeInstance(Communication communication, LocalFile local, int chunkSize)
 	{
 		this.local = local;
 		this.connection = communication;
+		this.chunkSize = chunkSize;
 	}
 	
 	private void stage() throws FileNotFoundException, IOException, NoSuchAlgorithmException
 	{
 		local.ensureChecksummed();
 		
-		tmpFile = PathSecurity.secureMakeDirs(Services.settings.stagingDirectory.get(), local.getFullPath());
+		tmpFile = PathSecurity.secureMakeDirs(Services.settings.servingDirectory.get(),
+					local.getRootDirectory().getName()
+					+ File.separator + local.getPath().getFullPath());
 		File toShare = local.getFsFile();
+		if (!local.getRootDirectory().contains(toShare.getCanonicalPath()))
+		{
+			// just to double check...
+			throw new FileOutsideOfRootException(local.getRootDirectory().getCanonicalPath().getFullPath(), toShare.getCanonicalPath());
+		}
 		
 		byte[] buffer = new byte[1024];
 		long offsetInFile = 0;
@@ -90,7 +99,7 @@ public class ServeInstance
 		System.out.println(string);
 	}
 
-	public void sendChunks(long numChunks)
+	public void sendChunks()
 	{
 		try
 		{

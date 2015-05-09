@@ -14,9 +14,9 @@ public class ServeManager
 		return serves.get(communication.getUrl());
 	}
 
-	public ServeInstance serve(LocalFile file, Communication c)
+	public ServeInstance serve(LocalFile file, Communication c, int chunkSize)
 	{
-		ServeInstance instance = new ServeInstance(c, file);
+		ServeInstance instance = new ServeInstance(c, file, chunkSize);
 		serves.put(c.getUrl(), instance);
 		return instance;
 	}

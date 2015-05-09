@@ -94,10 +94,9 @@ public abstract class RootDirectory extends DbObject
 			return;
 		}
 
-		try
+		try (RootSynchronizer localSynchronizer = createSynchronizer();)
 		{
 			Timer t = new Timer();
-			RootSynchronizer localSynchronizer = createSynchronizer();
 			t.scheduleAtFixedRate(localSynchronizer, RootSynchronizer.DEBUG_REPEAT, RootSynchronizer.DEBUG_REPEAT);
 			localSynchronizer.synchronize();
 			t.cancel();

@@ -12,8 +12,10 @@ import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbTables;
+import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.db.h2.RStringBuilder;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.sync.FileSource;
 
 public class PathElement extends DbObject
@@ -169,6 +171,8 @@ public class PathElement extends DbObject
 			{
 				return returnValue;
 			}
+			
+			DbObjects.PELEM.debug(Services.h2DbCache.getConnection(), System.out);
 			
 			iterator = DbPaths.listPathElements(local, broken.removeLast());
 		}

@@ -98,21 +98,19 @@ public class MachineView extends javax.swing.JPanel
 			{
 				try
 				{
-					final String path = tableListener.getTableValue("Path", row);
-					if (path == null)
-					{
-						Services.logger.logStream.println("Unable to find machine " + path);
-						return;
-					}
+					String dirname = tableListener.getTableValue("Path", row);
+					String basename = tableListener.getTableValue("Name", row);
+					final String fullPath = dirname + basename; 
 					Services.userThreads.execute(new Runnable()
 					{
 						@Override
 						public void run()
 						{
-							SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(path));
+							SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
 							if (remoteFile == null)
 							{
-								Services.logger.logStream.println("Unable to get remote file " + path);
+								Services.logger.logStream.println("Unable to get remote file " + fullPath);
+								return;
 							}
 							
 							try

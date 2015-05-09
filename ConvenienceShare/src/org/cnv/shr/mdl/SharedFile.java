@@ -88,7 +88,7 @@ public abstract class SharedFile extends DbObject implements NetworkObject
 	{
 		id = row.getInt("F_ID");
 
-		rootDirectory = (LocalDirectory) locals.getObject(c, DbTables.DbObjects.LROOT, row.getInt("ROOT"));
+		rootDirectory =  (RootDirectory) locals.getObject(c, DbTables.DbObjects.LROOT, row.getInt("ROOT"));
 		path          =    (PathElement) locals.getObject(c, DbTables.DbObjects.PELEM, row.getInt("PELEM"));
 		
 		tags = row.getString("TAGS");

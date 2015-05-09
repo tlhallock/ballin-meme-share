@@ -1,5 +1,6 @@
 package org.cnv.shr.sync;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -8,9 +9,9 @@ import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.FileOutsideOfRootException;
 
-public interface FileSource
+public interface FileSource extends Closeable
 {
-	boolean exists();
+	boolean stillExists();
 	Iterator<FileSource> listFiles() throws IOException;
 	String getName();
 	boolean isDirectory();

@@ -56,28 +56,36 @@ public class DbTables
 			}
 		}
 		
-		public void debug(Connection c, PrintStream ps) throws SQLException
+		public void debug(Connection c, PrintStream ps)
 		{
 //			new Exception().printStackTrace(ps);
 
-			ps.println("Printing " + tableName);
-			ps.println("----------------------------------------------");
-			ResultSet executeQuery2 = c.prepareStatement("select * from " + tableName + ";").executeQuery();
-			int ncols = executeQuery2.getMetaData().getColumnCount();
-			for (int i = 1; i <= ncols; i++)
+			
+			try
 			{
-				ps.print(executeQuery2.getMetaData().getColumnName(i) + ",");
-			}
-			ps.println();
-			while (executeQuery2.next())
-			{
+				ps.println("Printing " + tableName);
+				ps.println("----------------------------------------------");
+				ResultSet executeQuery2 = c.prepareStatement("select * from " + tableName + ";").executeQuery();
+				int ncols = executeQuery2.getMetaData().getColumnCount();
 				for (int i = 1; i <= ncols; i++)
 				{
-					ps.print(executeQuery2.getObject(i) + ",");
+					ps.print(executeQuery2.getMetaData().getColumnName(i) + ",");
 				}
 				ps.println();
+				while (executeQuery2.next())
+				{
+					for (int i = 1; i <= ncols; i++)
+					{
+						ps.print(executeQuery2.getObject(i) + ",");
+					}
+					ps.println();
+				}
+				ps.println("----------------------------------------------");
 			}
-			ps.println("----------------------------------------------");
+			catch (SQLException ex)
+			{
+				ex.printStackTrace();
+			}
 		}
 		
 		public DbObject allocate(ResultSet row) throws SQLException
@@ -179,15 +187,7 @@ public class DbTables
 	{
 		for (DbObjects table : ALL_TABLES)
 		{
-			try
-			{
-				table.debug(Services.h2DbCache.getConnection(), ps);
-			}
-			catch (SQLException e)
-			{
-				Services.logger.logStream.println("Unable to debug table " + table + ".");
-				e.printStackTrace(Services.logger.logStream);
-			}
+			table.debug(Services.h2DbCache.getConnection(), ps);
 		}
 	}
 
