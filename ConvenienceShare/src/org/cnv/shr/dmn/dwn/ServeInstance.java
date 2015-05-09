@@ -14,8 +14,10 @@ import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.msg.DoneMessage;
+import org.cnv.shr.msg.Failure;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkResponse;
+import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.FileOutsideOfRootException;
 
@@ -97,6 +99,8 @@ public class ServeInstance
 	private void fail(String string)
 	{
 		System.out.println(string);
+		connection.send(new DownloadFailure(string));
+		connection.send(new DoneMessage());
 	}
 
 	public void sendChunks()
@@ -118,6 +122,7 @@ public class ServeInstance
 		if (!myVersion.equals(chunk))
 		{
 			fail("Unkown chunk");
+			return;
 		}
 
 		synchronized (connection.getOut())

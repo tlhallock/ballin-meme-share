@@ -18,6 +18,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
+import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
@@ -266,5 +267,28 @@ public class DownloadInstance
 		ALLOCATING,
 		DOWNLOADING,
 		PLACING_IN_FS,
+	}
+
+	public void removePeer(Communication connection)
+	{
+		for (Seeder peer : seeders)
+		{
+			if (peer.getConnection().getUrl().equals(connection.getUrl()))
+			{
+				seeders.remove(peer);
+			}
+		}
+		
+		if (seeders.isEmpty())
+		{
+			System.out.println("There are no more seeders left!");
+			Services.downloads.done(this);
+		}
+		connection.send(new DoneMessage());
+	}
+
+	public Collection<Seeder> getSeeders()
+	{
+		return seeders;
 	}
 }

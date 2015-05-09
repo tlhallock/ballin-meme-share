@@ -86,6 +86,15 @@ public class MachineView extends javax.swing.JPanel
 		DefaultTableModel model2 = (DefaultTableModel) pathsTable.getModel();
 		TableListener.removeIfExists(model2, "Name", remote.getName());
 		model2.addRow(new String[] { remote.getName() });
+		
+		if (directory == null)
+		{
+			viewNoDirectory();
+		}
+		else
+		{
+			model.setRoot(directory);
+		}
 	}
 
 	private void addFilesListener()

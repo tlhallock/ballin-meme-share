@@ -41,4 +41,8 @@ public class Seeder
 		connection.send(new DoneMessage());
 	}
 
+	public Communication getConnection()
+	{
+		return connection;
+	}
 }

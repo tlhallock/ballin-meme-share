@@ -10,6 +10,7 @@ import org.cnv.shr.mdl.SharedFile;
 
 public class DownloadManager
 {
+	// I need to fix this model, because it doesn't allow multiple downloads from the same peer.
 	private HashMap<String, DownloadInstance> downloads = new HashMap<>();
 
 
@@ -29,9 +30,13 @@ public class DownloadManager
 		return instance;
 	}
 	
-	public void done(Communication c)
+	public void done(DownloadInstance d)
 	{
-		downloads.remove(c.getUrl());
+		for (Seeder seeder : d.getSeeders())
+		{
+			seeder.done();
+			downloads.remove(seeder.getConnection().getUrl());
+		}
 	}
 	
 	public DownloadInstance getDownloadInstance(Communication communication)

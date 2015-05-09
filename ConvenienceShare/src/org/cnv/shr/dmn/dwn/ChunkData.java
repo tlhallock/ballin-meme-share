@@ -18,7 +18,7 @@ public class ChunkData
 	{
 		MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 		
-		try (RandomAccessFile toWrite = new RandomAccessFile(f, "w"))
+		try (RandomAccessFile toWrite = new RandomAccessFile(f, "rw"))
 		{
 			toWrite.seek(chunk.getBegin());
 			int numberOfBytes = (int) chunk.getSize();

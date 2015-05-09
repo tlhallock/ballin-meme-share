@@ -39,9 +39,9 @@ public class Chunk implements NetworkObject
 	@Override
 	public void read(InputStream input) throws IOException
 	{
-		checksum = ByteReader.readString(input);
 		begin =  ByteReader.readLong(input);
 		end = ByteReader.readLong(input);
+		checksum = ByteReader.readString(input);
 	}
 
 	@Override
