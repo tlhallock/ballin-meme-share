@@ -13,6 +13,8 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 
+import com.sun.nio.sctp.Notification;
+
 public class DbRoots
 {
 
@@ -115,9 +117,12 @@ public class DbRoots
 				local.fill(c, executeQuery, new DbLocals().setObject(Services.localMachine).setObject(pathElement));
 				return local;
 			}
+			
+			
 			LocalDirectory local = new LocalDirectory(pathElement);
 			local.save();
 			DbPaths.pathLiesIn(pathElement, local);
+			Services.notifications.localChanged(local);
 			return local;
 		}
 		catch (SQLException | IOException e)
@@ -155,6 +160,31 @@ public class DbRoots
 		{
 			e.printStackTrace();
 			return null;
+		}
+	}
+	
+	public static void deleteRoot(RootDirectory root)
+	{
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement s1 = c.prepareStatement("delete from ROOT_CONTAINS where ROOT_CONTAINS.RID=?;");
+			 PreparedStatement s2 = c.prepareStatement("delete from SFILE where ROOT=?;");
+			 PreparedStatement s3 = c.prepareStatement("delete from ROOT where R_ID=?;");)
+		{
+			c.setAutoCommit(false);
+			s1.setInt(1, root.getId());
+			s2.setInt(1, root.getId());
+			s3.setInt(1, root.getId());
+			s1.execute();
+			s2.execute();
+			s3.execute();
+			c.commit();
+			c.setAutoCommit(true);
+			
+			Services.notifications.localsChanged();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
 		}
 	}
 }

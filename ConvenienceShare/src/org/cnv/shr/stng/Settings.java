@@ -53,7 +53,7 @@ public class Settings implements SettingListener
 	{
 		this.settingsFile = settingsFile;
 		localAddress = InetAddress.getLocalHost().getHostAddress();
-		Services.logger.logStream.println("Local host is " + localAddress);
+		System.out.println("Local host is " + localAddress);
 		for (Setting setting : settings)
 		{
 			setting.addListener(this);

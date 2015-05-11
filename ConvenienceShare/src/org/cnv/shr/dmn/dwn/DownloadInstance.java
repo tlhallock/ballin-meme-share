@@ -15,6 +15,7 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
@@ -124,13 +125,20 @@ public class DownloadInstance
 	private void allocate() throws IOException
 	{
 		state = DownloadState.ALLOCATING;
-		File file = Services.settings.stagingDirectory.get();
+		File file = PathSecurity.getMirrorDirectory(remoteFile);
+		
+		// ensure that we are sharing this mirror...
+		UserActions.addLocal(file, false);
+		
 		String str = remoteFile.getPath().getFullPath();
 		tmpFile = PathSecurity.secureMakeDirs(file, str);
 		if (tmpFile == null)
 		{
 			throw new FileOutsideOfRootException(file.getAbsolutePath(), str);
 		}
+		Services.logger.logStream.println("Downloading \"" + 
+				remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" +
+				tmpFile.getAbsolutePath() + "\"");
 
 		if (tmpFile.length() > 0)
 		{
@@ -253,11 +261,6 @@ public class DownloadInstance
 		}
 	}
 	
-	private void fail(String string)
-	{
-		System.out.println(string);
-	}
-	
 	enum DownloadState
 	{
 		NOT_STARTED,
@@ -268,6 +271,12 @@ public class DownloadInstance
 		DOWNLOADING,
 		PLACING_IN_FS,
 	}
+	
+	private void fail(String string)
+	{
+		System.out.println(string);
+		Services.downloads.done(this);
+	}
 
 	public void removePeer(Communication connection)
 	{
@@ -275,13 +284,14 @@ public class DownloadInstance
 		{
 			if (peer.getConnection().getUrl().equals(connection.getUrl()))
 			{
+				Services.downloads.remove(peer);
 				seeders.remove(peer);
 			}
 		}
 		
 		if (seeders.isEmpty())
 		{
-			System.out.println("There are no more seeders left!");
+			Services.logger.logStream.println("There are no more seeders left!");
 			Services.downloads.done(this);
 		}
 		connection.send(new DoneMessage());

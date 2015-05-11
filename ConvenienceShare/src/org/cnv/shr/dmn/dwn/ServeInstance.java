@@ -14,7 +14,6 @@ import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.msg.DoneMessage;
-import org.cnv.shr.msg.Failure;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.DownloadFailure;
@@ -51,7 +50,7 @@ public class ServeInstance
 		if (!local.getRootDirectory().contains(toShare.getCanonicalPath()))
 		{
 			// just to double check...
-			throw new FileOutsideOfRootException(local.getRootDirectory().getCanonicalPath().getFullPath(), toShare.getCanonicalPath());
+			throw new FileOutsideOfRootException(local.getRootDirectory().getPathElement().getFullPath(), toShare.getCanonicalPath());
 		}
 		
 		byte[] buffer = new byte[1024];
@@ -84,10 +83,11 @@ public class ServeInstance
 					chunkOffset += nread;
 					offsetInFile += nread;
 					digest.update(buffer, 0, nread);
+					outputStream.write(buffer, 0, nread);
 				}
 
 				Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest));
-				Chunk oldChunk = chunks.put(chunk.getChecksum(), chunk);
+				Chunk oldChunk = chunks.put(chunk.toString(), chunk);
 				if (oldChunk != null)
 				{
 					fail("Duplicate chunk checksum");
@@ -118,9 +118,10 @@ public class ServeInstance
 	
 	public void serve(Chunk chunk)
 	{
-		Chunk myVersion = chunks.get(chunk.getChecksum());
+		Chunk myVersion = chunks.get(chunk.toString());
 		if (!myVersion.equals(chunk))
 		{
+			// Should still send the chunk...
 			fail("Unkown chunk");
 			return;
 		}

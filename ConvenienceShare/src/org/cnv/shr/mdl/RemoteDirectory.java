@@ -31,7 +31,7 @@ public class RemoteDirectory extends RootDirectory
 	}
 	
 	@Override
-	public PathElement getCanonicalPath()
+	public PathElement getPathElement()
 	{
 		return path;
 	}
@@ -56,5 +56,11 @@ public class RemoteDirectory extends RootDirectory
 	public boolean pathIsSecure(String canonicalPath)
 	{
 		return true;
+	}
+
+	@Override
+	protected void sendNotifications()
+	{
+		Services.notifications.remotesChanged(this);
 	}
 }

@@ -6,6 +6,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Timer;
 
 import org.cnv.shr.db.h2.DbLocals;
@@ -13,7 +17,9 @@ import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.sync.DebugListener;
 import org.cnv.shr.sync.RootSynchronizer;
+import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
 import org.cnv.shr.util.Misc;
 
 public abstract class RootDirectory extends DbObject
@@ -69,7 +75,7 @@ public abstract class RootDirectory extends DbObject
 			stmt = c.prepareStatement("merge into ROOT key(R_ID)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
 			stmt.setInt(ndx++, getId());
 		}
-		stmt.setInt(ndx++, getCanonicalPath().getId());
+		stmt.setInt(ndx++, getPathElement().getId());
 		stmt.setString(ndx++, getTags());
 		stmt.setString(ndx++, getDescription());
 		stmt.setInt(ndx++, machine.getId());
@@ -80,27 +86,42 @@ public abstract class RootDirectory extends DbObject
 		return stmt;
 	}
 	
-	public abstract PathElement getCanonicalPath();
+	public abstract PathElement getPathElement();
 
 	public Machine getMachine()
 	{
 		return machine;
 	}
 	
-	public final void synchronize(boolean force)
+	public final void synchronize(List<? extends SynchronizationListener> listeners)
 	{
-		if (!Services.locals.startSynchronizing(this))
-		{
-			return;
-		}
+		Services.logger.logStream.println("Synchronizing " + getPathElement().getFullPath());
 
 		try (RootSynchronizer localSynchronizer = createSynchronizer();)
 		{
+			if (!startSynchronizing(this, localSynchronizer))
+			{
+				return;
+			}
+			
+			if (listeners != null)
+			{
+				for (SynchronizationListener listener : listeners)
+				{
+					localSynchronizer.addListener(listener);
+				}
+			}
+			DebugListener debugListener = new DebugListener(this);
+			localSynchronizer.addListener(debugListener);
+			
 			Timer t = new Timer();
-			t.scheduleAtFixedRate(localSynchronizer, RootSynchronizer.DEBUG_REPEAT, RootSynchronizer.DEBUG_REPEAT);
+			t.scheduleAtFixedRate(debugListener, DebugListener.DEBUG_REPEAT, DebugListener.DEBUG_REPEAT);
 			localSynchronizer.synchronize();
 			t.cancel();
 			setStats();
+			sendNotifications();
+
+			Services.logger.logStream.println("Done synchronizing " + getPathElement().getFullPath());
 		}
 		catch (Exception ex)
 		{
@@ -108,7 +129,7 @@ public abstract class RootDirectory extends DbObject
 		}
 		finally
 		{
-			Services.locals.stopSynchronizing(this);
+			stopSynchronizing(this);
 		}
 	}
 
@@ -125,8 +146,6 @@ public abstract class RootDirectory extends DbObject
 			e.printStackTrace();
 		}
 	}
-	
-	protected abstract RootSynchronizer createSynchronizer() throws IOException;
 	
 	public abstract boolean isLocal();
 
@@ -196,4 +215,36 @@ public abstract class RootDirectory extends DbObject
 	}
 
 	public abstract boolean pathIsSecure(String canonicalPath);
+	protected abstract RootSynchronizer createSynchronizer() throws IOException;
+	protected abstract void sendNotifications();
+	
+	
+
+	public void stopSynchronizing()
+	{
+		stopSynchronizing(this);
+	}
+	
+	
+	
+
+	private static HashMap<String, RootSynchronizer> synchronizing = new HashMap<>();
+	private static synchronized boolean startSynchronizing(RootDirectory d, RootSynchronizer sync)
+	{
+		RootSynchronizer rootSynchronizer = synchronizing.get(d.getPathElement().getFullPath());
+		if (rootSynchronizer == null)
+		{
+			synchronizing.put(d.getPathElement().getFullPath(), sync);
+			return true;
+		}
+		return false;
+	}
+	private static synchronized void stopSynchronizing(RootDirectory d)
+	{
+		RootSynchronizer remove = synchronizing.remove(d.getPathElement().getFullPath());
+		if (remove != null)
+		{
+			remove.quit();
+		}
+	}
 }

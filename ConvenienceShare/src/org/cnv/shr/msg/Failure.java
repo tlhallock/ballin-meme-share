@@ -10,7 +10,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class Failure extends Message
 {
-	String message;
+	private String message;
 	
 	public Failure(String message)
 	{

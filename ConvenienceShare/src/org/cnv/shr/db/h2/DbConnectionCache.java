@@ -26,7 +26,6 @@ public class DbConnectionCache
 	public Connection getConnection()
 	{
 		long id = Thread.currentThread().getId();
-		id = 0;
 		Connection returnValue = connections.get(id);
 		if (returnValue == null)
 		{

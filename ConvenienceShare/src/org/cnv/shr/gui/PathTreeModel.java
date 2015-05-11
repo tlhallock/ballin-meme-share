@@ -19,13 +19,16 @@ public class PathTreeModel implements TreeModel
 	RootDirectory rootDirectory;
 	Node root = new Node(new NoPath());
 	
-	public void setRoot(RootDirectory root)
+	public void setRoot(RootDirectory newRoot)
 	{
-		Node oldroot = this.root;
-		
-		this.rootDirectory = root;
+		RootDirectory oldroot = this.rootDirectory;
+		this.rootDirectory = newRoot;
 		this.root = new Node(DbPaths.ROOT);
 		this.root.expand();
+		if (oldroot == null)
+		{
+			return;
+		}
 		for (TreeModelListener listener : listeners)
 		{
 			listener.treeStructureChanged(new TreeModelEvent(this, new Object[] {oldroot}));
@@ -114,7 +117,12 @@ public class PathTreeModel implements TreeModel
 		}
 		return list;
 	}
-	
+
+	public RootDirectory getRootDirectory()
+	{
+		return rootDirectory;
+	}
+
 	class Node
 	{
 		PathElement element;

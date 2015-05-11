@@ -83,9 +83,16 @@ public class MachineView extends javax.swing.JPanel
 
 	public void refreshRoot(RemoteDirectory remote)
 	{
+		if (machine.getId() != remote.getMachine().getId())
+		{
+			return;
+		}
+		
 		DefaultTableModel model2 = (DefaultTableModel) pathsTable.getModel();
-		TableListener.removeIfExists(model2, "Name", remote.getName());
-		model2.addRow(new String[] { remote.getName() });
+		while (model2.getRowCount() > 0)
+		{
+			model2.removeRow(0);
+		}
 		
 		if (directory == null)
 		{
@@ -93,6 +100,10 @@ public class MachineView extends javax.swing.JPanel
 		}
 		else
 		{
+			if (model.getRootDirectory().getId() == directory.getId())
+			{
+				model.setRoot(remote);
+			}
 			model.setRoot(directory);
 		}
 	}
@@ -109,29 +120,14 @@ public class MachineView extends javax.swing.JPanel
 				{
 					String dirname = tableListener.getTableValue("Path", row);
 					String basename = tableListener.getTableValue("Name", row);
-					final String fullPath = dirname + basename; 
-					Services.userThreads.execute(new Runnable()
+					String fullPath = dirname + basename; 
+					SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
+					if (remoteFile == null)
 					{
-						@Override
-						public void run()
-						{
-							SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
-							if (remoteFile == null)
-							{
-								Services.logger.logStream.println("Unable to get remote file " + fullPath);
-								return;
-							}
-							
-							try
-							{
-								Services.downloads.download(remoteFile);
-							}
-							catch (IOException e)
-							{
-								e.printStackTrace();
-							}
-						}
-					});
+						Services.logger.logStream.println("Unable to get remote file " + fullPath);
+						return;
+					}
+					UserActions.download(remoteFile);
 				}
 				catch (Exception ex)
 				{
@@ -263,9 +259,9 @@ public class MachineView extends javax.swing.JPanel
     
     private void view(RootDirectory directory)
     {
-    	Services.logger.logStream.println("Showing directory " + directory.getCanonicalPath());
+    	Services.logger.logStream.println("Showing directory " + directory.getPathElement());
         this.directory = directory;
-    	this.pathLabel.setText(directory.getCanonicalPath().getFullPath());
+    	this.pathLabel.setText(directory.getPathElement().getFullPath());
         this.descriptionLabel.setText(directory.getDescription());
         this.tagsLabel.setText(directory.getTags());
         this.nFilesLabel.setText(directory.getTotalNumberOfFiles());
@@ -438,7 +434,7 @@ public class MachineView extends javax.swing.JPanel
                         .addGap(44, 44, 44)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 316, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton7))
                             .addComponent(keysLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -530,7 +526,7 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton1)
                     .addComponent(filterText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE))
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
         );
 
         jSplitPane1.setLeftComponent(jPanel3);
@@ -583,7 +579,7 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton2)
                     .addComponent(tablseFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
         );
 
         jSplitPane1.setRightComponent(jPanel4);
@@ -596,7 +592,7 @@ public class MachineView extends javax.swing.JPanel
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 287, Short.MAX_VALUE)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Files", jPanel6);
@@ -771,11 +767,11 @@ public class MachineView extends javax.swing.JPanel
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
-    	Services.userThreads.execute(new Runnable() { public void run() { directory.synchronize(true); } } );
+    	UserActions.syncRemote(directory);
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-        Services.userThreads.execute(new Runnable() { public void run() { Services.remotes.synchronizeRoots(machine); setMachine(machine); } } );
+        UserActions.syncRoots(machine);
     }//GEN-LAST:event_jButton8ActionPerformed
 
 

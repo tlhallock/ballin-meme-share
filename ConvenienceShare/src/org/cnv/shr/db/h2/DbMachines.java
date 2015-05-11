@@ -79,4 +79,18 @@ public class DbMachines
 			return null;
 		}
 	}
+
+	public static void delete(Machine remote)
+	{
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement stmt = c.prepareStatement("delete MACHINE where M_ID=?;"))
+		{
+			stmt.setInt(1, remote.getId());
+			stmt.execute();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
 }

@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class ListRoots extends Message
@@ -19,7 +18,7 @@ public class ListRoots extends Message
 	@Override
 	public void perform(Communication connection)
 	{
-		Services.locals.share(connection);
+		connection.send(new RootList());
 	}
 
 	@Override

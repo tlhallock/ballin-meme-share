@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.FileOutsideOfRootException;
 
@@ -27,7 +28,7 @@ public class LocalFile extends SharedFile
 		lastModified = f.lastModified();
 
 		String dir = f.getParentFile().getCanonicalPath();
-		String root = local.getCanonicalPath().getFullPath();
+		String root = local.getPathElement().getFullPath();
 
 		if (!dir.startsWith(root))
 		{
@@ -54,7 +55,7 @@ public class LocalFile extends SharedFile
 	
 	public String getFullPath()
 	{
-		return rootDirectory.getCanonicalPath().getFullPath() + File.separatorChar + path.getFullPath();
+		return rootDirectory.getPathElement().getFullPath() + File.separatorChar + path.getFullPath();
 	}
 
 	/**
@@ -65,7 +66,7 @@ public class LocalFile extends SharedFile
 	{
 		if (!exists())
 		{
-			delete();
+			DbFiles.delete(this);
 			return true;
 		}
 
@@ -137,7 +138,7 @@ public class LocalFile extends SharedFile
 
 	public File getFsFile()
 	{
-		return new File(getRootDirectory().getCanonicalPath().getFullPath() + "/" + path.getFullPath());
+		return new File(getRootDirectory().getPathElement().getFullPath() + "/" + path.getFullPath());
 	}
 
 	public void ensureChecksummed() throws IOException

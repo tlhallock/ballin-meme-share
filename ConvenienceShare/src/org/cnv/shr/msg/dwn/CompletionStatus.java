@@ -14,7 +14,7 @@ public class CompletionStatus extends Message
 {
 	public static int TYPE = 12;
 	
-	double percentComplete;
+	private double percentComplete;
 	
 	public CompletionStatus(double d)
 	{

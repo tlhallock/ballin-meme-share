@@ -34,8 +34,6 @@ public class Services
 	public static ChecksumManager checksums;
 	public static ConnectionManager networkManager;
 	public static RequestHandler[] handlers;
-	public static Remotes remotes;
-	public static Locals locals;
 	public static MessageReader msgReader;
 	public static KeyManager keyManager;
 	public static Timer monitorTimer;
@@ -46,18 +44,10 @@ public class Services
 	public static DownloadManager downloads;
 	public static RemoteSynchronizers syncs;
 	
-	public static void initialize(String[] args) throws Exception
+	public static void initialize(Settings stgs) throws Exception
 	{
+		settings = stgs;
 		logger = new Logger();
-		settings = new Settings(new File(args.length >= 1 ? args[0] : "convencie_share_settings.props"));
-		try
-		{
-			settings.read();
-		}
-		catch (IOException e)
-		{
-			logger.logStream.println("Creating settings file.");
-		}
 		settings.write();
 
 		logger.setLogLocation();
@@ -75,7 +65,6 @@ public class Services
 		downloads = new DownloadManager();
 		syncs = new RemoteSynchronizers();
 		
-		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
 		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
 		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
@@ -84,8 +73,6 @@ public class Services
 		connectionThreads  = new ThreadPoolExecutor(0, settings.maxDownloads.get(), 
 				60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
 		checksums = new ChecksumManager();
-		locals = new Locals();
-		remotes = new Remotes();
 		int numServeThreads = Math.min(1, settings.maxServes.get());
 		handlers = new RequestHandler[numServeThreads];
 		for (int i = 0; i < handlers.length; i++)
@@ -100,16 +87,20 @@ public class Services
 		{
 			handlers[i].start();
 		}
-		monitorTimer.schedule(new TimerTask() {
-			@Override
-			public void run()
-			{
-				locals.synchronize(false);
-			}}, settings.monitorRepeat.get(), settings.monitorRepeat.get());
 		
-		// Ensure the local machine is added and that the downloads directory is shared.
-		locals.share(settings.downloadsDirectory.get());
-
+//		monitorTimer.schedule(new TimerTask() {
+//			@Override
+//			public void run()
+//			{
+//				locals.synchronize(false);
+//			}}, settings.monitorRepeat.get(), settings.monitorRepeat.get());
+//		
+//		monitorTimer.schedule(new TimerTask() {
+//			@Override
+//			public void run() {
+//				remotes.refresh();
+//			}}, 1000);
+		
 		java.awt.EventQueue.invokeLater(new Runnable()
 		{
 			public void run()
@@ -131,12 +122,6 @@ public class Services
 				}
 			}
 		});
-		
-		monitorTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				remotes.refresh();
-			}}, 1000);
 	}
 
 	public static void deInitialize()
@@ -151,7 +136,7 @@ public class Services
 			handlers[i].quit();
 		}
 		
-		monitorTimer.cancel();
+//		monitorTimer.cancel();
 		checksums.quit();
 		
 		userThreads.shutdown();

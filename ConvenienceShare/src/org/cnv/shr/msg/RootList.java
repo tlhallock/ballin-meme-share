@@ -44,7 +44,7 @@ public class RootList extends Message
 	@Override
 	public void perform(Communication connection)
 	{
-		boolean changed = false;
+		boolean changed = true;
 		for (RootDirectory root : sharedDirectories)
 		{
 			try

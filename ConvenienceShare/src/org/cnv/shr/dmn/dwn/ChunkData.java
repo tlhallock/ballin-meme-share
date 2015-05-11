@@ -89,6 +89,7 @@ public class ChunkData
 					return false;
 				}
 				offset += nread;
+				digest.update(buffer, 0, nread);
 			}
 		}
 		

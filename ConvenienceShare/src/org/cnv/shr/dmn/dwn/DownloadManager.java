@@ -34,9 +34,14 @@ public class DownloadManager
 	{
 		for (Seeder seeder : d.getSeeders())
 		{
-			seeder.done();
-			downloads.remove(seeder.getConnection().getUrl());
+			remove(seeder);
 		}
+	}
+	
+	public void remove(Seeder peer)
+	{
+		peer.done();
+		downloads.remove(peer.getConnection().getUrl());
 	}
 	
 	public DownloadInstance getDownloadInstance(Communication communication)

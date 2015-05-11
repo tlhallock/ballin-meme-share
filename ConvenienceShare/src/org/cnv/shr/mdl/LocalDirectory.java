@@ -69,7 +69,7 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	public PathElement getCanonicalPath()
+	public PathElement getPathElement()
 	{
 		return path;
 	}
@@ -78,5 +78,11 @@ public class LocalDirectory extends RootDirectory
 	protected RootSynchronizer createSynchronizer() throws IOException
 	{
 		return new LocalSynchronizer(this);
+	}
+
+	@Override
+	protected void sendNotifications()
+	{
+		Services.notifications.localChanged(this);
 	}
 }

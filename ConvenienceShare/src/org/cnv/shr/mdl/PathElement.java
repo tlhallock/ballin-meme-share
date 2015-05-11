@@ -172,8 +172,6 @@ public class PathElement extends DbObject
 				return returnValue;
 			}
 			
-			DbObjects.PELEM.debug(Services.h2DbCache.getConnection(), System.out);
-			
 			iterator = DbPaths.listPathElements(local, broken.removeLast());
 		}
 	}

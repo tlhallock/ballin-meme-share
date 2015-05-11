@@ -162,4 +162,9 @@ public class Communication implements Runnable
 	{
 		return machine;
 	}
+	
+	public long getKbs()
+	{
+		return 0;
+	}
 }

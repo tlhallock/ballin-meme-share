@@ -138,7 +138,6 @@ public class ChecksumManager extends Thread
 			
 //			Services.logger.logStream.println("Done checksumming " + f + ": " + sb.toString());
 			return digestToString(digest);
-
 		}
 	}
 	

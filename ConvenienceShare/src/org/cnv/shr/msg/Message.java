@@ -59,6 +59,8 @@ public abstract class Message
 		{
 			return null;
 		}
+		
+		// last active?
 		if (m.getPort() != port || !m.getIp().equals(ip) || m.getNumberOfPorts() != nports)
 		{
 			m.setPort(port);

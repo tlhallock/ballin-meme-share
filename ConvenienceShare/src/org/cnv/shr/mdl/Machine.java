@@ -36,23 +36,7 @@ public class Machine extends DbObject
 	private boolean allowsMessages;
 	
 	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
-
-	/*
-	public Machine(String machine)
-	{
-		int index = machine.indexOf(':');
-		if (index < 0)
-		{
-			this.ip = machine;
-			port = Services.settings.defaultPort;
-		}
-		else
-		{
-			ip = machine.substring(0, index);
-			port = Integer.parseInt(machine.substring(index + 1, machine.length()));
-		}
-	}
-	*/
+	
 	
 	public Machine(
 			String ip, int port, int nports,
@@ -121,7 +105,6 @@ public class Machine extends DbObject
 	{
 		return allowsMessages;
 	}
-
 
 	public void setIp(String string)
 	{
@@ -213,47 +196,12 @@ public class Machine extends DbObject
 		nports = nports2;
 	}
 
-	public void refresh()
-	{
-		try
-		{
-			Communication openConnection = Services.networkManager.openConnection(ip, port);
-			openConnection.send(new FindMachines());
-			openConnection.send(new ListRoots());
-			openConnection.notifyDone();
-		}
-		catch (IOException e)
-		{
-			Services.logger.logStream.println("Unable to discover refresh " + this);
-			e.printStackTrace(Services.logger.logStream);
-		}
-	}
-
 	public String getUrl()
 	{
 		return getIp() + ":" + getPort();
 	}
 	
 	
-	/**
-	 * 
-	
-	public Machine(JSONObject object) throws JSONException
-	{
-		ip = object.getString("ip");
-		port = object.getInt("port");
-		
-		JSONArray arr = object.getJSONArray("keys");
-		for (int i = 0; i < arr.length(); i++)
-		{
-			String key = arr.getString(i);
-		}
-		lastActive = object.getLong("lastActive");
-	}
-	
-	 */
-	
-
 	public void append(JSONArray machines) throws JSONException
 	{
 		LinkedList<String> keys = new LinkedList<>();

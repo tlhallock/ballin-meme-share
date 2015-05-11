@@ -11,7 +11,6 @@ public class Notifications
 		{
 			Services.application.refreshLocals();
 		}
-//		Services.locals.write();
 	}
 
 	public void localChanged(LocalDirectory local)
@@ -28,7 +27,6 @@ public class Notifications
 		{
 			Services.application.refreshRemotes();
 		}
-//		Services.remotes.write();
 	}
 	public void remotesChanged(RemoteDirectory remote)
 	{
@@ -36,6 +34,30 @@ public class Notifications
 		{
 			Services.application.refreshRemote(remote);
 		}
-//		Services.remotes.write();
+	}
+	
+	public void downloadsChanged()
+	{
+		
+	}
+
+	public void servesChanged()
+	{
+		
+	}
+	
+	public void connectionOpened(Communication c)
+	{
+		
+	}
+	
+	public void connectionClosed(Communication c)
+	{
+		
+	}
+	
+	public void dbException(Exception ex)
+	{
+		
 	}
 }

@@ -42,6 +42,22 @@ public class DbFiles
 			return null;
 		}
 	}
+	
+	public static void delete(SharedFile f)
+	{
+		Connection c = Services.h2DbCache.getConnection();
+		// Delete from pending too...
+		try (PreparedStatement stmt = c.prepareStatement("delete from SFILE where F_ID=?;");)
+		{
+			stmt.setInt(1, f.getId());
+			stmt.execute();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	public static RemoteFile getFile(RemoteDirectory root, PathElement element)
 	{
 		return (RemoteFile) getFile((RootDirectory) root, element);

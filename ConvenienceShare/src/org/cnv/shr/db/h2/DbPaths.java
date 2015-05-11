@@ -190,7 +190,7 @@ public class DbPaths
 
 	public static PathElement getPathElement(LocalDirectory local, String fsPath)
 	{
-		String relPath = fsPath.substring(local.getCanonicalPath().getFullPath().length());
+		String relPath = fsPath.substring(local.getPathElement().getFullPath().length());
 		return getPathElement(relPath);
 	}
 
@@ -208,5 +208,20 @@ public class DbPaths
 		PathElement[] broken = PathBreaker.breakPath(parentId, relPath);
 		setPathElementIds(parentId, broken);
 		return broken[broken.length-1];
+	}
+	
+	public static void removeUnusedPaths()
+	{
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement stmt = c.prepareStatement("delete from PELEM "
+				+ "where not exists (select R_ID from ROOT where ROOT.PELEM = PELEM.P_ID) "
+				+ "and not exists (select F_ID from SFILE where SFILE.PELEM = PELEM.P_ID);");)
+		{
+			stmt.execute();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

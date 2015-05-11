@@ -3,9 +3,10 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.sql.SQLException;
 
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class HeartBeat extends Message
@@ -20,7 +21,16 @@ public class HeartBeat extends Message
 	@Override
 	public void perform(Communication connection)
 	{
-		Services.remotes.isAlive(getMachine());
+		Machine machine = getMachine();
+		machine.setLastActive(System.currentTimeMillis());
+		try
+		{
+			machine.save();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	@Override

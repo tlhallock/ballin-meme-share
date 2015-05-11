@@ -33,8 +33,8 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		{
 			return;
 		}
-		setTitle(root.getCanonicalPath().getFullPath());
-		pathLabel.setText(root.getCanonicalPath().getFullPath());
+		setTitle(root.getPathElement().getFullPath());
+		pathLabel.setText(root.getPathElement().getFullPath());
 		tagsString.setText(root.getTags());
 		descriptionString.setText(root.getDescription());
 		

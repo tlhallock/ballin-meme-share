@@ -30,7 +30,7 @@ public class DbTables
 		PELEM            ("PELEM              ".trim(), "P_ID"),
 		IGNORE_PATTERN   ("IGNORE_PATTERN     ".trim(), "I_ID"),
 		PENDING_DOWNLOAD ("PENDING_DOWNLOAD   ".trim(), "Q_ID"),
-		MESSAGES         ("MESSAGES           ".trim(), "M_ID"), 
+		MESSAGES         ("MESSAGE            ".trim(), "M_ID"), 
 		LROOT            ("ROOT               ".trim(), "R_ID"),
 		RROOT            ("ROOT               ".trim(), "R_ID"),
 		LFILE            ("SFILE              ".trim(), "F_ID"),
@@ -38,6 +38,7 @@ public class DbTables
 		LMACHINE         ("MACHINE            ".trim(), "M_ID"),
 		RMACHINE         ("MACHINE            ".trim(), "M_ID"),
 		ROOT_CONTAINS    ("ROOT_CONTAINS      ".trim(), ""),
+		SHARE_ROOT       ("SHARE_ROOT         ".trim(), ""),
 		;
 		String tableName;
 		String pKey;
@@ -60,7 +61,6 @@ public class DbTables
 		{
 //			new Exception().printStackTrace(ps);
 
-			
 			try
 			{
 				ps.println("Printing " + tableName);
@@ -181,6 +181,7 @@ public class DbTables
 		DbObjects.LFILE           ,
 		DbObjects.LMACHINE        ,
 		DbObjects.ROOT_CONTAINS   ,
+		DbObjects.SHARE_ROOT      ,
 	};
 
 	public static void debugDb(PrintStream ps)

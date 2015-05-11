@@ -10,6 +10,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Collections;
 import java.util.LinkedList;
 
 import javax.swing.JFileChooser;
@@ -21,7 +22,6 @@ import javax.swing.table.DefaultTableModel;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.TableListener.TableRowListener;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -29,6 +29,8 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.stng.Setting;
+import org.cnv.shr.sync.DebugListener;
+import org.cnv.shr.util.Misc;
 
 /**
  * 
@@ -51,133 +53,6 @@ public class Application extends javax.swing.JFrame
 		
 		machinesList.setAutoCreateRowSorter(true);
 		localsView.setAutoCreateRowSorter(true);
-	}
-	
-	private void initializeLocals()
-	{
-		final TableListener tableListener = new TableListener(localsView);
-		tableListener.addListener(new TableRowListener()
-		{
-			@Override
-			public void run(final int row)
-			{
-				final String mId = tableListener.getTableValue("Path", row);
-				if (mId == null)
-				{
-					return;
-				}
-				final RootDirectory root = DbRoots.getLocal(mId);
-				if (root == null)
-				{
-					Services.logger.logStream.println("Unable to find local directory " + mId);
-					return;
-				}
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						LocalDirectoryView localDirectoryView = new LocalDirectoryView();
-						localDirectoryView.view(root);
-						localDirectoryView.setVisible(true);
-						Services.logger.logStream.println("Displaying " + mId);
-					}
-				});
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Show";
-			}
-		}, true).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				System.out.println("Delete row " + row);
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Delete";
-			}
-		}).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				final String mId = tableListener.getTableValue("Path", row);
-				if (mId == null)
-				{
-					return;
-				}
-				final LocalDirectory root = DbRoots.getLocal(mId);
-				if (root == null)
-				{
-					Services.logger.logStream.println("Unable to find local directory " + mId);
-					return;
-				}
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						root.synchronize(true);
-					}
-				});
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Synchronize";
-			}
-		});
-	}
-	private void initializeMachines()
-	{
-		final TableListener tableListener = new TableListener(machinesList);
-		tableListener.addListener(new TableRowListener()
-		{
-			@Override
-			public void run(final int row)
-			{
-				final String mId = tableListener.getTableValue("Id", row);
-				if (mId == null)
-				{
-					return;
-				}
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						showRemote(DbMachines.getMachine(mId));
-					}
-				});
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Show";
-			}
-		}, true).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				System.out.println("Delete row " + row);
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Delete";
-			}
-		});
 	}
 
 	private void initializeSettings()
@@ -229,12 +104,13 @@ public class Application extends javax.swing.JFrame
 			model.removeRow(0);
 		}
 
+		int ndx = 0;
 		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
 		while (listLocals.hasNext())
 		{
             	LocalDirectory local = listLocals.next();
                 model.addRow(new String[] {
-                    local.getCanonicalPath().getFullPath(),
+                    local.getPathElement().getFullPath(),
                     local.getDescription(),
                     local.getTags(),
                     local.getTotalNumberOfFiles(),
@@ -246,10 +122,10 @@ public class Application extends javax.swing.JFrame
 	public synchronized void refreshLocal(LocalDirectory local)
 	{
 		DefaultTableModel model = (DefaultTableModel) localsView.getModel();
-		TableListener.removeIfExists(model, "Path", local.getCanonicalPath().getFullPath());
+		TableListener.removeIfExists(model, "Path", local.getPathElement().getFullPath());
 		
         model.addRow(new String[] {
-            local.getCanonicalPath().getFullPath(),
+            local.getPathElement().getFullPath(),
             local.getDescription(),
             local.getTags(),
             local.getTotalNumberOfFiles(),
@@ -414,6 +290,9 @@ public class Application extends javax.swing.JFrame
         jButton5 = new javax.swing.JButton();
         jScrollPane7 = new javax.swing.JScrollPane();
         jTable3 = new javax.swing.JTable();
+        jPanel10 = new javax.swing.JPanel();
+        jScrollPane8 = new javax.swing.JScrollPane();
+        jPanel11 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Convenience Share");
@@ -647,7 +526,7 @@ public class Application extends javax.swing.JFrame
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
+            .addComponent(jSplitPane1)
         );
 
         jTabbedPane2.addTab("Downloads", jPanel3);
@@ -669,7 +548,7 @@ public class Application extends javax.swing.JFrame
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 66, Short.MAX_VALUE)
+            .addGap(0, 65, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout settingsPanelLayout = new javax.swing.GroupLayout(settingsPanel);
@@ -820,6 +699,32 @@ public class Application extends javax.swing.JFrame
 
         jTabbedPane2.addTab("Messages", jPanel9);
 
+        javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
+        jPanel11.setLayout(jPanel11Layout);
+        jPanel11Layout.setHorizontalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 842, Short.MAX_VALUE)
+        );
+        jPanel11Layout.setVerticalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 410, Short.MAX_VALUE)
+        );
+
+        jScrollPane8.setViewportView(jPanel11);
+
+        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
+        jPanel10.setLayout(jPanel10Layout);
+        jPanel10Layout.setHorizontalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane8)
+        );
+        jPanel10Layout.setVerticalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane8)
+        );
+
+        jTabbedPane2.addTab("Open connections", jPanel10);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -842,7 +747,7 @@ public class Application extends javax.swing.JFrame
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-        	Services.userThreads.execute(new Runnable() { public void run() { Services.locals.share(fc.getSelectedFile()); }});
+        	UserActions.addLocal(fc.getSelectedFile(), true);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -853,22 +758,19 @@ public class Application extends javax.swing.JFrame
         {
             return;
         }
-        
-		Services.userThreads.execute(new Runnable() { public void run() {
-			Services.remotes.discover(whatTheUserEntered);
-		}});
+        UserActions.addMachine(whatTheUserEntered);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void DebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DebugActionPerformed
-    	Services.userThreads.execute(new Runnable() { public void run() { DbTables.debugDb(Services.logger.logStream); }} );
+    	UserActions.debug();
     }//GEN-LAST:event_DebugActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-    	Services.userThreads.execute(new Runnable() { public void run() { Services.locals.synchronize(true); }});
+    	UserActions.syncAllLocals();
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-    	Services.userThreads.execute(new Runnable() { public void run() { DbTables.deleteDb(Services.h2DbCache.getConnection()); }});
+    	UserActions.deleteDb();
     }//GEN-LAST:event_jButton3ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -883,6 +785,8 @@ public class Application extends javax.swing.JFrame
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -898,6 +802,7 @@ public class Application extends javax.swing.JFrame
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
+    private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTable1;
@@ -909,4 +814,188 @@ public class Application extends javax.swing.JFrame
     private javax.swing.JTable machinesList;
     private javax.swing.JPanel settingsPanel;
     // End of variables declaration//GEN-END:variables
+
+
+	private void initializeLocals()
+	{
+		final TableListener tableListener = new TableListener(localsView);
+		tableListener.addListener(new TableRowListener()
+		{
+			@Override
+			public void run(final int row)
+			{
+				final String mId = tableListener.getTableValue("Path", row);
+				if (mId == null)
+				{
+					return;
+				}
+				final RootDirectory root = DbRoots.getLocal(mId);
+				if (root == null)
+				{
+					Services.logger.logStream.println("Unable to find local directory " + mId);
+					return;
+				}
+				Services.userThreads.execute(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						LocalDirectoryView localDirectoryView = new LocalDirectoryView();
+						localDirectoryView.view(root);
+						localDirectoryView.setVisible(true);
+						Services.logger.logStream.println("Displaying " + mId);
+					}
+				});
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Show";
+			}
+		}, true).addListener(new TableRowListener()
+		{
+			@Override
+			public void run(int row)
+			{
+				final String mId = tableListener.getTableValue("Path", row);
+				if (mId == null)
+				{
+					return;
+				}
+				final RootDirectory root = DbRoots.getLocal(mId);
+				if (root == null)
+				{
+					Services.logger.logStream.println("Unable to find local directory " + mId);
+					return;
+				}
+				UserActions.remove((LocalDirectory) root);
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Delete";
+			}
+		}).addListener(new TableRowListener()
+		{
+			@Override
+			public void run(final int row)
+			{
+				final String mId = tableListener.getTableValue("Path", row);
+				if (mId == null)
+				{
+					return;
+				}
+				final LocalDirectory root = DbRoots.getLocal(mId);
+				if (root == null)
+				{
+					Services.logger.logStream.println("Unable to find local directory " + mId);
+					return;
+				}
+				Services.userThreads.execute(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						UserActions.sync(root);
+					}
+				});
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Synchronize";
+			}
+		});
+	}
+	private void initializeMachines()
+	{
+		final TableListener tableListener = new TableListener(machinesList);
+		tableListener.addListener(new TableRowListener()
+		{
+			@Override
+			public void run(final int row)
+			{
+				final String mId = tableListener.getTableValue("Id", row);
+				if (mId == null)
+				{
+					return;
+				}
+				Services.userThreads.execute(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						showRemote(DbMachines.getMachine(mId));
+					}
+				});
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Show";
+			}
+		}, true).addListener(new TableRowListener()
+		{
+			@Override
+			public void run(int row)
+			{
+				final String mId = tableListener.getTableValue("Id", row);
+				if (mId == null)
+				{
+					return;
+				}
+				UserActions.removeMachine(DbMachines.getMachine(mId));
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Delete";
+			}
+		});
+	}
+
+	DebugListener createLocalListener(final LocalDirectory root)
+	{
+		final DefaultTableModel model = (DefaultTableModel) localsView.getModel();
+		int row = -1;
+		String path = root.getPathElement().getFullPath();
+		for (int i = 0; i < localsView.getRowCount(); i++)
+		{
+			if (model.getValueAt(i, 0).equals(path))
+			{
+				row = i;
+				break;
+			}
+		}
+		if (row < 0)
+		{
+			return null;
+		}
+
+		final int dirRow = row;
+		return new DebugListener(root)
+		{
+			long startSize = root.diskSpace();
+			long startNumFiles = root.numFiles();
+			long lastGuiUpdate = 0;
+			
+			protected void changed()
+			{
+				long now = System.currentTimeMillis();
+				if (now - lastGuiUpdate < 1000)
+				{
+//					return;
+				}
+				
+				lastGuiUpdate = now;
+				model.setValueAt(Misc.formatDiskUsage(startSize + bytesAdded), dirRow, 4);
+				model.setValueAt(Misc.formatNumberOfFiles(startNumFiles + filesAdded - filesRemoved), dirRow, 3);
+			}
+		};
+	}
 }

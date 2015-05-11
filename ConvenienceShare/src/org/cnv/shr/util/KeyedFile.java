@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,16 +62,19 @@ public class KeyedFile
 	
 	public void delete() throws IOException
 	{
-		for (Path p : Files.newDirectoryStream(Paths.get(rootPath)))
+		final DirectoryStream<Path> newDirectoryStream = Files.newDirectoryStream(Paths.get(rootPath));
+		for (Path p : newDirectoryStream)
 		{
 			p.toFile().delete();
 		}
+		newDirectoryStream.close();
 		new File(rootPath).delete();
 	}
 	
 	public Iterator<Entry> entries() throws IOException
 	{
-		final Iterator<Path> newDirectoryStream = Files.newDirectoryStream(Paths.get(rootPath)).iterator();
+		final DirectoryStream<Path> newDirectoryStream = Files.newDirectoryStream(Paths.get(rootPath));
+		final Iterator<Path> directoryStream = newDirectoryStream.iterator();
 		return new Iterator<Entry>()
 		{
 			private Entry next = getNext();
@@ -91,9 +95,9 @@ public class KeyedFile
 			
 			Entry getNext()
 			{
-				while (newDirectoryStream.hasNext())
+				while (directoryStream.hasNext())
 				{
-					File f = newDirectoryStream.next().toFile();
+					File f = directoryStream.next().toFile();
 					try
 					{
 						return new Entry(f.getName(), get(f));
@@ -110,6 +114,18 @@ public class KeyedFile
 			public void remove()
 			{
 				throw new UnsupportedOperationException("Delete not supported!!");
+			}
+			
+			public void finalize()
+			{
+				try
+				{
+					newDirectoryStream.close();
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
 			}
 		};
 	}

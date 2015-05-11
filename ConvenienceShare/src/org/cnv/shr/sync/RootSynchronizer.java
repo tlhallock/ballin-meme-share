@@ -8,12 +8,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.TimerTask;
 
-import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
@@ -25,19 +22,17 @@ import org.cnv.shr.util.FileOutsideOfRootException;
  * Instead, this keeps a stack inside the LocalDirectorySyncIterator of synchronization tasks to be performed.
  *
  */
-public abstract class RootSynchronizer extends TimerTask implements Closeable
+public abstract class RootSynchronizer implements Closeable
 {
 	private static final Pair[] dummy = new Pair[0];
 	
 	int changeCount;
+
+	String currentFile;
 	DirectorySyncIterator iterator;
 	RootDirectory local;
-
-	int filesAdded;
-	long filesRefresh;
-	long filesRemoved;
-	long bytesAdded;
-	String currentFile;
+	LinkedList<SynchronizationListener> listeners = new LinkedList<>();
+	boolean quit;
 	
 	public RootSynchronizer(RootDirectory remoteDirectory, FileSource f) throws IOException
 	{
@@ -45,10 +40,25 @@ public abstract class RootSynchronizer extends TimerTask implements Closeable
 		this.local = remoteDirectory;
 	}
 	
+	public void quit()
+	{
+		quit = true;
+	}
+	
+	public void addListener(SynchronizationListener listener)
+	{
+		listeners.add(listener);
+	}
+	
+	public void removeListener(SynchronizationListener listener)
+	{
+		listeners.remove(listener);
+	}
+	
 	public void synchronize()
 	{
 		SynchronizationTask task = null;
-		while ((task = iterator.next()) != null)
+		while (!quit && (task = iterator.next()) != null)
 		{
 			synchronize(task);
 		}
@@ -65,7 +75,7 @@ public abstract class RootSynchronizer extends TimerTask implements Closeable
 		
 		currentFile = task.current.getFullPath();
 
-		if (true)
+		if (false)
 		{
 			Services.logger.logStream.println("Synchronizing " + task.current.getFullPath());
 			Services.logger.logStream.println("FS: " + task.files);
@@ -174,37 +184,43 @@ public abstract class RootSynchronizer extends TimerTask implements Closeable
 	private void remove(SharedFile dbVersion) throws SQLException
 	{
 		// delete stale file
-		dbVersion.delete();
+		DbFiles.delete(dbVersion);
 		changeCount++;
-		filesRemoved++;
+
+		for (SynchronizationListener listener : listeners)
+		{
+			listener.fileRemoved(dbVersion);
+		}
 	}
 
 	protected abstract boolean updateFile(SharedFile file) throws SQLException;
+	
 	private void update(SharedFile dbVersion) throws SQLException
 	{
 		// update file
-		if (updateFile(dbVersion))
+		if (!updateFile(dbVersion))
 		{
-			changeCount++;
+			return;
 		}
-		filesRefresh++;
+		changeCount++;
+		for (SynchronizationListener listener : listeners)
+		{
+			listener.fileUpdated(dbVersion);
+		}
 	}
 
 	private void addFile(PathElement element, FileSource fsCopy)
 	{
-		// Services.logger.logStream.println("Found new file " + fsCopy);
-
-		//DbTables.DbObjects.LFILE.debug(Services.h2DbCache.getConnection(), Services.logger.logStream);
-		//DbTables.DbObjects.ROOT_CONTAINS.debug(Services.h2DbCache.getConnection(), Services.logger.logStream);
 		try
 		{
 			SharedFile lFile = fsCopy.create(local, element);
 			if (lFile.save())
 			{
-				//DbTables.DbObjects.LFILE.debug(Services.h2DbCache.getConnection(), Services.logger.logStream);
 				changeCount++;
-				filesAdded++;
-				bytesAdded += fsCopy.getFileSize();
+				for (SynchronizationListener listener : listeners)
+				{
+					listener.fileAdded(lFile);
+				}
 			}
 		}
 		catch (FileOutsideOfRootException ex)
@@ -235,42 +251,16 @@ public abstract class RootSynchronizer extends TimerTask implements Closeable
 		}
 		return returnValue;
 	}
-
-	public static long DEBUG_REPEAT = 5000;
-	private long lastDebug = System.currentTimeMillis();
-	@Override
-	public void run()
-	{
-		long now = System.currentTimeMillis();
-		double seconds = (now - lastDebug) / 1000;
-
-		synchronized (Services.logger.logStream)
-		{
-			Services.logger.logStream.println("-------------------------------------------------------");
-			Services.logger.logStream.println("Synchronizing: " + local.getCanonicalPath().getFullPath());
-			Services.logger.logStream.println("Current file: " + currentFile);
-			Services.logger.logStream.println("File refresh rate: " + filesRefresh / seconds + "/s");
-			Services.logger.logStream.println("File add rate: " + filesAdded / seconds + "/s");
-			Services.logger.logStream.println("File remove rate: " + filesRemoved / seconds + "/s");
-			Services.logger.logStream.println("-------------------------------------------------------");
-		}
-		changeCount = 0;
-		
-		local.setTotalFileSize(local.diskSpace() + bytesAdded);
-		local.setTotalNumFiles(local.numFiles() + filesAdded - filesRemoved);
-		notifyChanged();
-		
-		lastDebug = now;
-		filesRefresh = 0;
-		filesAdded = 0;
-		filesRemoved = 0;
-		bytesAdded = 0;
-	}
 	
 	public void close() throws IOException
 	{
 		iterator.close();
 	}
 
-	protected abstract void notifyChanged();
+	public static interface SynchronizationListener
+	{
+		void fileAdded(SharedFile f);
+		void fileRemoved(SharedFile f);
+		void fileUpdated(SharedFile f);
+	}
 }

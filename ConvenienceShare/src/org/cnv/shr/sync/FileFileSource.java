@@ -2,6 +2,7 @@ package org.cnv.shr.sync;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,25 +44,38 @@ public class FileFileSource implements FileSource
 	{
 		return new Iterator<FileSource>()
 		{
-				Iterator<Path> it = Files.newDirectoryStream(f).iterator();
+			DirectoryStream<Path> stream = Files.newDirectoryStream(f);
+			Iterator<Path> it = stream.iterator();
 
-				@Override
-				public boolean hasNext()
-				{
-					return it.hasNext();
-				}
+			@Override
+			public boolean hasNext()
+			{
+				return it.hasNext();
+			}
 
-				@Override
-				public FileSource next()
-				{
-					return new FileFileSource(it.next());
-				}
+			@Override
+			public FileSource next()
+			{
+				return new FileFileSource(it.next());
+			}
 
-				@Override
-				public void remove()
+			@Override
+			public void remove()
+			{
+				it.remove();
+			}
+			
+			public void finalize()
+			{
+				try
 				{
-					it.remove();
+					stream.close();
 				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
 		};
 	}
 	@Override
