@@ -50,8 +50,8 @@ public class KeyChange extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (       (getMachine().hasKey(oldKey)                         && Services.keyManager.confirmPendingNaunce(oldKey, connection.getPendingNaunce(), encryptedNaunce))
-				|| (Services.keyManager.acceptKey(getMachine(), newKey) && Services.keyManager.confirmPendingNaunce(newKey, connection.getPendingNaunce(), encryptedNaunce)))
+		if (       (getMachine().hasKey(oldKey)                         && Arrays.equals(oldKey, connection.getPendingNaunce(), encryptedNaunce))
+				|| (Services.keyManager.acceptKey(getMachine(), newKey) && Arrays.equals(newKey, connection.getPendingNaunce(), encryptedNaunce)))
 		{
 			DbKeys.addKey(getMachine(), newKey);
 			connection.updateKey(newKey);
