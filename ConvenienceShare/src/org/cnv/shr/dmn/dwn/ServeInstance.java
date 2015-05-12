@@ -39,7 +39,7 @@ public class ServeInstance
 		this.chunkSize = chunkSize;
 	}
 	
-	private void stage() throws FileNotFoundException, IOException, NoSuchAlgorithmException
+	private String stage() throws FileNotFoundException, IOException, NoSuchAlgorithmException
 	{
 		local.ensureChecksummed();
 		
@@ -52,6 +52,8 @@ public class ServeInstance
 			// just to double check...
 			throw new FileOutsideOfRootException(local.getRootDirectory().getPathElement().getFullPath(), toShare.getCanonicalPath());
 		}
+
+		MessageDigest totalDigest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 		
 		byte[] buffer = new byte[1024];
 		long offsetInFile = 0;
@@ -83,6 +85,7 @@ public class ServeInstance
 					chunkOffset += nread;
 					offsetInFile += nread;
 					digest.update(buffer, 0, nread);
+					totalDigest.update(buffer, 0, nread);
 					outputStream.write(buffer, 0, nread);
 				}
 
@@ -94,6 +97,8 @@ public class ServeInstance
 				}
 			}
 		}
+
+		return ChecksumManager.digestToString(totalDigest);
 	}
 
 	private void fail(String string)
@@ -107,8 +112,8 @@ public class ServeInstance
 	{
 		try
 		{
-			stage();
-			connection.send(new ChunkList(chunks));
+			String checksum = stage();
+			connection.send(new ChunkList(chunks, checksum));
 		}
 		catch (NoSuchAlgorithmException | IOException e)
 		{

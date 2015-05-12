@@ -11,7 +11,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.security.PublicKey;
-import java.util.Collections;
 import java.util.LinkedList;
 
 import javax.swing.JFileChooser;

@@ -9,37 +9,35 @@ import java.util.HashMap;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.key.InitiateAuthentication;
-import org.cnv.shr.util.Misc;
 
 public class ConnectionManager
 {
 	private HashMap<String, Communication> openConnections = new HashMap<>();
 	
-	public Communication openConnection(String url) throws UnknownHostException, IOException
+	public Communication openConnection(String url, boolean acceptKeys) throws UnknownHostException, IOException
 	{
 		int index = url.indexOf(':');
 		if (index < 0)
 		{
 			// Should try all other ports too...
-			return openConnection(url, Services.settings.servePortBegin.get(), null);
+			return openConnection(url, Services.settings.servePortBegin.get(), null, acceptKeys);
 		}
 		else
 		{
-			return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), null);
+			return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), null, acceptKeys);
 		}
 	}
-	public Communication openConnection(Machine m) throws UnknownHostException, IOException
+	public Communication openConnection(Machine m, boolean acceptKeys) throws UnknownHostException, IOException
 	{
-		return openConnection(m.getIp(), m.getPort(), DbKeys.getKey(m));
+		return openConnection(m.getIp(), m.getPort(), DbKeys.getKey(m), acceptKeys);
 	}
 	
-	private synchronized Communication openConnection(String ip, int port, final PublicKey knownKey) throws UnknownHostException, IOException
+	private synchronized Communication openConnection(String ip, int port, final PublicKey remoteKey, boolean acceptAnyKeys) throws UnknownHostException, IOException
 	{
-		final Communication connection = new Communication(ip, port);
+		final Communication connection = new Communication(ip, port, acceptAnyKeys);
 		openConnections.put(connection.getUrl(), connection);
 
-		final byte[] original = Misc.createNaunce();
-		final byte[] sentNaunce = Services.keyManager.createNaunce(knownKey, original);
+		final byte[] naunceRequest = Services.keyManager.createTestNaunce(connection, remoteKey);
 		Services.connectionThreads.execute(new Runnable() {
 			@Override
 			public void run()
@@ -51,11 +49,13 @@ public class ConnectionManager
 					openConnections.remove(connection.getUrl());
 				}
 				
-//				PublicKey knownKey = Services.keyManager.getPublicKey(); 
-				// If there is a naunce, get it here
-				connection.addPendingNaunce(original);
-				connection.send(new InitiateAuthentication(knownKey, sentNaunce));
+				connection.setKeys(remoteKey, Services.keyManager.getPublicKey());
+				connection.send(new InitiateAuthentication(remoteKey, naunceRequest));
 			}});
+		if (!connection.waitForAuthentication())
+		{
+			return null;
+		}
 		return connection;
 	}
 	

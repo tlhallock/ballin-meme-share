@@ -1,7 +1,5 @@
 package org.cnv.shr.test;
 
-import static org.junit.Assert.*;
-
 import org.cnv.shr.dmn.Main;
 import org.junit.After;
 import org.junit.Before;

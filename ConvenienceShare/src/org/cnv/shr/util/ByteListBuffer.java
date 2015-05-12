@@ -8,8 +8,6 @@ import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
 
-import de.flexiprovider.common.math.FlexiBigInt;
-
 public final class ByteListBuffer
 {
 	private int length;

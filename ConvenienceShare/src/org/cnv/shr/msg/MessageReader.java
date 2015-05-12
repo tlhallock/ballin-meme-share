@@ -6,6 +6,7 @@ import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.util.HashMap;
 
+import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.dwn.ChunkList;
@@ -16,7 +17,17 @@ import org.cnv.shr.msg.dwn.DownloadDone;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.msg.dwn.MachineHasFile;
 import org.cnv.shr.msg.dwn.RequestCompletionStatus;
+import org.cnv.shr.msg.key.ConnectionOpenAwk;
+import org.cnv.shr.msg.key.ConnectionOpened;
+import org.cnv.shr.msg.key.InitiateAuthentication;
+import org.cnv.shr.msg.key.KeyChange;
+import org.cnv.shr.msg.key.KeyFailure;
+import org.cnv.shr.msg.key.KeyNotFound;
+import org.cnv.shr.msg.key.NewKey;
+import org.cnv.shr.msg.key.RevokeKey;
 import org.cnv.shr.util.ByteReader;
+
+
 
 public class MessageReader
 {
@@ -33,7 +44,7 @@ public class MessageReader
 		add(new MessageIdentifier(ChunkRequest.class               ));
 		add(new MessageIdentifier(MachineHasFile.class             ));
 		add(new MessageIdentifier(ListRoots.class                  ));
-		add(new MessageIdentifier(ListPath.class              ));
+		add(new MessageIdentifier(ListPath.class                   ));
 		add(new MessageIdentifier(MachineFound.class               ));
 		add(new MessageIdentifier(UpdateCode.class                 ));
 		add(new MessageIdentifier(DoneMessage.class                ));
@@ -44,6 +55,15 @@ public class MessageReader
 		add(new MessageIdentifier(Failure.class                    ));
 		add(new MessageIdentifier(Wait.class                       ));
 		add(new MessageIdentifier(HeartBeat.class                  ));
+		add(new MessageIdentifier(LookingFor.class                 ));
+		add(new MessageIdentifier(ConnectionOpenAwk.class          ));
+		add(new MessageIdentifier(NewKey.class                     ));
+		add(new MessageIdentifier(RevokeKey.class                  ));
+		add(new MessageIdentifier(ConnectionOpened.class           ));
+		add(new MessageIdentifier(KeyNotFound.class                ));
+		add(new MessageIdentifier(KeyFailure.class                 ));
+		add(new MessageIdentifier(InitiateAuthentication.class     ));
+		add(new MessageIdentifier(KeyChange.class                  ));
 
 		Services.logger.logStream.println("Message map:\n" + this);
 	}
@@ -69,16 +89,9 @@ public class MessageReader
 		identifiers.put(type, identifier);
 	}
 	
-	public Message readMsg(InetAddress address, InputStream inputStream) throws IOException
+	public Message readMsg(InetAddress address, Communication c) throws IOException
 	{
-//		int read;
-//		do
-//		{
-//			read = inputStream.read();
-//			System.out.println(read);
-//		} while (read >= 0);
-		
-		int msgType = ByteReader.readInt(inputStream);
+		int msgType = ByteReader.readInt(c.getIn());
 
 		MessageIdentifier messageIdentifier = identifiers.get(msgType);
 		if (messageIdentifier == null)
@@ -87,15 +100,15 @@ public class MessageReader
 			return null;
 		}
 		
-		Message message = messageIdentifier.create(address, inputStream);
+		Message message = messageIdentifier.create(address, c.getIn());
 
-		if (!message.authenticate())
+		if (!c.authenticate(message))
 		{
 			Services.logger.logStream.println("Unable to authenticate message of type " + msgType + " from " + address);
 			return null;
 		}
 		
-		message.read(inputStream);
+		message.read(c.getIn());
 		
 		System.out.println("Msg: " + message);
 

@@ -2,7 +2,6 @@ package org.cnv.shr.sync;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +39,11 @@ public class RemoteSynchronizers
 
 	public RemoteSynchronizerQueue createRemoteSynchronizer(Machine remote, RemoteDirectory root) throws UnknownHostException, IOException
 	{
-		Communication c = Services.networkManager.openConnection(remote.getIp(), remote.getPort());
+		Communication c = Services.networkManager.openConnection(remote, false);
+		if (c == null)
+		{
+			throw new IOException("Unable to connect to remote!");
+		}
 		RemoteSynchronizerQueue returnValue = new RemoteSynchronizerQueue(c, root);
 		synchronizers.put(getKey(returnValue), returnValue);
 		return returnValue;

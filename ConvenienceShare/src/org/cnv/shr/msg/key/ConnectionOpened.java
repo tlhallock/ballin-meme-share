@@ -2,35 +2,39 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
 
-public class ConnectionOpened extends Message
+public class ConnectionOpened extends KeyMessage
 {
-	byte[] encodedNaunce;
+	byte[] decryptedNaunce;
+
+	public ConnectionOpened(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
+	}
 	
 	public ConnectionOpened(byte[] encoded)
 	{
-		this.encodedNaunce = encoded;
+		this.decryptedNaunce = encoded;
 	}
 
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		encodedNaunce = ByteReader.readVarByteArray(bytes);
+		decryptedNaunce = ByteReader.readVarByteArray(bytes);
 	}
 
 	@Override
 	protected void write(ByteListBuffer buffer)
 	{
-		buffer.appendVarByteArray(encodedNaunce);
+		buffer.appendVarByteArray(decryptedNaunce);
 	}
 
-	public static int TYPE = 10;
+	public static int TYPE = 24;
 	@Override
 	protected int getType()
 	{
@@ -40,14 +44,15 @@ public class ConnectionOpened extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (Services.keyManager.confirmPendingNaunce(connection.getRemoteKey(), connection.getPendingNaunce(), encodedNaunce))
+		if (connection.hasPendingNaunce(decryptedNaunce))
 		{
-			connection.isAuthenticated();
+			connection.notifyAuthentication(true);
 		}
 		else
 		{
 			connection.send(new KeyFailure());
 			connection.notifyDone();
+			connection.notifyAuthentication(false);
 		}
 	}
 }

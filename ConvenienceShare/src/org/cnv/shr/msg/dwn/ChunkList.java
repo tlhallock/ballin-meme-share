@@ -17,9 +17,10 @@ import org.cnv.shr.util.ByteReader;
 public class ChunkList extends Message
 {
 	private LinkedList<Chunk> chunks = new LinkedList<>();
+	private String checksum;
 
 	public static int TYPE = 11;
-	public ChunkList(HashMap<String, Chunk> chunks2)
+	public ChunkList(HashMap<String, Chunk> chunks2, String checksum)
 	{
 		for (Chunk c : chunks2.values())
 		{
@@ -45,6 +46,7 @@ public class ChunkList extends Message
 		{
 			chunks.add(new Chunk(bytes));
 		}
+		checksum = ByteReader.readString(bytes);
 	}
 	@Override
 	protected void write(ByteListBuffer buffer)
@@ -54,14 +56,14 @@ public class ChunkList extends Message
 		{
 			c.write(buffer);
 		}
+		buffer.append(checksum);
 	}
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(connection);
-		downloadInstance.foundChunks(chunks);
+		downloadInstance.foundChunks(chunks, checksum);
 	}
-
 	
 	public String toString()
 	{

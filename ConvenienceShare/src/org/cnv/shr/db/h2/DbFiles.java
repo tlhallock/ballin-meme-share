@@ -66,4 +66,10 @@ public class DbFiles
 	{
 		return (LocalFile) getFile((RootDirectory) root, element);
 	}
+
+	public static SharedFile getFile(String checksum, long fileSize)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

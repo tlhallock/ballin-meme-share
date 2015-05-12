@@ -11,11 +11,11 @@ import java.sql.SQLException;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
+import org.cnv.shr.mdl.IgnorePattern;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.Machine.LocalMachine;
-import org.cnv.shr.mdl.IgnorePattern;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;

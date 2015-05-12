@@ -2,24 +2,29 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.security.PublicKey;
 
 import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteListBuffer;
 
 public class NewKey extends Message
 {
 	PublicKey newKey;
-	byte[] encryptedNaunce;
 	byte[] naunceRequest;
 
-	public NewKey(PublicKey publicKey, byte[] encoded, byte[] responseAwk)
+	public NewKey(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
+	}
+	public NewKey(PublicKey publicKey, byte[] responseAwk)
 	{
 		this.newKey = publicKey;
-		this.encryptedNaunce = encoded;
 		naunceRequest = responseAwk;
 	}
 
@@ -37,33 +42,30 @@ public class NewKey extends Message
 		
 	}
 
+	public static int TYPE = 22;
 	@Override
 	protected int getType()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return TYPE;
 	}
 
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (Services.keyManager.acceptKey(getMachine(), newKey)
-				&& Services.keyManager.confirmPendingNaunce(newKey, connection.getPendingNaunce(), encryptedNaunce))
+		if (!connection.acceptKey(newKey))
 		{
-			DbKeys.addKey(getMachine(), newKey);
-			connection.updateKey(newKey);
-			connection.authenticateToTarget(naunceRequest);
-			
-//			connection.updateKey(newKey);
-//			DbKeys.addKey(getMachine(), newKey);
-//			
-//			byte[] encoded = Services.keyManager.encode(newKey, naunceRequest);
-//			connection.send(new ConnectionOpened(encoded));
-			return;
+			DbMessages.addMessage(new UserMessage.AuthenticationRequest(getMachine(), newKey));
+			connection.send(new KeyFailure());
+			connection.notifyAuthentication(false);
+			connection.notifyDone();
 		}
 		
-		// add message
-		connection.send(new KeyFailure());
-		connection.notifyDone();
+		DbKeys.addKey(getMachine(), newKey);
+		connection.updateKey(newKey);
+
+		byte[] decrypted = Services.keyManager.decryptNaunce(connection.getLocalKey(), naunceRequest);
+		byte[] newRequest = Services.keyManager.createTestNaunce(connection, newKey);
+		connection.send(new ConnectionOpenAwk(decrypted, newRequest));
+		return;
 	}
 }

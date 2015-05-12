@@ -41,7 +41,12 @@ public class UserActions
 			{
 				try
 				{
-					Communication openConnection = Services.networkManager.openConnection(url);
+					Communication openConnection = Services.networkManager.openConnection(url, true);
+					if (openConnection == null)
+					{
+						Services.keyManager.addPendingAuthentication(url);
+						return;
+					}
 					openConnection.send(new MachineFound());
 					openConnection.send(new FindMachines());
 					openConnection.notifyDone();
@@ -64,7 +69,11 @@ public class UserActions
 				String url = m.getUrl();
 				try
 				{
-					Communication openConnection = Services.networkManager.openConnection(url);
+					Communication openConnection = Services.networkManager.openConnection(m, false);
+					if (openConnection == null)
+					{
+						return;
+					}
 					openConnection.send(new ListRoots());
 					openConnection.notifyDone();
 				}
@@ -85,7 +94,11 @@ public class UserActions
 			{
 				try
 				{
-					Communication openConnection = Services.networkManager.openConnection(m.getUrl());
+					Communication openConnection = Services.networkManager.openConnection(m, false);
+					if (openConnection == null)
+					{
+						return;
+					}
 					openConnection.send(new FindMachines());
 					openConnection.notifyDone();
 				}

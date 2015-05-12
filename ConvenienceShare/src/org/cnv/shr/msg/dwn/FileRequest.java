@@ -18,8 +18,6 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
 
-import sun.net.www.http.Hurryable;
-
 public class FileRequest extends Message
 {
 	private String rootName;

@@ -1,15 +1,11 @@
 package org.cnv.shr.dmn;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.security.InvalidKeyException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -19,33 +15,25 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.security.cert.CertificateEncodingException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.Scanner;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 
-import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.msg.key.InitiateAuthentication;
+import org.cnv.shr.msg.FindMachines;
+import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.Misc;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
-import de.flexiprovider.api.keys.KeySpec;
 import de.flexiprovider.common.math.FlexiBigInt;
 import de.flexiprovider.core.FlexiCoreProvider;
 import de.flexiprovider.core.rsa.RSAPrivateCrtKey;
-import de.flexiprovider.core.rsa.RSAPrivateCrtKeySpec;
-import de.flexiprovider.core.rsa.RSAPrivateKey;
-import de.flexiprovider.core.rsa.RSAPrivateKeySpec;
 import de.flexiprovider.core.rsa.RSAPublicKey;
-import de.flexiprovider.pki.PKCS8EncodedKeySpec;
-import de.flexiprovider.pki.X509EncodedKeySpec;
 
 public class KeyManager
 {
@@ -53,7 +41,8 @@ public class KeyManager
 	
 	HashMap<String, KeyPairObject> keys = new HashMap<>();
 	File keysFile;
-	
+
+	private HashSet<String> pendingAuthenticationRequests = new HashSet<>();
 	
 	public KeyManager(File keysFile)
 	{
@@ -69,6 +58,12 @@ public class KeyManager
 			for (KeyPairObject pair : keys.values())
 			{
 				pair.write(ps);
+				ps.println();
+			}
+			ps.println(pendingAuthenticationRequests.size());
+			for (String url : pendingAuthenticationRequests)
+			{
+				ps.println(url);
 			}
 		}
 	}
@@ -78,11 +73,21 @@ public class KeyManager
 		try (Scanner scanner = new Scanner(new FileReader(keysFile)))
 		{
 			int length = scanner.nextInt();
-			for (int i=0;i<length;i++)
+			for (int i = 0; i < length; i++)
 			{
 				KeyPairObject keyPairObject = new KeyPairObject(scanner);
 				keys.put(keyPairObject.hash(), keyPairObject);
 			}
+			length = scanner.nextInt();
+			for (int i = 0; i < length; i++)
+			{
+				pendingAuthenticationRequests.add(scanner.nextLine());
+			}
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+			writeKeys();
 		}
 		generateNecessaryKeys();
 	}
@@ -121,6 +126,47 @@ public class KeyManager
 			return false;
 		}
 		return false;
+	}
+	
+	public void addPendingAuthentication(String url)
+	{
+		pendingAuthenticationRequests.add(url);
+		try
+		{
+			writeKeys();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public void attemptAuthentications() throws IOException
+	{
+		outer: for (;;)
+		{
+			for (String url : pendingAuthenticationRequests)
+			{
+				Communication openConnection;
+				try
+				{
+					openConnection = Services.networkManager.openConnection(url, true);
+					if (openConnection != null)
+					{
+						openConnection.send(new FindMachines());
+						openConnection.send(new MachineFound());
+						pendingAuthenticationRequests.remove(url);
+						writeKeys();
+						continue outer;
+					}
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+					continue;
+				}
+			}
+		}
 	}
 	
 //	public boolean confirmPendingNaunce(PublicKey publicKey, byte[] original, byte[] encrtypedNaunce2) throws IOException
@@ -172,6 +218,10 @@ public class KeyManager
 	
 	public byte[] createTestNaunce(Communication c, PublicKey remoteKey) throws IOException
 	{
+		if (remoteKey == null)
+		{
+			return new byte[0];
+		}
 		final byte[] original = Misc.createNaunce();
 		final byte[] sentNaunce = createNaunce(remoteKey, original);
 		c.addPendingNaunce(original);
@@ -201,14 +251,9 @@ public class KeyManager
 		}
 	}
 
-	private PrivateKey getPrivateKey(PublicKey publicKey)
+	PrivateKey getPrivateKey(PublicKey publicKey)
 	{
 		return keys.get(hashObject(publicKey)).privateKey;
-	}
-
-	public boolean acceptKey(Machine machine, PublicKey sourcePublicKey)
-	{
-		return Services.application != null && Services.application.acceptKey(machine, sourcePublicKey);
 	}
 
 	private static String hashObject(PublicKey publicKey)

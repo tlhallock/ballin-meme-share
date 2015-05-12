@@ -2,18 +2,9 @@ package org.cnv.shr.test;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.gui.UserActions;
-import org.cnv.shr.mdl.LocalDirectory;
-import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RemoteDirectory;
-import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.stng.Settings;
 
 public class TestActions

@@ -1,5 +1,6 @@
 package org.cnv.shr.mdl;
 
+import java.security.PublicKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,7 +11,7 @@ import org.cnv.shr.db.h2.DbObject;
 
 public class UserMessage extends DbObject
 {
-	public UserMessage(int int1)
+	public UserMessage(Integer int1)
 	{
 		super(int1);
 	}
@@ -26,5 +27,18 @@ public class UserMessage extends DbObject
 	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
 	{
 		return null;
+	}
+	
+	public static class AuthenticationRequest extends UserMessage
+	{
+		public AuthenticationRequest(int int1)
+		{
+			super(int1);
+		}
+
+		public AuthenticationRequest(Machine m, PublicKey key)
+		{
+			super(null);
+		}
 	}
 }

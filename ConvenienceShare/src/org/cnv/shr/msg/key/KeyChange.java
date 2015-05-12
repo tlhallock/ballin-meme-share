@@ -2,28 +2,30 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.security.PublicKey;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteListBuffer;
 
-public class KeyChange extends Message
+public class KeyChange extends KeyMessage
 {
-	public static int TYPE = 1;
-	
-	PublicKey oldKey;
-	PublicKey newKey;
-	byte[] deryptedProof;
-	byte[] naunceRequest;
+	private PublicKey oldKey;
+	private PublicKey newKey;
+	private byte[] decryptedProof;
+	private byte[] naunceRequest;
 
+	public KeyChange(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
+	}
+	
 	public KeyChange(PublicKey oldKey, PublicKey newKey, byte[] deryptedProof, byte[] naunceRequest)
 	{
 		this.oldKey = oldKey;
 		this.newKey = newKey;
-		this.deryptedProof = deryptedProof;
+		this.decryptedProof = deryptedProof;
 		this.naunceRequest = naunceRequest;
 	}
 
@@ -41,17 +43,17 @@ public class KeyChange extends Message
 		
 	}
 
+	public static final int TYPE = 27;
 	@Override
 	protected int getType()
 	{
-		return 0;
+		return TYPE;
 	}
 
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (       (getMachine().hasKey(oldKey)                         && Arrays.equals(oldKey, connection.getPendingNaunce(), encryptedNaunce))
-				|| (Services.keyManager.acceptKey(getMachine(), newKey) && Arrays.equals(newKey, connection.getPendingNaunce(), encryptedNaunce)))
+		if (getMachine().hasKey(oldKey) && connection.hasPendingNaunce(decryptedProof))
 		{
 			DbKeys.addKey(getMachine(), newKey);
 			connection.updateKey(newKey);

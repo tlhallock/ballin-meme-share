@@ -1,9 +1,6 @@
 package org.cnv.shr.dmn;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
@@ -53,6 +50,7 @@ public class Services
 		logger.setLogLocation();
 		notifications = new Notifications();
 		keyManager = new KeyManager(settings.keysFile.get());
+		keyManager.readKeys();
 		h2DbCache = new DbConnectionCache();
 		localMachine = new Machine.LocalMachine();
 		if (!localMachine.save())

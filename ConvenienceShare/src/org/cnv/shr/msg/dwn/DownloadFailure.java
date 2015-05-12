@@ -8,8 +8,6 @@ import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.msg.Failure;
-import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
 
 public class DownloadFailure extends Failure
 {

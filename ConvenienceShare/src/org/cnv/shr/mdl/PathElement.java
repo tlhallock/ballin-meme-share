@@ -12,10 +12,8 @@ import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbTables;
-import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.db.h2.RStringBuilder;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.sync.FileSource;
 
 public class PathElement extends DbObject

@@ -2,39 +2,44 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
 
-public class ConnectionOpenAwk extends Message
+public class ConnectionOpenAwk extends KeyMessage
 {
-	byte[] encrtypedNaunce;
+	byte[] decryptedNaunce;
 	byte[] naunceRequest;
+
+	public ConnectionOpenAwk(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
+	}
 
 	public ConnectionOpenAwk(byte[] encoded, byte[] responseAwk)
 	{
-		encrtypedNaunce = encoded;
+		decryptedNaunce = encoded;
 		naunceRequest = responseAwk;
 	}
 
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		encrtypedNaunce = ByteReader.readVarByteArray(bytes);
+		decryptedNaunce = ByteReader.readVarByteArray(bytes);
 		naunceRequest   = ByteReader.readVarByteArray(bytes);
 	}
 
 	@Override
 	protected void write(ByteListBuffer buffer)
 	{
-		buffer.appendVarByteArray(encrtypedNaunce);
+		buffer.appendVarByteArray(decryptedNaunce);
 		buffer.appendVarByteArray(naunceRequest);
 	}
 
-	public static final int TYPE = 0;
+	public static final int TYPE = 21;
 	@Override
 	protected int getType()
 	{
@@ -44,17 +49,15 @@ public class ConnectionOpenAwk extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (Services.keyManager.confirmPendingNaunce(
-				connection.getRemoteKey(),
-				connection.getPendingNaunce(),
-				encrtypedNaunce))
+		if (connection.hasPendingNaunce(decryptedNaunce))
 		{
-			byte[] encoded = Services.keyManager.encode(connection.getLocalKey(), naunceRequest);
-			connection.send(new ConnectionOpened(encoded));
-			connection.isAuthenticated();
+			byte[] decrypted = Services.keyManager.decryptNaunce(connection.getLocalKey(), naunceRequest);
+			connection.send(new ConnectionOpened(decrypted));
+			connection.notifyAuthentication(true);
 		}
 		else
 		{
+			connection.notifyAuthentication(false);
 			connection.send(new KeyFailure());
 			connection.notifyDone();
 		}

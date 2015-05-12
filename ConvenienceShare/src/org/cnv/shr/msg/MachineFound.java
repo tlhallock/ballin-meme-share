@@ -3,7 +3,9 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.security.PublicKey;
 
+import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
@@ -12,12 +14,10 @@ import org.cnv.shr.util.ByteReader;
 
 public class MachineFound extends Message
 {
-	public static int TYPE = 18;
-	
 	private String ip;
 	private int port;
 	private int nports;
-	private String[] keys;
+	private java.security.PublicKey[] keys;
 	private String name;
 	private String ident;
 	private long lastActive;
@@ -36,7 +36,7 @@ public class MachineFound extends Message
 	{
 		ip         = m.getIp();
 		port       = m.getPort();
-		keys       = m.getKeys();
+		keys       = DbKeys.getKeys(m);
 		name       = m.getName();
 		ident      = m.getIdentifier();
 		lastActive = m.getLastActive();
@@ -50,9 +50,15 @@ public class MachineFound extends Message
 		{
 			return;
 		}
-		Machine newMachine = new Machine(ip, port, nports, name, ident, keys);
+		Machine newMachine = new Machine(ip, port, nports, name, ident);
 		newMachine.setLastActive(lastActive);
 		newMachine.save();
+		
+		// Should this happen?
+//		for (PublicKey key : keys)
+//		{
+//			DbKeys.addKey(newMachine, key);
+//		}
 		Services.notifications.remotesChanged();
 	}
 
@@ -66,10 +72,10 @@ public class MachineFound extends Message
 		lastActive  = ByteReader.readLong(bytes);
 		nports      = ByteReader.readInt(bytes);
 		int numKeys = ByteReader.readInt(bytes);
-		keys = new String[numKeys];
+		keys = new PublicKey[numKeys];
 		for (int i = 0; i < numKeys; i++)
 		{
-			keys[i] = ByteReader.readString(bytes);
+			keys[i] = ByteReader.readPublicKey(bytes);
 		}
 	}
 
@@ -83,17 +89,13 @@ public class MachineFound extends Message
 		buffer.append(lastActive);
 		buffer.append(nports);
 		buffer.append(keys.length);
-		for (String key : keys)
+		for (PublicKey key : keys)
 		{
 			buffer.append(key);
 		}
 	}
 
-	public boolean authenticate()
-	{
-		return true;
-	}
-	
+	public static int TYPE = 18;
 	protected int getType()
 	{
 		return TYPE;

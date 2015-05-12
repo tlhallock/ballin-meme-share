@@ -2,26 +2,27 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.security.PublicKey;
-import java.util.Arrays;
-import java.util.HashMap;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
-import org.cnv.shr.util.Misc;
 
-public class InitiateAuthentication extends Message
+public class InitiateAuthentication extends KeyMessage
 {
 	public static int TYPE = 0;
 	
 	PublicKey sourcePublicKey;
 	PublicKey destinationPublicKey;
 	byte[] requestedNaunce;
-	
+
+	public InitiateAuthentication(InetAddress address, InputStream stream) throws IOException
+	{
+		super(address, stream);
+	}
 	public InitiateAuthentication(PublicKey remotePublicKey, byte[] requestedNaunce)
 	{
 		destinationPublicKey = remotePublicKey;
@@ -62,7 +63,7 @@ public class InitiateAuthentication extends Message
 		connection.authenticateToTarget(requestedNaunce);
 	}
 	
-	private boolean authenticateRemote(Communication connection)
+	private boolean authenticateRemote(Communication connection) throws IOException
 	{
 		// authenticate remote...
 		if (getMachine().hasKey(sourcePublicKey))
@@ -70,17 +71,16 @@ public class InitiateAuthentication extends Message
 			return true;
 		}
 
-		if (Services.keyManager.acceptKey(getMachine(), sourcePublicKey))
+		if (connection.acceptKey(sourcePublicKey))
 		{
-			destinationPublicKey = Services.keyManager.getPublicKey();
 			DbKeys.addKey(getMachine(), sourcePublicKey);
 			return true;
 		}
 	
 		PublicKey[] knownKeys = DbKeys.getKeys(getMachine());
-		if (knownKeys != null)
+		if (knownKeys != null && knownKeys.length > 0)
 		{
-			connection.send(new KeyNotFound(knownKeys, knownKeys));
+			connection.send(new KeyNotFound(connection, knownKeys));
 			return false;
 		}
 

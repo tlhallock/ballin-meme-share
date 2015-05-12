@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.sql.SQLException;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Communication;
@@ -50,24 +49,25 @@ public abstract class Message
 		Machine m = DbMachines.getMachine(originatorIdentifier);
 		if (m == null)
 		{
-			return null;
+			
+			return new Machine(ip, port, nports, "Unkown machine", originatorIdentifier);
 		}
 		
-		// last active?
-		if (m.getPort() != port || !m.getIp().equals(ip) || m.getNumberOfPorts() != nports)
-		{
-			m.setPort(port);
-			m.setIp(ip);
-			m.setNumberOfPorts(nports);
-			try
-			{
-				m.save();
-			}
-			catch (SQLException e)
-			{
-				e.printStackTrace();
-			}
-		}
+//		// last active?
+//		if (m.getPort() != port || !m.getIp().equals(ip) || m.getNumberOfPorts() != nports)
+//		{
+//			m.setPort(port);
+//			m.setIp(ip);
+//			m.setNumberOfPorts(nports);
+//			try
+//			{
+//				m.save();
+//			}
+//			catch (SQLException e)
+//			{
+//				e.printStackTrace();
+//			}
+//		}
 		
 		return m;
 	}
@@ -112,10 +112,9 @@ public abstract class Message
 		return header.getBytes();
 	}
 
-	public boolean authenticate()
+	public boolean requiresAthentication()
 	{
 		return true;
-//		return getMachine().isSharing();
 	}
 	
 	public String toString()

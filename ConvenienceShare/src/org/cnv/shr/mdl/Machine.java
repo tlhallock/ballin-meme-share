@@ -1,6 +1,5 @@
 package org.cnv.shr.mdl;
 
-import java.io.IOException;
 import java.security.PublicKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,10 +11,7 @@ import java.util.LinkedList;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.FindMachines;
-import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.util.Misc;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,8 +37,7 @@ public class Machine extends DbObject
 	
 	public Machine(
 			String ip, int port, int nports,
-			String name, String identifier,
-			String[] keys)
+			String name, String identifier)
 	{
 		super(null);
 		this.ip = ip;
@@ -51,10 +46,6 @@ public class Machine extends DbObject
 		this.identifier = identifier;
 		this.nports = nports;
 		this.sharing = false;
-		for (String key : keys)
-		{
-			
-		}
 	}
 	
 	protected Machine() { super(null); }
@@ -146,7 +137,7 @@ public class Machine extends DbObject
 
 	public String toString()
 	{
-		return getIp() + ":" + getPort() + "[id=" + getIdentifier() + "][keys=" + getKeys() + "]";
+		return getIp() + ":" + getPort() + "[id=" + getIdentifier() + "]";
 	}
 
 	public int hashCode()
@@ -157,11 +148,6 @@ public class Machine extends DbObject
 	public boolean equals(Object other)
 	{
 		return other instanceof Machine && toString().equals(other.toString());
-	}
-
-	public String[] getKeys()
-	{
-		return new String[0];
 	}
 
 	public void setSharing(boolean b)
@@ -271,11 +257,6 @@ public class Machine extends DbObject
 		public int getPort()
 		{
 			return Services.settings.servePortBegin.get();
-		}
-
-		public String[] getKeys()
-		{
-			return new String[0];
 		}
 		
 		public String getIdentifier()

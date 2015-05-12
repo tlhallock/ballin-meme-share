@@ -37,9 +37,7 @@ public class ListRoots extends Message
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
-		
 		builder.append("List your root directories.");
-		
 		return builder.toString();
 	}
 }

@@ -13,6 +13,10 @@ public class DownloadManager
 	// I need to fix this model, because it doesn't allow multiple downloads from the same peer.
 	private HashMap<String, DownloadInstance> downloads = new HashMap<>();
 
+	public void addConnection(DownloadInstance downloadInstance, Communication connection)
+	{
+		downloads.put(connection.getUrl(), downloadInstance);
+	}
 
 	public void download(SharedFile remoteFile) throws UnknownHostException, IOException
 	{
@@ -22,6 +26,7 @@ public class DownloadManager
 		}
 		download((RemoteFile) remoteFile);
 	}
+	
 	public DownloadInstance download(RemoteFile file) throws UnknownHostException, IOException
 	{
 		DownloadInstance instance = new DownloadInstance(file);

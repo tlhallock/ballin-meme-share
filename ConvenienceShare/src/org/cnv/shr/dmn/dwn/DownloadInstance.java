@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -20,6 +21,7 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.DoneMessage;
+import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
@@ -65,12 +67,23 @@ public class DownloadInstance
 		state = DownloadState.GETTING_META_DATA;
 		FileRequest request = new FileRequest(remoteFile, CHUNK_SIZE);
 		Machine machine = remoteFile.getRootDirectory().getMachine();
-		Communication openConnection = Services.networkManager.openConnection(machine.getIp() + ":" + machine.getPort());
+		Communication openConnection = Services.networkManager.openConnection(machine, false);
+		if (openConnection == null)
+		{
+			throw new IOException("Unable to authenticate to host.");
+		}
+		
 		Seeder seeder = new Seeder(machine, openConnection);
 		seeders.add(seeder);
 		seeder.send(request);
-		requestSeeders();
 		return openConnection;
+	}
+
+	public void addSeeder(Machine machine, Communication connection)
+	{
+		Services.downloads.addConnection(this, connection);
+		seeders.add(new Seeder(machine, connection));
+		queue();
 	}
 
 	private void requestSeeders()
@@ -79,12 +92,45 @@ public class DownloadInstance
 		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
 		while (listRemoteMachines.hasNext())
 		{
-			Machine next = listRemoteMachines.next();
+			final Machine remote = listRemoteMachines.next();
+			Services.userThreads.execute(new Runnable() {
+				@Override
+				public void run()
+				{
+					try
+					{
+						Communication openConnection = Services.networkManager.openConnection(remote, false);
+						if (openConnection == null)
+						{
+							return;
+						}
+						openConnection.send(new LookingFor(remoteFile));
+						openConnection.notifyDone();
+					}
+					catch (IOException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}});
 		}
 	}
 
-	public void foundChunks(LinkedList<Chunk> chunks) throws IOException
+	public void foundChunks(LinkedList<Chunk> chunks, String checksum) throws IOException
 	{
+		if (remoteFile.getChecksum() == null)
+		{
+			remoteFile.setChecksum(checksum);
+			try
+			{
+				remoteFile.save();
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
 		upComing = chunks;
 		for (Chunk c : upComing)
 		{
@@ -93,6 +139,7 @@ public class DownloadInstance
 				
 			}
 		}
+		requestSeeders();
 		allocate();
 		recover();
 		allocate();

@@ -8,7 +8,6 @@ package org.cnv.shr.gui;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -217,10 +216,10 @@ public class MachineView extends javax.swing.JPanel
         this.isSharing.setSelected(machine.isSharing());
         machineLabel.setText(machine.getName());
         StringBuilder builder = new StringBuilder();
-        for (String str : machine.getKeys())
-        {
-        	builder.append(str).append(";");
-        }
+//        for (String str : machine.getKeys())
+//        {
+//        	builder.append(str).append(";");
+//        }
         keysLabel.setText(builder.toString());
 
     	DefaultTableModel model = (DefaultTableModel) pathsTable.getModel();
