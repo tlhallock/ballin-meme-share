@@ -52,7 +52,7 @@ public class Services
 
 		logger.setLogLocation();
 		notifications = new Notifications();
-		keyManager = new KeyManager();
+		keyManager = new KeyManager(settings.keysFile.get());
 		h2DbCache = new DbConnectionCache();
 		localMachine = new Machine.LocalMachine();
 		if (!localMachine.save())

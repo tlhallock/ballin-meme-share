@@ -5,6 +5,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -12,6 +15,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
+import org.cnv.shr.msg.key.ConnectionOpenAwk;
+import org.cnv.shr.msg.key.InitiateAuthentication;
+import org.cnv.shr.msg.key.KeyChange;
+import org.cnv.shr.msg.key.NewKey;
+import org.cnv.shr.util.Misc;
 
 public class Communication implements Runnable
 {
@@ -23,13 +31,20 @@ public class Communication implements Runnable
 	private OutputStream output;
 	
 	private Machine machine;
+
+	PublicKey remotePublicKey;
+	PublicKey localPublicKey;
+	
+	private HashMap<String, byte[]> pendingNaunces = new HashMap<>();
+	private boolean authenticated;
+	
+	
 	
 	private boolean done = false;
 	
-
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
-
+	
 	/** Initiator **/
 	public Communication(String ip, int port) throws UnknownHostException, IOException
 	{
@@ -166,5 +181,73 @@ public class Communication implements Runnable
 	public long getKbs()
 	{
 		return 0;
+	}
+
+	public void updateKey(PublicKey publicKey)
+	{
+		this.remotePublicKey = publicKey;
+	}
+
+	public void setKeys(PublicKey remotePublicKey, PublicKey localPublicKey)
+	{
+		this.remotePublicKey = remotePublicKey;
+		this.localPublicKey = localPublicKey;
+	}
+	
+	public PublicKey getLocalKey()
+	{
+		return localPublicKey;
+	}
+	public PublicKey getRemoteKey()
+	{
+		return remotePublicKey;
+	}
+
+	public void addPendingNaunce(byte[] naunce)
+	{
+		String pKey = Misc.format(naunce);
+		pendingNaunces.put(pKey, naunce);
+	}
+
+	public byte[] getPendingNaunce(PublicKey key)
+	{
+		String keyVal = Misc.format(key.getEncoded());
+		byte[] returnValue = pendingNaunces.get(keyVal);
+		pendingNaunces.remove(keyVal);
+		return returnValue;
+	}
+
+	public void isAuthenticated()
+	{
+		authenticated = true;
+	}
+	
+	public void authenticateToTarget(byte[] requestedNaunce)
+	{
+		PublicKey publicKey = Services.keyManager.getPublicKey();
+		if (!Services.keyManager.containsKey(localPublicKey))
+		{
+			// not able to verify self to remote, add key
+			byte[] encoded = Services.keyManager.encode(publicKey, requestedNaunce);
+
+			final byte[] original = Misc.createNaunce();
+			final byte[] sentNaunce = Services.keyManager.createNaunce(publicKey, original);
+			addPendingNaunce(original);
+			send(new NewKey(publicKey, encoded, sentNaunce));
+			return;
+		}
+		
+		if (!Arrays.equals(publicKey.getEncoded(), localPublicKey.getEncoded()))
+		{
+			// able to verify self to remote, but change key
+			send(new KeyChange(localPublicKey, publicKey, encoded, Services.keyManager.createTestNaunce(this, publicKey)));
+			localPublicKey = publicKey;
+			return;
+		}
+
+		byte[] encoded = Services.keyManager.encode(localPublicKey, requestedNaunce);
+		byte[] responseAwk = Misc.getNaunce();
+		addPendingNaunce(responseAwk);
+		send(new ConnectionOpenAwk(encoded, responseAwk));
 	}
 }

@@ -1,11 +1,14 @@
 package org.cnv.shr.util;
 
 import java.io.UnsupportedEncodingException;
+import java.security.PublicKey;
 import java.util.LinkedList;
 
 import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
+
+import de.flexiprovider.common.math.FlexiBigInt;
 
 public final class ByteListBuffer
 {
@@ -78,10 +81,9 @@ public final class ByteListBuffer
 
 	public ByteListBuffer append(String str)
 	{
-		byte[] bytes;
 		try
 		{
-			bytes = str.getBytes(Settings.encoding);
+			return appendVarByteArray(str.getBytes(Settings.encoding));
 		}
 		catch (UnsupportedEncodingException e)
 		{
@@ -90,7 +92,32 @@ public final class ByteListBuffer
 			Main.quit();
 			return this;
 		}
-		return append(bytes.length).append(bytes);
+	}
+
+	public ByteListBuffer appendVarByteArray(byte[] bytes)
+	{
+		if (bytes == null)
+		{
+			return append(0);
+		}
+		else
+		{
+			return append(bytes.length).append(bytes);
+		}
+	}
+	
+	public ByteListBuffer append(PublicKey key)
+	{
+		if (key == null)
+		{
+			return appendVarByteArray(null);
+		}
+		else
+		{
+			appendVarByteArray(((de.flexiprovider.core.rsa.RSAPublicKey) key).getN().toByteArray());
+			appendVarByteArray(((de.flexiprovider.core.rsa.RSAPublicKey) key).getE().toByteArray());
+			return this;
+		}
 	}
 
 	public byte[] getBytes()

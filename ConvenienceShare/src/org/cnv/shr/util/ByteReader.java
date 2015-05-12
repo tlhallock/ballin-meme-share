@@ -2,13 +2,15 @@ package org.cnv.shr.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.PublicKey;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
 
+import de.flexiprovider.common.math.FlexiBigInt;
+
 public class ByteReader
 {
-
 	public static int readByte(InputStream in) throws IOException
 	{
 		return in.read() & 0xff;
@@ -54,6 +56,11 @@ public class ByteReader
 
 	public static String readString(InputStream in) throws IOException
 	{
+		return new String(readVarByteArray(in), Settings.encoding);
+	}
+	
+	public static byte[] readVarByteArray(InputStream in) throws IOException
+	{
 		int size = (int) readInt(in);
 		if (size > Services.settings.maxStringSize.get())
 		{
@@ -62,12 +69,23 @@ public class ByteReader
 
 		byte[] returnValue = new byte[size];
 		int readSoFar = 0;
-		while (readSoFar < size)
+		while (readSoFar < size && readSoFar >= 0)
 		{
 			readSoFar += in.read(returnValue, readSoFar, size - readSoFar);
 		}
-
-		return new String(returnValue, Settings.encoding);
+		if (readSoFar < size)
+		{
+			throw new IOException("Hit end of stream too early: " + readSoFar + " of " + size);
+		}
+		
+		return returnValue;
+	}
+	
+	public static PublicKey readPublicKey(InputStream bytes) throws IOException
+	{
+		FlexiBigInt publn = new FlexiBigInt(readVarByteArray(bytes));
+		FlexiBigInt puble = new FlexiBigInt(readVarByteArray(bytes));
+		return new de.flexiprovider.core.rsa.RSAPublicKey(publn, puble);
 	}
 
 	public static double readDouble(InputStream bytes) throws IOException

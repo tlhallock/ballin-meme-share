@@ -10,6 +10,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.security.PublicKey;
 import java.util.Collections;
 import java.util.LinkedList;
 
@@ -997,5 +998,10 @@ public class Application extends javax.swing.JFrame
 				model.setValueAt(Misc.formatNumberOfFiles(startNumFiles + filesAdded - filesRemoved), dirRow, 3);
 			}
 		};
+	}
+
+	public boolean acceptKey(Machine machine, PublicKey sourcePublicKey)
+	{
+		return false;
 	}
 }

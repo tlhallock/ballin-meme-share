@@ -3,7 +3,13 @@ package org.cnv.shr.dmn;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PublicKey;
 import java.util.HashMap;
+
+import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.msg.key.InitiateAuthentication;
+import org.cnv.shr.util.Misc;
 
 public class ConnectionManager
 {
@@ -15,18 +21,25 @@ public class ConnectionManager
 		if (index < 0)
 		{
 			// Should try all other ports too...
-			return openConnection(url, Services.settings.servePortBegin.get());
+			return openConnection(url, Services.settings.servePortBegin.get(), null);
 		}
 		else
 		{
-			return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())));
+			return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), null);
 		}
 	}
+	public Communication openConnection(Machine m) throws UnknownHostException, IOException
+	{
+		return openConnection(m.getIp(), m.getPort(), DbKeys.getKey(m));
+	}
 	
-	public synchronized Communication openConnection(String ip, int port) throws UnknownHostException, IOException
+	private synchronized Communication openConnection(String ip, int port, final PublicKey knownKey) throws UnknownHostException, IOException
 	{
 		final Communication connection = new Communication(ip, port);
 		openConnections.put(connection.getUrl(), connection);
+
+		final byte[] original = Misc.createNaunce();
+		final byte[] sentNaunce = Services.keyManager.createNaunce(knownKey, original);
 		Services.connectionThreads.execute(new Runnable() {
 			@Override
 			public void run()
@@ -37,6 +50,11 @@ public class ConnectionManager
 				{
 					openConnections.remove(connection.getUrl());
 				}
+				
+//				PublicKey knownKey = Services.keyManager.getPublicKey(); 
+				// If there is a naunce, get it here
+				connection.addPendingNaunce(original);
+				connection.send(new InitiateAuthentication(knownKey, sentNaunce));
 			}});
 		return connection;
 	}

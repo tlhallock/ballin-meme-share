@@ -23,12 +23,6 @@ public abstract class Message
 	private int nports;
 	private int size;
 	
-	// need to have a version
-	
-	// These are not used yet...
-	private byte[] naunce;
-	private byte[] encrypted;
-	
 	String ip;
 	
 	/** Outgoing Message **/
@@ -36,8 +30,7 @@ public abstract class Message
 	{
 		originatorIdentifier = Services.settings.machineIdentifier.get();
 		port = Services.settings.servePortBegin.get();
-		nports = Services.settings.maxServes.get();   
-		naunce = Misc.getNaunce();
+		nports = Services.settings.maxServes.get();
 	}
 	
 	/** Message received 
@@ -138,5 +131,4 @@ public abstract class Message
 	protected abstract void write(ByteListBuffer buffer);
 	protected abstract int getType();
 	public abstract void perform(Communication connection) throws Exception;
-	
 }

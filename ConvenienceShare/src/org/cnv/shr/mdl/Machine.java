@@ -36,6 +36,7 @@ public class Machine extends DbObject
 	private boolean allowsMessages;
 	
 	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
+	protected boolean acceptPeers;
 	
 	
 	public Machine(
@@ -75,12 +76,13 @@ public class Machine extends DbObject
 		    sharing        = row.getBoolean("SHARING");
 		    identifier     = row.getString ("IDENT");
 		    allowsMessages = row.getBoolean("MESSAGES");
+		    acceptPeers    = row.getBoolean("ACCEPT_PEERS");
 	}
 	@Override
 	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
 	{
 		PreparedStatement stmt = c.prepareStatement(
-				 "merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where MACHINE.IDENT = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+				 "merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where MACHINE.IDENT = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
 				, Statement.RETURN_GENERATED_KEYS);
 		int ndx = 1;
 		stmt.setString(ndx++,  getIdentifier());
@@ -93,6 +95,7 @@ public class Machine extends DbObject
 		stmt.setString(ndx++,  getIdentifier());
 		stmt.setBoolean(ndx++, isLocal());
 		stmt.setBoolean(ndx++, getAllowsMessages());
+		stmt.setBoolean(ndx++, acceptPeers);
 		return stmt;
 	}
 	
@@ -294,5 +297,11 @@ public class Machine extends DbObject
 		{
 			id = DbMachines.getMachineId(getIdentifier());
 		}
+	}
+
+	public boolean hasKey(PublicKey sourcePublicKey)
+	{
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

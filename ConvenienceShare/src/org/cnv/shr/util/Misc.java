@@ -1,6 +1,9 @@
 package org.cnv.shr.util;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Random;
@@ -59,7 +62,7 @@ public class Misc
 		return builder.toString();
 	}
 	
-	public static byte[] getNaunce()
+	public static byte[] createNaunce()
 	{
 		return getBytes(Services.settings.minNaunce.get());
 	}
@@ -146,6 +149,17 @@ public class Misc
 		{
 			e.printStackTrace();
 			return path;
+		}
+	}
+	
+	public static void copy(InputStream input, OutputStream output) throws IOException
+	{
+		byte[] buffer = new byte[1024];
+		int offset;
+		
+		while ((offset = input.read(buffer, 0, buffer.length)) >= 0)
+		{
+			output.write(buffer, 0, offset);
 		}
 	}
 }

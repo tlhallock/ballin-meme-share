@@ -1,17 +1,35 @@
 package org.cnv.shr.db.h2;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.security.PublicKey;
 
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.SecurityKey;
 
 public class DbKeys
 {
-	public static DbIterator<SecurityKey> getKeys(Machine machine) throws SQLException
+//	public static DbIterator<SecurityKey> getKeys(Machine machine) throws SQLException
+//	{
+//		Connection c = Services.h2DbCache.getConnection();
+//		return null;
+//	}
+	
+	public static PublicKey[] getKeys(Machine machine)
 	{
-		Connection c = Services.h2DbCache.getConnection();
+		return null;
+	}
+	
+	public static void addKey(Machine machine, PublicKey key)
+	{
+		
+	}
+
+	public static void removeKey(Machine machine, PublicKey revoke)
+	{
+		
+	}
+
+	public static PublicKey getKey(Machine m)
+	{
+		// TODO Auto-generated method stub
 		return null;
 	}
 }
