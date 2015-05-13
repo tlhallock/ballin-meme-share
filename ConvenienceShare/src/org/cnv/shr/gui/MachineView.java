@@ -103,14 +103,7 @@ public class MachineView extends javax.swing.JPanel
 		{
 			return;
 		}
-		try
-		{
-			model.setRoot(remote);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		model.setRoot(remote);
 	}
 
 	private void addFilesListener()
@@ -271,14 +264,7 @@ public class MachineView extends javax.swing.JPanel
         this.tagsLabel.setText(directory.getTags());
         this.nFilesLabel.setText(directory.getTotalNumberOfFiles());
         this.sizeLabel.setText(directory.getTotalFileSize());
-        try
-		{
-			((PathTreeModel) filesTree.getModel()).setRoot(directory);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		((PathTreeModel) filesTree.getModel()).setRoot(directory);
     }
     
     static final class FileSize implements Comparable<FileSize>
@@ -315,7 +301,7 @@ public class MachineView extends javax.swing.JPanel
     		
     		int indexSlh = path.lastIndexOf('/');
     		String name    = indexSlh < 0 ? path : path.substring(indexSlh + 1);
-    		String relPath = indexSlh < 0 ? path : path.substring(0, indexSlh + 1);
+    		String relPath = indexSlh < 0 ? ""   : path.substring(0, indexSlh + 1);
 
     		int indexExt = name.lastIndexOf('.');
     		String ext     = indexExt < 0 ?  ""  : name.substring(indexExt);

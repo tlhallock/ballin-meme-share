@@ -83,8 +83,14 @@ public class ByteReader
 	
 	public static PublicKey readPublicKey(InputStream bytes) throws IOException
 	{
-		FlexiBigInt publn = new FlexiBigInt(readVarByteArray(bytes));
-		FlexiBigInt puble = new FlexiBigInt(readVarByteArray(bytes));
+		byte[] readVarByteArray1 = readVarByteArray(bytes);
+		byte[] readVarByteArray2 = readVarByteArray(bytes);
+		if (readVarByteArray1.length == 0 || readVarByteArray2.length == 0)
+		{
+			return null;
+		}
+		FlexiBigInt publn = new FlexiBigInt(readVarByteArray1);
+		FlexiBigInt puble = new FlexiBigInt(readVarByteArray2);
 		return new de.flexiprovider.core.rsa.RSAPublicKey(publn, puble);
 	}
 

@@ -197,7 +197,7 @@ public class Communication implements Runnable
 	public boolean authenticate(Message m)
 	{
 		// Double check identifier and keys...
-		return m.requiresAthentication() || (authenticated != null && authenticated);
+		return !m.requiresAthentication() || (authenticated != null && authenticated);
 	}
 
 	public OutputStream getOut()
@@ -308,8 +308,13 @@ public class Communication implements Runnable
 				Cipher cipherOut = Cipher.getInstance("RSA", "FlexiCore"); cipherOut.init(Cipher.ENCRYPT_MODE, remotePublicKey);
 				Cipher cipherIn  = Cipher.getInstance("RSA", "FlexiCore");  cipherIn.init(Cipher.DECRYPT_MODE, Services.keyManager.getPrivateKey(localPublicKey));
 				
-				input  = new CipherInputStream(new GZIPInputStream(input), cipherIn);
-				output = new GZIPOutputStream(new CipherOutputStream(output, cipherOut));
+				
+				// I thought this was stopping the stream from being flushed, but i guess it might be something else...
+//				input  = new CipherInputStream(new GZIPInputStream(input), cipherIn);
+//				output = new GZIPOutputStream(new CipherOutputStream(output, cipherOut));
+				
+				input  = new CipherInputStream(input, cipherIn);
+				output = new CipherOutputStream(output, cipherOut);
 				
 				DbMachines.updateMachineInfo(claimedMachine, new PublicKey[]{remotePublicKey}, getIp());
 			}
@@ -321,18 +326,18 @@ public class Communication implements Runnable
 			e.printStackTrace();
 			Main.quit();
 		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-			try
-			{
-				socket.close();
-			}
-			catch (IOException e1)
-			{
-				e1.printStackTrace();
-			}
-		}
+//		catch (IOException e)
+//		{
+//			e.printStackTrace();
+//			try
+//			{
+//				socket.close();
+//			}
+//			catch (IOException e1)
+//			{
+//				e1.printStackTrace();
+//			}
+//		}
 		finally
 		{
 			lock.unlock();

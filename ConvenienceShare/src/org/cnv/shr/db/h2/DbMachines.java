@@ -30,6 +30,11 @@ public class DbMachines
 	
 	public static Machine getMachine(String identifier)
 	{
+		if (identifier.equals(Services.localMachine.getIdentifier()))
+		{
+			return Services.localMachine;
+		}
+		
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement("select * from MACHINE where IDENT = ?"))
 		{

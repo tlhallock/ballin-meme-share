@@ -1,7 +1,6 @@
 package org.cnv.shr.gui;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 
 import javax.swing.event.TreeModelEvent;
@@ -50,16 +49,23 @@ public class PathTreeModel implements TreeModel
 		}
 	}
 	
-	public void setRoot(RootDirectory newRoot) throws IOException
+	public void setRoot(RootDirectory newRoot)
 	{
-		closeConnections();
-		iterator = new ExplorerSyncIterator(rootDirectory);
-		synchronizer = new RemoteSynchronizer(rootDirectory, iterator);
-		rootSource = iterator.getInitialFileSource();
-		// actually have to kick the synchronizer off...
-		
 		RootDirectory oldroot = this.rootDirectory;
 		this.rootDirectory = newRoot;
+		closeConnections();
+		try
+		{
+			iterator = new ExplorerSyncIterator(rootDirectory);
+			synchronizer = new RemoteSynchronizer(rootDirectory, iterator);
+			rootSource = iterator.getInitialFileSource();
+			// actually have to kick the synchronizer off...
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		
 		this.root = new Node(DbPaths.ROOT);
 		this.root.task = iterator.getSyncTask(rootSource, DbPaths.ROOT, this.root);
 		this.root.expand();
@@ -176,6 +182,10 @@ public class PathTreeModel implements TreeModel
 		
 		public Node(PathElement element)
 		{
+			if (element == null)
+			{
+				throw new NullPointerException("Path must not be null.");
+			}
 			this.element = element;
 			this.children = null;
 		}
@@ -224,7 +234,6 @@ public class PathTreeModel implements TreeModel
 		private synchronized void expand()
 		{
 			System.out.println("Expanding " + element.getFullPath());
-			System.out.println("Expanding " + element.getId());
 			if (rootDirectory == null)
 			{
 				children = new Node[0];
@@ -246,10 +255,10 @@ public class PathTreeModel implements TreeModel
 			{
 				children[ndx] = new Node(e);
 				
-				if (childSources[ndx] != null)
-				{
-					children[ndx].task = iterator.getSyncTask(childSources[ndx], element, children[ndx]);
-				}
+//				if (childSources[ndx] != null)
+//				{
+//					children[ndx].task = iterator.getSyncTask(childSources[ndx], element, children[ndx]);
+//				}
 				ndx++;
 			}
 		}
@@ -261,21 +270,22 @@ public class PathTreeModel implements TreeModel
 			for (Pair<? extends FileSource> p : task.getSynchronizationResults())
 			{
 				Node child = null;
+				throw new RuntimeException("Not implemented.");
 				
-				if (!alreadyExpanded)
-				{
-					childSources[ndx] = p.getSource();
-					continue;
-				}
-				
-				children[ndx].source = p.getSource();
-				children[ndx].task = iterator.getSyncTask(childSources[ndx], element, children[ndx]);
-
-				for (TreeModelListener listener : listeners)
-				{
-					// listener.treeStructureChanged(new TreeModelEvent(this,
-					// new Object[] {oldroot}));
-				}
+//				if (!alreadyExpanded)
+//				{
+//					childSources[ndx] = p.getSource();
+//					continue;
+//				}
+//				
+//				children[ndx].source = p.getSource();
+//				children[ndx].task = iterator.getSyncTask(childSources[ndx], element, children[ndx]);
+//
+//				for (TreeModelListener listener : listeners)
+//				{
+//					// listener.treeStructureChanged(new TreeModelEvent(this,
+//					// new Object[] {oldroot}));
+//				}
 			}
 		}
 
@@ -290,6 +300,11 @@ public class PathTreeModel implements TreeModel
 		public NoPath()
 		{
 			super(null);
+		}
+		
+		public Integer getId()
+		{
+			return -1;
 		}
 
 		public String toString()

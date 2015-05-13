@@ -28,6 +28,11 @@ public class DirectoryList extends Message
 	private LinkedList<String> subDirs = new LinkedList<>();
 	private LinkedList<Child> children = new LinkedList<>();
 
+	public DirectoryList(InputStream input) throws IOException
+	{
+		super(input);
+	}	
+
 	public DirectoryList(LocalDirectory localByName, PathElement pathElement)
 	{
 		name = localByName.getName();

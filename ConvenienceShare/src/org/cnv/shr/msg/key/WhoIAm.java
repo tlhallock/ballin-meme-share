@@ -17,17 +17,17 @@ public class WhoIAm extends MachineFound
 	
 	protected java.security.PublicKey[] keys;
 	
+	public WhoIAm(InputStream input) throws IOException
+	{
+		super(input);
+	}
+	
 	public WhoIAm()
 	{
 		super();
 		keys       = new PublicKey[] {Services.keyManager.getPublicKey()};
 	}
 	
-	protected WhoIAm(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-
 	protected int getType()
 	{
 		return TYPE;

@@ -2,7 +2,6 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -20,6 +19,12 @@ public class ChunkList extends Message
 	private String checksum;
 
 	public static int TYPE = 11;
+	
+	public ChunkList(InputStream input) throws IOException
+	{
+		super(input);
+	}
+	
 	public ChunkList(HashMap<String, Chunk> chunks2, String checksum)
 	{
 		for (Chunk c : chunks2.values())

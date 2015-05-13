@@ -40,6 +40,7 @@ public class KeyManager
 	private static FlexiCoreProvider provider = new FlexiCoreProvider();
 	
 	HashMap<String, KeyPairObject> keys = new HashMap<>();
+	KeyPairObject primaryKey;
 	File keysFile;
 
 	private HashSet<String> pendingAuthenticationRequests = new HashSet<>();
@@ -76,6 +77,10 @@ public class KeyManager
 			for (int i = 0; i < length; i++)
 			{
 				KeyPairObject keyPairObject = new KeyPairObject(scanner);
+				if (primaryKey == null || keyPairObject.timeStamp > primaryKey.timeStamp)
+				{
+					primaryKey = keyPairObject;
+				}
 				keys.put(keyPairObject.hash(), keyPairObject);
 			}
 			length = scanner.nextInt();
@@ -102,6 +107,7 @@ public class KeyManager
 		kpg.initialize(1024 /*Services.settings.keySize.get()*/);
 		KeyPairObject keyPairObject = new KeyPairObject(kpg);
 		keys.put(keyPairObject.hash(), keyPairObject);
+		primaryKey = keyPairObject;
 		writeKeys();
 	}
 
@@ -112,11 +118,12 @@ public class KeyManager
 
 	public PublicKey getPublicKey()
 	{
-		return keys.get(0).publicKey;
+		return primaryKey.publicKey;
 	}
+	
 	public PrivateKey getPrivateKey()
 	{
-		return keys.get(0).privateKey;
+		return primaryKey.privateKey;
 	}
 
 	public boolean containsKey(PublicKey destinationPublicKey)
@@ -168,30 +175,6 @@ public class KeyManager
 			}
 		}
 	}
-	
-//	public boolean confirmPendingNaunce(PublicKey publicKey, byte[] original, byte[] encrtypedNaunce2) throws IOException
-//	{
-//		return Arrays.equals(original, encrtypedNaunce2);
-//		try
-//		{
-//			PrivateKey privateKey = getPrivateKey(publicKey);
-//			Cipher cipher2 = Cipher.getInstance("RSA", "FlexiCore");
-//			cipher2.init(Cipher.DECRYPT_MODE, privateKey);
-//			
-//			ByteOutputStream output = new ByteOutputStream();
-//			try (ByteInputStream input = new ByteInputStream(encrtypedNaunce2, 0, encrtypedNaunce2.length);)
-//			{
-//				Misc.copy(new CipherInputStream(input, cipher2), output);
-//			}
-//			return Arrays.equals(original, output.getBytes());
-//		}
-//		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
-//		{
-//			e.printStackTrace();
-//			Main.quit();
-//			return false;
-//		}
-//	}
 	
 	public byte[] decryptNaunce(PublicKey pKey, byte[] encrypted) throws IOException
 	{
