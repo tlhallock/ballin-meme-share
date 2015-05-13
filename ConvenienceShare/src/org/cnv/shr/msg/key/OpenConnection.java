@@ -2,28 +2,28 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.security.PublicKey;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
-public class InitiateAuthentication extends KeyMessage
+public class OpenConnection extends KeyMessage
 {
 	public static int TYPE = 0;
 	
-	PublicKey sourcePublicKey;
-	PublicKey destinationPublicKey;
-	byte[] requestedNaunce;
+	private PublicKey sourcePublicKey;
+	private PublicKey destinationPublicKey;
+	private byte[] requestedNaunce;
 
-	public InitiateAuthentication(InetAddress address, InputStream stream) throws IOException
+	public OpenConnection(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
-	public InitiateAuthentication(PublicKey remotePublicKey, byte[] requestedNaunce)
+	public OpenConnection(PublicKey remotePublicKey, byte[] requestedNaunce)
 	{
 		destinationPublicKey = remotePublicKey;
 		this.requestedNaunce = requestedNaunce;
@@ -39,7 +39,7 @@ public class InitiateAuthentication extends KeyMessage
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(sourcePublicKey);
 		buffer.append(destinationPublicKey);
@@ -66,18 +66,19 @@ public class InitiateAuthentication extends KeyMessage
 	private boolean authenticateRemote(Communication connection) throws IOException
 	{
 		// authenticate remote...
-		if (getMachine().hasKey(sourcePublicKey))
+		Machine machine = connection.getMachine();
+		if (machine.hasKey(sourcePublicKey))
 		{
 			return true;
 		}
 
 		if (connection.acceptKey(sourcePublicKey))
 		{
-			DbKeys.addKey(getMachine(), sourcePublicKey);
+			DbKeys.addKey(machine, sourcePublicKey);
 			return true;
 		}
 	
-		PublicKey[] knownKeys = DbKeys.getKeys(getMachine());
+		PublicKey[] knownKeys = DbKeys.getKeys(machine);
 		if (knownKeys != null && knownKeys.length > 0)
 		{
 			connection.send(new KeyNotFound(connection, knownKeys));

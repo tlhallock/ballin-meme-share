@@ -2,13 +2,12 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.dwn.MachineHasFile;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class LookingFor extends Message
 {
@@ -24,9 +23,9 @@ public class LookingFor extends Message
 		fileSize = file.getFileSize();
 	}
 
-	public LookingFor(InetAddress address, InputStream stream) throws IOException
+	public LookingFor(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 
 	@Override
@@ -36,7 +35,7 @@ public class LookingFor extends Message
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer)
 	{
 
 	}

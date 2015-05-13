@@ -22,4 +22,9 @@ public class Pair<T extends FileSource>
 	{
 		return dbCopy;
 	}
+
+	public T getSource()
+	{
+		return fsCopy;
+	}
 }

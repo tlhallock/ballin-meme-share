@@ -9,7 +9,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class ChunkResponse extends Message
 {
@@ -22,9 +22,9 @@ public class ChunkResponse extends Message
 		chunk = c;
 	}
 	
-	public ChunkResponse(InetAddress address, InputStream stream) throws IOException
+	public ChunkResponse(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	@Override
@@ -39,7 +39,7 @@ public class ChunkResponse extends Message
 		chunk = new Chunk(bytes);
 	}
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		chunk.write(buffer);
 	}

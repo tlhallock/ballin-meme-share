@@ -2,26 +2,26 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.sql.SQLException;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class HeartBeat extends Message
 {
-	public HeartBeat() {}
+	public HeartBeat() {
+		}
 	
-	public HeartBeat(InetAddress a, InputStream i) throws IOException
+	public HeartBeat(InputStream i) throws IOException
 	{
-		super(a, i);
+		super(i);
 	}
 	
 	@Override
 	public void perform(Communication connection)
 	{
-		Machine machine = getMachine();
+		Machine machine = connection.getMachine();
 		machine.setLastActive(System.currentTimeMillis());
 		try
 		{
@@ -37,7 +37,7 @@ public class HeartBeat extends Message
 	protected void parse(InputStream bytes) throws IOException {}
 
 	@Override
-	protected void write(ByteListBuffer buffer) {}
+	protected void write(AbstractByteWriter buffer) {}
 	
 	public static int TYPE = 5;
 	protected int getType()

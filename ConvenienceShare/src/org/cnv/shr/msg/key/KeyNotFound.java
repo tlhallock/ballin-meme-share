@@ -9,15 +9,16 @@ import java.util.Map.Entry;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
 public class KeyNotFound extends KeyMessage
 {
 	HashMap<PublicKey, byte[]> tests = new HashMap<>();
 
-	public KeyNotFound(InetAddress address, InputStream stream) throws IOException
+	public KeyNotFound(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	public KeyNotFound(Communication c, PublicKey[] knownKeys) throws IOException
@@ -31,13 +32,24 @@ public class KeyNotFound extends KeyMessage
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		
+		int size = ByteReader.readInt(bytes);
+		for (int i = 0; i < size; i++)
+		{
+			PublicKey readPublicKey = ByteReader.readPublicKey(bytes);
+			byte[] readVarByteArray = ByteReader.readVarByteArray(bytes);
+			tests.put(readPublicKey, readVarByteArray);
+		}
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
-		
+		buffer.append(tests.size());
+		for (Entry<PublicKey, byte[]> entry : tests.entrySet())
+		{
+			buffer.append(entry.getKey());
+			buffer.append(entry.getValue());
+		}
 	}
 
 	public static int TYPE = 25;

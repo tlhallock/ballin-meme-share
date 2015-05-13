@@ -2,10 +2,9 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class Failure extends Message
@@ -16,9 +15,9 @@ public class Failure extends Message
 	{
 		this.message = message;
 	}
-	public Failure(InetAddress address, InputStream stream) throws IOException
+	public Failure(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	@Override
@@ -34,7 +33,7 @@ public class Failure extends Message
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(message);
 	}

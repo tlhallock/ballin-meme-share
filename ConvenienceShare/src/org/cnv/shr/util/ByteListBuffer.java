@@ -1,16 +1,10 @@
 package org.cnv.shr.util;
 
-import java.io.UnsupportedEncodingException;
-import java.security.PublicKey;
 import java.util.LinkedList;
 
-import org.cnv.shr.dmn.Main;
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.stng.Settings;
-
-public final class ByteListBuffer
+public final class ByteListBuffer extends AbstractByteWriter
 {
-	private int length;
+	int length;
 	private LinkedList<byte[]> bytesSoFar = new LinkedList<>();
 
 	private static final int BUFFER_LENGTH = 256;
@@ -35,87 +29,12 @@ public final class ByteListBuffer
 		return this;
 	}
 	
-	public int getLength()
-	{
-		return length;
-	}
-	
 	public ByteListBuffer append(byte i)
 	{
 		checkEnd();
 		currentBuffer[offset++] = i;
 		length++;
 		return this;
-	}
-
-	public ByteListBuffer append(short i)
-	{
-		append((byte) ((i >>  8L) & 0xff));
-		append((byte) ((i >>  0L) & 0xff)); 
-		return this;
-	}
-
-	public ByteListBuffer append(int i)
-	{
-		append((byte) ((i >> 24L) & 0xff));
-		append((byte) ((i >> 16L) & 0xff));
-		append((byte) ((i >>  8L) & 0xff));
-		append((byte) ((i >>  0L) & 0xff));
-		return this;
-	}
-
-	public ByteListBuffer append(long i)
-	{
-		append((byte) ((i >> 56L) & 0xff));
-		append((byte) ((i >> 48L) & 0xff));
-		append((byte) ((i >> 40L) & 0xff));
-		append((byte) ((i >> 32L) & 0xff));
-		append((byte) ((i >> 24L) & 0xff));
-		append((byte) ((i >> 16L) & 0xff));
-		append((byte) ((i >>  8L) & 0xff));
-		append((byte) ((i >>  0L) & 0xff));
-		return this;
-	}
-
-	public ByteListBuffer append(String str)
-	{
-		try
-		{
-			return appendVarByteArray(str.getBytes(Settings.encoding));
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			Services.logger.logStream.println("Encoding is not supported");
-			e.printStackTrace(Services.logger.logStream);
-			Main.quit();
-			return this;
-		}
-	}
-
-	public ByteListBuffer appendVarByteArray(byte[] bytes)
-	{
-		if (bytes == null)
-		{
-			return append(0);
-		}
-		else
-		{
-			return append(bytes.length).append(bytes);
-		}
-	}
-	
-	public ByteListBuffer append(PublicKey key)
-	{
-		if (key == null)
-		{
-			return appendVarByteArray(null);
-		}
-		else
-		{
-			appendVarByteArray(((de.flexiprovider.core.rsa.RSAPublicKey) key).getN().toByteArray());
-			appendVarByteArray(((de.flexiprovider.core.rsa.RSAPublicKey) key).getE().toByteArray());
-			return this;
-		}
 	}
 
 	public byte[] getBytes()
@@ -146,9 +65,9 @@ public final class ByteListBuffer
 		currentBuffer = new byte[BUFFER_LENGTH];
 		offset = 0;
 	}
-
-	public ByteListBuffer append(double percentComplete)
+	
+	public long getLength()
 	{
-		return append(String.valueOf(percentComplete));
+		return length;
 	}
 }

@@ -2,27 +2,26 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class DownloadDone extends Message
 {
 	public DownloadDone() {}
-	
-	public DownloadDone(InetAddress address, InputStream stream) throws IOException
+
+	public DownloadDone(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 
 	@Override
 	protected void parse(InputStream bytes) throws IOException {}
 
 	@Override
-	protected void write(ByteListBuffer buffer) {}
+	protected void write(AbstractByteWriter buffer) {}
 
 	public static int TYPE = 15;
 	@Override

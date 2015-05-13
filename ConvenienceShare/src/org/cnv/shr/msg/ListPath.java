@@ -2,7 +2,6 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
@@ -10,7 +9,7 @@ import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class ListPath extends Message
@@ -24,9 +23,9 @@ public class ListPath extends Message
 		this.path = path.getFullPath();
 	}
 	
-	public ListPath(InetAddress address, InputStream stream) throws IOException
+	public ListPath(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 
@@ -38,7 +37,7 @@ public class ListPath extends Message
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(rootName);
 		buffer.append(path);

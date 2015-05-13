@@ -2,7 +2,6 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
@@ -16,9 +15,9 @@ public class DownloadFailure extends Failure
 		super(message);
 	}
 
-	public DownloadFailure(InetAddress address, InputStream stream) throws IOException
+	public DownloadFailure(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 
 	public static int TYPE = 21;

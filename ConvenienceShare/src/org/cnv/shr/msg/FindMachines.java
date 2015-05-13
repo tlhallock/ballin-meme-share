@@ -2,13 +2,12 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class FindMachines extends Message
 {
@@ -16,11 +15,10 @@ public class FindMachines extends Message
 	
 	public FindMachines() {}
 	
-	public FindMachines(InetAddress a, InputStream i) throws IOException
+	public FindMachines(InputStream stream) throws IOException
 	{
-		super(a, i);
+		super(stream);
 	}
-	
 	
 	protected int getType()
 	{
@@ -31,7 +29,7 @@ public class FindMachines extends Message
 	protected void parse(InputStream bytes) throws IOException {}
 
 	@Override
-	protected void write(ByteListBuffer buffer) {}
+	protected void write(AbstractByteWriter buffer) {}
 	
 	@Override
 	public void perform(Communication connection) throws Exception

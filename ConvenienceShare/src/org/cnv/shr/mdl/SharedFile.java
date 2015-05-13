@@ -1,7 +1,5 @@
 package org.cnv.shr.mdl;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,9 +9,8 @@ import java.sql.Statement;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbTables;
-import org.cnv.shr.util.ByteListBuffer;
 
-public abstract class SharedFile extends DbObject implements NetworkObject
+public abstract class SharedFile extends DbObject
 {
 	protected RootDirectory rootDirectory;
 	protected PathElement path;
@@ -115,26 +112,26 @@ public abstract class SharedFile extends DbObject implements NetworkObject
 		return stmt;
 	}
 
-	@Override
-	public void read(InputStream bytes) throws IOException
-	{
-//		path =         (ByteReader.readString(bytes));
-//		fileSize =     (ByteReader.readLong  (bytes));
-//		tags =         (ByteReader.readString(bytes));
-//		checksum =     (ByteReader.readString(bytes));
-//		lastModified = (ByteReader.readLong  (bytes));
-	}
-
-	@Override
-	public void write(ByteListBuffer buffer)
-	{
-//		buffer.append(getName());
-//		buffer.append(getRelativePath());
-//		buffer.append(getFileSize());
-//		buffer.append(getTags());
-//		buffer.append(getChecksum());
-//		buffer.append(getLastUpdated());
-	}
+//	@Override
+//	public void read(InputStream bytes) throws IOException
+//	{
+////		path =         (ByteReader.readString(bytes));
+////		fileSize =     (ByteReader.readLong  (bytes));
+////		tags =         (ByteReader.readString(bytes));
+////		checksum =     (ByteReader.readString(bytes));
+////		lastModified = (ByteReader.readLong  (bytes));
+//	}
+//
+//	@Override
+//	public void write(ByteListBuffer buffer)
+//	{
+////		buffer.append(getName());
+////		buffer.append(getRelativePath());
+////		buffer.append(getFileSize());
+////		buffer.append(getTags());
+////		buffer.append(getChecksum());
+////		buffer.append(getLastUpdated());
+//	}
 
 	public String getTags()
 	{

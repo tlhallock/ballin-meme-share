@@ -2,19 +2,18 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class ConnectionOpened extends KeyMessage
 {
 	byte[] decryptedNaunce;
 
-	public ConnectionOpened(InetAddress address, InputStream stream) throws IOException
+	public ConnectionOpened(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	public ConnectionOpened(byte[] encoded)
@@ -29,7 +28,7 @@ public class ConnectionOpened extends KeyMessage
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.appendVarByteArray(decryptedNaunce);
 	}

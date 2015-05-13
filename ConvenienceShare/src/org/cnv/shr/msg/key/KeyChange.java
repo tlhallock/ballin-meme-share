@@ -7,7 +7,9 @@ import java.security.PublicKey;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
 public class KeyChange extends KeyMessage
 {
@@ -16,9 +18,9 @@ public class KeyChange extends KeyMessage
 	private byte[] decryptedProof;
 	private byte[] naunceRequest;
 
-	public KeyChange(InetAddress address, InputStream stream) throws IOException
+	public KeyChange(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	public KeyChange(PublicKey oldKey, PublicKey newKey, byte[] deryptedProof, byte[] naunceRequest)
@@ -32,14 +34,19 @@ public class KeyChange extends KeyMessage
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		// TODO Auto-generated method stub
-		
+		oldKey         = ByteReader.readPublicKey(bytes);
+		newKey         = ByteReader.readPublicKey(bytes);
+		decryptedProof = ByteReader.readVarByteArray(bytes);
+		naunceRequest  = ByteReader.readVarByteArray(bytes);
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
-		// TODO Auto-generated method stub
+		buffer.append(oldKey        );
+		buffer.append(newKey        );
+		buffer.append(decryptedProof);
+		buffer.append(naunceRequest );
 		
 	}
 
@@ -53,9 +60,10 @@ public class KeyChange extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (getMachine().hasKey(oldKey) && connection.hasPendingNaunce(decryptedProof))
+		Machine machine = connection.getMachine();
+		if (machine.hasKey(oldKey) && connection.hasPendingNaunce(decryptedProof))
 		{
-			DbKeys.addKey(getMachine(), newKey);
+			DbKeys.addKey(machine, newKey);
 			connection.updateKey(newKey);
 			connection.authenticateToTarget(naunceRequest);
 			return;

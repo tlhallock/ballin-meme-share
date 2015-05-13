@@ -15,7 +15,7 @@ import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class FileRequest extends Message
@@ -39,9 +39,9 @@ public class FileRequest extends Message
 		this.chunkSize = chunkSize;
 	}
 	
-	public FileRequest(InetAddress address, InputStream stream) throws IOException
+	public FileRequest(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public class FileRequest extends Message
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(rootName );
 		buffer.append(path     );

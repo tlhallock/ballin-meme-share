@@ -40,6 +40,7 @@ public class Services
 	public static ServeManager server;
 	public static DownloadManager downloads;
 	public static RemoteSynchronizers syncs;
+	public static BlackList blackList;
 	
 	public static void initialize(Settings stgs) throws Exception
 	{
@@ -62,6 +63,7 @@ public class Services
 		server = new ServeManager();
 		downloads = new DownloadManager();
 		syncs = new RemoteSynchronizers();
+		blackList = new BlackList();
 		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
 		Misc.ensureDirectory(settings.stagingDirectory.get(), false);

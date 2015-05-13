@@ -1,115 +1,22 @@
 package org.cnv.shr.msg;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
+import java.io.OutputStream;
 
-import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.util.ByteListBuffer;
-import org.cnv.shr.util.ByteReader;
-import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.OutputByteWriter;
 
 public abstract class Message
 {
 	private static final int VERSION = 1;
 	
-	private String originatorIdentifier;
-	private int port;
-	private int nports;
-	private int size;
+	protected Message() {}
 	
-	String ip;
-	
-	/** Outgoing Message **/
-	protected Message()
+	protected Message(InputStream stream) throws IOException
 	{
-		originatorIdentifier = Services.settings.machineIdentifier.get();
-		port = Services.settings.servePortBegin.get();
-		nports = Services.settings.maxServes.get();
-	}
-	
-	/** Message received 
-	 * @throws IOException **/
-	protected Message(InetAddress address, InputStream stream) throws IOException
-	{
-		originatorIdentifier = ByteReader.readString(stream);
-		port    = ByteReader.readInt(stream);
-		nports  = ByteReader.readInt(stream);
-		size    = ByteReader.readInt(stream);
-		
-		ip = Misc.getIp(address.getAddress());
-	}
-	
-	public Machine getMachine()
-	{
-		Machine m = DbMachines.getMachine(originatorIdentifier);
-		if (m == null)
-		{
-			
-			return new Machine(ip, port, nports, "Unkown machine", originatorIdentifier);
-		}
-		
-//		// last active?
-//		if (m.getPort() != port || !m.getIp().equals(ip) || m.getNumberOfPorts() != nports)
-//		{
-//			m.setPort(port);
-//			m.setIp(ip);
-//			m.setNumberOfPorts(nports);
-//			try
-//			{
-//				m.save();
-//			}
-//			catch (SQLException e)
-//			{
-//				e.printStackTrace();
-//			}
-//		}
-		
-		return m;
-	}
-
-	public void read(InputStream stream) throws IOException
-	{
-		byte[] msgData = new byte[size];
-		int offset = 0;
-		int bytesRead;
-		while (offset < size && (bytesRead = stream.read(msgData, offset, size - offset)) >= 0)
-		{
-			offset += bytesRead;
-		}
-		if (offset < size)
-		{
-			throw new IOException("Message is missing bytes! expected " + size + "bytes, but found " + offset);
-		}
-		
-		// decrypt
-		
-		parse(new ByteArrayInputStream(msgData));
-	}
-	
-	public final byte[] getBytes()
-	{
-		ByteListBuffer buffer = new ByteListBuffer();
-		write(buffer);
-		byte[] bytes = buffer.getBytes();
-
-		// encrypt
-
-		ByteListBuffer header = new ByteListBuffer();
-
-		header.append(getType());
-		
-		header.append(originatorIdentifier);
-		header.append(port                );
-		header.append(nports              );
-		header.append(bytes.length);
-		header.append(bytes);
-		
-		return header.getBytes();
+		parse(stream);
 	}
 
 	public boolean requiresAthentication()
@@ -125,9 +32,17 @@ public abstract class Message
 		
 		return builder.toString();
 	}
+	
+	public final void write(OutputStream output) throws IOException
+	{
+		OutputByteWriter writer = new OutputByteWriter(output);
+		writer.append(getType());
+		write(writer);
+		output.flush();
+	}
 
+	protected abstract int  getType();
 	protected abstract void parse(InputStream bytes) throws IOException;
-	protected abstract void write(ByteListBuffer buffer);
-	protected abstract int getType();
-	public abstract void perform(Communication connection) throws Exception;
+	protected abstract void write(AbstractByteWriter buffer) throws IOException;
+	public    abstract void perform(Communication connection) throws Exception;
 }

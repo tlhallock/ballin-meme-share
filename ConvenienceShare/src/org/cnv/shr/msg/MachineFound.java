@@ -2,14 +2,14 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.security.PublicKey;
 
 import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class MachineFound extends Message
@@ -17,14 +17,13 @@ public class MachineFound extends Message
 	private String ip;
 	private int port;
 	private int nports;
-	private java.security.PublicKey[] keys;
 	private String name;
 	private String ident;
 	private long lastActive;
 	
-	public MachineFound(InetAddress address, InputStream stream) throws IOException
+	public MachineFound(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 
 	public MachineFound()
@@ -36,7 +35,6 @@ public class MachineFound extends Message
 	{
 		ip         = m.getIp();
 		port       = m.getPort();
-		keys       = DbKeys.getKeys(m);
 		name       = m.getName();
 		ident      = m.getIdentifier();
 		lastActive = m.getLastActive();
@@ -50,16 +48,14 @@ public class MachineFound extends Message
 		{
 			return;
 		}
+		DbMachines.updateMachineInfo(createMachine(), null, connection.getIp());
+	}
+
+	public Machine createMachine()
+	{
 		Machine newMachine = new Machine(ip, port, nports, name, ident);
 		newMachine.setLastActive(lastActive);
-		newMachine.save();
-		
-		// Should this happen?
-//		for (PublicKey key : keys)
-//		{
-//			DbKeys.addKey(newMachine, key);
-//		}
-		Services.notifications.remotesChanged();
+		return newMachine;
 	}
 
 	@Override
@@ -71,16 +67,10 @@ public class MachineFound extends Message
 		ident       = ByteReader.readString(bytes);
 		lastActive  = ByteReader.readLong(bytes);
 		nports      = ByteReader.readInt(bytes);
-		int numKeys = ByteReader.readInt(bytes);
-		keys = new PublicKey[numKeys];
-		for (int i = 0; i < numKeys; i++)
-		{
-			keys[i] = ByteReader.readPublicKey(bytes);
-		}
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(ip);
 		buffer.append(port);
@@ -88,11 +78,6 @@ public class MachineFound extends Message
 		buffer.append(ident);
 		buffer.append(lastActive);
 		buffer.append(nports);
-		buffer.append(keys.length);
-		for (PublicKey key : keys)
-		{
-			buffer.append(key);
-		}
 	}
 
 	public static int TYPE = 18;

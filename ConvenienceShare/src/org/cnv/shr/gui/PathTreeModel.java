@@ -1,5 +1,7 @@
 package org.cnv.shr.gui;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 
 import javax.swing.event.TreeModelEvent;
@@ -12,18 +14,54 @@ import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.sync.ExplorerSyncIterator;
+import org.cnv.shr.sync.FileSource;
+import org.cnv.shr.sync.Pair;
+import org.cnv.shr.sync.RemoteSynchronizer;
+import org.cnv.shr.sync.RootSynchronizer;
+import org.cnv.shr.sync.SynchronizationTask;
+import org.cnv.shr.sync.SynchronizationTask.TaskListener;
 
 public class PathTreeModel implements TreeModel
 {
-	LinkedList<TreeModelListener> listeners = new LinkedList<>();
-	RootDirectory rootDirectory;
-	Node root = new Node(new NoPath());
-	
-	public void setRoot(RootDirectory newRoot)
+	private LinkedList<TreeModelListener> listeners = new LinkedList<>();
+	private RootDirectory rootDirectory;
+	private Node root = new Node(new NoPath());
+
+	private RootSynchronizer synchronizer;
+	private ExplorerSyncIterator iterator;
+	private FileSource rootSource;
+
+	private void closeConnections()
 	{
+		if (synchronizer == null)
+		{
+			return;
+		}
+		try
+		{
+			synchronizer.close();
+			iterator.close();
+			rootSource.close();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public void setRoot(RootDirectory newRoot) throws IOException
+	{
+		closeConnections();
+		iterator = new ExplorerSyncIterator(rootDirectory);
+		synchronizer = new RemoteSynchronizer(rootDirectory, iterator);
+		rootSource = iterator.getInitialFileSource();
+		// actually have to kick the synchronizer off...
+		
 		RootDirectory oldroot = this.rootDirectory;
 		this.rootDirectory = newRoot;
 		this.root = new Node(DbPaths.ROOT);
+		this.root.task = iterator.getSyncTask(rootSource, DbPaths.ROOT, this.root);
 		this.root.expand();
 		if (oldroot == null)
 		{
@@ -33,6 +71,11 @@ public class PathTreeModel implements TreeModel
 		{
 			listener.treeStructureChanged(new TreeModelEvent(this, new Object[] {oldroot}));
 		}
+	}
+	
+	public void finalize()
+	{
+		closeConnections();
 	}
 	
 	@Override
@@ -123,10 +166,13 @@ public class PathTreeModel implements TreeModel
 		return rootDirectory;
 	}
 
-	class Node
+	class Node implements TaskListener
 	{
 		PathElement element;
 		Node[] children;
+		FileSource[] childSources;
+		
+		SynchronizationTask task;
 		
 		public Node(PathElement element)
 		{
@@ -175,7 +221,7 @@ public class PathTreeModel implements TreeModel
 			return element.getFullPath().equals(n.element.getFullPath());
 		}
 		
-		private void expand()
+		private synchronized void expand()
 		{
 			System.out.println("Expanding " + element.getFullPath());
 			System.out.println("Expanding " + element.getId());
@@ -198,7 +244,38 @@ public class PathTreeModel implements TreeModel
 			int ndx = 0;
 			for (PathElement e : list)
 			{
-				children[ndx++] = new Node(e);
+				children[ndx] = new Node(e);
+				
+				if (childSources[ndx] != null)
+				{
+					children[ndx].task = iterator.getSyncTask(childSources[ndx], element, children[ndx]);
+				}
+				ndx++;
+			}
+		}
+
+		@Override
+		public synchronized void syncCompleted()
+		{
+			boolean alreadyExpanded = children != null;
+			for (Pair<? extends FileSource> p : task.getSynchronizationResults())
+			{
+				Node child = null;
+				
+				if (!alreadyExpanded)
+				{
+					childSources[ndx] = p.getSource();
+					continue;
+				}
+				
+				children[ndx].source = p.getSource();
+				children[ndx].task = iterator.getSyncTask(childSources[ndx], element, children[ndx]);
+
+				for (TreeModelListener listener : listeners)
+				{
+					// listener.treeStructureChanged(new TreeModelEvent(this,
+					// new Object[] {oldroot}));
+				}
 			}
 		}
 

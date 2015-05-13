@@ -11,16 +11,16 @@ import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class NewKey extends Message
 {
 	PublicKey newKey;
 	byte[] naunceRequest;
 
-	public NewKey(InetAddress address, InputStream stream) throws IOException
+	public NewKey(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	public NewKey(PublicKey publicKey, byte[] responseAwk)
 	{
@@ -36,7 +36,7 @@ public class NewKey extends Message
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer)
 	{
 		// TODO Auto-generated method stub
 		
@@ -54,13 +54,13 @@ public class NewKey extends Message
 	{
 		if (!connection.acceptKey(newKey))
 		{
-			DbMessages.addMessage(new UserMessage.AuthenticationRequest(getMachine(), newKey));
+			DbMessages.addMessage(new UserMessage.AuthenticationRequest(connection.getMachine(), newKey));
 			connection.send(new KeyFailure());
 			connection.notifyAuthentication(false);
 			connection.notifyDone();
 		}
 		
-		DbKeys.addKey(getMachine(), newKey);
+		DbKeys.addKey(connection.getMachine(), newKey);
 		connection.updateKey(newKey);
 
 		byte[] decrypted = Services.keyManager.decryptNaunce(connection.getLocalKey(), naunceRequest);

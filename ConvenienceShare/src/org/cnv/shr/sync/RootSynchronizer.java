@@ -29,14 +29,14 @@ public abstract class RootSynchronizer implements Closeable
 	int changeCount;
 
 	String currentFile;
-	DirectorySyncIterator iterator;
+	SyncrhonizationTaskIterator iterator;
 	RootDirectory local;
 	LinkedList<SynchronizationListener> listeners = new LinkedList<>();
 	boolean quit;
 	
-	public RootSynchronizer(RootDirectory remoteDirectory, FileSource f) throws IOException
+	public RootSynchronizer(RootDirectory remoteDirectory, SyncrhonizationTaskIterator iterator) throws IOException
 	{
-		iterator = new DirectorySyncIterator(remoteDirectory, f);
+		this.iterator = iterator;
 		this.local = remoteDirectory;
 	}
 	
@@ -108,7 +108,7 @@ public abstract class RootSynchronizer implements Closeable
 			}
 		}
 		
-		task.synchronizedResults = subDirectories.toArray(dummy);
+		task.setResults(subDirectories.toArray(dummy));
 		Thread.yield();
 	}
 

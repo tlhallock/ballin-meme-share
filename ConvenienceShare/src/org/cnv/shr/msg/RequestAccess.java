@@ -2,12 +2,11 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.util.HashSet;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class RequestAccess extends Message
 {
@@ -22,9 +21,9 @@ public class RequestAccess extends Message
 		
 	}
 
-	public RequestAccess(InetAddress a, InputStream i) throws IOException
+	public RequestAccess(InputStream i) throws IOException
 	{
-		super(a, i);
+		super(i);
 	}
 	
 	protected int getType()
@@ -36,7 +35,7 @@ public class RequestAccess extends Message
 	{
 	}
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer)
 	{
 		
 	}

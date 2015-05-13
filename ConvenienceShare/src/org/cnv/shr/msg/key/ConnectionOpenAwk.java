@@ -6,7 +6,7 @@ import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class ConnectionOpenAwk extends KeyMessage
@@ -14,9 +14,9 @@ public class ConnectionOpenAwk extends KeyMessage
 	byte[] decryptedNaunce;
 	byte[] naunceRequest;
 
-	public ConnectionOpenAwk(InetAddress address, InputStream stream) throws IOException
+	public ConnectionOpenAwk(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 
 	public ConnectionOpenAwk(byte[] encoded, byte[] responseAwk)
@@ -33,7 +33,7 @@ public class ConnectionOpenAwk extends KeyMessage
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.appendVarByteArray(decryptedNaunce);
 		buffer.appendVarByteArray(naunceRequest);

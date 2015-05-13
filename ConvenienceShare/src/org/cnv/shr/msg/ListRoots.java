@@ -2,17 +2,17 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class ListRoots extends Message
 {
-	public ListRoots() {}
-	public ListRoots(InetAddress address, InputStream stream) throws IOException
+	public ListRoots() {
+		}
+	public ListRoots(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	@Override
@@ -25,7 +25,7 @@ public class ListRoots extends Message
 	protected void parse(InputStream bytes) throws IOException {}
 
 	@Override
-	protected void write(ByteListBuffer buffer) {}
+	protected void write(AbstractByteWriter buffer) {}
 	
 	public static int TYPE = 6;
 	protected int getType()

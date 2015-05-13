@@ -1,5 +1,6 @@
 package org.cnv.shr.db.h2;
 
+import java.security.PublicKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -93,4 +94,44 @@ public class DbMachines
 			e.printStackTrace();
 		}
 	}
+	
+	
+	// Should be in the same transaction...
+	public static void updateMachineInfo(Machine claimedMachine, PublicKey[] publicKeys, String ip)
+	{
+		if (ip != null)
+		{
+			claimedMachine.setIp(ip);
+		}
+		Machine machine = getMachine(claimedMachine.getIdentifier());
+		if (machine == null)
+		{
+			machine = claimedMachine;
+		}
+		machine.setIp(claimedMachine.getIp());
+		machine.setPort(claimedMachine.getPort());
+		machine.setName(claimedMachine.getName());
+		machine.setNumberOfPorts(claimedMachine.getNumberOfPorts());
+		
+		if (publicKeys != null)
+		{
+			for (PublicKey key : publicKeys)
+			{
+				DbKeys.addKey(machine, key);
+			}
+		}
+		
+		try
+		{
+			machine.save();
+			Services.notifications.remotesChanged();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
 }

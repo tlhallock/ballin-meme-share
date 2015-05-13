@@ -11,7 +11,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class ChunkList extends Message
@@ -27,12 +27,7 @@ public class ChunkList extends Message
 			chunks.add(c);
 		}
 	}
-	
-	public ChunkList(InetAddress address, InputStream stream) throws IOException
-	{
-		super(address, stream);
-	}
-	
+
 	@Override
 	protected int getType()
 	{
@@ -49,7 +44,7 @@ public class ChunkList extends Message
 		checksum = ByteReader.readString(bytes);
 	}
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(chunks.size());
 		for (Chunk c : chunks)

@@ -9,14 +9,14 @@ import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 
-public class DirectorySyncIterator implements Closeable
+public class ConsecutiveDirectorySyncIterator implements SyncrhonizationTaskIterator
 {
 	private boolean first;
 	private LinkedList<Node> stack = new LinkedList<>();
 	private RootDirectory root;
 	FileSource source;
 		
-	public DirectorySyncIterator(RootDirectory remoteDirectory, FileSource f) throws IOException
+	public ConsecutiveDirectorySyncIterator(RootDirectory remoteDirectory, FileSource f) throws IOException
 	{
 		root = remoteDirectory;
 		source = f;
@@ -84,7 +84,7 @@ public class DirectorySyncIterator implements Closeable
 					continue;
 				}
 
-				stack.addLast(new Node(/*sync.synchronizedResults[index],*/ new SynchronizationTask(dbDir, root, grandChildren)));
+				stack.addLast(new Node(new SynchronizationTask(dbDir, root, grandChildren)));
 				index++;
 				return true;
 			}

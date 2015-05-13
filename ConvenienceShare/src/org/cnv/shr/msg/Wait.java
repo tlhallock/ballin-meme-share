@@ -2,18 +2,17 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class Wait extends Message
 {
 	public static int TYPE = 8;
 	
-	public Wait(InetAddress a, InputStream i) throws IOException
+	public Wait(InputStream i) throws IOException
 	{
-		super(a, i);
+		super(i);
 	}
 	
 	protected int getType()
@@ -28,7 +27,7 @@ public class Wait extends Message
 	}
 	
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer)
 	{
 		
 	}

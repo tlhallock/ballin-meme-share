@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class CompletionStatus extends Message
@@ -21,9 +21,9 @@ public class CompletionStatus extends Message
 		percentComplete = d;
 	}
 
-	public CompletionStatus(InetAddress address, InputStream stream) throws IOException
+	public CompletionStatus(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	@Override
@@ -37,7 +37,7 @@ public class CompletionStatus extends Message
 		percentComplete = ByteReader.readDouble(bytes);
 	}
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(percentComplete);
 	}

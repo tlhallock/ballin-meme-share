@@ -8,6 +8,7 @@ package org.cnv.shr.gui;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -96,14 +97,19 @@ public class MachineView extends javax.swing.JPanel
 		if (directory == null)
 		{
 			viewNoDirectory();
+			return;
 		}
-		else
+		if (model.getRootDirectory().getId() != directory.getId())
 		{
-			if (model.getRootDirectory().getId() == directory.getId())
-			{
-				model.setRoot(remote);
-			}
-			model.setRoot(directory);
+			return;
+		}
+		try
+		{
+			model.setRoot(remote);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
 		}
 	}
 
@@ -265,7 +271,14 @@ public class MachineView extends javax.swing.JPanel
         this.tagsLabel.setText(directory.getTags());
         this.nFilesLabel.setText(directory.getTotalNumberOfFiles());
         this.sizeLabel.setText(directory.getTotalFileSize());
-        ((PathTreeModel) filesTree.getModel()).setRoot(directory);
+        try
+		{
+			((PathTreeModel) filesTree.getModel()).setRoot(directory);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
     }
     
     static final class FileSize implements Comparable<FileSize>

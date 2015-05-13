@@ -6,21 +6,21 @@ import java.net.InetAddress;
 
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class KeyFailure extends KeyMessage
 {
 	public KeyFailure() {}
-	public KeyFailure(InetAddress address, InputStream stream) throws IOException
+	public KeyFailure(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	@Override
 	protected void parse(InputStream bytes) throws IOException {}
 
 	@Override
-	protected void write(ByteListBuffer buffer) {}
+	protected void write(AbstractByteWriter buffer) {}
 
 	public static int TYPE = 26;
 	@Override

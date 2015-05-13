@@ -14,6 +14,6 @@ public class TestByteListBuffer
 		System.out.println(Misc.format(naunce));
 		System.out.println(Misc.format(buffer.getBytes()));
 		
-		System.out.println(Misc.format(new ByteListBuffer().append(15).getBytes()));
+//		System.out.println(Misc.format(new ByteListBuffer().append(15).getBytes()));
 	}
 }

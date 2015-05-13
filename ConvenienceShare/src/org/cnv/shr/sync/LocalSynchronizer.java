@@ -15,7 +15,7 @@ public class LocalSynchronizer extends RootSynchronizer
 {
 	public LocalSynchronizer(LocalDirectory remoteDirectory) throws IOException
 	{
-		super(remoteDirectory, new FileFileSource(new File(remoteDirectory.getPathElement().getFullPath())));
+		super(remoteDirectory, new ConsecutiveDirectorySyncIterator(remoteDirectory, new FileFileSource(new File(remoteDirectory.getPathElement().getFullPath()))));
 
 //		if (Files.isSymbolicLink(Paths.get(f.getCanonicalPath())) || !f.isDirectory())
 //		{

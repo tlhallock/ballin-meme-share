@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
-import org.cnv.shr.mdl.NetworkObject;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
-public class Chunk implements NetworkObject
+public class Chunk
 {
 	private String checksum;
 	private long begin;
@@ -36,7 +35,6 @@ public class Chunk implements NetworkObject
 		read(input);
 	}
 
-	@Override
 	public void read(InputStream input) throws IOException
 	{
 		begin =  ByteReader.readLong(input);
@@ -44,8 +42,7 @@ public class Chunk implements NetworkObject
 		checksum = ByteReader.readString(input);
 	}
 
-	@Override
-	public void write(ByteListBuffer buffer)
+	public void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(getBegin());
 		buffer.append(end);

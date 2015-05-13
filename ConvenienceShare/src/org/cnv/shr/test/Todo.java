@@ -2,6 +2,9 @@ package org.cnv.shr.test;
 
 public class Todo
 {
+	// test multiple users of a single connection...
+	
+	
 	// test add bad machine
 	// test add machine
 	// test remove machine

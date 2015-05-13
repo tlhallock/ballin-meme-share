@@ -11,6 +11,7 @@ public class SynchronizationTask
 {
 	ArrayList<FileSource> files = new ArrayList<>();
 	LinkedList<PathElement> dbPaths;
+	LinkedList<TaskListener> listeners = new LinkedList<>();
 	
 	Pair<? extends FileSource>[] synchronizedResults;
 	
@@ -24,5 +25,34 @@ public class SynchronizationTask
 		{
 			files.add(grandChildren.next());
 		}
+	}
+	
+	public void addListener(TaskListener listener)
+	{
+		listeners.add(listener);
+	}
+	
+	public void removeListener(TaskListener listener)
+	{
+		listeners.remove(listener);
+	}
+
+	public void setResults(Pair[] array)
+	{
+		synchronizedResults = array;
+		for (TaskListener listener : listeners)
+		{
+			listener.syncCompleted();
+		}
+	}
+	
+	public interface TaskListener
+	{
+		public void syncCompleted();
+	}
+
+	public Pair<? extends FileSource>[] getSynchronizationResults()
+	{
+		return synchronizedResults;
 	}
 }

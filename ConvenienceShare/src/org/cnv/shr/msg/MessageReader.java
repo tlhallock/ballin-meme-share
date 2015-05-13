@@ -3,7 +3,6 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
-import java.net.InetAddress;
 import java.util.HashMap;
 
 import org.cnv.shr.dmn.Communication;
@@ -19,12 +18,13 @@ import org.cnv.shr.msg.dwn.MachineHasFile;
 import org.cnv.shr.msg.dwn.RequestCompletionStatus;
 import org.cnv.shr.msg.key.ConnectionOpenAwk;
 import org.cnv.shr.msg.key.ConnectionOpened;
-import org.cnv.shr.msg.key.InitiateAuthentication;
 import org.cnv.shr.msg.key.KeyChange;
 import org.cnv.shr.msg.key.KeyFailure;
 import org.cnv.shr.msg.key.KeyNotFound;
 import org.cnv.shr.msg.key.NewKey;
+import org.cnv.shr.msg.key.OpenConnection;
 import org.cnv.shr.msg.key.RevokeKey;
+import org.cnv.shr.msg.key.WhoIAm;
 import org.cnv.shr.util.ByteReader;
 
 
@@ -62,8 +62,9 @@ public class MessageReader
 		add(new MessageIdentifier(ConnectionOpened.class           ));
 		add(new MessageIdentifier(KeyNotFound.class                ));
 		add(new MessageIdentifier(KeyFailure.class                 ));
-		add(new MessageIdentifier(InitiateAuthentication.class     ));
+		add(new MessageIdentifier(OpenConnection.class             ));
 		add(new MessageIdentifier(KeyChange.class                  ));
+		add(new MessageIdentifier(WhoIAm.class                     ));
 
 		Services.logger.logStream.println("Message map:\n" + this);
 	}
@@ -89,30 +90,18 @@ public class MessageReader
 		identifiers.put(type, identifier);
 	}
 	
-	public Message readMsg(InetAddress address, Communication c) throws IOException
+	public Message readMsg(Communication c) throws IOException
 	{
 		int msgType = ByteReader.readInt(c.getIn());
 
 		MessageIdentifier messageIdentifier = identifiers.get(msgType);
 		if (messageIdentifier == null)
 		{
-			Services.logger.logStream.println("Ignoring unkown message type: " + msgType + " from " + address);
+			Services.logger.logStream.println("Ignoring unkown message type: " + msgType + " from " + c.getUrl());
 			return null;
 		}
 		
-		Message message = messageIdentifier.create(address, c.getIn());
-
-		if (!c.authenticate(message))
-		{
-			Services.logger.logStream.println("Unable to authenticate message of type " + msgType + " from " + address);
-			return null;
-		}
-		
-		message.read(c.getIn());
-		
-		System.out.println("Msg: " + message);
-
-		return message;
+		return messageIdentifier.create(c.getIn());
 	}
 	
 	public String toString()
@@ -138,7 +127,7 @@ public class MessageReader
 			{
 				name = c.getName();
 				type = c.getField("TYPE").getInt(null);
-				constructor = c.getConstructor(InetAddress.class, InputStream.class);
+				constructor = c.getConstructor(InputStream.class);
 				if (constructor == null)
 				{
 					throw new Exception("Missing constructor in class " + name);
@@ -157,12 +146,12 @@ public class MessageReader
 			return type;
 		}
 		
-		Message create(InetAddress address, InputStream stream)
+		Message create(InputStream stream)
 		{
 			try
 			{
 				Services.logger.logStream.println("Received message of type " + name);
-				return constructor.newInstance(address, stream);
+				return constructor.newInstance(stream);
 			}
 			catch (Exception e)
 			{

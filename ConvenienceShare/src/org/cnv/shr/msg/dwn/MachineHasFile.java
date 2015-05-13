@@ -8,7 +8,7 @@ import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class MachineHasFile extends Message
 {
@@ -32,9 +32,9 @@ public class MachineHasFile extends Message
 		}
 	}
 
-	public MachineHasFile(InetAddress address, InputStream stream) throws IOException
+	public MachineHasFile(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 	
 	@Override
@@ -50,7 +50,7 @@ public class MachineHasFile extends Message
 	}
 	
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer)
 	{
 		
 	}
@@ -63,7 +63,7 @@ public class MachineHasFile extends Message
 		// No.
 		if (!hasFile) return;
 
-		Services.downloads.getDownloadInstance(null).addSeeder(getMachine(), connection);
+		Services.downloads.getDownloadInstance(null).addSeeder(connection.getMachine(), connection);
 	}
 	
 	public String toString()

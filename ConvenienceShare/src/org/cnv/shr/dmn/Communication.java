@@ -23,6 +23,7 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
@@ -35,25 +36,38 @@ import org.cnv.shr.util.Misc;
 // TODO: this should really only need authentication to UPDATE machine info...
 public class Communication implements Runnable
 {
+	// Statistics
+	private long lastKbpsRefresh;
+	private long numBytesSent;
+	private long numBytesReceived;
 	private long connectionOpened;
 	private long lastActivity;
 	
+	// The streams
 	private Socket socket;
 	private InputStream input;
 	private OutputStream output;
 	
-	private Machine machine;
-	PublicKey remotePublicKey;
-	PublicKey localPublicKey;
+	// The machine that the remote says it is
+	private Machine claimedMachine;
+	private PublicKey remotePublicKey;
+	private PublicKey localPublicKey;
 	
+	// Authentication setting
 	private boolean acceptAnyKeys;
+	// Unecrypted naunces that the remote should be able to send back
 	private HashSet<String> pendingNaunces = new HashSet<>();
 	private Boolean authenticated;
 	
+	// a signal that we should stop
 	private boolean done = false;
 	
+	// A condition to wait until this communication has been authenticated
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
+	
+	// Keep the connection open while this is positive
+	private int numUsers;
 	
 	/** Initiator **/
 	public Communication(String ip, int port, boolean acceptKeys) throws UnknownHostException, IOException
@@ -73,19 +87,23 @@ public class Communication implements Runnable
 		input =  socket.getInputStream();
 		output = socket.getOutputStream();
 	}
-	
+
+	public String getIp()
+	{
+		return socket.getInetAddress().getHostAddress();
+	}
 	public String getUrl()
 	{
-		return socket.getInetAddress() + ":" + socket.getPort();
+		return getIp() + ":" + socket.getPort();
 	}
 	
 	public void run()
 	{
 		try
 		{
-			while (!done)
+			while (!done || numUsers > 0)
 			{
-				Message request = Services.msgReader.readMsg(socket.getInetAddress(), this);
+				Message request = Services.msgReader.readMsg(this);
 				if (request == null || !authenticate(request))
 				{
 					return;
@@ -121,7 +139,7 @@ public class Communication implements Runnable
 		}
 	}
 
-	public void send(Message m)
+	public synchronized void send(Message m)
 	{
 		if (m.requiresAthentication() && (authenticated == null || !authenticated))
 		{
@@ -137,8 +155,7 @@ public class Communication implements Runnable
 		{
 			synchronized (output)
 			{
-				output.write(m.getBytes());
-				output.flush();
+				m.write(output);
 			}
 		}
 		catch (IOException e)
@@ -153,32 +170,28 @@ public class Communication implements Runnable
 		return socket.isClosed();
 	}
 	
-	public void notifyDone()
+	public synchronized void addUser()
 	{
+		numUsers++;
+	}
+	
+	public synchronized void notifyDone()
+	{
+		numUsers--;
+		if (numUsers > 0)
+		{
+			return;
+		}
+		
 		send(new DoneMessage());
-//		try
-//		{
-//			socket.shutdownOutput();
-//		}
-//		catch (IOException e)
-//		{
-//			Services.logger.logStream.println("Unable to close output stream.");
-//			e.printStackTrace(Services.logger.logStream);
-//		}
 	}
 
 	public void remoteIsDone()
 	{
-		done = true;
-//		try
-//		{
-//			socket.shutdownInput();
-//		}
-//		catch (IOException e)
-//		{
-//			Services.logger.logStream.println("Unable to close input stream.");
-//			e.printStackTrace(Services.logger.logStream);
-//		}
+		if (numUsers <= 0)
+		{
+			done = true;
+		}
 	}
 	
 	public boolean authenticate(Message m)
@@ -198,7 +211,7 @@ public class Communication implements Runnable
 
 	public Machine getMachine()
 	{
-		return machine;
+		return DbMachines.getMachine(claimedMachine.getIdentifier());
 	}
 	
 	public long getKbs()
@@ -238,14 +251,19 @@ public class Communication implements Runnable
 		return returnValue;
 	}
 	
-	public boolean waitForAuthentication()
+	public boolean waitForAuthentication() throws IOException
 	{
 		lock.lock();
 		boolean returnValue = false;
 		try
 		{
+			int count = 0;
 			while (authenticated == null)
 			{
+				if (count++ > 60)
+				{
+					throw new IOException("Connection timed out...");
+				}
 				try
 				{
 					condition.await(10, TimeUnit.SECONDS);
@@ -264,11 +282,27 @@ public class Communication implements Runnable
 		return returnValue;
 	}
 
+	public void offerMachine(Machine claimedMachine, PublicKey[] publicKeys)
+	{
+		this.claimedMachine = claimedMachine;
+		if (getMachine() == null && !Services.blackList.contains(claimedMachine))
+		{
+			// If we have no record of this machine, then it can be authenticated. (We will not share with it anyway.)
+			// Otherwise, it must prove that it who it said it was in case we are sharing with it.
+			
+
+			// Somebody could spam a whole bunch of these to make the database too big.
+			// Should fix that sometime...
+			DbMachines.updateMachineInfo(claimedMachine, publicKeys, getIp());
+		}
+	}
+
 	public void notifyAuthentication(boolean authenticated)
 	{
 		lock.lock();
 		try
 		{
+			condition.signalAll();
 			if (authenticated)
 			{
 				Cipher cipherOut = Cipher.getInstance("RSA", "FlexiCore"); cipherOut.init(Cipher.ENCRYPT_MODE, remotePublicKey);
@@ -277,11 +311,10 @@ public class Communication implements Runnable
 				input  = new CipherInputStream(new GZIPInputStream(input), cipherIn);
 				output = new GZIPOutputStream(new CipherOutputStream(output, cipherOut));
 				
-				// update machine info from message
+				DbMachines.updateMachineInfo(claimedMachine, new PublicKey[]{remotePublicKey}, getIp());
 			}
 			
 			this.authenticated = authenticated;
-			condition.signalAll();
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
 		{
@@ -291,7 +324,6 @@ public class Communication implements Runnable
 		catch (IOException e)
 		{
 			e.printStackTrace();
-			condition.signalAll();
 			try
 			{
 				socket.close();
@@ -313,7 +345,7 @@ public class Communication implements Runnable
 		{
 			return true;
 		}
-		return Services.application != null && Services.application.acceptKey(machine, remote);
+		return Services.application != null && Services.application.acceptKey(getMachine(), remote);
 	}
 	
 	public void authenticateToTarget(byte[] requestedNaunce) throws IOException

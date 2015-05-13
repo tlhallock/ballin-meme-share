@@ -8,15 +8,15 @@ import java.security.PublicKey;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 
 public class RevokeKey extends Message
 {
 	private PublicKey revoke;
 
-	public RevokeKey(InetAddress address, InputStream stream) throws IOException
+	public RevokeKey(InputStream stream) throws IOException
 	{
-		super(address, stream);
+		super(stream);
 	}
 
 	@Override
@@ -27,7 +27,7 @@ public class RevokeKey extends Message
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer)
 	{
 		// TODO Auto-generated method stub
 		
@@ -43,7 +43,7 @@ public class RevokeKey extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		DbKeys.removeKey(getMachine(), revoke);
+		DbKeys.removeKey(connection.getMachine(), revoke);
 	}
 
 }

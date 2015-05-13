@@ -2,7 +2,6 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbFiles;
@@ -11,20 +10,23 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.RemoteSynchronizers;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class DirectoryList extends Message
 {
-	String name;
-	String currentPath;
-	LinkedList<String> subDirs = new LinkedList<>();
-	LinkedList<Child> children = new LinkedList<>();
+	public static int TYPE = 19;
+	
+	private String name;
+	private String currentPath;
+	private LinkedList<String> subDirs = new LinkedList<>();
+	private LinkedList<Child> children = new LinkedList<>();
 
 	public DirectoryList(LocalDirectory localByName, PathElement pathElement)
 	{
@@ -42,11 +44,6 @@ public class DirectoryList extends Message
 				children.add(new Child(local));
 			}
 		}
-	}
-
-	public DirectoryList(InetAddress address, InputStream stream) throws IOException
-	{
-		super(address, stream);
 	}
 	
 	public String toString()
@@ -85,7 +82,7 @@ public class DirectoryList extends Message
 	}
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(name);
 		buffer.append(currentPath);
@@ -101,16 +98,10 @@ public class DirectoryList extends Message
 		}
 	}
 
-	public static int TYPE = 19;
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
+		getRoot(connection.getMachine());
 		RemoteSynchronizers.RemoteSynchronizerQueue sync = Services.syncs.getSynchronizer(connection, getRoot());
 		if (sync == null)
 		{
@@ -126,13 +117,18 @@ public class DirectoryList extends Message
 	}
 	
 	RemoteDirectory rootCache;
-	RemoteDirectory getRoot()
+	RemoteDirectory getRoot(Machine machine)
 	{
 		if (rootCache != null)
 		{
 			return rootCache;
 		}
-		return rootCache = (RemoteDirectory) DbRoots.getRoot(getMachine(), name);
+		return rootCache = (RemoteDirectory) DbRoots.getRoot(machine, name);
+	}
+
+	private RemoteDirectory getRoot()
+	{
+		return rootCache;
 	}
 	
 	PathElement elemCache;
@@ -147,11 +143,11 @@ public class DirectoryList extends Message
 	
 	public class Child
 	{
-		String name;
-		long size;
-		String checksum;
-		String tags;
-		long lastModified;
+		private String name;
+		private long size;
+		private String checksum;
+		private String tags;
+		private long lastModified;
 		
 		Child(SharedFile l)
 		{
@@ -162,7 +158,7 @@ public class DirectoryList extends Message
 			this.lastModified = l.getLastUpdated();
 		}
 		
-		Child(InputStream bytes) throws IOException
+		Child (InputStream bytes) throws IOException
 		{
 			name = ByteReader.readString(bytes);
 			size = ByteReader.readLong(bytes);
@@ -171,7 +167,7 @@ public class DirectoryList extends Message
 			lastModified = ByteReader.readLong(bytes);
 		}
 		
-		public void write(ByteListBuffer buffer)
+		public void write(AbstractByteWriter buffer) throws IOException
 		{
 			buffer.append(name);
 			buffer.append(size);
@@ -196,5 +192,11 @@ public class DirectoryList extends Message
 	public LinkedList<String> getSubDirs()
 	{
 		return subDirs;
+	}
+
+	@Override
+	protected int getType()
+	{
+		return TYPE;
 	}
 }

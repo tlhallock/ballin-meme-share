@@ -2,7 +2,6 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,10 +11,9 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
-import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
-import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class RootList extends Message
@@ -31,9 +29,9 @@ public class RootList extends Message
 		}
 	}
 	
-	public RootList(InetAddress a, InputStream i) throws IOException
+	public RootList(InputStream i) throws IOException
 	{
-		super(a, i);
+		super(i);
 	}
 	
 	private void add(RootDirectory root)
@@ -47,6 +45,7 @@ public class RootList extends Message
 		boolean changed = true;
 		for (RootDirectory root : sharedDirectories)
 		{
+			root.setMachine(connection.getMachine());
 			try
 			{
 				root.save();
@@ -66,7 +65,6 @@ public class RootList extends Message
 	@Override
 	protected void parse(InputStream bytes) throws IOException
 	{
-		Machine machine = getMachine();
 		int numFolders = ByteReader.readInt(bytes);
 		for (int i = 0; i < numFolders; i++)
 		{
@@ -74,13 +72,13 @@ public class RootList extends Message
 			String tags        = ByteReader.readString(bytes);
 			String description = ByteReader.readString(bytes);
 			
-			sharedDirectories.add(new RemoteDirectory(machine, name, tags, description));
+			sharedDirectories.add(new RemoteDirectory(null, name, tags, description));
 		}
 	}
 	
 
 	@Override
-	protected void write(ByteListBuffer buffer)
+	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(sharedDirectories.size());
 		for (RootDirectory dir : sharedDirectories)
