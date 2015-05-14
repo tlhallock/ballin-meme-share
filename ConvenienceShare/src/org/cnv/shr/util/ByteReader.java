@@ -31,15 +31,31 @@ public class ByteReader
 		return i;
 	}
 	
-	public static int readInt(InputStream in) throws IOException
+	public static long tryToReadInt(InputStream in) throws IOException
 	{
 		long i = 0;
+		
+		int firstByte = in.read();
+		if (firstByte < 0)
+		{
+			return -1;
+		}
 
-		i |= (readByte(in)) << 24L;
+		i |=      firstByte << 24L;
 		i |= (readByte(in)) << 16L;
 		i |= (readByte(in)) <<  8L;
 		i |= (readByte(in)) <<  0L;
 
+		return i;
+	}
+	
+	public static int readInt(InputStream in) throws IOException
+	{
+		long i = tryToReadInt(in);
+		if (i < 0)
+		{
+			throw new IOException("Hit end of stream.");
+		}
 		return (int) i;
 	}
 

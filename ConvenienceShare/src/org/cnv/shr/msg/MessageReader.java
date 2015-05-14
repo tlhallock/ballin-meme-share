@@ -95,11 +95,12 @@ public class MessageReader
 	
 	public Message readMsg(ConnectionStatistics stats, InputStream input) throws IOException
 	{
-		int msgType = ByteReader.readInt(input);
-		if (msgType < 0)
+		long msgTypeL = ByteReader.tryToReadInt(input);
+		if (msgTypeL < 0)
 		{
 			return null;
 		}
+		int msgType = (int) msgTypeL;
 
 		MessageIdentifier messageIdentifier = identifiers.get(msgType);
 		if (messageIdentifier == null)

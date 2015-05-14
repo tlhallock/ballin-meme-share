@@ -1,9 +1,8 @@
 package org.cnv.shr.cnctn;
 
-import java.io.InputStream;
+import java.io.IOException;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.DoneResponse;
 import org.cnv.shr.msg.Message;
 
 public class ConnectionRunnable implements Runnable
@@ -41,14 +40,41 @@ public class ConnectionRunnable implements Runnable
 					e.printStackTrace(Services.logger.logStream);
 				}
 			}
-
-			connection.getSocket().shutdownOutput();
+			Services.notifications.connectionClosed(connection);
 		}
 		catch (Exception ex)
 		{
 			Services.logger.logStream.println("Error with connection:");
 			ex.printStackTrace(Services.logger.logStream);
 		}
-		Services.notifications.connectionClosed(connection);
+		finally
+		{
+			ensureClosed();
+		}
+	}
+
+	private void ensureClosed()
+	{
+		int ndx = 0;
+		while (!connection.isClosed() && ndx <= 10)
+		{
+			try
+			{
+				Thread.sleep(200);
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		try
+		{
+			connection.getSocket().close();
+			System.out.println("Closed");
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

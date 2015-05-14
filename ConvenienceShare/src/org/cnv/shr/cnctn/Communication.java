@@ -1,5 +1,6 @@
 package org.cnv.shr.cnctn;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -8,15 +9,6 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PublicKey;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -27,21 +19,14 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
-import org.cnv.shr.msg.DoneResponse;
 import org.cnv.shr.msg.Message;
-import org.cnv.shr.msg.key.ConnectionOpenAwk;
-import org.cnv.shr.msg.key.KeyChange;
-import org.cnv.shr.msg.key.NewKey;
-import org.cnv.shr.msg.key.WhoIAm;
-import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.OutputStreamFlusher;
-import org.junit.internal.ExactComparisonCriteria;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
 
 // TODO: this should really only need authentication to UPDATE machine info...
-public class Communication
+public class Communication implements Closeable
 {
 	// The streams
 	private Socket socket;
@@ -141,11 +126,14 @@ public class Communication
 		return DbMachines.getMachine(remoteIdentifier);
 	}
 	
-	void close()
+	public void close()
 	{
 		try
 		{
-			socket.close();
+			if (!socket.isClosed())
+			{
+				socket.close();
+			}
 		}
 		catch (IOException e)
 		{
@@ -186,11 +174,18 @@ public class Communication
 	public void finish()
 	{
 		send(new DoneMessage());
+		try
+		{
+			socket.shutdownOutput();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
 	public void setDone()
 	{
-		needsMore = false;
 		try
 		{
 			socket.shutdownInput();
@@ -206,8 +201,21 @@ public class Communication
 		return authentication;
 	}
 
-	Socket getSocket()
+	public Socket getSocket()
 	{
 		return socket;
+	}
+	
+	// todo: remove this. can be done by breaking up whoiam and changing runnable exception to throwable
+	public void finalize()
+	{
+		try
+		{
+			if (!socket.isClosed()) socket.close();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }
