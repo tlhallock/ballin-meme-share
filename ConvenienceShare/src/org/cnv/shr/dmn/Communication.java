@@ -26,11 +26,16 @@ import javax.crypto.NoSuchPaddingException;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
+import org.cnv.shr.msg.DoneResponse;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.key.ConnectionOpenAwk;
 import org.cnv.shr.msg.key.KeyChange;
 import org.cnv.shr.msg.key.NewKey;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.OutputStreamFlusher;
+import org.junit.internal.ExactComparisonCriteria;
+
+import de.flexiprovider.core.rijndael.RijndaelKey;
 
 
 // TODO: this should really only need authentication to UPDATE machine info...
@@ -47,6 +52,10 @@ public class Communication implements Runnable
 	private Socket socket;
 	private InputStream input;
 	private OutputStream output;
+	private OutputStreamFlusher flusher;
+	
+	// true if this connection was initiated by the remote.
+	private boolean receivedConnection;
 	
 	// The machine that the remote says it is
 	private Machine claimedMachine;
@@ -66,9 +75,6 @@ public class Communication implements Runnable
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
 	
-	// Keep the connection open while this is positive
-	private int numUsers;
-	
 	/** Initiator **/
 	public Communication(String ip, int port, boolean acceptKeys) throws UnknownHostException, IOException
 	{
@@ -77,6 +83,7 @@ public class Communication implements Runnable
 		socket = new Socket(ip, port);
 		output = socket.getOutputStream();
 		input =  socket.getInputStream();
+		receivedConnection = false;
 	}
 	
 	/** Receiver **/
@@ -86,6 +93,7 @@ public class Communication implements Runnable
 		this.socket = socket;
 		input =  socket.getInputStream();
 		output = socket.getOutputStream();
+		receivedConnection = true;
 	}
 
 	public String getIp()
@@ -101,7 +109,7 @@ public class Communication implements Runnable
 	{
 		try
 		{
-			while (!done || numUsers > 0)
+			while (!done)
 			{
 				Message request = Services.msgReader.readMsg(this);
 				if (request == null || !authenticate(request))
@@ -127,35 +135,27 @@ public class Communication implements Runnable
 			Services.logger.logStream.println("Error with connection:");
 			ex.printStackTrace(Services.logger.logStream);
 		}
-		notifyDone();
-		try
-		{
-			socket.close();
-		}
-		catch (IOException e)
-		{
-			Services.logger.logStream.println("Unable to close socket.");
-			e.printStackTrace(Services.logger.logStream);
-		}
+		
+		send(new DoneResponse());
+		close();
 	}
 
 	public synchronized void send(Message m)
 	{
+		new Exception().printStackTrace(System.out);
 		if (m.requiresAthentication() && (authenticated == null || !authenticated))
 		{
-			throw new RuntimeException("Trying to send message on connection not yet authenticated");
+			throw new RuntimeException("Trying to send message on connection not yet authenticated. msg=" + m);
 		}
 		
-		Services.logger.logStream.println("Sending message of type " + m.getClass().getName()
-				+ " to " + socket.getInetAddress() + ":" + socket.getPort());
-		
-		Services.logger.logStream.println("The message is " + m);
+		Services.logger.logStream.println("Sending message " + m + " to " + socket.getInetAddress() + ":" + socket.getPort());
 		
 		try
 		{
 			synchronized (output)
 			{
 				m.write(output);
+				output.flush();
 			}
 		}
 		catch (IOException e)
@@ -164,36 +164,30 @@ public class Communication implements Runnable
 			e.printStackTrace(Services.logger.logStream);
 		}
 	}
+	
+	public void flush()
+	{
+		if (flusher != null)
+		{
+			flusher.flushPending();
+		}
+	}
 
 	public boolean isClosed()
 	{
 		return socket.isClosed();
 	}
 	
-	public synchronized void addUser()
-	{
-		numUsers++;
-	}
-	
 	public synchronized void notifyDone()
 	{
-		numUsers--;
-		if (numUsers > 0)
-		{
-			return;
-		}
-		
 		send(new DoneMessage());
 	}
 
 	public void remoteIsDone()
 	{
-		if (numUsers <= 0)
-		{
-			done = true;
-		}
+		done = true;
 	}
-	
+
 	public boolean authenticate(Message m)
 	{
 		// Double check identifier and keys...
@@ -219,15 +213,18 @@ public class Communication implements Runnable
 		return 0;
 	}
 
-	public void updateKey(PublicKey publicKey)
-	{
-		this.remotePublicKey = publicKey;
-	}
-
 	public void setKeys(PublicKey remotePublicKey, PublicKey localPublicKey)
 	{
 		this.remotePublicKey = remotePublicKey;
 		this.localPublicKey = localPublicKey;
+	}
+	public void setLocalKey(PublicKey localKey)
+	{
+		this.localPublicKey = localKey;
+	}
+	public void setRemoteKey(PublicKey publicKey)
+	{
+		this.remotePublicKey = publicKey;
 	}
 	
 	public PublicKey getLocalKey()
@@ -285,19 +282,23 @@ public class Communication implements Runnable
 	public void offerMachine(Machine claimedMachine, PublicKey[] publicKeys)
 	{
 		this.claimedMachine = claimedMachine;
-		if (getMachine() == null && !Services.blackList.contains(claimedMachine))
+		Machine prevMachine = getMachine();
+		if (prevMachine != null || Services.blackList.contains(claimedMachine))
 		{
-			// If we have no record of this machine, then it can be authenticated. (We will not share with it anyway.)
-			// Otherwise, it must prove that it who it said it was in case we are sharing with it.
-			
-
-			// Somebody could spam a whole bunch of these to make the database too big.
-			// Should fix that sometime...
-			DbMachines.updateMachineInfo(claimedMachine, publicKeys, getIp());
+			Services.logger.logStream.println("There is already a machine with this id or it is on the blacklist");
+			return;
 		}
+		// If we have no record of this machine, then it can be authenticated. (We will not share with it anyway.)
+		// Otherwise, it must prove that it who it said it was in case we are sharing with it.
+		
+
+		// Somebody could spam a whole bunch of these to make the database too big.
+		// Should fix that sometime...
+		Services.logger.logStream.println("Found new machine!");
+		claimedMachine = DbMachines.updateMachineInfo(claimedMachine, publicKeys, getIp());
 	}
 
-	public void notifyAuthentication(boolean authenticated)
+	public void notifyAuthentication(boolean authenticated, RijndaelKey aesKey)
 	{
 		lock.lock();
 		try
@@ -305,18 +306,46 @@ public class Communication implements Runnable
 			condition.signalAll();
 			if (authenticated)
 			{
-				Cipher cipherOut = Cipher.getInstance("RSA", "FlexiCore"); cipherOut.init(Cipher.ENCRYPT_MODE, remotePublicKey);
-				Cipher cipherIn  = Cipher.getInstance("RSA", "FlexiCore");  cipherIn.init(Cipher.DECRYPT_MODE, Services.keyManager.getPrivateKey(localPublicKey));
+				Services.logger.logStream.println("Remote is authenticated.");
+				Cipher cipherOut = Cipher.getInstance("AES128_CBC", "FlexiCore"); cipherOut.init(Cipher.ENCRYPT_MODE, aesKey);
+				Cipher cipherIn  = Cipher.getInstance("AES128_CBC", "FlexiCore");  cipherIn.init(Cipher.DECRYPT_MODE, aesKey);
+
+				if (receivedConnection)
+				{
+					input  = new CipherInputStream(input, cipherIn);
+					output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
+				}
+				else
+				{
+					output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
+					input  = new CipherInputStream(input, cipherIn);
+				}
 				
-				
-				// I thought this was stopping the stream from being flushed, but i guess it might be something else...
-//				input  = new CipherInputStream(new GZIPInputStream(input), cipherIn);
-//				output = new GZIPOutputStream(new CipherOutputStream(output, cipherOut));
-				
-				input  = new CipherInputStream(input, cipherIn);
-				output = new CipherOutputStream(output, cipherOut);
-				
-				DbMachines.updateMachineInfo(claimedMachine, new PublicKey[]{remotePublicKey}, getIp());
+//				if (receivedConnection)
+//				{
+//					System.out.println("here...3.0");
+//					input  = new GZIPInputStream(new CipherInputStream(input, cipherIn));
+//					System.out.println("here...3.1");
+//					for (int i = 0; i < flushLength; i++) input.read();
+//					output = new GZIPOutputStream(new CipherOutputStream(output, cipherOut));
+////					output = new GZIPOutputStream(new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut));
+//					System.out.println("here...3.2");
+//				}
+//				else
+//				{
+////					output = new GZIPOutputStream(new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut));
+//					output = new GZIPOutputStream(new CipherOutputStream(output, cipherOut));
+//					for (int i = 0; i < flushLength; i++) output.write(0);
+//					System.out.println("here...3.5");
+////					flusher.flushPending();
+//					input  = new GZIPInputStream(new CipherInputStream(input, cipherIn));
+//					System.out.println("here...3.6");
+//				}
+				DbMachines.updateMachineInfo(claimedMachine, new PublicKey[] {remotePublicKey}, getIp());
+			}
+			else
+			{
+				Services.logger.logStream.println("Remote failed authentication.");
 			}
 			
 			this.authenticated = authenticated;
@@ -359,6 +388,7 @@ public class Communication implements Runnable
 		if (!Services.keyManager.containsKey(localPublicKey))
 		{
 			// not able to verify self to remote, add key
+			localPublicKey = publicKey;
 			final byte[] sentNaunce = Services.keyManager.createTestNaunce(this, remotePublicKey);
 			send(new NewKey(publicKey, sentNaunce));
 			return;
@@ -375,5 +405,18 @@ public class Communication implements Runnable
 		}
 
 		send(new ConnectionOpenAwk(decrypted, naunceRequest));
+	}
+
+	public void close()
+	{
+		try
+		{
+			socket.close();
+		}
+		catch (IOException e)
+		{
+			Services.logger.logStream.println("Unable to close socket.");
+			e.printStackTrace(Services.logger.logStream);
+		}
 	}
 }

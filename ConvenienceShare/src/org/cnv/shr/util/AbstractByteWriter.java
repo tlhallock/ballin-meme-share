@@ -77,6 +77,10 @@ public abstract class AbstractByteWriter
 		}
 		else
 		{
+			if (bytes.length > Services.settings.maxStringSize.get())
+			{
+				throw new IOException("This byte array is too big. length=" + bytes.length);
+			}
 			return append(bytes.length).append(bytes);
 		}
 	}
@@ -85,14 +89,15 @@ public abstract class AbstractByteWriter
 	{
 		if (key == null)
 		{
-			return appendVarByteArray(null);
+			appendVarByteArray(null);
+			appendVarByteArray(null);
 		}
 		else
 		{
 			appendVarByteArray(((de.flexiprovider.core.rsa.RSAPublicKey) key).getN().toByteArray());
 			appendVarByteArray(((de.flexiprovider.core.rsa.RSAPublicKey) key).getE().toByteArray());
-			return this;
 		}
+		return this;
 	}
 
 	public AbstractByteWriter append(double percentComplete) throws IOException

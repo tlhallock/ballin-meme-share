@@ -45,7 +45,7 @@ public class FileRequest extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		rootName  = ByteReader.readString(bytes);
 		path      = ByteReader.readString(bytes);

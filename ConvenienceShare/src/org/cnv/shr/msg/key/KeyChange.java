@@ -32,7 +32,7 @@ public class KeyChange extends KeyMessage
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		oldKey         = ByteReader.readPublicKey(bytes);
 		newKey         = ByteReader.readPublicKey(bytes);
@@ -45,8 +45,8 @@ public class KeyChange extends KeyMessage
 	{
 		buffer.append(oldKey        );
 		buffer.append(newKey        );
-		buffer.append(decryptedProof);
-		buffer.append(naunceRequest );
+		buffer.appendVarByteArray(decryptedProof);
+		buffer.appendVarByteArray(naunceRequest );
 		
 	}
 
@@ -61,14 +61,14 @@ public class KeyChange extends KeyMessage
 	public void perform(Communication connection) throws Exception
 	{
 		Machine machine = connection.getMachine();
-		if (machine.hasKey(oldKey) && connection.hasPendingNaunce(decryptedProof))
+		if (DbKeys.machineHasKey(machine, oldKey) && connection.hasPendingNaunce(decryptedProof))
 		{
 			DbKeys.addKey(machine, newKey);
-			connection.updateKey(newKey);
+			connection.setRemoteKey(newKey);
 			connection.authenticateToTarget(naunceRequest);
 			return;
 		}
-		connection.send(new KeyFailure());
+		connection.send(new KeyFailure("Change key: either no old key or no pending naunce."));
 		connection.notifyDone();
 	}
 }

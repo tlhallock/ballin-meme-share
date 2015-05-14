@@ -31,7 +31,7 @@ public class RequestAccess extends Message
 		return TYPE;
 	}
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 	}
 	@Override

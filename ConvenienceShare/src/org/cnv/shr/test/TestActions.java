@@ -1,11 +1,11 @@
 package org.cnv.shr.test;
 
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.PrintStream;
 import java.util.LinkedList;
+import java.util.Scanner;
 
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.stng.Settings;
+import org.cnv.shr.gui.UserActions;
 
 public class TestActions
 {
@@ -13,16 +13,16 @@ public class TestActions
 	
 	public static abstract class TestAction
 	{
-		private String name;
-		private String args;
+		protected String name;
 
 		protected TestAction(String n)
 		{
 			this.name = n;
 			actions.add(this);
 		}
+		public abstract void send(PrintStream stream, String... args);
+		public abstract void perform(Scanner scanner) throws Exception;
 		
-		public abstract void perform() throws Exception;
 		public boolean matches(String line)
 		{
 			return line.startsWith(name);
@@ -36,13 +36,20 @@ public class TestActions
 //			GuiActions.removeMachine(remote);
 //		}
 //	};
-//	public static TestAction ADD_MACHINE = new TestAction("ADD_MACHINE")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.addMachine(url);
-//		}
-//	};
+	public static TestAction ADD_MACHINE = new TestAction("ADD_MACHINE")
+	{
+		public void perform(Scanner scanner)
+		{
+			scanner.next(); // skip name
+			UserActions.addMachine(scanner.next());
+		}
+		
+		@Override
+		public void send(PrintStream stream, String... args)
+		{
+			stream.println(name + " " + args[0]);
+		}
+	};
 //	public static TestAction SYNC_ROOTS = new TestAction("SYNC_ROOTS")
 //	{
 //		public void perform()
@@ -113,17 +120,6 @@ public class TestActions
 //			GuiActions.download(remote);
 //		}
 //	};
-	public static TestAction INIT = new TestAction("INITIALIZE")
-	{
-		public void perform() throws Exception
-		{
-			Settings settings = new Settings(new File("something"));
-			settings.applicationDirectory.set(new File("."));
-			Services.initialize(settings);
-		}
-	};
-	
-	
 	
 	public static void run(BufferedReader reader) throws Exception
 	{
@@ -132,11 +128,12 @@ public class TestActions
 		{
 			for (TestAction action : actions)
 			{
-				if (action.matches(line))
+				if (!action.matches(line))
 				{
-					action.perform();
 					continue;
 				}
+				action.perform(new Scanner(line));
+				break;
 			}
 		}
 	}

@@ -2,7 +2,6 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -11,6 +10,7 @@ import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.Misc;
 
 public class KeyNotFound extends KeyMessage
 {
@@ -25,18 +25,23 @@ public class KeyNotFound extends KeyMessage
 	{
 		for (PublicKey publicKey : knownKeys)
 		{
+			if (publicKey == null)
+			{
+				throw new NullPointerException("Known keys should not be null.");
+			}
 			tests.put(publicKey, Services.keyManager.createTestNaunce(c, publicKey));
 		}
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		int size = ByteReader.readInt(bytes);
 		for (int i = 0; i < size; i++)
 		{
 			PublicKey readPublicKey = ByteReader.readPublicKey(bytes);
 			byte[] readVarByteArray = ByteReader.readVarByteArray(bytes);
+			System.out.println(tests);
 			tests.put(readPublicKey, readVarByteArray);
 		}
 	}
@@ -48,7 +53,7 @@ public class KeyNotFound extends KeyMessage
 		for (Entry<PublicKey, byte[]> entry : tests.entrySet())
 		{
 			buffer.append(entry.getKey());
-			buffer.append(entry.getValue());
+			buffer.appendVarByteArray(entry.getValue());
 		}
 	}
 
@@ -76,9 +81,24 @@ public class KeyNotFound extends KeyMessage
 				return;
 			}
 		}
-
-		connection.send(new NewKey(Services.keyManager.getPublicKey(), 
+		
+		PublicKey localKey = Services.keyManager.getPublicKey();
+		connection.setLocalKey(localKey);
+		connection.send(new NewKey(localKey, 
 				Services.keyManager.createTestNaunce(connection, connection.getRemoteKey())));
 	}
 
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		builder.append("Key not found. Known keys are: ");
+		for (Entry<PublicKey, byte[]> entry : tests.entrySet())
+		{
+			builder.append(Misc.format(entry.getKey().getEncoded()));
+			builder.append("->");
+			builder.append(Misc.format(entry.getValue()));
+			builder.append('\n');
+		}
+		return builder.toString();
+	}
 }

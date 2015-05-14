@@ -8,6 +8,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.cnv.shr.db.h2.DbConnectionCache;
+import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.dwn.DownloadManager;
 import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.gui.Application;
@@ -42,22 +44,23 @@ public class Services
 	public static RemoteSynchronizers syncs;
 	public static BlackList blackList;
 	
-	public static void initialize(Settings stgs) throws Exception
+	public static void initialize(Settings stgs, boolean deleteDb) throws Exception
 	{
 		settings = stgs;
 		logger = new Logger();
 		settings.write();
 
 		logger.setLogLocation();
+		h2DbCache = new DbConnectionCache(deleteDb);
 		notifications = new Notifications();
 		keyManager = new KeyManager(settings.keysFile.get());
 		keyManager.readKeys();
-		h2DbCache = new DbConnectionCache();
 		localMachine = new Machine.LocalMachine();
 		if (!localMachine.save())
 		{
 			localMachine.setId();
 		}
+		DbKeys.addKey(localMachine, keyManager.getPublicKey());
 		networkManager = new ConnectionManager();
 		msgReader = new MessageReader();
 		server = new ServeManager();

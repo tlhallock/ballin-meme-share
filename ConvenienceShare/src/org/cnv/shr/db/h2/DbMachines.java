@@ -102,7 +102,7 @@ public class DbMachines
 	
 	
 	// Should be in the same transaction...
-	public static void updateMachineInfo(Machine claimedMachine, PublicKey[] publicKeys, String ip)
+	public static Machine updateMachineInfo(Machine claimedMachine, PublicKey[] publicKeys, String ip)
 	{
 		if (ip != null)
 		{
@@ -118,14 +118,6 @@ public class DbMachines
 		machine.setName(claimedMachine.getName());
 		machine.setNumberOfPorts(claimedMachine.getNumberOfPorts());
 		
-		if (publicKeys != null)
-		{
-			for (PublicKey key : publicKeys)
-			{
-				DbKeys.addKey(machine, key);
-			}
-		}
-		
 		try
 		{
 			machine.save();
@@ -134,9 +126,17 @@ public class DbMachines
 		catch (SQLException e)
 		{
 			e.printStackTrace();
+			return machine;
 		}
+		
+		if (publicKeys != null)
+		{
+			for (PublicKey key : publicKeys)
+			{
+				DbKeys.addKey(machine, key);
+			}
+		}
+		
+		return machine;
 	}
-	
-	
-	
 }

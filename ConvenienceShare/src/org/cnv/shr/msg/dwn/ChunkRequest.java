@@ -32,7 +32,7 @@ public class ChunkRequest extends Message
 	}
 	
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		chunk = new Chunk(bytes);
 	}

@@ -9,6 +9,8 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
+import de.flexiprovider.core.rijndael.RijndaelKey;
+
 public class ConnectionOpenAwk extends KeyMessage
 {
 	byte[] decryptedNaunce;
@@ -26,7 +28,7 @@ public class ConnectionOpenAwk extends KeyMessage
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		decryptedNaunce = ByteReader.readVarByteArray(bytes);
 		naunceRequest   = ByteReader.readVarByteArray(bytes);
@@ -51,14 +53,15 @@ public class ConnectionOpenAwk extends KeyMessage
 	{
 		if (connection.hasPendingNaunce(decryptedNaunce))
 		{
+			RijndaelKey aesKey = Services.keyManager.createAesKey();
 			byte[] decrypted = Services.keyManager.decryptNaunce(connection.getLocalKey(), naunceRequest);
-			connection.send(new ConnectionOpened(decrypted));
-			connection.notifyAuthentication(true);
+			connection.send(new ConnectionOpened(aesKey, decrypted));
+			connection.notifyAuthentication(true, aesKey);
 		}
 		else
 		{
-			connection.notifyAuthentication(false);
-			connection.send(new KeyFailure());
+			connection.notifyAuthentication(false, null);
+			connection.send(new KeyFailure("ConnectionOpenAwk: first naunce failed."));
 			connection.notifyDone();
 		}
 	}

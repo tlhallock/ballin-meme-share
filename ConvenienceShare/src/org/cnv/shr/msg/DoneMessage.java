@@ -9,6 +9,7 @@ import org.cnv.shr.util.AbstractByteWriter;
 public class DoneMessage extends Message
 {
 	public static int TYPE = 1;
+	public static int DONE_PADDING = 20;
 	
 	public DoneMessage() {}
 	public DoneMessage(InputStream stream) throws IOException
@@ -17,10 +18,16 @@ public class DoneMessage extends Message
 	}
 	
 	@Override
-	protected void parse(InputStream bytes) throws IOException {}
+	public void parse(InputStream bytes) throws IOException {}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) {}
+	protected void write(AbstractByteWriter buffer) throws IOException
+	{
+		for (int i = 0; i < DONE_PADDING; i++)
+		{
+			buffer.append(0);
+		}
+	}
 
 	@Override
 	protected int getType()
@@ -41,5 +48,10 @@ public class DoneMessage extends Message
 		builder.append("done.");
 		
 		return builder.toString();
+	}
+	
+	public boolean requiresAthentication()
+	{
+		return false;
 	}
 }

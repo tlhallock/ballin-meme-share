@@ -32,7 +32,7 @@ public class Settings implements SettingListener
 	public IntSetting        servePortBegin           = new IntSetting       ("servePortBegin      ".trim(), 8990                                       ,    1, Integer.MAX_VALUE         , false, true, "Smallest port to use for listening for other machines.                      ".trim()); { settings.add(servePortBegin      );  }
 	public IntSetting        maxDownloads             = new IntSetting       ("maxDownloads        ".trim(), 20                                         ,    1, Integer.MAX_VALUE         , false, true, "Maximum number of concurrent downloads.                                     ".trim()); { settings.add(maxDownloads        );  }
 	public IntSetting        maxServes                = new IntSetting       ("maxServes           ".trim(), 20                                         ,    1, Integer.MAX_VALUE         , false, true, "Number of ports to listen on.                                               ".trim()); { settings.add(maxServes           );  }
-	public IntSetting        minNaunce                = new IntSetting       ("minNaunce           ".trim(), 256                                        ,    1, Integer.MAX_VALUE         , false, true, "Minimum size of a Naunce for authentication.                                ".trim()); { settings.add(minNaunce           );  }
+	public IntSetting        minNaunce                = new IntSetting       ("minNaunce           ".trim(), 117                                        ,    1, Integer.MAX_VALUE         , false, true, "Minimum size of a Naunce for authentication.                                ".trim()); { settings.add(minNaunce           );  }
 	public IntSetting        maxStringSize            = new IntSetting       ("maxStringSize       ".trim(), 4096                                       ,    1, Integer.MAX_VALUE         , false, true, "                                                                            ".trim()); { settings.add(maxStringSize       );  }
 	public IntSetting        numThreads               = new IntSetting       ("numThreads          ".trim(), 20                                         ,    1, Integer.MAX_VALUE         , false, true, "                                                                            ".trim()); { settings.add(numThreads          );  }
 	public IntSetting        keySize                  = new IntSetting       ("keySize             ".trim(), 1024                                       , 1024,              4096         , false, true, "                                                                            ".trim()); { settings.add(keySize             );  }
@@ -151,4 +151,9 @@ public class Settings implements SettingListener
     public Setting[] getUserSettings() {
         return settings.toArray(new Setting[0]);
     }
+
+	public File getSettingsFile()
+	{
+		return settingsFile;
+	}
 }

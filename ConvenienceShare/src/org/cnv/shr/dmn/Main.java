@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.test.TestActions;
@@ -11,6 +13,8 @@ import org.cnv.shr.util.Misc;
 
 public class Main
 {
+	static boolean connectedToTestStream = false;
+	
 	public static void main(String[] args) throws Exception
 	{
         System.out.println("Starting from " + Misc.getJarPath());
@@ -38,28 +42,58 @@ public class Main
 
 		try
 		{
+			boolean deleteDb = false;
+			Settings settings = null;
+			for (int i = 0; i < args.length; i++)
+			{
+				if (args[i].equals("-f") && i < args.length - 1)
+				{
+					settings = new Settings(new File(args[i + 1]));
+					settings.read();
+				}
+				if (args[i].equals("-d"))
+				{
+					deleteDb = true;
+				}
+			}
+
+			for (int i = 0; i < args.length; i++)
+			{
+				if (args[i].equals("-k") && i < args.length - 1)
+				{
+					new Timer().schedule(new TimerTask() {
+						@Override
+						public void run()
+						{
+							if (!connectedToTestStream)
+							{
+								quit();
+							}
+						}}, Long.parseLong(args[i+1]));
+					break;
+				}
+			}
+			
+			if (settings == null)
+			{
+				settings = new Settings(new File("/work/ballin-meme-share/runDir/settings1.props"));
+			}
+			settings.read();
+			Services.initialize(settings, deleteDb);
+
 			for (int i = 0; i < args.length; i++)
 			{
 				if (args[i].equals("-t") && i < args.length - 2)
 				{
 					try (Socket socket = new Socket(args[i+1], Integer.parseInt(args[i+2])))
 					{
-						TestActions.run(new BufferedReader(new InputStreamReader(socket.getInputStream())));
+						BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+						connectedToTestStream = true;
+						TestActions.run(reader);
 					}
-					return;
-				}
-				if (args[i].equals("-f") && i < args.length - 1)
-				{
-					Settings settings = new Settings(new File(args[i + 1]));
-					settings.read();
-					Services.initialize(settings);
-					return;
+					break;
 				}
 			}
-
-			Settings settings = new Settings(new File("/work/ballin-meme-share/runDir/settings1.props"));
-			settings.read();
-			Services.initialize(settings);
 		}
 		catch (Exception ex)
 		{

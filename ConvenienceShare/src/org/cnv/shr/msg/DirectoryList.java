@@ -70,7 +70,7 @@ public class DirectoryList extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		name = ByteReader.readString(bytes);
 		currentPath = ByteReader.readString(bytes);

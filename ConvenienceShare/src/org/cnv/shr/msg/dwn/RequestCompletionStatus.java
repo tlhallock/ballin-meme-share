@@ -18,7 +18,7 @@ public class RequestCompletionStatus extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException {}
+	public void parse(InputStream bytes) throws IOException {}
 
 	@Override
 	protected void write(AbstractByteWriter buffer) {}

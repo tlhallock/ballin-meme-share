@@ -39,7 +39,7 @@ public class ChunkList extends Message
 		return TYPE;
 	}
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		int numChunks = ByteReader.readInt(bytes);
 		for (int i = 0; i < numChunks; i++)

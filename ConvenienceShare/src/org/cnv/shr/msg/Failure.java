@@ -27,7 +27,7 @@ public class Failure extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		message = ByteReader.readString(bytes);
 	}

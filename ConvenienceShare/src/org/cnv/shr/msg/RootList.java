@@ -63,7 +63,7 @@ public class RootList extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		int numFolders = ByteReader.readInt(bytes);
 		for (int i = 0; i < numFolders; i++)

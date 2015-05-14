@@ -1,9 +1,11 @@
 package org.cnv.shr.dmn;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -21,7 +23,9 @@ import java.util.Scanner;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
@@ -32,13 +36,12 @@ import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 import de.flexiprovider.common.math.FlexiBigInt;
 import de.flexiprovider.core.FlexiCoreProvider;
+import de.flexiprovider.core.rijndael.RijndaelKey;
 import de.flexiprovider.core.rsa.RSAPrivateCrtKey;
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
 public class KeyManager
 {
-	private static FlexiCoreProvider provider = new FlexiCoreProvider();
-	
 	HashMap<String, KeyPairObject> keys = new HashMap<>();
 	KeyPairObject primaryKey;
 	File keysFile;
@@ -48,7 +51,7 @@ public class KeyManager
 	public KeyManager(File keysFile)
 	{
 		this.keysFile = keysFile;
-		Security.addProvider(provider);
+		Security.addProvider(new FlexiCoreProvider());
 	}
 	
 	public void writeKeys() throws IOException
@@ -91,7 +94,7 @@ public class KeyManager
 		}
 		catch (Exception ex)
 		{
-			ex.printStackTrace();
+			Services.logger.logStream.println("Unable to read previous keys.");
 			writeKeys();
 		}
 		generateNecessaryKeys();
@@ -104,7 +107,7 @@ public class KeyManager
 			return;
 		}
 		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "FlexiCore");
-		kpg.initialize(1024 /*Services.settings.keySize.get()*/);
+		kpg.initialize(Services.settings.keySize.get());
 		KeyPairObject keyPairObject = new KeyPairObject(kpg);
 		keys.put(keyPairObject.hash(), keyPairObject);
 		primaryKey = keyPairObject;
@@ -132,7 +135,8 @@ public class KeyManager
 		{
 			return false;
 		}
-		return false;
+
+		return keys.get(hashObject(destinationPublicKey)) != null;
 	}
 	
 	public void addPendingAuthentication(String url)
@@ -175,29 +179,7 @@ public class KeyManager
 			}
 		}
 	}
-	
-	public byte[] decryptNaunce(PublicKey pKey, byte[] encrypted) throws IOException
-	{
-		try
-		{
-			PrivateKey privateKey = getPrivateKey(pKey);
-			Cipher cipher2 = Cipher.getInstance("RSA", "FlexiCore");
-			cipher2.init(Cipher.DECRYPT_MODE, privateKey);
-			
-			ByteOutputStream output = new ByteOutputStream();
-			try (ByteInputStream input = new ByteInputStream(encrypted, 0, encrypted.length);)
-			{
-				Misc.copy(new CipherInputStream(input, cipher2), output);
-			}
-			return output.getBytes();
-		}
-		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
-		{
-			e.printStackTrace();
-			Main.quit();
-			return new byte[0];
-		}
-	}
+
 	
 	public byte[] createTestNaunce(Communication c, PublicKey remoteKey) throws IOException
 	{
@@ -210,7 +192,7 @@ public class KeyManager
 		c.addPendingNaunce(original);
 		return sentNaunce;
 	}
-	
+
 	public byte[] createNaunce(PublicKey remoteKey, byte[] original) throws IOException
 	{
 		try
@@ -219,14 +201,54 @@ public class KeyManager
 			
 			cipher2.init(Cipher.ENCRYPT_MODE, remoteKey);
 			
-			ByteOutputStream output = new ByteOutputStream();
-			try (ByteInputStream input = new ByteInputStream(original, 0, original.length);)
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			try (InputStream input = new ByteInputStream(original, 0, original.length);)
 			{
 				Misc.copy(new CipherInputStream(input, cipher2), output);
 			}
-			return output.getBytes();
+			byte[] byteArray = output.toByteArray();
+			
+//			System.out.println("Encrypted");
+//			System.out.println(Misc.format(original));
+//			System.out.println("to");
+//			System.out.println(Misc.format(byteArray));
+//			System.out.println("with");
+//			System.out.println(Misc.format(remoteKey.getEncoded()));
+			
+			return byteArray;
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e)
+		{
+			e.printStackTrace();
+			Main.quit();
+			return new byte[0];
+		}
+	}
+	public byte[] decryptNaunce(PublicKey pKey, byte[] encrypted) throws IOException
+	{
+		try
+		{
+			PrivateKey privateKey = getPrivateKey(pKey);
+			Cipher cipher2 = Cipher.getInstance("RSA", "FlexiCore");
+			cipher2.init(Cipher.DECRYPT_MODE, privateKey);
+			
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			try (ByteInputStream input = new ByteInputStream(encrypted, 0, encrypted.length);)
+			{
+				Misc.copy(new CipherInputStream(input, cipher2), output);
+			}
+			byte[] bytes = output.toByteArray();
+			
+//			System.out.println("Decrypted");
+//			System.out.println(Misc.format(encrypted));
+//			System.out.println("to");
+//			System.out.println(Misc.format(bytes));
+//			System.out.println("with");
+//			System.out.println(Misc.format(pKey.getEncoded()));
+			
+			return bytes;
+		}
+		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
 		{
 			e.printStackTrace();
 			Main.quit();
@@ -304,6 +326,20 @@ public class KeyManager
 		public String hash()
 		{
 			return hashObject(publicKey);
+		}
+	}
+
+	public RijndaelKey createAesKey()
+	{
+		try
+		{
+			return (RijndaelKey) KeyGenerator.getInstance("AES", "FlexiCore").generateKey();
+		}
+		catch (NoSuchAlgorithmException | NoSuchProviderException e)
+		{
+			e.printStackTrace();
+			Main.quit();
+			return null;
 		}
 	}
 }

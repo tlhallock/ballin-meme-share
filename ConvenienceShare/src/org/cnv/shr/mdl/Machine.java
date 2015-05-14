@@ -58,12 +58,12 @@ public class Machine extends DbObject
 	@Override
 	public void fill(java.sql.Connection c, ResultSet row, DbLocals locals) throws SQLException
 	{
-			id             = row.getInt   ("M_ID");        
-			name           = row.getString("MNAME");        
-			ip             = row.getString("IP");    
-			port		   = row.getInt   ("PORT");
-			nports         = row.getInt   ("NPORTS");
-		    lastActive     = row.getLong  ("LAST_ACTIVE");
+			id             = row.getInt    ("M_ID");        
+			name           = row.getString ("MNAME");        
+			ip             = row.getString ("IP");    
+			port		   = row.getInt    ("PORT");
+			nports         = row.getInt    ("NPORTS");
+		    lastActive     = row.getLong   ("LAST_ACTIVE");
 		    sharing        = row.getBoolean("SHARING");
 		    identifier     = row.getString ("IDENT");
 		    allowsMessages = row.getBoolean("MESSAGES");
@@ -278,11 +278,5 @@ public class Machine extends DbObject
 		{
 			id = DbMachines.getMachineId(getIdentifier());
 		}
-	}
-
-	public boolean hasKey(PublicKey sourcePublicKey)
-	{
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

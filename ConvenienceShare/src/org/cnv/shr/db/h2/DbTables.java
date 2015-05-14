@@ -223,6 +223,7 @@ public class DbTables
 		catch(SQLException ex)
 		{
 			Services.logger.logStream.println("Unable to create constraint in initialization");
+			ex.printStackTrace();
 		}
 	}
 	

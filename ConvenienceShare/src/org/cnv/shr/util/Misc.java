@@ -138,6 +138,27 @@ public class Misc
 		}
 		return sb.toString();
 	}
+	
+	public static void copy(InputStream input, OutputStream output) throws IOException
+	{
+		int readByte;
+		while ((readByte = input.read()) >= 0)
+		{
+			output.write(readByte);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
 	public static String getJarPath()
 	{
 		String path = Services.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -151,15 +172,16 @@ public class Misc
 			return path;
 		}
 	}
-	
-	public static void copy(InputStream input, OutputStream output) throws IOException
+	public static String getJavaPath()
 	{
-		byte[] buffer = new byte[1024];
-		int offset;
-		
-		while ((offset = input.read(buffer, 0, buffer.length)) >= 0)
-		{
-			output.write(buffer, 0, offset);
-		}
+		return "/usr/bin/java";
+	}
+	public static String getJarName()
+	{
+		return "org.cnv.shr.dmn.Main";
+	}
+	public static String getClassPath()
+	{
+		return "../libs/h2-1.4.187.jar:../libs/org.json-20120521.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:.";
 	}
 }

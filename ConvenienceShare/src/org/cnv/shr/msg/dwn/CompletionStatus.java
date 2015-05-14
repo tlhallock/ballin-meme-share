@@ -32,7 +32,7 @@ public class CompletionStatus extends Message
 		return TYPE;
 	}
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		percentComplete = ByteReader.readDouble(bytes);
 	}

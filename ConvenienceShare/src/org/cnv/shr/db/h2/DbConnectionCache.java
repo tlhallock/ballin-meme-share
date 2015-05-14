@@ -13,12 +13,17 @@ public class DbConnectionCache
 {
 	private Hashtable<Long, Connection> connections = new Hashtable<>();
 
-	public DbConnectionCache() throws SQLException, IOException, ClassNotFoundException
+	public DbConnectionCache(boolean fresh) throws SQLException, IOException, ClassNotFoundException
 	{
 		Misc.ensureDirectory(Services.settings.dbFile.get(), true);
 		Class.forName("org.h2.Driver");
 		
 		Connection c = getConnection();
+		if (fresh)
+		{
+			Services.logger.logStream.println("Deleting database.");
+			DbTables.deleteDb(c);
+		}
 		Services.logger.logStream.println("Creating database.");
 		DbTables.createDb(c);
 	}
@@ -31,7 +36,9 @@ public class DbConnectionCache
 		{
 			try
 			{
-				returnValue = DriverManager.getConnection("jdbc:h2:./test_" + Services.settings.servePortBegin.get() + ".db", "sa", "");
+				String file = Services.settings.dbFile.get().getAbsolutePath();
+				Services.logger.logStream.println("DbFile: " + file);
+				returnValue = DriverManager.getConnection("jdbc:h2:" + file, "sa", "");
 			} catch (SQLException e)
 			{
 				e.printStackTrace();

@@ -35,16 +35,16 @@ public class ConnectionManager
 	
 	private synchronized Communication openConnection(String ip, int port, final PublicKey remoteKey, boolean acceptAnyKeys) throws UnknownHostException, IOException
 	{
-		Communication communication = openConnections.get(ip + ":" + port);
-		if (communication != null)
-		{
-			communication.addUser();
-			if (!communication.waitForAuthentication())
-			{
-				return null;
-			}
-			return communication;
-		}
+//		Communication communication = openConnections.get(ip + ":" + port);
+//		if (communication != null)
+//		{
+//			communication.addUser();
+//			if (!communication.waitForAuthentication())
+//			{
+//				return null;
+//			}
+//			return communication;
+//		}
 		
 		
 		final Communication connection = new Communication(ip, port, acceptAnyKeys);
@@ -61,6 +61,7 @@ public class ConnectionManager
 				Services.notifications.connectionOpened(connection);
 				connection.run();
 				remove(connection);
+				Services.notifications.connectionClosed(connection);
 			}});
 		if (!connection.waitForAuthentication())
 		{
@@ -73,10 +74,17 @@ public class ConnectionManager
 	{
 		Communication connection = new Communication(accepted);
 		openConnections.put(connection.getUrl(), connection);
+		Services.notifications.connectionOpened(connection);
 		connection.send(new WhoIAm());
 		connection.run();
 		remove(connection);
-		Services.notifications.connectionOpened(connection);
+		Services.notifications.connectionClosed(connection);
+	}
+	
+	public void closeConnection(Communication connection)
+	{
+		remove(connection);
+		connection.close();
 	}
 	
 	private synchronized void remove(Communication c)

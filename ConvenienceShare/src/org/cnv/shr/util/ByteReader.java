@@ -13,7 +13,12 @@ public class ByteReader
 {
 	public static int readByte(InputStream in) throws IOException
 	{
-		return in.read() & 0xff;
+		int read = in.read();
+		if (read < 0)
+		{
+			throw new IOException("Hit end of stream.");
+		}
+		return read & 0xff;
 	}
 
 	public static int readShort(InputStream in) throws IOException
@@ -66,7 +71,7 @@ public class ByteReader
 		{
 			throw new IOException("Received string that is way too big!! Size=" + size);
 		}
-
+		
 		byte[] returnValue = new byte[size];
 		int readSoFar = 0;
 		while (readSoFar < size && readSoFar >= 0)

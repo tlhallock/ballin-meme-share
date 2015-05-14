@@ -14,9 +14,10 @@ public abstract class Message
 	
 	protected Message() {}
 	
+	// This constructor is no longer needed.
 	protected Message(InputStream stream) throws IOException
 	{
-		parse(stream);
+//		parse(stream);
 	}
 
 	public boolean requiresAthentication()
@@ -42,7 +43,7 @@ public abstract class Message
 	}
 
 	protected abstract int  getType();
-	protected abstract void parse(InputStream bytes) throws IOException;
+	public abstract void parse(InputStream bytes) throws IOException;
 	protected abstract void write(AbstractByteWriter buffer) throws IOException;
 	public    abstract void perform(Communication connection) throws Exception;
 }

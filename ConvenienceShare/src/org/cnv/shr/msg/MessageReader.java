@@ -65,6 +65,8 @@ public class MessageReader
 		add(new MessageIdentifier(OpenConnection.class             ));
 		add(new MessageIdentifier(KeyChange.class                  ));
 		add(new MessageIdentifier(WhoIAm.class                     ));
+		add(new MessageIdentifier(EmptyMessage.class               ));
+		add(new MessageIdentifier(DoneResponse.class               ));
 
 		Services.logger.logStream.println("Message map:\n" + this);
 	}
@@ -97,7 +99,7 @@ public class MessageReader
 		MessageIdentifier messageIdentifier = identifiers.get(msgType);
 		if (messageIdentifier == null)
 		{
-			Services.logger.logStream.println("Ignoring unkown message type: " + msgType + " from " + c.getUrl());
+			Services.logger.logStream.println("Ignoring unknown message type: " + msgType + " from " + c.getUrl());
 			return null;
 		}
 		
@@ -151,12 +153,22 @@ public class MessageReader
 			try
 			{
 				Services.logger.logStream.println("Received message of type " + name);
-				return constructor.newInstance(stream);
+				Message newInstance = constructor.newInstance(stream);
+				newInstance.parse(stream);
+				return newInstance;
 			}
 			catch (Exception e)
 			{
 				Services.logger.logStream.println("Unable to create message type "  + name);
 				e.printStackTrace(Services.logger.logStream);
+				
+//				Throwable t = e;
+//				while (t != null)
+//				{
+//					t.printStackTrace(Services.logger.logStream);
+//					t = t.getCause();
+//				}
+				
 				Main.quit();
 				return null;
 			}

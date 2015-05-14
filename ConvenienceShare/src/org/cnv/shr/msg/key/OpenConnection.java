@@ -31,7 +31,7 @@ public class OpenConnection extends KeyMessage
 	}
 	
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		sourcePublicKey      = ByteReader.readPublicKey(bytes);
 		destinationPublicKey = ByteReader.readPublicKey(bytes);
@@ -67,7 +67,7 @@ public class OpenConnection extends KeyMessage
 	{
 		// authenticate remote...
 		Machine machine = connection.getMachine();
-		if (machine.hasKey(sourcePublicKey))
+		if (DbKeys.machineHasKey(machine, sourcePublicKey))
 		{
 			return true;
 		}
@@ -86,7 +86,7 @@ public class OpenConnection extends KeyMessage
 		}
 
 		// add message
-		connection.send(new KeyFailure());
+		connection.send(new KeyFailure("Open connection authenticate to remote: no known keys available."));
 		connection.notifyDone();
 		return false;
 	}

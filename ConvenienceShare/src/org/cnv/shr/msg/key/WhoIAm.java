@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
 
-import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.MachineFound;
@@ -34,7 +33,7 @@ public class WhoIAm extends MachineFound
 	}
 
 	@Override
-	protected void parse(InputStream bytes) throws IOException
+	public void parse(InputStream bytes) throws IOException
 	{
 		super.parse(bytes);
 		int numKeys = ByteReader.readInt(bytes);
