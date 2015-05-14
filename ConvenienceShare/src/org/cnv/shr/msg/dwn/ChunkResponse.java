@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
@@ -34,7 +35,7 @@ public class ChunkResponse extends Message
 	}
 	
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		chunk = new Chunk(bytes);
 	}

@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -33,9 +34,9 @@ public class WhoIAm extends MachineFound
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
-		super.parse(bytes);
+		super.parse(bytes, stats);
 		int numKeys = ByteReader.readInt(bytes);
 		keys = new PublicKey[numKeys];
 		for (int i = 0; i < numKeys; i++)
@@ -58,11 +59,20 @@ public class WhoIAm extends MachineFound
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		connection.offerMachine(createMachine(), keys);
+		connection.setRemoteIdentifier(ident);
+		connection.getAuthentication().setMachineInfo(name, port, nports);
+		connection.getAuthentication().offerRemote(ident, connection.getIp());
 	}
 
 	public boolean requiresAthentication()
 	{
 		return false;
+	}
+
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		builder.append("I am a machine with ident=" + ident + " on a port " + port);
+		return builder.toString();
 	}
 }

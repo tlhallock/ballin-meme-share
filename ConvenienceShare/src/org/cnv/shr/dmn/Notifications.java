@@ -1,5 +1,6 @@
 package org.cnv.shr.dmn;
 
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.RemoteDirectory;
 

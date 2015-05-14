@@ -30,7 +30,7 @@ public class ByteReader
 
 		return i;
 	}
-
+	
 	public static int readInt(InputStream in) throws IOException
 	{
 		long i = 0;

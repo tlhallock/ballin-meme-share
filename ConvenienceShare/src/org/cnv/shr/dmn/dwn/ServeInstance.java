@@ -9,8 +9,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.ChecksumManager;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.msg.DoneMessage;
@@ -105,7 +105,7 @@ public class ServeInstance
 	{
 		System.out.println(string);
 		connection.send(new DownloadFailure(string));
-		connection.send(new DoneMessage());
+		connection.finish();
 	}
 
 	public void sendChunks()
@@ -149,8 +149,7 @@ public class ServeInstance
 	public void quit()
 	{
 		tmpFile.delete();
-		connection.send(new DoneMessage());
-		connection.remoteIsDone();
+		connection.finish();
 	}
 
 	public void setPercentComplete(double percentComplete)

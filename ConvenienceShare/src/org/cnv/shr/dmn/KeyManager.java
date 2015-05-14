@@ -27,6 +27,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
+import org.cnv.shr.cnctn.AuthenticationWaiter;
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.Misc;
@@ -181,7 +183,7 @@ public class KeyManager
 	}
 
 	
-	public byte[] createTestNaunce(Communication c, PublicKey remoteKey) throws IOException
+	public byte[] createTestNaunce(AuthenticationWaiter authentication, PublicKey remoteKey) throws IOException
 	{
 		if (remoteKey == null)
 		{
@@ -189,7 +191,7 @@ public class KeyManager
 		}
 		final byte[] original = Misc.createNaunce();
 		final byte[] sentNaunce = createNaunce(remoteKey, original);
-		c.addPendingNaunce(original);
+		authentication.addPendingNaunce(original);
 		return sentNaunce;
 	}
 

@@ -3,7 +3,7 @@ package org.cnv.shr.msg.dwn;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.msg.Failure;

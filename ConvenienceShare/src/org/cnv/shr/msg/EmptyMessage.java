@@ -3,7 +3,8 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -29,7 +30,7 @@ public class EmptyMessage extends Message
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		size = ByteReader.readInt(bytes);
 		for (int i = 0; i < size; i++)

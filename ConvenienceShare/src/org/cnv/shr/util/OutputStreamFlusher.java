@@ -3,7 +3,7 @@ package org.cnv.shr.util;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.EmptyMessage;
 

@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -28,7 +30,7 @@ public class ConnectionOpenAwk extends KeyMessage
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		decryptedNaunce = ByteReader.readVarByteArray(bytes);
 		naunceRequest   = ByteReader.readVarByteArray(bytes);
@@ -51,18 +53,16 @@ public class ConnectionOpenAwk extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (connection.hasPendingNaunce(decryptedNaunce))
+		if (connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
 		{
 			RijndaelKey aesKey = Services.keyManager.createAesKey();
-			byte[] decrypted = Services.keyManager.decryptNaunce(connection.getLocalKey(), naunceRequest);
+			byte[] decrypted = Services.keyManager.decryptNaunce(connection.getAuthentication().getLocalKey(), naunceRequest);
 			connection.send(new ConnectionOpened(aesKey, decrypted));
-			connection.notifyAuthentication(true, aesKey);
+			connection.setAuthenticated(aesKey);
 		}
 		else
 		{
-			connection.notifyAuthentication(false, null);
-			connection.send(new KeyFailure("ConnectionOpenAwk: first naunce failed."));
-			connection.notifyDone();
+			fail(connection);
 		}
 	}
 }

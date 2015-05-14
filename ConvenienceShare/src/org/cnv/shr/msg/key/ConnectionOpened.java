@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
+import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -30,7 +32,7 @@ public class ConnectionOpened extends KeyMessage
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		decryptedNaunce = ByteReader.readVarByteArray(bytes);
 		try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(ByteReader.readVarByteArray(bytes)));)
@@ -68,15 +70,13 @@ public class ConnectionOpened extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (connection.hasPendingNaunce(decryptedNaunce))
+		if (connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
 		{
-			connection.notifyAuthentication(true, aesKey);
+			connection.setAuthenticated(aesKey);
 		}
 		else
 		{
-			connection.send(new KeyFailure("Connection opened: last naunce failed."));
-			connection.notifyDone();
-			connection.notifyAuthentication(false, null);
+			fail(connection);
 		}
 	}
 }

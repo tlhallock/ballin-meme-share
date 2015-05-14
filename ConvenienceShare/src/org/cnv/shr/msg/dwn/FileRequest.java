@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -45,7 +46,7 @@ public class FileRequest extends Message
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		rootName  = ByteReader.readString(bytes);
 		path      = ByteReader.readString(bytes);

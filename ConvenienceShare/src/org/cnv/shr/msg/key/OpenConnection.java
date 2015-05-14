@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
 
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -31,7 +33,7 @@ public class OpenConnection extends KeyMessage
 	}
 	
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		sourcePublicKey      = ByteReader.readPublicKey(bytes);
 		destinationPublicKey = ByteReader.readPublicKey(bytes);
@@ -55,12 +57,12 @@ public class OpenConnection extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		connection.setKeys(sourcePublicKey, destinationPublicKey);
+		connection.getAuthentication().setKeys(sourcePublicKey, destinationPublicKey);
 		if (!authenticateRemote(connection))
 		{
 			return;
 		}
-		connection.authenticateToTarget(requestedNaunce);
+		connection.getAuthentication().authenticateToTarget(connection, requestedNaunce);
 	}
 	
 	private boolean authenticateRemote(Communication connection) throws IOException
@@ -72,7 +74,7 @@ public class OpenConnection extends KeyMessage
 			return true;
 		}
 
-		if (connection.acceptKey(sourcePublicKey))
+		if (connection.getAuthentication().acceptKey(sourcePublicKey))
 		{
 			DbKeys.addKey(machine, sourcePublicKey);
 			return true;
@@ -86,8 +88,7 @@ public class OpenConnection extends KeyMessage
 		}
 
 		// add message
-		connection.send(new KeyFailure("Open connection authenticate to remote: no known keys available."));
-		connection.notifyDone();
+		fail(connection);
 		return false;
 	}
 }

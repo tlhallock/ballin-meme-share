@@ -3,8 +3,8 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cnv.shr.dmn.Communication;
-import org.cnv.shr.dmn.Services;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.util.AbstractByteWriter;
 
 public class DoneResponse extends Message
@@ -24,26 +24,20 @@ public class DoneResponse extends Message
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException {}
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException {}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
-	{
-//		for (int i = 0; i < DoneMessage.DONE_PADDING; i++)
-//		{
-//			buffer.append(0);
-//		}
-	}
+	protected void write(AbstractByteWriter buffer) throws IOException {}
 
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		Services.networkManager.closeConnection(connection);
+		connection.setDone();
 	}
 
 	public boolean requiresAthentication()
 	{
-		return true;
+		return false;
 	}
 	
 	public String toString()

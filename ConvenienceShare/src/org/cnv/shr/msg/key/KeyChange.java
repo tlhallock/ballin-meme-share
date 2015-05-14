@@ -5,9 +5,11 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.security.PublicKey;
 
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -32,7 +34,7 @@ public class KeyChange extends KeyMessage
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		oldKey         = ByteReader.readPublicKey(bytes);
 		newKey         = ByteReader.readPublicKey(bytes);
@@ -61,14 +63,13 @@ public class KeyChange extends KeyMessage
 	public void perform(Communication connection) throws Exception
 	{
 		Machine machine = connection.getMachine();
-		if (DbKeys.machineHasKey(machine, oldKey) && connection.hasPendingNaunce(decryptedProof))
+		if (DbKeys.machineHasKey(machine, oldKey) && connection.getAuthentication().hasPendingNaunce(decryptedProof))
 		{
 			DbKeys.addKey(machine, newKey);
-			connection.setRemoteKey(newKey);
-			connection.authenticateToTarget(naunceRequest);
+			connection.getAuthentication().setRemoteKey(newKey);
+			connection.getAuthentication().authenticateToTarget(connection, naunceRequest);
 			return;
 		}
-		connection.send(new KeyFailure("Change key: either no old key or no pending naunce."));
-		connection.notifyDone();
+		fail(connection);
 	}
 }

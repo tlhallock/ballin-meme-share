@@ -23,7 +23,7 @@ public class Machine extends DbObject
 	private int port;
 	
 	private String name;
-	private String identifier = "";
+	private String identifier;
 	
 	private long lastActive;
 	private Boolean sharing;
@@ -35,17 +35,11 @@ public class Machine extends DbObject
 	protected boolean acceptPeers;
 	
 	
-	public Machine(
-			String ip, int port, int nports,
-			String name, String identifier)
+	public Machine(String identifier)
 	{
 		super(null);
-		this.ip = ip;
-		this.port = port;
-		this.name = name;
 		this.identifier = identifier;
-		this.nports = nports;
-		this.sharing = false;
+		sharing = false;
 	}
 	
 	protected Machine() { super(null); }

@@ -2,7 +2,7 @@ package org.cnv.shr.dmn.dwn;
 
 import java.util.HashMap;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
@@ -38,7 +38,7 @@ public class Seeder
 
 	public void done()
 	{
-		connection.send(new DoneMessage());
+		connection.finish();
 	}
 
 	public Communication getConnection()

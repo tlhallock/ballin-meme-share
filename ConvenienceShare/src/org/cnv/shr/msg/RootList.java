@@ -6,9 +6,10 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.RemoteDirectory;
@@ -63,7 +64,7 @@ public class RootList extends Message
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		int numFolders = ByteReader.readInt(bytes);
 		for (int i = 0; i < numFolders; i++)

@@ -3,7 +3,8 @@ package org.cnv.shr.msg.key;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 
@@ -21,7 +22,7 @@ public class KeyFailure extends KeyMessage
 	}
 	
 	@Override
-	public void parse(InputStream bytes) throws IOException {}
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException {}
 
 	@Override
 	protected void write(AbstractByteWriter buffer) {}
@@ -42,7 +43,6 @@ public class KeyFailure extends KeyMessage
 	public void perform(Communication connection) throws Exception
 	{
 		Services.logger.logStream.println("Key failure");
-		connection.notifyAuthentication(false, null);
-		connection.notifyDone();
+		connection.setAuthenticated(null);
 	}
 }

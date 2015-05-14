@@ -5,16 +5,17 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.msg.MachineFound;
@@ -49,7 +50,7 @@ public class UserActions
 					}
 					openConnection.send(new MachineFound());
 					openConnection.send(new FindMachines());
-					openConnection.notifyDone();
+					openConnection.finish();
 				}
 				catch (IOException e)
 				{
@@ -75,7 +76,7 @@ public class UserActions
 						return;
 					}
 					openConnection.send(new ListRoots());
-					openConnection.notifyDone();
+					openConnection.finish();
 				}
 				catch (IOException e)
 				{
@@ -100,7 +101,7 @@ public class UserActions
 						return;
 					}
 					openConnection.send(new FindMachines());
-					openConnection.notifyDone();
+					openConnection.finish();
 				}
 				catch (IOException e)
 				{

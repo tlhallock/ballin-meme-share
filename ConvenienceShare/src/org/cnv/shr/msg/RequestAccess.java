@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.AbstractByteWriter;
 
@@ -31,7 +32,7 @@ public class RequestAccess extends Message
 		return TYPE;
 	}
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 	}
 	@Override

@@ -5,7 +5,8 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.dwn.ChunkList;
@@ -92,18 +93,22 @@ public class MessageReader
 		identifiers.put(type, identifier);
 	}
 	
-	public Message readMsg(Communication c) throws IOException
+	public Message readMsg(ConnectionStatistics stats, InputStream input) throws IOException
 	{
-		int msgType = ByteReader.readInt(c.getIn());
+		int msgType = ByteReader.readInt(input);
+		if (msgType < 0)
+		{
+			return null;
+		}
 
 		MessageIdentifier messageIdentifier = identifiers.get(msgType);
 		if (messageIdentifier == null)
 		{
-			Services.logger.logStream.println("Ignoring unknown message type: " + msgType + " from " + c.getUrl());
+			Services.logger.logStream.println("Ignoring unknown message type: " + msgType + " from ");
 			return null;
 		}
 		
-		return messageIdentifier.create(c.getIn());
+		return messageIdentifier.create(input);
 	}
 	
 	public String toString()
@@ -154,7 +159,7 @@ public class MessageReader
 			{
 				Services.logger.logStream.println("Received message of type " + name);
 				Message newInstance = constructor.newInstance(stream);
-				newInstance.parse(stream);
+				newInstance.parse(stream, null);
 				return newInstance;
 			}
 			catch (Exception e)

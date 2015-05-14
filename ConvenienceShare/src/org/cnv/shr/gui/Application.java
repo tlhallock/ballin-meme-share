@@ -998,9 +998,4 @@ public class Application extends javax.swing.JFrame
 			}
 		};
 	}
-
-	public boolean acceptKey(Machine machine, PublicKey sourcePublicKey)
-	{
-		return false;
-	}
 }

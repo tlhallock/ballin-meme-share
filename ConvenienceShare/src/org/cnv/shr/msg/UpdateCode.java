@@ -3,7 +3,8 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.util.AbstractByteWriter;
 
 public class UpdateCode extends Message
@@ -23,7 +24,7 @@ public class UpdateCode extends Message
 	}
 	
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		// TODO Auto-generated method stub
 		

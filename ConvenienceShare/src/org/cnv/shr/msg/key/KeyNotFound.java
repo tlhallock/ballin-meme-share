@@ -6,7 +6,8 @@ import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -29,12 +30,12 @@ public class KeyNotFound extends KeyMessage
 			{
 				throw new NullPointerException("Known keys should not be null.");
 			}
-			tests.put(publicKey, Services.keyManager.createTestNaunce(c, publicKey));
+			tests.put(publicKey, Services.keyManager.createTestNaunce(c.getAuthentication(), publicKey));
 		}
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		int size = ByteReader.readInt(bytes);
 		for (int i = 0; i < size; i++)
@@ -76,16 +77,16 @@ public class KeyNotFound extends KeyMessage
 				// able to verify self to remote, but change key
 				byte[] decrypted = Services.keyManager.decryptNaunce(knownKey, test);
 				// still need to authenticate them.
-				byte[] naunceRequest = Services.keyManager.createTestNaunce(connection, connection.getRemoteKey());
+				byte[] naunceRequest = Services.keyManager.createTestNaunce(connection.getAuthentication(), connection.getAuthentication().getRemoteKey());
 				connection.send(new KeyChange(knownKey, Services.keyManager.getPublicKey(), decrypted, naunceRequest));
 				return;
 			}
 		}
 		
 		PublicKey localKey = Services.keyManager.getPublicKey();
-		connection.setLocalKey(localKey);
+		connection.getAuthentication().setLocalKey(localKey);
 		connection.send(new NewKey(localKey, 
-				Services.keyManager.createTestNaunce(connection, connection.getRemoteKey())));
+				Services.keyManager.createTestNaunce(connection.getAuthentication(), connection.getAuthentication().getRemoteKey())));
 	}
 
 	public String toString()

@@ -5,8 +5,9 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.security.PublicKey;
 
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 
@@ -20,7 +21,7 @@ public class RevokeKey extends Message
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		// TODO Auto-generated method stub
 		

@@ -2,7 +2,7 @@ package org.cnv.shr.dmn.dwn;
 
 import java.util.HashMap;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.mdl.LocalFile;
 
 public class ServeManager

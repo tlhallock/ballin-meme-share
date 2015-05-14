@@ -11,12 +11,13 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.msg.DirectoryList;
+import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.ListPath;
 
 public class RemoteSynchronizers
@@ -170,7 +171,7 @@ public class RemoteSynchronizers
 			{
 				done(this);
 				condition.signalAll();
-				communication.notifyDone();
+				communication.finish();
 			}
 			finally
 			{

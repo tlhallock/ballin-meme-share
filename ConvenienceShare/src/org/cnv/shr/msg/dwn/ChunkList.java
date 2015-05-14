@@ -5,7 +5,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import org.cnv.shr.dmn.Communication;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
@@ -39,7 +40,7 @@ public class ChunkList extends Message
 		return TYPE;
 	}
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		int numChunks = ByteReader.readInt(bytes);
 		for (int i = 0; i < numChunks; i++)

@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
 
-import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -15,10 +15,10 @@ import org.cnv.shr.util.ByteReader;
 public class MachineFound extends Message
 {
 	private String ip;
-	private int port;
-	private int nports;
-	private String name;
-	private String ident;
+	protected int port;
+	protected int nports;
+	protected String name;
+	protected String ident;
 	private long lastActive;
 	
 	public MachineFound(InputStream stream) throws IOException
@@ -48,18 +48,17 @@ public class MachineFound extends Message
 		{
 			return;
 		}
-		DbMachines.updateMachineInfo(createMachine(), null, connection.getIp());
-	}
-
-	public Machine createMachine()
-	{
-		Machine newMachine = new Machine(ip, port, nports, name, ident);
-		newMachine.setLastActive(lastActive);
-		return newMachine;
+		DbMachines.updateMachineInfo(
+				ident,
+				name,
+				new PublicKey[0],
+				ip,
+				port,
+				nports);
 	}
 
 	@Override
-	public void parse(InputStream bytes) throws IOException
+	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		ip          = ByteReader.readString(bytes);
 		port        = ByteReader.readInt(bytes);

@@ -12,9 +12,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.dmn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
@@ -105,7 +105,7 @@ public class DownloadInstance
 							return;
 						}
 						openConnection.send(new LookingFor(remoteFile));
-						openConnection.notifyDone();
+						openConnection.finish();
 					}
 					catch (IOException e)
 					{
@@ -341,7 +341,7 @@ public class DownloadInstance
 			Services.logger.logStream.println("There are no more seeders left!");
 			Services.downloads.done(this);
 		}
-		connection.send(new DoneMessage());
+		connection.finish();
 	}
 
 	public Collection<Seeder> getSeeders()

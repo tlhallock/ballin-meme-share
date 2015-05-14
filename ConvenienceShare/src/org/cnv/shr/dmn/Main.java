@@ -56,6 +56,8 @@ public class Main
 					deleteDb = true;
 				}
 			}
+			
+			Thread.sleep(1000);
 
 			for (int i = 0; i < args.length; i++)
 			{

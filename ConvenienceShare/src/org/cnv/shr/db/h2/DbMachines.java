@@ -100,23 +100,26 @@ public class DbMachines
 		}
 	}
 	
-	
+//	new PublicKey[0]
 	// Should be in the same transaction...
-	public static Machine updateMachineInfo(Machine claimedMachine, PublicKey[] publicKeys, String ip)
+	public static void updateMachineInfo(
+			String ident,
+			String name,
+			PublicKey[] publicKeys,
+			String ip,
+			int port,
+			int nports)
 	{
-		if (ip != null)
-		{
-			claimedMachine.setIp(ip);
-		}
-		Machine machine = getMachine(claimedMachine.getIdentifier());
+		Machine machine = getMachine(ident);
 		if (machine == null)
 		{
-			machine = claimedMachine;
+			machine = new Machine(ident);
 		}
-		machine.setIp(claimedMachine.getIp());
-		machine.setPort(claimedMachine.getPort());
-		machine.setName(claimedMachine.getName());
-		machine.setNumberOfPorts(claimedMachine.getNumberOfPorts());
+		
+		machine.setIp(ip);
+		machine.setPort(port);
+		machine.setName(name);
+		machine.setNumberOfPorts(nports);
 		
 		try
 		{
@@ -126,17 +129,11 @@ public class DbMachines
 		catch (SQLException e)
 		{
 			e.printStackTrace();
-			return machine;
+			return;
 		}
-		
-		if (publicKeys != null)
+		for (PublicKey key : publicKeys)
 		{
-			for (PublicKey key : publicKeys)
-			{
-				DbKeys.addKey(machine, key);
-			}
+			DbKeys.addKey(machine, key);
 		}
-		
-		return machine;
 	}
 }

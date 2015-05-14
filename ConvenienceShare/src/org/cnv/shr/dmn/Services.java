@@ -7,6 +7,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.cnv.shr.cnctn.ConnectionManager;
 import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbTables;
