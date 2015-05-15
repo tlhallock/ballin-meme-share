@@ -3,8 +3,8 @@ package org.cnv.shr.cnctn;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.Message;
 
 public class ConnectionRunnable implements Runnable
@@ -48,7 +48,7 @@ public class ConnectionRunnable implements Runnable
 		{
 			Services.logger.println("Error creating message:");
 			Services.logger.print(e);
-			Main.quit();
+			Services.quiter.quit();
 		}
 		catch (Exception ex)
 		{

@@ -186,7 +186,7 @@ public class Authenticator
 			return;
 		}
 		
-		byte[] decrypted = Services.keyManager.decryptNaunce(localPublicKey, requestedNaunce);
+		byte[] decrypted = Services.keyManager.decrypt(localPublicKey, requestedNaunce);
 		byte[] naunceRequest = Services.keyManager.createTestNaunce(this, remotePublicKey);
 		if (!Arrays.equals(publicKey.getEncoded(), localPublicKey.getEncoded()))
 		{

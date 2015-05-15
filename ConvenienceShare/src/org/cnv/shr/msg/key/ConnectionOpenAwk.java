@@ -54,8 +54,8 @@ public class ConnectionOpenAwk extends KeyMessage
 		if (connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
 		{
 			RijndaelKey aesKey = Services.keyManager.createAesKey();
-			byte[] decrypted = Services.keyManager.decryptNaunce(connection.getAuthentication().getLocalKey(), naunceRequest);
-			connection.send(new ConnectionOpened(aesKey, decrypted));
+			byte[] decrypted = Services.keyManager.decrypt(connection.getAuthentication().getLocalKey(), naunceRequest);
+			connection.send(new ConnectionOpened(aesKey, decrypted, connection.getAuthentication().getRemoteKey()));
 			connection.setAuthenticated(aesKey);
 		}
 		else

@@ -7,8 +7,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 import org.cnv.shr.cnctn.ConnectionStatistics;
-import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.ChunkResponse;
@@ -79,7 +79,7 @@ public class MessageReader
 		{
 			Services.logger.println("Message type " + type + " for " + identifier.name + " is not in range.");
 			Services.logger.println(this);
-			Main.quit();
+			Services.quiter.quit();
 			return;
 		}
 		MessageIdentifier messageIdentifier = identifiers.get(type);
@@ -87,7 +87,7 @@ public class MessageReader
 		{
 			Services.logger.println("Type " + type + " is already used by " + messageIdentifier.name + " so " + identifier.name + " cannot also use it.");
 			Services.logger.println(this);
-			Main.quit();
+			Services.quiter.quit();
 			return;
 		}
 		identifiers.put(type, identifier);
@@ -145,7 +145,7 @@ public class MessageReader
 			{
 				Services.logger.println("Unable to read fields for class " + name);
 				Services.logger.print(e);
-				Main.quit();
+				Services.quiter.quit();
 			}
 		}
 		

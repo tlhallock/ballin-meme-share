@@ -28,6 +28,7 @@ import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.cnctn.Authenticator;
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.Misc;
@@ -188,19 +189,17 @@ public class KeyManager
 			return new byte[0];
 		}
 		final byte[] original = Misc.createNaunce();
-		final byte[] sentNaunce = createNaunce(remoteKey, original);
+		final byte[] sentNaunce = encrypt(remoteKey, original);
 		authentication.addPendingNaunce(original);
 		return sentNaunce;
 	}
 
-	public byte[] createNaunce(PublicKey remoteKey, byte[] original) throws IOException
+	public byte[] encrypt(PublicKey pKey, byte[] original)
 	{
 		try
 		{
 			Cipher cipher2 = Cipher.getInstance("RSA", "FlexiCore");
-			
-			cipher2.init(Cipher.ENCRYPT_MODE, remoteKey);
-			
+			cipher2.init(Cipher.ENCRYPT_MODE, pKey);
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			try (InputStream input = new ByteInputStream(original, 0, original.length);)
 			{
@@ -208,50 +207,64 @@ public class KeyManager
 			}
 			byte[] byteArray = output.toByteArray();
 			
-//			System.out.println("Encrypted");
-//			System.out.println(Misc.format(original));
-//			System.out.println("to");
-//			System.out.println(Misc.format(byteArray));
-//			System.out.println("with");
-//			System.out.println(Misc.format(remoteKey.getEncoded()));
-			
+			System.out.println("Encrypted");
+			System.out.println(Misc.format(original));
+			System.out.println("to");
+			System.out.println(Misc.format(byteArray));
+			System.out.println("with");
+			System.out.println(Misc.format(pKey.getEncoded()));
+
 			return byteArray;
 		}
-		catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e)
+		catch (IOException e)
 		{
+			Services.logger.println("WTH?");
 			Services.logger.print(e);
-			Main.quit();
+			Services.quiter.quit();
+			return new byte[0];
+		}
+		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
+		{
+			Services.logger.println("Quiting:");
+			Services.logger.print(e);
+			Services.quiter.quit();
 			return new byte[0];
 		}
 	}
-	public byte[] decryptNaunce(PublicKey pKey, byte[] encrypted) throws IOException
+
+	public byte[] decrypt(PublicKey pKey, byte[] encrypted)
 	{
 		try
 		{
 			PrivateKey privateKey = getPrivateKey(pKey);
 			Cipher cipher2 = Cipher.getInstance("RSA", "FlexiCore");
 			cipher2.init(Cipher.DECRYPT_MODE, privateKey);
-			
+
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			try (ByteInputStream input = new ByteInputStream(encrypted, 0, encrypted.length);)
 			{
 				Misc.copy(new CipherInputStream(input, cipher2), output);
 			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 			byte[] bytes = output.toByteArray();
-			
-//			System.out.println("Decrypted");
-//			System.out.println(Misc.format(encrypted));
-//			System.out.println("to");
-//			System.out.println(Misc.format(bytes));
-//			System.out.println("with");
-//			System.out.println(Misc.format(pKey.getEncoded()));
-			
+
+			 System.out.println("Decrypted");
+			 System.out.println(Misc.format(encrypted));
+			 System.out.println("to");
+			 System.out.println(Misc.format(bytes));
+			 System.out.println("with");
+			 System.out.println(Misc.format(pKey.getEncoded()));
+
 			return bytes;
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
 		{
+			Services.logger.println("Quiting:");
 			Services.logger.print(e);
-			Main.quit();
+			Services.quiter.quit();
 			return new byte[0];
 		}
 	}
@@ -338,7 +351,7 @@ public class KeyManager
 		catch (NoSuchAlgorithmException | NoSuchProviderException e)
 		{
 			Services.logger.print(e);
-			Main.quit();
+			Services.quiter.quit();
 			return null;
 		}
 	}

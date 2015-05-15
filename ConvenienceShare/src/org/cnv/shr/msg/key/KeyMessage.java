@@ -9,8 +9,8 @@ import java.security.NoSuchProviderException;
 import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.Message;
 
 public abstract class KeyMessage extends Message
@@ -29,7 +29,7 @@ public abstract class KeyMessage extends Message
 	
 	public void fail(Communication connection)
 	{
-		connection.send(new KeyFailure("ConnectionOpenAwk: first naunce failed."));
+		connection.send(new KeyFailure("ConnectionOpened: first naunce failed."));
 		try
 		{
 			connection.setAuthenticated(null);
@@ -37,7 +37,7 @@ public abstract class KeyMessage extends Message
 		catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e)
 		{
 			Services.logger.print(e);
-			Main.quit();
+			Services.quiter.quit();
 		}
 		connection.finish();
 	}

@@ -62,7 +62,7 @@ public class NewKey extends KeyMessage
 		DbKeys.addKey(connection.getMachine(), newKey);
 		connection.getAuthentication().setRemoteKey(newKey);
 
-		byte[] decrypted = Services.keyManager.decryptNaunce(connection.getAuthentication().getLocalKey(), naunceRequest);
+		byte[] decrypted = Services.keyManager.decrypt(connection.getAuthentication().getLocalKey(), naunceRequest);
 		byte[] newRequest = Services.keyManager.createTestNaunce(connection.getAuthentication(), newKey);
 		connection.send(new ConnectionOpenAwk(decrypted, newRequest));
 		return;

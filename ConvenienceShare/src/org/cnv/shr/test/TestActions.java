@@ -9,7 +9,8 @@ import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.Main;
+import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.gui.UserActions;
 
 public class TestActions
@@ -49,7 +50,7 @@ public class TestActions
 		@Override
 		public void perform() throws Exception
 		{
-			Main.quit();
+			Services.quiter.quit();
 		}
 	};
 	public static class SYNC_ROOTS extends TestAction

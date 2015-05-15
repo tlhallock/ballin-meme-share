@@ -23,6 +23,9 @@ import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.dwn.DownloadManager;
 import org.cnv.shr.dmn.dwn.ServeManager;
+import org.cnv.shr.dmn.mn.Arguments;
+import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.dmn.mn.Quiter;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.Machine.LocalMachine;
@@ -56,10 +59,13 @@ public class Services
 	public static DownloadManager downloads;
 	public static RemoteSynchronizers syncs;
 	public static BlackList blackList;
+	public static Quiter quiter;
 	
-	public static void initialize(Settings stgs, boolean deleteDb) throws Exception
+	public static void initialize(Arguments args) throws Exception
 	{
-		createServices(stgs, deleteDb);
+		quiter = args.quiter;
+		args.settings.read();
+		createServices(args.settings, args.deleteDb);
 		testStartUp();
 		startServices();
 	}
@@ -149,7 +155,7 @@ public class Services
 				{
 					Services.logger.println("Unable to start GUI.\nQuiting.");
 					Services.logger.print(ex);
-					Main.quit();
+					Services.quiter.quit();
 				}
 			}
 		});

@@ -6,14 +6,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Arguments;
+import org.cnv.shr.dmn.mn.Quiter;
 import org.cnv.shr.stng.Settings;
 
 
 public class LocalMachineTest
 {
 	private static int LOCAL_PORT = 6990;
+	protected boolean quit;
 	
 	public Closeable launchLocalMachine() throws Exception
 	{
@@ -28,8 +30,19 @@ public class LocalMachineTest
 		stgs.stagingDirectory.set(    new File(root + File.separator + "stage"));
 		stgs.servePortBegin.set(LOCAL_PORT);
 		stgs.machineIdentifier.set("6mkDuKhkiTpjpM3vS6LGEKN72dEB4tmsaKslTJc2ZDrXLGplYE");
-		Main.quitting = false;
-		Services.initialize(stgs, true);
+		stgs.write();
+		
+		Arguments args = new Arguments();
+		args.settings = stgs;
+		args.deleteDb = true;
+		args.quiter = new Quiter() {
+			@Override
+			public void doFinal()
+			{
+				quit = true;
+			}};
+		
+		Services.initialize(args);
 
 		return new Closeable() {
 			@Override

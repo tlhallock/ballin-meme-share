@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.PublicKey;
 
-import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.stng.Settings;
 
 /**
@@ -64,7 +64,7 @@ public abstract class AbstractByteWriter
 		{
 			Services.logger.println("Encoding is not supported");
 			Services.logger.print(e);
-			Main.quit();
+			Services.quiter.quit();
 			return this;
 		}
 	}

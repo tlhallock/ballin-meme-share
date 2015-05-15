@@ -52,10 +52,18 @@ public class Settings implements SettingListener
 	public FileSetting       logFile                  = new FileSetting      ("logFile             ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "log.txt"  ), false, true, "File to put log messages if logging to file.                                ".trim()); { settings.add(logFile             );  }
 	public FileSetting       dbFile                   = new FileSetting      ("dbFile              ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "files.db" ), false, true, "File to put database.                                                       ".trim()); { settings.add(dbFile              );  }
 	
-	public Settings(File settingsFile) throws UnknownHostException
+	public Settings(File settingsFile)
 	{
 		this.settingsFile = settingsFile;
-		localAddress = InetAddress.getLocalHost().getHostAddress();
+		try
+		{
+			localAddress = InetAddress.getLocalHost().getHostAddress();
+		}
+		catch (UnknownHostException e)
+		{
+			localAddress = "127.0.0.1";
+			e.printStackTrace();
+		}
 		System.out.println("Local host is " + localAddress);
 	}
 	
@@ -88,6 +96,17 @@ public class Settings implements SettingListener
 		try (FileInputStream inStream = new FileInputStream(settingsFile))
 		{
 			properties.load(inStream);
+		}
+		catch (IOException ex)
+		{
+			if (Services.logger == null)
+			{
+				System.out.println("No settings file found.");
+			}
+			else
+			{
+				Services.logger.println("No settings file found.");
+			}
 		}
 		read(properties);
 	}

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.ConnectionStatistics;
@@ -17,47 +18,33 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 
 public class ConnectionOpened extends KeyMessage
 {
-	private RijndaelKey aesKey;
-	byte[] decryptedNaunce;
-
+	private byte[] decryptedNaunce;
+	private byte[] encryptedAesKey;
+	
 	public ConnectionOpened(InputStream stream) throws IOException
 	{
 		super(stream);
 	}
 	
-	public ConnectionOpened(RijndaelKey aesKey, byte[] encoded)
+	public ConnectionOpened(RijndaelKey aesKey, byte[] encoded, PublicKey pKey) throws IOException
 	{
 		this.decryptedNaunce = encoded;
-		this.aesKey = aesKey;
+		Services.keyManager.encrypt(pKey, aesKey.getEncoded());
+		this.encryptedAesKey = getBytes(pKey, aesKey);
 	}
 
 	@Override
 	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
 	{
 		decryptedNaunce = ByteReader.readVarByteArray(bytes);
-		try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(ByteReader.readVarByteArray(bytes)));)
-		{
-			try
-			{
-				aesKey = (RijndaelKey) objectInputStream.readObject();
-			}
-			catch (ClassNotFoundException e)
-			{
-				Services.logger.print(e);
-			}
-		}
+		encryptedAesKey = ByteReader.readVarByteArray(bytes);
 	}
 
 	@Override
 	protected void write(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.appendVarByteArray(decryptedNaunce);
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);)
-		{
-			objectOutputStream.writeObject(aesKey);
-		}
-		buffer.appendVarByteArray(byteArrayOutputStream.toByteArray());
+		buffer.appendVarByteArray(encryptedAesKey);
 	}
 
 	public static int TYPE = 24;
@@ -72,11 +59,30 @@ public class ConnectionOpened extends KeyMessage
 	{
 		if (connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
 		{
-			connection.setAuthenticated(aesKey);
+			connection.setAuthenticated(getKey(connection.getAuthentication().getLocalKey(), encryptedAesKey));
 		}
 		else
 		{
 			fail(connection);
 		}
+	}
+	
+	private static RijndaelKey getKey(PublicKey pKey, byte[] bytes) throws IOException, ClassNotFoundException
+	{
+		try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(
+				Services.keyManager.decrypt(pKey, bytes)));)
+		{
+			return (RijndaelKey) objectInputStream.readObject();
+		}
+	}
+	
+	private static byte[] getBytes(PublicKey key, RijndaelKey aesKey) throws IOException
+	{
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);)
+		{
+			objectOutputStream.writeObject(aesKey);
+		}
+		return Services.keyManager.encrypt(key, byteArrayOutputStream.toByteArray());
 	}
 }

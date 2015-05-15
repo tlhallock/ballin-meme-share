@@ -178,7 +178,7 @@ public class Misc
 	}
 	public static String getJarName()
 	{
-		return "org.cnv.shr.dmn.Main";
+		return "org.cnv.shr.dmn.mn.MainTest";
 	}
 	public static String getClassPath()
 	{
