@@ -24,7 +24,7 @@ public class DbPermissions
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
@@ -52,7 +52,7 @@ public class DbPermissions
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		return SharingState.INVISIBLE;
 	}

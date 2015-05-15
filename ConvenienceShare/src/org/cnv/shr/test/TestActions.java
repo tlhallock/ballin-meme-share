@@ -1,32 +1,24 @@
 package org.cnv.shr.test;
 
-import java.io.BufferedReader;
-import java.io.PrintStream;
+import java.io.File;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.LinkedList;
-import java.util.Scanner;
 
+import org.cnv.shr.db.h2.DbFiles;
+import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.dmn.Main;
 import org.cnv.shr.gui.UserActions;
 
 public class TestActions
 {
 	private static LinkedList<TestAction> actions = new LinkedList<>();
 	
-	public static abstract class TestAction
+	public static abstract class TestAction implements Serializable
 	{
-		protected String name;
-
-		protected TestAction(String n)
-		{
-			this.name = n;
-			actions.add(this);
-		}
-		public abstract void send(PrintStream stream, String... args);
-		public abstract void perform(Scanner scanner) throws Exception;
-		
-		public boolean matches(String line)
-		{
-			return line.startsWith(name);
-		}
+		public abstract void perform() throws Exception;
 	}
 
 //	public static TestAction REMOVE_MACHINE = new TestAction("REMOVE_MACHINE")
@@ -36,105 +28,155 @@ public class TestActions
 //			GuiActions.removeMachine(remote);
 //		}
 //	};
-	public static TestAction ADD_MACHINE = new TestAction("ADD_MACHINE")
+	
+	public static class AddMachine extends TestAction
 	{
-		public void perform(Scanner scanner)
+		private String url;
+		
+		public AddMachine(String url)
 		{
-			scanner.next(); // skip name
-			UserActions.addMachine(scanner.next());
+			this.url = url;
 		}
 		
-		@Override
-		public void send(PrintStream stream, String... args)
+		public void perform()
 		{
-			stream.println(name + " " + args[0]);
+			UserActions.addMachine(url);
 		}
 	};
-//	public static TestAction SYNC_ROOTS = new TestAction("SYNC_ROOTS")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.syncRoots(m);
-//		}
-//	};
-//	public static TestAction FIND_MACHINES = new TestAction("FIND_MACHINES")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.findMachines(m);
-//		}
-//	};
-//	public static TestAction SYNC_ALL_LOCAL = new TestAction("SYNC_ALL_LOCAL")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.syncAllLocals();
-//		}
-//	};
-//	public static TestAction SYNC_LOCAL = new TestAction("SYNC_LOCAL")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.sync(d);
-//		}
-//	};
-//	public static TestAction ADD_LOCAL = new TestAction("ADD_LOCAL")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.addLocal(localDirectory);
-//		}
-//	};
-//	public static TestAction SYNC_REMOTE = new TestAction("SYNC_REMOTE")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.sync(d);
-//		}
-//	};
-//	public static TestAction REMOVE_LOCAL = new TestAction("REMOVE_LOCAL")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.remove(l);
-//		}
-//	};
-//	public static TestAction SHARE_WITH = new TestAction("SHARE_WITH")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.share(m);
-//		}
-//	};
-//	public static TestAction SHARE_LOCAL_WITH = new TestAction("SHARE_LOCAL_WITH")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.share(m, local);
-//		}
-//	};
-//	public static TestAction DOWNLOAD = new TestAction("DOWNLOAD")
-//	{
-//		public void perform()
-//		{
-//			GuiActions.download(remote);
-//		}
-//	};
 	
-	public static void run(BufferedReader reader) throws Exception
+	public static class Die extends TestAction
 	{
-		String line;
-		while ((line = reader.readLine()) != null)
+		@Override
+		public void perform() throws Exception
 		{
-			for (TestAction action : actions)
-			{
-				if (!action.matches(line))
-				{
-					continue;
-				}
-				action.perform(new Scanner(line));
-				break;
-			}
+			Main.quit();
+		}
+	};
+	public static class SYNC_ROOTS extends TestAction
+	{
+		private String ident;
+		
+		public SYNC_ROOTS(String ident)
+		{
+			this.ident = ident;
+		}
+		public void perform()
+		{
+			UserActions.syncRoots(DbMachines.getMachine(ident));
+		}
+	};
+	public static class FIND_MACHINES extends TestAction
+	{
+		private String ident;
+		
+		public void perform()
+		{
+			UserActions.findMachines(DbMachines.getMachine(ident));
+		}
+	};
+	public static class SYNC_ALL_LOCAL extends TestAction
+	{
+		public void perform()
+		{
+			UserActions.syncAllLocals();
+		}
+	};
+	public static class SYNC_LOCAL extends TestAction
+	{
+		String local;
+		
+		SYNC_LOCAL(String local)
+		{
+			this.local = local;
+		}
+		
+		public void perform()
+		{
+			UserActions.sync(DbRoots.getLocal(local));
+		}
+	};
+	public static class ADD_LOCAL extends TestAction
+	{
+		String local;
+		
+		ADD_LOCAL(String local)
+		{
+			this.local = local;
+		}
+		
+		public void perform()
+		{
+			UserActions.addLocal(new File(local), true);
+		}
+	};
+	public static class SYNC_REMOTE extends TestAction
+	{
+		String ident;
+		String name;
+		
+		SYNC_REMOTE(String ident, String name)
+		{
+			this.name = name;
+			this.ident = ident;
+		}
+		
+		public void perform()
+		{
+			DbRoots.getRoot(DbMachines.getMachine(ident), name).synchronize(null);
+		}
+	};
+	public static class REMOVE_LOCAL extends TestAction
+	{
+		String local;
+		
+		public REMOVE_LOCAL(String local)
+		{
+			this.local = local;
+		}
+		
+		public void perform()
+		{
+			UserActions.remove(DbRoots.getLocal(local));
+		}
+	};
+	public static class SHARE_WITH extends TestAction
+	{
+		private String ident;
+		private boolean share;
+		
+		public SHARE_WITH(String ident, boolean share)
+		{
+			this.ident = ident;
+			this.share = share;
+		}
+		
+		public void perform()
+		{
+			UserActions.shareWith(DbMachines.getMachine(ident), share);
+		}
+	};
+	public static class DOWNLOAD extends TestAction
+	{
+		String ident;
+		String name;
+		String path;
+		
+		public void perform()
+		{
+			UserActions.download(
+					DbFiles.getFile(
+							DbRoots.getRoot(
+									DbMachines.getMachine(ident), name), 
+							DbPaths.getPathElement(path)));
+		}
+	};
+	
+	public static void run(ObjectInputStream reader) throws Exception
+	{
+		TestAction action;
+		while ((action = (TestAction) reader.readObject()) != null)
+		{
+			action.perform();
 		}
 	}
 }

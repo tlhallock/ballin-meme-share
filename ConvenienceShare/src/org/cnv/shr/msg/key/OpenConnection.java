@@ -9,7 +9,6 @@ import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 

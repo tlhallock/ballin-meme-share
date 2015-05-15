@@ -3,7 +3,6 @@ package org.cnv.shr.db.h2;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -57,34 +56,34 @@ public class DbTables
 			}
 		}
 		
-		public void debug(Connection c, PrintStream ps)
+		public void debug(Connection c)
 		{
 //			new Exception().printStackTrace(ps);
 
 			try
 			{
-				ps.println("Printing " + tableName);
-				ps.println("----------------------------------------------");
+				Services.logger.println("Printing " + tableName);
+				Services.logger.println("----------------------------------------------");
 				ResultSet executeQuery2 = c.prepareStatement("select * from " + tableName + ";").executeQuery();
 				int ncols = executeQuery2.getMetaData().getColumnCount();
 				for (int i = 1; i <= ncols; i++)
 				{
-					ps.print(executeQuery2.getMetaData().getColumnName(i) + ",");
+					Services.logger.print(executeQuery2.getMetaData().getColumnName(i) + ",");
 				}
-				ps.println();
+				Services.logger.println();
 				while (executeQuery2.next())
 				{
 					for (int i = 1; i <= ncols; i++)
 					{
-						ps.print(executeQuery2.getObject(i) + ",");
+						Services.logger.print(executeQuery2.getObject(i) + ",");
 					}
-					ps.println();
+					Services.logger.println();
 				}
-				ps.println("----------------------------------------------");
+				Services.logger.println("----------------------------------------------");
 			}
 			catch (SQLException ex)
 			{
-				ex.printStackTrace();
+				Services.logger.print(ex);
 			}
 		}
 		
@@ -162,8 +161,8 @@ public class DbTables
 			}
 			catch (SQLException ex)
 			{
-				Services.logger.logStream.println("Unable to create from id " + id + ":" + this);
-				ex.printStackTrace(Services.logger.logStream);
+				Services.logger.println("Unable to create from id " + id + ":" + this);
+				Services.logger.print(ex);
 				return null;
 			}
 		}
@@ -184,11 +183,11 @@ public class DbTables
 		DbObjects.SHARE_ROOT      ,
 	};
 
-	public static void debugDb(PrintStream ps)
+	public static void debugDb()
 	{
 		for (DbObjects table : ALL_TABLES)
 		{
-			table.debug(Services.h2DbCache.getConnection(), ps);
+			table.debug(Services.h2DbCache.getConnection());
 		}
 	}
 
@@ -202,8 +201,8 @@ public class DbTables
 			}
 			catch (SQLException e)
 			{
-				Services.logger.logStream.println("Unable to delete table " + table + ".");
-				e.printStackTrace(Services.logger.logStream);
+				Services.logger.println("Unable to delete table " + table + ".");
+				Services.logger.print(e);
 			}
 		}
 
@@ -222,8 +221,8 @@ public class DbTables
 		}
 		catch(SQLException ex)
 		{
-			Services.logger.logStream.println("Unable to create constraint in initialization");
-			ex.printStackTrace();
+			Services.logger.println("Unable to create constraint in initialization");
+			Services.logger.print(ex);
 		}
 	}
 	

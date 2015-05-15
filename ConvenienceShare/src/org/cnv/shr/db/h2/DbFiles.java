@@ -38,7 +38,7 @@ public class DbFiles
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 	}
@@ -54,7 +54,7 @@ public class DbFiles
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	

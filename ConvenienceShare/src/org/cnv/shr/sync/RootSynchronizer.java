@@ -77,9 +77,9 @@ public abstract class RootSynchronizer implements Closeable
 
 		if (false)
 		{
-			Services.logger.logStream.println("Synchronizing " + task.current.getFullPath());
-			Services.logger.logStream.println("FS: " + task.files);
-			Services.logger.logStream.println("DB: " + task.dbPaths);
+			Services.logger.println("Synchronizing " + task.current.getFullPath());
+			Services.logger.println("FS: " + task.files);
+			Services.logger.println("DB: " + task.dbPaths);
 		}
 		
 		LinkedList<Pair<? extends FileSource>> subDirectories = new LinkedList<>();
@@ -92,7 +92,7 @@ public abstract class RootSynchronizer implements Closeable
 			}
 			catch (Exception e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 		
@@ -104,7 +104,7 @@ public abstract class RootSynchronizer implements Closeable
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 		
@@ -225,16 +225,16 @@ public abstract class RootSynchronizer implements Closeable
 		}
 		catch (FileOutsideOfRootException ex)
 		{
-			Services.logger.logStream.println("Skipping symbolic link: "  + fsCopy);
+			Services.logger.println("Skipping symbolic link: "  + fsCopy);
 		}
 		catch (IOException ex)
 		{
-			Services.logger.logStream.println("Unable to get path of file: " + fsCopy);
-			ex.printStackTrace();
+			Services.logger.println("Unable to get path of file: " + fsCopy);
+			Services.logger.print(ex);
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 

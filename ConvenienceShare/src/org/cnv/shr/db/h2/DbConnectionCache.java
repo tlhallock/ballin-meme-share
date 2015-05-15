@@ -21,10 +21,10 @@ public class DbConnectionCache
 		Connection c = getConnection();
 		if (fresh)
 		{
-			Services.logger.logStream.println("Deleting database.");
+			Services.logger.println("Deleting database.");
 			DbTables.deleteDb(c);
 		}
-		Services.logger.logStream.println("Creating database.");
+		Services.logger.println("Creating database.");
 		DbTables.createDb(c);
 	}
 
@@ -37,14 +37,26 @@ public class DbConnectionCache
 			try
 			{
 				String file = Services.settings.dbFile.get().getAbsolutePath();
-				Services.logger.logStream.println("DbFile: " + file);
+				Services.logger.println("DbFile: " + file);
 				returnValue = DriverManager.getConnection("jdbc:h2:" + file, "sa", "");
 			} catch (SQLException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 			connections.put(id, returnValue);
 		}
 		return returnValue;
+	}
+	
+	public void close()
+	{
+		try
+		{
+			getConnection().close();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

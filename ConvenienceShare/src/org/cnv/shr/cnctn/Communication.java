@@ -40,10 +40,10 @@ public class Communication implements Closeable
 	private String remoteIdentifier;
 	private boolean needsMore;
 	
-	private AuthenticationWaiter authentication;
+	private Authenticator authentication;
 	
 	/** Initiator **/
-	public Communication(AuthenticationWaiter authentication, String ip, int port) throws UnknownHostException, IOException
+	public Communication(Authenticator authentication, String ip, int port) throws UnknownHostException, IOException
 	{
 		socket = new Socket(ip, port);
 		output = socket.getOutputStream();
@@ -54,7 +54,7 @@ public class Communication implements Closeable
 	}
 	
 	/** Receiver **/
-	public Communication(AuthenticationWaiter authentication, Socket socket) throws IOException
+	public Communication(Authenticator authentication, Socket socket) throws IOException
 	{
 		this.socket = socket;
 		input =  socket.getInputStream();
@@ -77,7 +77,7 @@ public class Communication implements Closeable
 	{
 		authentication.assertCanSend(m);
 		
-		Services.logger.logStream.println("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
+		Services.logger.println("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
 		
 		try
 		{
@@ -89,8 +89,8 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			Services.logger.logStream.println("Unable to send message: " + m.getClass().getName());
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to send message: " + m.getClass().getName());
+			Services.logger.print(e);
 		}
 	}
 	
@@ -137,8 +137,8 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			Services.logger.logStream.println("Unable to close socket.");
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to close socket.");
+			Services.logger.print(e);
 		}
 	}
 
@@ -180,7 +180,7 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	
@@ -192,11 +192,11 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
-	public AuthenticationWaiter getAuthentication()
+	public Authenticator getAuthentication()
 	{
 		return authentication;
 	}
@@ -215,7 +215,7 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 }

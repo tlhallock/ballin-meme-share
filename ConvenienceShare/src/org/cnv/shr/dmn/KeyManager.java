@@ -25,16 +25,14 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 
-import org.cnv.shr.cnctn.AuthenticationWaiter;
+import org.cnv.shr.cnctn.Authenticator;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.Misc;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 import de.flexiprovider.common.math.FlexiBigInt;
 import de.flexiprovider.core.FlexiCoreProvider;
@@ -96,7 +94,7 @@ public class KeyManager
 		}
 		catch (Exception ex)
 		{
-			Services.logger.logStream.println("Unable to read previous keys.");
+			Services.logger.println("Unable to read previous keys.");
 			writeKeys();
 		}
 		generateNecessaryKeys();
@@ -150,7 +148,7 @@ public class KeyManager
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	
@@ -175,7 +173,7 @@ public class KeyManager
 				}
 				catch (Exception e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 					continue;
 				}
 			}
@@ -183,7 +181,7 @@ public class KeyManager
 	}
 
 	
-	public byte[] createTestNaunce(AuthenticationWaiter authentication, PublicKey remoteKey) throws IOException
+	public byte[] createTestNaunce(Authenticator authentication, PublicKey remoteKey) throws IOException
 	{
 		if (remoteKey == null)
 		{
@@ -221,7 +219,7 @@ public class KeyManager
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			Main.quit();
 			return new byte[0];
 		}
@@ -252,7 +250,7 @@ public class KeyManager
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			Main.quit();
 			return new byte[0];
 		}
@@ -339,7 +337,7 @@ public class KeyManager
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			Main.quit();
 			return null;
 		}

@@ -17,7 +17,6 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.msg.DirectoryList;
-import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.ListPath;
 
 public class RemoteSynchronizers
@@ -87,16 +86,18 @@ public class RemoteSynchronizers
 				try
 				{
 					condition.await(20, TimeUnit.SECONDS);
-					if (communication.isClosed()
-							|| System.currentTimeMillis() - lastCommunication > MAX_TIME_TO_WAIT)
-					{
-						errorCount++;
-						return null;
-					}
 				}
 				catch (InterruptedException e)
 				{
+					// TODO: Make sure this is handled well...
 					e.printStackTrace();
+					communication.close();
+					return null;
+				}
+				if (communication.isClosed() || System.currentTimeMillis() - lastCommunication > MAX_TIME_TO_WAIT)
+				{
+					errorCount++;
+					return null;
 				}
 			}
 		}
@@ -177,6 +178,14 @@ public class RemoteSynchronizers
 			{
 				lock.unlock();
 			}
+		}
+	}
+	
+	public void closeAll()
+	{
+		for (RemoteSynchronizerQueue s : synchronizers.values())
+		{
+			s.close();
 		}
 	}
 }

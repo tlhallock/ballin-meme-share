@@ -1,43 +1,57 @@
 package org.cnv.shr.dmn;
 
-import java.net.BindException;
+import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
-public class RequestHandler extends Thread
+public class RequestHandler implements Runnable
 {	
 	private boolean quit;
-	private int port;
+	ServerSocket socket;
 	
-	public RequestHandler(int port)
+	public RequestHandler(ServerSocket socket)
 	{
-		this.port = port;
+		this.socket = socket;
 	}
 	
 	public void quit()
 	{
 		quit = true;
-		interrupt();
+		// kick the socket
+		try (Socket s = new Socket(socket.getInetAddress(), socket.getLocalPort()))
+		{
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		try
+		{
+			socket.close();
+		}
+		catch (IOException ex)
+		{
+			Services.logger.print(ex);
+		}
 	}
 	
 	public void run()
 	{
-		while (!quit)
+		try
 		{
-			try (ServerSocket socket = new ServerSocket(port);)
+			socket.setReuseAddress(true);
+			while (!quit)
 			{
-				socket.setReuseAddress(true);
-				Services.networkManager.handleConnection(socket.accept());
+				// socket.setSoTimeout(5000);
+				Socket accept = socket.accept();
+				if (quit) return;
+				Services.networkManager.handleConnection(accept);
 			}
-			catch(BindException ex)
-			{
-				Services.logger.logStream.println("Port already in use.");
-				Services.logger.logStream.println("Quiting.");
-				Main.quit();
-			}
-			catch (Exception ex)
-			{
-				ex.printStackTrace(Services.logger.logStream);
-			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			Services.logger.println("Quitting:");
 		}
 	}
 }

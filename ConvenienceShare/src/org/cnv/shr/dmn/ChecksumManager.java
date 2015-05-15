@@ -47,8 +47,8 @@ public class ChecksumManager extends Thread
 				}
 				catch (InterruptedException e)
 				{
-					Services.logger.logStream.println("Interrupted while waiting for condition.");
-					e.printStackTrace(Services.logger.logStream);
+					Services.logger.println("Interrupted while waiting for condition.");
+					Services.logger.print(e);
 				}
 				if (stop)
 				{
@@ -73,8 +73,8 @@ public class ChecksumManager extends Thread
 		}
 		catch (Exception e)
 		{
-			Services.logger.logStream.println("Unable to calculate checksum of " + file);
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to calculate checksum of " + file);
+			Services.logger.print(e);
 		}
 		if (checksum != null)
 		{
@@ -104,14 +104,14 @@ public class ChecksumManager extends Thread
 		}
 		catch (InterruptedException e)
 		{
-			Services.logger.logStream.println("Interrupted while waiting.");
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Interrupted while waiting.");
+			Services.logger.print(e);
 		}
 	}
 
 	public String checksumBlocking(File f) throws IOException
 	{
-//		Services.logger.logStream.println("Checksumming " + f);
+//		Services.logger.println("Checksumming " + f);
 		MessageDigest digest = null;
 		try
 		{
@@ -119,8 +119,8 @@ public class ChecksumManager extends Thread
 		}
 		catch (NoSuchAlgorithmException e)
 		{
-			Services.logger.logStream.println("No SHA1 algorithm.\nQuitting");
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("No SHA1 algorithm.\nQuitting");
+			Services.logger.print(e);
 			Main.quit();
 			return null;
 		}
@@ -136,7 +136,7 @@ public class ChecksumManager extends Thread
 				digest.update(dataBytes, 0, nread);
 			}
 			
-//			Services.logger.logStream.println("Done checksumming " + f + ": " + sb.toString());
+//			Services.logger.println("Done checksumming " + f + ": " + sb.toString());
 			return digestToString(digest);
 		}
 	}
@@ -161,7 +161,7 @@ public class ChecksumManager extends Thread
 			catch (IOException e)
 			{
 				queue.put(f.getAbsolutePath(), sf);
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 			condition.signalAll();
 		}

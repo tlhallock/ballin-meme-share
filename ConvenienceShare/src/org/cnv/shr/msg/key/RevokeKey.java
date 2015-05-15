@@ -2,7 +2,6 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;

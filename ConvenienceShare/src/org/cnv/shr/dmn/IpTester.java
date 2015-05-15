@@ -37,12 +37,12 @@ public class IpTester
 		}
 		catch (MalformedURLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 	}
@@ -56,17 +56,17 @@ public class IpTester
 		}
 		catch (UnknownHostException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return "Unkown host.";
 		}
 		catch (java.net.ConnectException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return "Port not open. (Is it forwarded?)";
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return "Unable to read.";
 		}
 	}

@@ -84,7 +84,7 @@ public class Find implements Iterator<File>
 			{
 				if (Files.isSymbolicLink(Paths.get(files[index].getAbsolutePath())))
 				{
-					Services.logger.logStream.println("Skipping symbolic link: " + files[index]);
+					Services.logger.println("Skipping symbolic link: " + files[index]);
 					
 					index++;
 					continue;

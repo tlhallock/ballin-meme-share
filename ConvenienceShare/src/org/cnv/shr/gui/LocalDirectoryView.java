@@ -8,6 +8,7 @@ package org.cnv.shr.gui;
 
 import java.sql.SQLException;
 
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.RootDirectory;
 
 /**
@@ -64,7 +65,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 //		Services.db.setIgnores(r, ignoreTextArea.getText().split("\n"));
 	}

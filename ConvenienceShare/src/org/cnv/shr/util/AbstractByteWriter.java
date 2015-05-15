@@ -62,8 +62,8 @@ public abstract class AbstractByteWriter
 		}
 		catch (UnsupportedEncodingException e)
 		{
-			Services.logger.logStream.println("Encoding is not supported");
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Encoding is not supported");
+			Services.logger.print(e);
 			Main.quit();
 			return this;
 		}

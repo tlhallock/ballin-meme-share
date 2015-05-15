@@ -44,7 +44,7 @@ public class LocalFile extends SharedFile
 		}
 		catch (IOException ex)
 		{
-			ex.printStackTrace();
+			Services.logger.print(ex);
 		}
 	}
 
@@ -104,8 +104,8 @@ public class LocalFile extends SharedFile
 		}
 		catch (IOException e)
 		{
-			Services.logger.logStream.println("Unable to checksum " + fsCopy);
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to checksum " + fsCopy);
+			Services.logger.print(e);
 		}
 		Services.checksums.checksum(this, fsCopy);
 	}
@@ -127,7 +127,7 @@ public class LocalFile extends SharedFile
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	

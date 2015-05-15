@@ -24,7 +24,7 @@ public class LocalSynchronizer extends RootSynchronizer
 //				remoteDirectory.delete();
 //			}
 //			{
-//				e.printStackTrace();
+//				Services.logger.print(e);
 //			}
 //			throw new RuntimeException("Symbolic link: " + remoteDirectory + ". Skipping");
 //		}

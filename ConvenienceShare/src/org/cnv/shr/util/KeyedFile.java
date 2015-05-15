@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
+import org.cnv.shr.dmn.Services;
+
 public class KeyedFile
 {
 	private String rootPath;
@@ -50,7 +52,7 @@ public class KeyedFile
 		}
 		catch (FileNotFoundException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 	}
@@ -104,7 +106,7 @@ public class KeyedFile
 					}
 					catch (IOException e)
 					{
-						e.printStackTrace();
+						Services.logger.print(e);
 					}
 				}
 				return null;
@@ -124,7 +126,7 @@ public class KeyedFile
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 			}
 		};

@@ -41,8 +41,9 @@ public class Settings implements SettingListener
 	public LongSetting       checksumWait             = new LongSetting      ("checksumWait        ".trim(), 1 * 200                                                                      , false, true, "Time to pause between checksumming large files/                             ".trim()); { settings.add(checksumWait        );  }
 	public LongSetting       maxImmediateChecksum     = new LongSetting      ("maxImmediateChecksum".trim(), 1 * 1024 * 1024                                                              , false, true, "Maximum file size in bytes to checksum immediately.                         ".trim()); { settings.add(maxImmediateChecksum);  }
 	public LongSetting       maxChunkSize             = new LongSetting      ("maxChunkSize        ".trim(), 1024                                                                         , false, true, "Maximum size of any chunk to send accross the network.                      ".trim()); { settings.add(maxChunkSize        );  }
+	public LongSetting       logLength                = new LongSetting      ("logLength            ".trim(), 20 * 1024 * 1024                                                            , false, true, "File to put log messages if logging to file.                                ".trim()); { settings.add(logLength           );  }
 	public BooleanSetting    logToFile                = new BooleanSetting   ("logToFile           ".trim(), true                                                                         , false, true, "Should log messages be written to file.                                     ".trim()); { settings.add(logToFile           );  }
-	public BooleanSetting    acceptNewKeys            = new BooleanSetting   ("acceptNewKeys       ".trim(), false                                                                        , false, true, "True if all new keys should be accepted.                                    ".trim()); { settings.add(logToFile           );  }
+	public BooleanSetting    acceptNewKeys            = new BooleanSetting   ("acceptNewKeys       ".trim(), false                                                                        , false, true, "True if all new keys should be accepted.                                    ".trim()); { settings.add(acceptNewKeys       );  }
 	public DirectorySetting  downloadsDirectory       = new DirectorySetting ("downloadsDirectory  ".trim(), new File("."                                  + File.separator + "downloads"), false, true, "Directory to put downloaded files.                                          ".trim()); { settings.add(downloadsDirectory  );  }
 	public DirectorySetting  applicationDirectory     = new DirectorySetting ("applicationDirectory".trim(), new File("."                                  + File.separator + "app"      ), false, true, "Directory to put application files.                                         ".trim()); { settings.add(applicationDirectory);  }
 	public DirectorySetting  stagingDirectory         = new DirectorySetting ("stagingDirectory    ".trim(), new File("."                                  + File.separator + "tempD"    ), false, true, "Directory to put files currently being served.                              ".trim()); { settings.add(stagingDirectory    );  }
@@ -56,6 +57,10 @@ public class Settings implements SettingListener
 		this.settingsFile = settingsFile;
 		localAddress = InetAddress.getLocalHost().getHostAddress();
 		System.out.println("Local host is " + localAddress);
+	}
+	
+	public void listenToSettings()
+	{
 		for (Setting setting : settings)
 		{
 			setting.addListener(this);
@@ -143,8 +148,8 @@ public class Settings implements SettingListener
 		}
 		catch (IOException e)
 		{
-			Services.logger.logStream.println("Unable to save settings.");
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to save settings.");
+			Services.logger.print(e);
 		}
 	}
 

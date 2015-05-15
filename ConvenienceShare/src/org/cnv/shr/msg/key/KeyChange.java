@@ -2,14 +2,12 @@ package org.cnv.shr.msg.key;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 

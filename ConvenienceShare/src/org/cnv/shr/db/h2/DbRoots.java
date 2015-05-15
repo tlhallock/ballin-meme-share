@@ -34,8 +34,8 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.logStream.println("Unable to get file size of " + d);
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to get file size of " + d);
+			Services.logger.print(e);
 			return -1;
 		}
 	}
@@ -58,8 +58,8 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.logStream.println("Unable to count files in " + d);
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to count files in " + d);
+			Services.logger.print(e);
 			return -1;
 		}
 	}
@@ -78,7 +78,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return new DbIterator.NullIterator<>();
 		}
 	}
@@ -96,7 +96,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return new DbIterator.NullIterator<>();
 		}
 	}
@@ -125,7 +125,7 @@ public class DbRoots
 		}
 		catch (SQLException | IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 	}
@@ -156,7 +156,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 	}
@@ -182,7 +182,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 }

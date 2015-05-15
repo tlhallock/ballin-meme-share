@@ -47,7 +47,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		
 		PathElement current = ROOT;
@@ -111,7 +111,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	
@@ -133,7 +133,7 @@ public class DbPaths
 		}
 		catch (SQLException ex)
 		{
-			ex.printStackTrace();
+			Services.logger.print(ex);
 			return new DbIterator.NullIterator<PathElement>();
 		}
 	}
@@ -161,7 +161,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	public static void pathDoesNotLieIn(PathElement element, RootDirectory local)
@@ -184,7 +184,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
@@ -221,7 +221,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 }

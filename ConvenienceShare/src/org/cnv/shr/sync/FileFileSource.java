@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
@@ -73,7 +74,7 @@ public class FileFileSource implements FileSource
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 			}
 		};
@@ -102,7 +103,7 @@ public class FileFileSource implements FileSource
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return f.toFile().getAbsolutePath();
 		}
 	}

@@ -23,7 +23,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return new DbIterator.NullIterator<>();
 		}
 	}
@@ -53,7 +53,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 	}
@@ -81,7 +81,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 	}
@@ -96,7 +96,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	
@@ -128,7 +128,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return;
 		}
 		for (PublicKey key : publicKeys)

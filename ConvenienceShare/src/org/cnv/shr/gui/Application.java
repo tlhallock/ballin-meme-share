@@ -10,7 +10,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.security.PublicKey;
 import java.util.LinkedList;
 
 import javax.swing.JFileChooser;
@@ -220,7 +219,7 @@ public class Application extends javax.swing.JFrame
 			}
 		});
 		frame.setVisible(true);
-		Services.logger.logStream.println("Showing remote " + machine.getName());
+		Services.logger.println("Showing remote " + machine.getName());
 
 		java.awt.EventQueue.invokeLater(new Runnable()
 		{
@@ -832,7 +831,7 @@ public class Application extends javax.swing.JFrame
 				final RootDirectory root = DbRoots.getLocal(mId);
 				if (root == null)
 				{
-					Services.logger.logStream.println("Unable to find local directory " + mId);
+					Services.logger.println("Unable to find local directory " + mId);
 					return;
 				}
 				Services.userThreads.execute(new Runnable()
@@ -843,7 +842,7 @@ public class Application extends javax.swing.JFrame
 						LocalDirectoryView localDirectoryView = new LocalDirectoryView();
 						localDirectoryView.view(root);
 						localDirectoryView.setVisible(true);
-						Services.logger.logStream.println("Displaying " + mId);
+						Services.logger.println("Displaying " + mId);
 					}
 				});
 			}
@@ -866,7 +865,7 @@ public class Application extends javax.swing.JFrame
 				final RootDirectory root = DbRoots.getLocal(mId);
 				if (root == null)
 				{
-					Services.logger.logStream.println("Unable to find local directory " + mId);
+					Services.logger.println("Unable to find local directory " + mId);
 					return;
 				}
 				UserActions.remove((LocalDirectory) root);
@@ -890,7 +889,7 @@ public class Application extends javax.swing.JFrame
 				final LocalDirectory root = DbRoots.getLocal(mId);
 				if (root == null)
 				{
-					Services.logger.logStream.println("Unable to find local directory " + mId);
+					Services.logger.println("Unable to find local directory " + mId);
 					return;
 				}
 				Services.userThreads.execute(new Runnable()

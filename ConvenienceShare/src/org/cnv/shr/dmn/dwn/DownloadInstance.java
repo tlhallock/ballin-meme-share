@@ -20,7 +20,6 @@ import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.CompletionStatus;
@@ -110,7 +109,7 @@ public class DownloadInstance
 					catch (IOException e)
 					{
 						// TODO Auto-generated catch block
-						e.printStackTrace();
+						Services.logger.print(e);
 					}
 				}});
 		}
@@ -127,7 +126,7 @@ public class DownloadInstance
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 		
@@ -160,7 +159,7 @@ public class DownloadInstance
 			}
 			catch (Exception e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 		for (Chunk c : completed)
@@ -183,7 +182,7 @@ public class DownloadInstance
 		{
 			throw new FileOutsideOfRootException(file.getAbsolutePath(), str);
 		}
-		Services.logger.logStream.println("Downloading \"" + 
+		Services.logger.println("Downloading \"" + 
 				remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" +
 				tmpFile.getAbsolutePath() + "\"");
 
@@ -243,7 +242,7 @@ public class DownloadInstance
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		
 		File localRoot = ((RemoteDirectory) remoteFile.getRootDirectory()).getLocalRoot();
@@ -260,7 +259,7 @@ public class DownloadInstance
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		
 		for (Seeder seeder : seeders)
@@ -338,7 +337,7 @@ public class DownloadInstance
 		
 		if (seeders.isEmpty())
 		{
-			Services.logger.logStream.println("There are no more seeders left!");
+			Services.logger.println("There are no more seeders left!");
 			Services.downloads.done(this);
 		}
 		connection.finish();

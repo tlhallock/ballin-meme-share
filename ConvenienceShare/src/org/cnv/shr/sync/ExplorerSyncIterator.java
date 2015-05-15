@@ -6,7 +6,7 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
@@ -67,7 +67,7 @@ public class ExplorerSyncIterator implements SyncrhonizationTaskIterator
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 		if (grandChildren == null)

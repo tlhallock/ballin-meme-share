@@ -1,9 +1,6 @@
 package org.cnv.shr.cnctn;
 
 import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -12,25 +9,15 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.NoSuchPaddingException;
-
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.key.ConnectionOpenAwk;
 import org.cnv.shr.msg.key.KeyChange;
 import org.cnv.shr.msg.key.NewKey;
 import org.cnv.shr.util.Misc;
-import org.cnv.shr.util.OutputStreamFlusher;
 
-import de.flexiprovider.core.rijndael.RijndaelKey;
-
-public class AuthenticationWaiter
+public class Authenticator
 {
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
@@ -47,12 +34,12 @@ public class AuthenticationWaiter
 
 	private boolean acceptAnyKeys;
 	
-	public AuthenticationWaiter(boolean acceptAnyKeys, PublicKey remote, PublicKey local)
+	public Authenticator(boolean acceptAnyKeys, PublicKey remote, PublicKey local)
 	{
 		this.acceptAnyKeys = acceptAnyKeys;
 	}
 
-	public AuthenticationWaiter()
+	public Authenticator()
 	{
 		this.acceptAnyKeys = false;
 	}
@@ -80,7 +67,7 @@ public class AuthenticationWaiter
 			return;
 		}
 
-		Services.logger.logStream.println("Found new machine!");
+		Services.logger.println("Found new machine!");
 		updateMachineInfo(id, ip);
 	}
 	
@@ -101,14 +88,14 @@ public class AuthenticationWaiter
 			condition.signalAll();
 			if (authenticated)
 			{
-				Services.logger.logStream.println("Remote is authenticated.");
+				Services.logger.println("Remote is authenticated.");
 				updateMachineInfo(id, ip);
 				authenticated = true;
 			}
 			else
 			{
 				authenticated = false;
-				Services.logger.logStream.println("Remote failed authentication.");
+				Services.logger.println("Remote failed authentication.");
 			}
 		}
 		finally
@@ -130,16 +117,13 @@ public class AuthenticationWaiter
 				{
 					throw new IOException("Connection timed out...");
 				}
-				try
-				{
-					condition.await(10, TimeUnit.SECONDS);
-				}
-				catch (InterruptedException e)
-				{
-					e.printStackTrace();
-				}
+				condition.await(10, TimeUnit.SECONDS);
 			}
 			returnValue = authenticated;
+		}
+		catch (InterruptedException e)
+		{
+			Services.logger.print(e);
 		}
 		finally
 		{

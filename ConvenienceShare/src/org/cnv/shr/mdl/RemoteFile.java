@@ -62,7 +62,7 @@ public class RemoteFile extends SharedFile
 					return s;
 				}
 			}
-			Services.logger.logStream.println("Uknown file state: " + dbValue);
+			Services.logger.println("Uknown file state: " + dbValue);
 			return null;
 		}
 	}

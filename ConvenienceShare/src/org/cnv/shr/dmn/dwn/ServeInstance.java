@@ -13,7 +13,6 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.ChecksumManager;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
-import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.DownloadFailure;
@@ -117,7 +116,7 @@ public class ServeInstance
 		}
 		catch (NoSuchAlgorithmException | IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	
@@ -140,7 +139,7 @@ public class ServeInstance
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 				fail("Unable to write chunk.");
 			}
 		}

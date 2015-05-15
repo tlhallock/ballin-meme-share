@@ -168,7 +168,7 @@ public class Misc
 		}
 		catch (UnsupportedEncodingException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return path;
 		}
 	}

@@ -6,6 +6,7 @@ import java.sql.SQLException;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.ConnectionStatistics;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.AbstractByteWriter;
 
@@ -30,7 +31,7 @@ public class HeartBeat extends Message
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 

@@ -1,11 +1,11 @@
 package org.cnv.shr.sync;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 
@@ -74,7 +74,7 @@ public class ConsecutiveDirectorySyncIterator implements SyncrhonizationTaskIter
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 					index++;
 					continue;
 				}

@@ -55,8 +55,8 @@ public class DbIterator<T extends DbObject> implements Iterator<T>
 		}
 		catch (SQLException e)
 		{
-			Services.logger.logStream.println("Unable to close query.");
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to close query.");
+			Services.logger.print(e);
 		}
 		return false;
 	}
@@ -82,8 +82,8 @@ public class DbIterator<T extends DbObject> implements Iterator<T>
 		}
 		catch (SQLException e)
 		{
-			Services.logger.logStream.println("Unable to create a shared file from a record");
-			e.printStackTrace(Services.logger.logStream);
+			Services.logger.println("Unable to create a shared file from a record");
+			Services.logger.print(e);
 			return null;
 		}
 	}

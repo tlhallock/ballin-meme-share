@@ -111,7 +111,7 @@ public class DirectoryList extends Message
 		RemoteSynchronizers.RemoteSynchronizerQueue sync = Services.syncs.getSynchronizer(connection, getRoot());
 		if (sync == null)
 		{
-			Services.logger.logStream.println("Lost synchronizer?");
+			Services.logger.println("Lost synchronizer?");
 			return;
 		}
 		sync.receiveList(this);

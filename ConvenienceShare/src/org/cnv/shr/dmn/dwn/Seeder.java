@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 

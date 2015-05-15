@@ -45,7 +45,7 @@ public class DbKeys
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		return Misc.format(byteListBuffer.getBytes()); 
 	}
@@ -62,7 +62,7 @@ public class DbKeys
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return null;
 		}
 	}
@@ -89,7 +89,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		
 		return returnValue.toArray(dummy);
@@ -119,7 +119,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
@@ -137,22 +137,15 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
 	public static PublicKey getKey(Machine m)
 	{
 		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(""
-				+ "with ALL_KEYS as "
-				+ "("
-				+ "         select ADDED, KEYSTR from PUBLIC_KEY where MID=?"
-				+ ")"
-				+ "select KEYSTR from ALL_KEYS where ADDED="
-				+ "("
-				+ "         select max(ADDED) from ALL_KEYS"
-				+ ");"))
+		try (PreparedStatement stmt = c.prepareStatement(
+				"select KEYSTR from PUBLIC_KEY where MID=? order by ADDED desc limit 1;"))
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, m.getId());
@@ -164,7 +157,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		return null;
 	}
@@ -182,7 +175,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return false;
 		}
 	}

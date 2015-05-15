@@ -93,7 +93,7 @@ public abstract class RootDirectory extends DbObject
 	
 	public final void synchronize(List<? extends SynchronizationListener> listeners)
 	{
-		Services.logger.logStream.println("Synchronizing " + getPathElement().getFullPath());
+		Services.logger.println("Synchronizing " + getPathElement().getFullPath());
 
 		try (RootSynchronizer localSynchronizer = createSynchronizer();)
 		{
@@ -119,11 +119,11 @@ public abstract class RootDirectory extends DbObject
 			setStats();
 			sendNotifications();
 
-			Services.logger.logStream.println("Done synchronizing " + getPathElement().getFullPath());
+			Services.logger.println("Done synchronizing " + getPathElement().getFullPath());
 		}
 		catch (Exception ex)
 		{
-			ex.printStackTrace();
+			Services.logger.print(ex);
 		}
 		finally
 		{
@@ -141,7 +141,7 @@ public abstract class RootDirectory extends DbObject
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	

@@ -53,7 +53,7 @@ public class RootList extends Message
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 		

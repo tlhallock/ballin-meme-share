@@ -10,6 +10,7 @@ import javax.swing.tree.TreePath;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
@@ -45,7 +46,7 @@ public class PathTreeModel implements TreeModel
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	
@@ -63,7 +64,7 @@ public class PathTreeModel implements TreeModel
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		
 		this.root = new Node(DbPaths.ROOT);

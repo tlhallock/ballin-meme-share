@@ -8,7 +8,6 @@ package org.cnv.shr.gui;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -122,15 +121,15 @@ public class MachineView extends javax.swing.JPanel
 					SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
 					if (remoteFile == null)
 					{
-						Services.logger.logStream.println("Unable to get remote file " + fullPath);
+						Services.logger.println("Unable to get remote file " + fullPath);
 						return;
 					}
 					UserActions.download(remoteFile);
 				}
 				catch (Exception ex)
 				{
-					Services.logger.logStream.println("Unable to show machine at index " + row);
-					ex.printStackTrace(Services.logger.logStream);
+					Services.logger.println("Unable to show machine at index " + row);
+					Services.logger.print(ex);
 				}
 			}
 
@@ -155,7 +154,7 @@ public class MachineView extends javax.swing.JPanel
 					final String mId = tableListener.getTableValue("Name", row);
 					if (mId == null)
 					{
-						Services.logger.logStream.println("Unable to find machine " + mId);
+						Services.logger.println("Unable to find machine " + mId);
 						return;
 					}
 					Services.userThreads.execute(new Runnable()
@@ -168,7 +167,7 @@ public class MachineView extends javax.swing.JPanel
 								RootDirectory root = DbRoots.getRoot(machine, mId);
 								if (root == null)
 								{
-									Services.logger.logStream.println("Unable to find root mid=" + machine + " name=" + mId);
+									Services.logger.println("Unable to find root mid=" + machine + " name=" + mId);
 									viewNoDirectory();
 								}
 								else
@@ -178,16 +177,16 @@ public class MachineView extends javax.swing.JPanel
 							}
 							catch(Exception ex)
 							{
-								Services.logger.logStream.println("Unable to show directory " + mId);
-								ex.printStackTrace(Services.logger.logStream);
+								Services.logger.println("Unable to show directory " + mId);
+								Services.logger.print(ex);
 							}
 						}
 					});
 				}
 				catch (Exception ex)
 				{
-					Services.logger.logStream.println("Unable to show machine at index " + row);
-					ex.printStackTrace(Services.logger.logStream);
+					Services.logger.println("Unable to show machine at index " + row);
+					Services.logger.print(ex);
 				}
 			}
 
@@ -257,7 +256,7 @@ public class MachineView extends javax.swing.JPanel
     
     private void view(RootDirectory directory)
     {
-    	Services.logger.logStream.println("Showing directory " + directory.getPathElement());
+    	Services.logger.println("Showing directory " + directory.getPathElement());
         this.directory = directory;
     	this.pathLabel.setText(directory.getPathElement().getFullPath());
         this.descriptionLabel.setText(directory.getDescription());

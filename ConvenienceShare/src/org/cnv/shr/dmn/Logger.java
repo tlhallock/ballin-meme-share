@@ -1,22 +1,28 @@
 package org.cnv.shr.dmn;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.sql.SQLException;
+import java.util.Date;
 
 import org.cnv.shr.stng.SettingListener;
+import org.cnv.shr.util.CircularOutputStream;
 import org.cnv.shr.util.Misc;
 
 public class Logger implements SettingListener
 {
-	public PrintStream logStream;
 	private PrintStream logFile;
+	private PrintStream applicationLog;
+	private PrintStream sysout;
 
 	public Logger()
 	{
-		logStream = new PrintStream(new LogStream());
+		sysout = System.out;
+		applicationLog = new PrintStream(new ApplicationLogStream());
+		logFile = null;
 	}
 	
 	@Override
@@ -27,35 +33,73 @@ public class Logger implements SettingListener
 		{
 			setLogLocation();
 		}
-		catch (FileNotFoundException e)
+		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
-	void setLogLocation() throws FileNotFoundException
+	synchronized void setLogLocation() throws IOException
 	{
-		if (!Services.settings.logToFile.get())
+		File file = Services.settings.logFile.get();
+		Misc.ensureDirectory(file, true);
+		logFile = new PrintStream(new CircularOutputStream(file, 1024 * 1024));
+	}
+	
+	public void printTo(String str, PrintStream ps)
+	{
+		if (ps != null)
 		{
-			return;
-		}
-		synchronized (logStream)
-		{
-			File file = Services.settings.logFile.get();
-			Misc.ensureDirectory(file, true);
-			logFile = new PrintStream(file);
+			ps.print(new Date() + ":" + str);
 		}
 	}
 
+	public void print(Exception ex)
+	{
+		if (ex instanceof SQLException && Services.notifications != null)
+		{
+			Services.notifications.dbException(ex);
+		}
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		try (PrintStream ps = new PrintStream(byteArrayOutputStream))
+		{
+			ex.printStackTrace(ps);
+		}
+		print(new String(byteArrayOutputStream.toString()));
+	}
+
+	public void println()
+	{
+		println("");
+	}
+
+	public void println(String str)
+	{
+		print(str + '\n');
+	}
+
+	public void println(Object str)
+	{
+		print(str.toString() + '\n');
+	}
+
+	public synchronized void print(String str)
+	{
+		printTo(str, sysout);
+		printTo(str, applicationLog);
+		if (Services.settings.logToFile.get())
+		{
+			printTo(str, logFile);
+		}
+	}
 
 	void close()
 	{
-		logStream.close();
 		logFile.close();
+		applicationLog.close();
 	}
 	
-	
-	private class LogStream extends OutputStream
+	private class ApplicationLogStream extends OutputStream
 	{
 		StringBuilder buffer = new StringBuilder();
 		
@@ -64,11 +108,6 @@ public class Logger implements SettingListener
 		{
 			char c = (char) arg0;
 			buffer.append(Character.toString(c));
-			System.out.print(c);
-			if (logFile != null && Services.settings.logToFile.get())
-			{
-				logFile.print(c);
-			}
 			
 			if (c == '\n' && Services.application != null)
 			{

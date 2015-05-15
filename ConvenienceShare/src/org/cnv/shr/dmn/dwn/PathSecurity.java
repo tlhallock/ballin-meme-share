@@ -62,7 +62,7 @@ class PathSecurity
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 				return null;
 			}
 		}
@@ -87,7 +87,7 @@ class PathSecurity
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return false;
 		}
 		if (!canonicalPath.startsWith(root))

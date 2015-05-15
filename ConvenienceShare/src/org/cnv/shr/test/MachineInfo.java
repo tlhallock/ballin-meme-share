@@ -1,9 +1,11 @@
 package org.cnv.shr.test;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -11,7 +13,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.test.TestActions.TestAction;
 import org.cnv.shr.util.Misc;
 
 public class MachineInfo
@@ -19,6 +23,12 @@ public class MachineInfo
 	private String name;
 	private Settings processSettings;
 	private Process process;
+	
+	private ServerSocket server;
+	private Socket current;
+	private ObjectOutputStream commandStream;
+	
+	private String url;
 	
 	public MachineInfo(String root, int port, String id) throws UnknownHostException
 	{
@@ -36,9 +46,27 @@ public class MachineInfo
 		processSettings.stagingDirectory.set(    new File(root + File.separator + "stage"));
 		processSettings.servePortBegin.set(port);
 		processSettings.machineIdentifier.set(id);
+		
+		url = InetAddress.getLoopbackAddress().getHostAddress() + ":" + port;
 	}
 	
-	public ServerSocket launch() throws IOException
+	public String getUrl()
+	{
+		return url;
+	}
+
+	public String getIdent()
+	{
+		return name;
+	}
+	
+	public void send(TestAction action) throws IOException
+	{
+		commandStream.writeObject(action);
+		commandStream.flush();
+	}
+	
+	public Closeable launch() throws IOException
 	{
 		processSettings.write();
 		
@@ -59,23 +87,77 @@ public class MachineInfo
 		};
 		process = Runtime.getRuntime().exec(args, null, new File(Misc.getJarPath()));
 
+		try
+		{
+			Thread.sleep(2000);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+
 		System.out.println(Arrays.toString(args));
 		System.out.println("From: " + Misc.getJarPath());
 		
 		new OutputThread(name, System.err, new BufferedReader(new InputStreamReader(process.getErrorStream()))).start();
 		new OutputThread(name, System.out, new BufferedReader(new InputStreamReader(process.getInputStream()))).start();
 		
-		return socket;
+		current = socket.accept();
+		commandStream = new ObjectOutputStream(current.getOutputStream());
+		
+		return new Closeable() {
+			@Override
+			public void close() throws IOException
+			{
+				send(new TestActions.Die());
+				try
+				{
+					Thread.sleep(1000);
+				}
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+				kill();
+			}};
 	}
-	
+
 	public void kill()
 	{
-		if (process != null)
+		try
 		{
-			process.destroy();
+			if (commandStream != null) commandStream.close();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		try
+		{
+			if (current != null) current.close();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		try
+		{
+			if (server != null) server.close();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		try
+		{
+			if (process != null) process.destroy();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
 		}
 	}
-	
+
 	private static class OutputThread extends Thread
 	{
 		private PrintStream out;
@@ -102,7 +184,7 @@ public class MachineInfo
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 	}

@@ -15,7 +15,6 @@ import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
-import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.msg.MachineFound;
@@ -54,8 +53,8 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					Services.logger.logStream.println("Unable to discover " + url);
-					e.printStackTrace(Services.logger.logStream);
+					Services.logger.println("Unable to discover " + url);
+					Services.logger.print(e);
 				}
 			}
 		});
@@ -80,8 +79,8 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					Services.logger.logStream.println("Unable to discover " + url);
-					e.printStackTrace(Services.logger.logStream);
+					Services.logger.println("Unable to discover " + url);
+					Services.logger.print(e);
 				}
 			}
 		});
@@ -105,8 +104,8 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					Services.logger.logStream.println("Unable to discover refresh " + m.getUrl());
-					e.printStackTrace(Services.logger.logStream);
+					Services.logger.println("Unable to discover refresh " + m.getUrl());
+					Services.logger.print(e);
 				}
 			}
 		});
@@ -153,7 +152,7 @@ public class UserActions
 			{
 				try
 				{
-					Services.logger.logStream.println("Sharing " + localDirectory);
+					Services.logger.println("Sharing " + localDirectory);
 					LocalDirectory local = DbRoots.getLocal(localDirectory.getCanonicalPath());
 					if (sync)
 					{
@@ -162,8 +161,8 @@ public class UserActions
 				}
 				catch (IOException e1)
 				{
-					Services.logger.logStream.println("Unable to get file path to share: " + localDirectory);
-					e1.printStackTrace(Services.logger.logStream);
+					Services.logger.println("Unable to get file path to share: " + localDirectory);
+					Services.logger.print(e1);
 				}
 			}
 		});
@@ -214,7 +213,7 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 			}
 		});
@@ -226,7 +225,7 @@ public class UserActions
 		{
 			public void run()
 			{
-				DbTables.debugDb(Services.logger.logStream);
+				DbTables.debugDb();
 			}
 		});
 	}

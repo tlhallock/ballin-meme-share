@@ -42,7 +42,7 @@ public class KeyFailure extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		Services.logger.logStream.println("Key failure");
+		Services.logger.println("Key failure");
 		connection.setAuthenticated(null);
 	}
 }

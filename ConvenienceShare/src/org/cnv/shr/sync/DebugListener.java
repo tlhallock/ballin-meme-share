@@ -54,15 +54,15 @@ public class DebugListener extends TimerTask implements SynchronizationListener
 		long now = System.currentTimeMillis();
 		double seconds = (now - lastDebug) / 1000;
 
-		synchronized (Services.logger.logStream)
+		synchronized (Services.logger)
 		{
-			Services.logger.logStream.println("-------------------------------------------------------");
-			Services.logger.logStream.println("Synchronizing: " + local.getPathElement().getFullPath());
-			Services.logger.logStream.println("Current file: " + currentFile);
-			Services.logger.logStream.println("File refresh rate: " + filesRefresh / seconds + "/s");
-			Services.logger.logStream.println("File add rate: " + filesAdded / seconds + "/s");
-			Services.logger.logStream.println("File remove rate: " + filesRemoved / seconds + "/s");
-			Services.logger.logStream.println("-------------------------------------------------------");
+			Services.logger.println("-------------------------------------------------------");
+			Services.logger.println("Synchronizing: " + local.getPathElement().getFullPath());
+			Services.logger.println("Current file: " + currentFile);
+			Services.logger.println("File refresh rate: " + filesRefresh / seconds + "/s");
+			Services.logger.println("File add rate: " + filesAdded / seconds + "/s");
+			Services.logger.println("File remove rate: " + filesRemoved / seconds + "/s");
+			Services.logger.println("-------------------------------------------------------");
 		}
 		lastDebug = now;
 		filesRefresh = 0;

@@ -3,9 +3,9 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
-import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Main;
 import org.cnv.shr.dmn.Services;
@@ -69,7 +69,7 @@ public class MessageReader
 		add(new MessageIdentifier(EmptyMessage.class               ));
 		add(new MessageIdentifier(DoneResponse.class               ));
 
-		Services.logger.logStream.println("Message map:\n" + this);
+		Services.logger.println("Message map:\n" + this);
 	}
 	
 	private void add(MessageIdentifier identifier)
@@ -77,23 +77,23 @@ public class MessageReader
 		int type = identifier.getType();
 		if (type > Byte.MAX_VALUE || type < Byte.MIN_VALUE)
 		{
-			Services.logger.logStream.println("Message type " + type + " for " + identifier.name + " is not in range.");
-			Services.logger.logStream.println(this);
+			Services.logger.println("Message type " + type + " for " + identifier.name + " is not in range.");
+			Services.logger.println(this);
 			Main.quit();
 			return;
 		}
 		MessageIdentifier messageIdentifier = identifiers.get(type);
 		if (messageIdentifier != null)
 		{
-			Services.logger.logStream.println("Type " + type + " is already used by " + messageIdentifier.name + " so " + identifier.name + " cannot also use it.");
-			Services.logger.logStream.println(this);
+			Services.logger.println("Type " + type + " is already used by " + messageIdentifier.name + " so " + identifier.name + " cannot also use it.");
+			Services.logger.println(this);
 			Main.quit();
 			return;
 		}
 		identifiers.put(type, identifier);
 	}
 	
-	public Message readMsg(ConnectionStatistics stats, InputStream input) throws IOException
+	public Message readMsg(ConnectionStatistics stats, InputStream input) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		long msgTypeL = ByteReader.tryToReadInt(input);
 		if (msgTypeL < 0)
@@ -105,7 +105,7 @@ public class MessageReader
 		MessageIdentifier messageIdentifier = identifiers.get(msgType);
 		if (messageIdentifier == null)
 		{
-			Services.logger.logStream.println("Ignoring unknown message type: " + msgType + " from ");
+			Services.logger.println("Ignoring unknown message type: " + msgType + " from ");
 			return null;
 		}
 		
@@ -143,8 +143,8 @@ public class MessageReader
 			}
 			catch (Exception e)
 			{
-				Services.logger.logStream.println("Unable to read fields for class " + name);
-				e.printStackTrace(Services.logger.logStream);
+				Services.logger.println("Unable to read fields for class " + name);
+				Services.logger.print(e);
 				Main.quit();
 			}
 		}
@@ -154,30 +154,26 @@ public class MessageReader
 			return type;
 		}
 		
-		Message create(InputStream stream)
+		Message create(InputStream stream) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException
 		{
-			try
-			{
-				Services.logger.logStream.println("Received message of type " + name);
+				Services.logger.println("Received message of type " + name);
 				Message newInstance = constructor.newInstance(stream);
 				newInstance.parse(stream, null);
 				return newInstance;
-			}
-			catch (Exception e)
-			{
-				Services.logger.logStream.println("Unable to create message type "  + name);
-				e.printStackTrace(Services.logger.logStream);
-				
-//				Throwable t = e;
-//				while (t != null)
-//				{
-//					t.printStackTrace(Services.logger.logStream);
-//					t = t.getCause();
-//				}
-				
-				Main.quit();
-				return null;
-			}
+//			catch (Exception e)
+//			{
+//				Services.logger.println("Unable to create message type "  + name);
+//				Services.logger.print(e);
+//				
+////				Throwable t = e;
+////				while (t != null)
+////				{
+////					t.printStackTrace(Services.logger.;
+////					t = t.getCause();
+////				}
+//				
+//				Main.quit();
+//			}
 		}
 		
 		public String toString()

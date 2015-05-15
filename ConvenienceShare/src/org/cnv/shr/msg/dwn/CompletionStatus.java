@@ -2,7 +2,6 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.ConnectionStatistics;
