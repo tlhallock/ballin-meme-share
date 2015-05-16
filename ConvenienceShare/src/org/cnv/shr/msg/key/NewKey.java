@@ -52,10 +52,10 @@ public class NewKey extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (!connection.getAuthentication().acceptKey(newKey))
+		if (!connection.getAuthentication().newKey(newKey))
 		{
 			DbMessages.addMessage(new UserMessage.AuthenticationRequest(connection.getMachine(), newKey));
-			fail(connection);
+			fail("New key not accepted.", connection);
 			return;
 		}
 		

@@ -28,17 +28,17 @@ CREATE TABLE IF NOT EXISTS  PUBLIC_KEY (
 );
 
 CREATE TABLE IF NOT EXISTS  PELEM (
-   P_ID           INTEGER       PRIMARY KEY   AUTO_INCREMENT,
-   PARENT         INTEGER       NOT NULL,
+   P_ID           LONG          PRIMARY KEY   AUTO_INCREMENT,
+   PARENT         LONG          NOT NULL,
    BROKEN         BOOLEAN       NOT NULL,
-   PELEM          varchar(50)   NOT NULL,
+   PELEM          varchar(20)   NOT NULL,
 
    UNIQUE(PELEM, PARENT)
 );
 
 CREATE TABLE IF NOT EXISTS  ROOT (
    R_ID           INTEGER PRIMARY KEY   AUTO_INCREMENT,
-   PELEM          INTEGER     NOT NULL,
+   PELEM          LONG        NOT NULL,
    TAGS           varchar( 64),
    DESCR          varchar(256),
    MID            INT         NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS  ROOT (
 -- Tells which remote this path exists in;
 CREATE TABLE IF NOT EXISTS ROOT_CONTAINS (
    RID            INTEGER,
-   PELEM          INTEGER,
+   PELEM          LONG,
 
    FOREIGN KEY(RID)   REFERENCES ROOT(R_ID),
    FOREIGN KEY(PELEM) REFERENCES PELEM(P_ID),
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS SFILE (
    FSIZE          INT           NOT NULL,
    TAGS           varchar(64),
    CHKSUM         char(40),
-   PELEM          INTEGER       NOT NULL,
+   PELEM          LONG          NOT NULL,
    ROOT           INTEGER       NOT NULL,
    RSTATE         INTEGER       NOT NULL DEFAULT 0,
    MODIFIED       LONG,
@@ -118,4 +118,9 @@ CREATE TABLE IF NOT EXISTS SHARE_ROOT (
    PRIMARY KEY(RID, MID)
 );
 
+
+merge into MESSAGE key (MTYPE) values (DEFAULT, 1, 10, 1);
+
+MERGE INTO PELEM KEY(P_ID) VALUES (0, 0, FALSE, '                    ');
+ALTER TABLE PELEM ADD FOREIGN KEY (PARENT) REFERENCES PELEM(P_ID);
 

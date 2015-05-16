@@ -66,9 +66,9 @@ public class DbRoots
 	
 	public static DbIterator<RootDirectory> list(Machine machine)
 	{
-		Connection c = Services.h2DbCache.getConnection();
 		try
 		{
+			Connection c = Services.h2DbCache.getConnection();
 			PreparedStatement prepareStatement = c.prepareStatement("select * from ROOT where ROOT.MID = ?;");
 			prepareStatement.setInt(1,  machine.getId());
 			return new DbIterator<RootDirectory>(c, 
@@ -86,9 +86,9 @@ public class DbRoots
 	public static DbIterator<LocalDirectory> listLocals()
 	{
 		// return list(Services.localMachine));
-		Connection c = Services.h2DbCache.getConnection();
 		try
 		{
+			Connection c = Services.h2DbCache.getConnection();
 			return new DbIterator<LocalDirectory>(c, 
 					c.prepareStatement("select * from ROOT where ROOT.IS_LOCAL = true;").executeQuery(),
 					DbTables.DbObjects.LROOT, 
@@ -103,11 +103,11 @@ public class DbRoots
 
 	public static LocalDirectory getLocal(String path)
 	{
-		PathElement pathElement = DbPaths.getPathElement(path);
 		Connection c = Services.h2DbCache.getConnection();
+		PathElement pathElement = DbPaths.getPathElement(path);
 		try (PreparedStatement prepareStatement = c.prepareStatement("select * from ROOT where PELEM=?;");)
 		{
-			prepareStatement.setInt(1, pathElement.getId());
+			prepareStatement.setLong(1, pathElement.getId());
 			ResultSet executeQuery = prepareStatement.executeQuery();
 			if (executeQuery.next())
 			{

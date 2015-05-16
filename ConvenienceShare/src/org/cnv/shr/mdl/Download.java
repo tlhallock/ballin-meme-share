@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 
-public class Download extends DbObject
+public class Download extends DbObject<Integer>
 {
 	private SharedFile file;
 	private DownloadState currentState;
@@ -24,13 +24,6 @@ public class Download extends DbObject
 		// TODO Auto-generated method stub
 		
 	}
-
-	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	public enum DownloadState
 	{
@@ -39,6 +32,22 @@ public class Download extends DbObject
 		int getDbState()
 		{
 			return 0;
+		}
+	}
+
+	@Override
+	public boolean save(Connection c) throws SQLException
+	{
+		try (PreparedStatement stmt = c.prepareStatement("");)
+		{
+			stmt.executeUpdate();
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getInt(1);
+				return true;
+			}
+			return false;
 		}
 	}
 }

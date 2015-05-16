@@ -9,8 +9,11 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.cnv.shr.db.h2.DbConnectionCache;
+import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.key.ConnectionOpenAwk;
 import org.cnv.shr.msg.key.KeyChange;
@@ -37,6 +40,8 @@ public class Authenticator
 	public Authenticator(boolean acceptAnyKeys, PublicKey remote, PublicKey local)
 	{
 		this.acceptAnyKeys = acceptAnyKeys;
+		this.remotePublicKey = remote;
+		this.localPublicKey = local;
 	}
 
 	public Authenticator()
@@ -51,7 +56,7 @@ public class Authenticator
 		this.claimedNumPorts = nports;
 	}
 	
-	public void offerRemote(String id, String ip)
+	public void offerRemote(String id, String ip, PublicKey[] keys)
 	{
 		// If we have no record of this machine, then it can be authenticated. (We will not share with it anyway.)
 		// Otherwise, it must prove that it who it said it was in case we are sharing with it.
@@ -61,23 +66,19 @@ public class Authenticator
 		{
 			return;
 		}
-		
+
 		if (DbMachines.getMachine(id) != null)
 		{
 			return;
 		}
 
 		Services.logger.println("Found new machine!");
-		updateMachineInfo(id, ip);
+		updateMachineInfo(id, ip, keys);
 	}
 	
-	void updateMachineInfo(String ident, String ip)
+	void updateMachineInfo(String ident, String ip, PublicKey[] keys)
 	{
-		if (ip == null)
-		{
-			new Exception().printStackTrace(System.out);
-		}
-		DbMachines.updateMachineInfo(ident, claimedName, new PublicKey[] { remotePublicKey }, ip, claimedPort, claimedNumPorts);
+		DbMachines.updateMachineInfo(ident, claimedName, keys, ip, claimedPort, claimedNumPorts);
 	}
 	
 	void notifyAuthentication(String id, String ip, boolean authenticated)
@@ -89,12 +90,13 @@ public class Authenticator
 			if (authenticated)
 			{
 				Services.logger.println("Remote is authenticated.");
-				updateMachineInfo(id, ip);
-				authenticated = true;
+
+				updateMachineInfo(id, ip, new PublicKey[] { remotePublicKey });
+				this.authenticated = true;
 			}
 			else
 			{
-				authenticated = false;
+				this.authenticated = false;
 				Services.logger.println("Remote failed authentication.");
 			}
 		}
@@ -138,12 +140,7 @@ public class Authenticator
 		// Double check identifier and keys...
 		return !m.requiresAthentication() || (authenticated != null && authenticated);
 	}
-
-	public void setKeys(PublicKey remotePublicKey, PublicKey localPublicKey)
-	{
-		this.remotePublicKey = remotePublicKey;
-		this.localPublicKey = localPublicKey;
-	}
+	
 	public void setLocalKey(PublicKey localKey)
 	{
 		this.localPublicKey = localKey;
@@ -172,6 +169,24 @@ public class Authenticator
 		boolean returnValue = pendingNaunces.contains(Misc.format(decrypted));
 		pendingNaunces.clear();
 		return returnValue;
+	}
+	
+	public boolean canAuthenticateRemote(Machine machine, PublicKey remote, PublicKey local) throws IOException
+	{
+		// authenticate remote...
+		if (DbKeys.machineHasKey(machine, remote))
+		{
+			return true;
+		}
+
+		if (acceptKey(remote))
+		{
+			DbKeys.addKey(machine, remote);
+			return true;
+		}
+
+		// add message
+		return false;
 	}
 	
 	public void authenticateToTarget(Communication connection, byte[] requestedNaunce) throws IOException
@@ -211,5 +226,17 @@ public class Authenticator
 			throw new RuntimeException("Trying to send message on connection not yet authenticated.\n"
 					+ "type = " + m.getClass().getName() + "\nmsg=\"" + m + "\"");
 		}
+	}
+
+	public boolean newKey(PublicKey newKey)
+	{
+		if (authenticated != null 
+				&& authenticated 
+				&& remotePublicKey != null 
+				&& Arrays.equals(newKey.getEncoded(), remotePublicKey.getEncoded()))
+		{
+			return true;
+		}
+		return acceptKey(newKey);
 	}
 }

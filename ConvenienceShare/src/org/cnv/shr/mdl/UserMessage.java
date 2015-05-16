@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 
-public class UserMessage extends DbObject
+public class UserMessage extends DbObject<Integer>
 {
 	public UserMessage(Integer int1)
 	{
@@ -24,9 +24,19 @@ public class UserMessage extends DbObject
 	}
 
 	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
+	public boolean save(Connection c) throws SQLException
 	{
-		return null;
+		try (PreparedStatement stmt = c.prepareStatement("");)
+		{
+			stmt.executeUpdate();
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getInt(1);
+				return true;
+			}
+			return false;
+		}
 	}
 	
 	public static class AuthenticationRequest extends UserMessage

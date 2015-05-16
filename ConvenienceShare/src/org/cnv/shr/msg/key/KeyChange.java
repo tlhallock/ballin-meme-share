@@ -68,6 +68,6 @@ public class KeyChange extends KeyMessage
 			connection.getAuthentication().authenticateToTarget(connection, naunceRequest);
 			return;
 		}
-		fail(connection);
+		fail("Key change: did not know key.", connection);
 	}
 }

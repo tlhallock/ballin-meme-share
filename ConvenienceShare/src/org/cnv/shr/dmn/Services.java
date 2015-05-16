@@ -1,5 +1,6 @@
 package org.cnv.shr.dmn;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -8,6 +9,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateEncodingException;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
@@ -69,7 +71,7 @@ public class Services
 		testStartUp();
 		startServices();
 	}
-	private static void createServices(Settings stgs, boolean deleteDb) throws FileNotFoundException, IOException, SQLException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, CertificateEncodingException, InvalidKeySpecException
+	private static void createServices(Settings stgs, boolean deleteDb) throws FileNotFoundException, IOException, SQLException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, CertificateEncodingException, InvalidKeySpecException, InterruptedException
 	{
 		settings = stgs;
 		logger = new Logger();
@@ -77,7 +79,9 @@ public class Services
 		settings.listenToSettings();
 
 		logger.setLogLocation();
+		
 		h2DbCache = new DbConnectionCache(deleteDb);
+        
 		notifications = new Notifications();
 		keyManager = new KeyManager(settings.keysFile.get());
 		keyManager.readKeys();

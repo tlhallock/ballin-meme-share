@@ -17,7 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Machine extends DbObject
+public class Machine extends DbObject<Integer>
 {
 	private String ip;
 	private int port;
@@ -50,7 +50,7 @@ public class Machine extends DbObject
 	}
 
 	@Override
-	public void fill(java.sql.Connection c, ResultSet row, DbLocals locals) throws SQLException
+	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
 	{
 			id             = row.getInt    ("M_ID");        
 			name           = row.getString ("MNAME");        
@@ -63,24 +63,43 @@ public class Machine extends DbObject
 		    allowsMessages = row.getBoolean("MESSAGES");
 		    acceptPeers    = row.getBoolean("ACCEPT_PEERS");
 	}
+
+	@Override
+	public boolean save(Connection c) throws SQLException
+	{
+		try (PreparedStatement stmt = c.prepareStatement(
+				 "merge into MACHINE key(IDENT) values "
+				 + "(DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+				, Statement.RETURN_GENERATED_KEYS);)
+		{
+			int ndx = 1;
+			stmt.setString( ndx++, getIdentifier());
+			stmt.setString( ndx++, getName());
+			stmt.setString( ndx++, getIp());
+			stmt.setInt(    ndx++, getPort());
+			stmt.setInt(    ndx++, getNumberOfPorts());
+			stmt.setLong(   ndx++, System.currentTimeMillis());
+			stmt.setBoolean(ndx++, isSharing());
+			stmt.setString( ndx++, getIdentifier());
+			stmt.setBoolean(ndx++, isLocal());
+			stmt.setBoolean(ndx++, getAllowsMessages());
+			stmt.setBoolean(ndx++, acceptPeers);
+			stmt.executeUpdate();
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getInt(1);
+				return true;
+			}
+			return false;
+		}
+	}
+	
 	@Override
 	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
 	{
-		PreparedStatement stmt = c.prepareStatement(
-				 "merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where MACHINE.IDENT = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
-				, Statement.RETURN_GENERATED_KEYS);
-		int ndx = 1;
-		stmt.setString(ndx++,  getIdentifier());
-		stmt.setString(ndx++,  getName());
-		stmt.setString(ndx++,  getIp());
-		stmt.setInt(ndx++,     getPort());
-		stmt.setInt(ndx++,     getNumberOfPorts());
-		stmt.setLong(ndx++,    System.currentTimeMillis());
-		stmt.setBoolean(ndx++, isSharing());
-		stmt.setString(ndx++,  getIdentifier());
-		stmt.setBoolean(ndx++, isLocal());
-		stmt.setBoolean(ndx++, getAllowsMessages());
-		stmt.setBoolean(ndx++, acceptPeers);
+		PreparedStatement stmt = c.prepareStatement();
+
 		return stmt;
 	}
 	

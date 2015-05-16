@@ -56,38 +56,21 @@ public class OpenConnection extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		connection.getAuthentication().setKeys(sourcePublicKey, destinationPublicKey);
-		if (!authenticateRemote(connection))
+		Machine machine = connection.getMachine();
+		if (connection.getAuthentication().canAuthenticateRemote(machine, sourcePublicKey, destinationPublicKey))
 		{
+			connection.getAuthentication().authenticateToTarget(connection, requestedNaunce);
 			return;
 		}
-		connection.getAuthentication().authenticateToTarget(connection, requestedNaunce);
-	}
-	
-	private boolean authenticateRemote(Communication connection) throws IOException
-	{
-		// authenticate remote...
-		Machine machine = connection.getMachine();
-		if (DbKeys.machineHasKey(machine, sourcePublicKey))
-		{
-			return true;
-		}
-
-		if (connection.getAuthentication().acceptKey(sourcePublicKey))
-		{
-			DbKeys.addKey(machine, sourcePublicKey);
-			return true;
-		}
-	
+		
 		PublicKey[] knownKeys = DbKeys.getKeys(machine);
 		if (knownKeys != null && knownKeys.length > 0)
 		{
 			connection.send(new KeyNotFound(connection, knownKeys));
-			return false;
+			return;
 		}
-
-		// add message
-		fail(connection);
-		return false;
+		
+		fail("Open connection: has keys, but not claimed keys.", connection);
 	}
+	
 }

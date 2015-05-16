@@ -27,9 +27,9 @@ public abstract class KeyMessage extends Message
 		return false;
 	}
 	
-	public void fail(Communication connection)
+	public void fail(String message, Communication connection)
 	{
-		connection.send(new KeyFailure("ConnectionOpened: first naunce failed."));
+		connection.send(new KeyFailure(message));
 		try
 		{
 			connection.setAuthenticated(null);

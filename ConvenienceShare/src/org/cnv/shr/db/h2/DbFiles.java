@@ -23,7 +23,7 @@ public class DbFiles
 		try (PreparedStatement stmt = c.prepareStatement(
 				"select * from SFILE where PELEM=? and ROOT=?;");)
 		{
-			stmt.setInt(1, element.getId());
+			stmt.setLong(1, element.getId());
 			stmt.setInt(2, root.getId());
 			
 			ResultSet executeQuery = stmt.executeQuery();

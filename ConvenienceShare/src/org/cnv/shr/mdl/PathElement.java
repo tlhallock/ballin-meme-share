@@ -16,7 +16,7 @@ import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.db.h2.RStringBuilder;
 import org.cnv.shr.sync.FileSource;
 
-public class PathElement extends DbObject
+public class PathElement extends DbObject<Long>
 {
 	protected PathElement parentId;
 	protected String value;
@@ -24,7 +24,7 @@ public class PathElement extends DbObject
 	
 	String fullPath;
 	
-	public PathElement(Integer id)
+	public PathElement(Long id)
 	{
 		super(id);
 	}
@@ -41,7 +41,7 @@ public class PathElement extends DbObject
 		}
 	}
 
-	public PathElement(PathElement current, int integer, String string)
+	public PathElement(PathElement current, long integer, String string)
 	{
 		super(integer);
 		parentId = current;
@@ -68,7 +68,7 @@ public class PathElement extends DbObject
 		return getFullPath();
 	}
 
-	public void setId(int i)
+	public void setId(long i)
 	{
 		id = i;
 	}
@@ -82,26 +82,37 @@ public class PathElement extends DbObject
 	@Override
 	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
 	{
-		id       = row.getInt("P_ID");
+		id       = row.getLong("P_ID");
 		parentId = (PathElement) locals.getObject(c, DbTables.DbObjects.PELEM, row.getInt("PARENT"));
 		broken   = row.getBoolean("BROKEN");
 		value    = row.getString("PELEM");
 	}
-	
-	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
-	{
-		PreparedStatement stmt = c.prepareStatement(
-					 "merge into PELEM key(PARENT, PELEM) values ((select P_ID from PELEM where PARENT=? and PELEM=?), ?, ?, ?);"
-					, Statement.RETURN_GENERATED_KEYS);
-		int ndx = 1;
 
-		stmt.setInt(ndx++, getParent().getId());
-		stmt.setString(ndx++, value);
-		stmt.setInt(ndx++, getParent().getId());
-		stmt.setBoolean(ndx++, broken);
-		stmt.setString(ndx++, value);
-		return stmt;
+	@Override
+	public boolean save(Connection c) throws SQLException
+	{
+		try (PreparedStatement stmt = c.prepareStatement(
+				 "merge into PELEM key(PARENT, PELEM) "
+				 + "values (DEFAULT, ?, ?, ?);"
+				, Statement.RETURN_GENERATED_KEYS);)
+		{
+			int ndx = 1;
+
+			stmt.setLong(ndx++, getParent().getId());
+			stmt.setString(ndx++, value);
+			stmt.setLong(ndx++, getParent().getId());
+			stmt.setBoolean(ndx++, broken);
+			stmt.setString(ndx++, value);
+			stmt.executeUpdate();
+			
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getLong(1);
+				return true;
+			}
+			return false;
+		}
 	}
 
 	public String getName()

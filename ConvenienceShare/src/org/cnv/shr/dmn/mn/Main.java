@@ -10,8 +10,7 @@ import org.cnv.shr.util.Misc;
 
 public class Main
 {
-	// not static for now
-	public void main(String[] args) throws Exception
+	public static void main(String[] args) throws Exception
 	{
         System.out.println("Starting from " + Misc.getJarPath());
 		

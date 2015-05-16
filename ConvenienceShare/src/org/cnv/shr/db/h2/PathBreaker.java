@@ -6,7 +6,7 @@ import org.cnv.shr.mdl.PathElement;
 
 public class PathBreaker
 {
-	public static int PATH_ELEMENT_LENGTH = 10;
+	public static int PATH_ELEMENT_LENGTH = 20;
 	
 	private static final PathElement[] dummy = new PathElement[0];
 
@@ -66,14 +66,5 @@ public class PathBreaker
 		}
 		
 		return builder.toString();
-	}
-	
-	public static void main(String[] args0)
-	{
-//		String str = "Combinatorial optimization.. theory and algorithms.pdf";
-		String str = "/home/thallock/Documents/Combinatorial optimization.. theory and algorithms.pdf";
-		System.out.println(str);
-		System.out.println(join(breakPath(str)));
-		System.out.println(breakPath(str)[breakPath(str).length-1].getUnbrokenName());
 	}
 }

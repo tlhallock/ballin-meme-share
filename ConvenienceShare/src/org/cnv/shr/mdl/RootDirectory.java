@@ -20,7 +20,7 @@ import org.cnv.shr.sync.RootSynchronizer;
 import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
 import org.cnv.shr.util.Misc;
 
-public abstract class RootDirectory extends DbObject
+public abstract class RootDirectory extends DbObject<Integer>
 {
 	protected Machine machine;
 	protected String name;
@@ -58,30 +58,40 @@ public abstract class RootDirectory extends DbObject
 
 	protected abstract void setPath(PathElement object);
 
+
 	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
+	public boolean save(Connection c) throws SQLException
 	{
-		PreparedStatement stmt;
-		int ndx = 1;
-		
-		if (id == null)
+		try (PreparedStatement stmt = c.prepareStatement("merge into ROOT key(PELEM) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?);");)
 		{
-			stmt = c.prepareStatement("merge into ROOT key(PELEM) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
+			int ndx = 1;
+			
+//			if (id == null)
+//			{
+//				stmt = c.prepareStatement("", Statement.RETURN_GENERATED_KEYS);
+//			}
+//			else
+//			{
+//				stmt = c.prepareStatement("merge into ROOT key(R_ID)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
+//				stmt.setInt(ndx++, getId());
+//			}
+			stmt.setLong(ndx++, getPathElement().getId());
+			stmt.setString(ndx++, getTags());
+			stmt.setString(ndx++, getDescription());
+			stmt.setInt(ndx++, machine.getId());
+			stmt.setBoolean(ndx++, isLocal());
+			stmt.setLong(ndx++, totalFileSize);
+			stmt.setLong(ndx++, totalNumFiles);
+			stmt.setString(ndx++, name);
+			stmt.executeUpdate();
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getInt(1);
+				return true;
+			}
+			return false;
 		}
-		else
-		{
-			stmt = c.prepareStatement("merge into ROOT key(R_ID)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
-			stmt.setInt(ndx++, getId());
-		}
-		stmt.setInt(ndx++, getPathElement().getId());
-		stmt.setString(ndx++, getTags());
-		stmt.setString(ndx++, getDescription());
-		stmt.setInt(ndx++, machine.getId());
-		stmt.setBoolean(ndx++, isLocal());
-		stmt.setLong(ndx++, totalFileSize);
-		stmt.setLong(ndx++, totalNumFiles);
-		stmt.setString(ndx++, name);
-		return stmt;
 	}
 	
 	public abstract PathElement getPathElement();

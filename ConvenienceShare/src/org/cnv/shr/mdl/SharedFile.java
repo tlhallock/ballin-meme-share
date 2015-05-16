@@ -10,7 +10,7 @@ import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbTables;
 
-public abstract class SharedFile extends DbObject
+public abstract class SharedFile extends DbObject<Integer>
 {
 	protected RootDirectory rootDirectory;
 	protected PathElement path;
@@ -94,6 +94,24 @@ public abstract class SharedFile extends DbObject
 		lastModified = row.getLong("MODIFIED");
 	}
 
+
+	@Override
+	public boolean save(Connection c) throws SQLException
+	{
+		try (PreparedStatement stmt = c.prepareStatement("");)
+		{
+			stmt.executeUpdate();
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getInt(1);
+				return true;
+			}
+			return false;
+		}
+	}
+	
+	
 	@Override
 	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
 	{
@@ -104,7 +122,7 @@ public abstract class SharedFile extends DbObject
 		stmt.setLong(ndx++, getFileSize());
 		stmt.setString(ndx++, getTags());
 		stmt.setString(ndx++, checksum);
-		stmt.setInt(ndx++, path.getId());
+		stmt.setLong(ndx++, path.getId());
 		stmt.setInt(ndx++, rootDirectory.getId());
 		stmt.setInt(ndx++, 0/*remote state*/);
 		stmt.setLong(ndx++, lastModified);

@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -25,7 +27,6 @@ import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.util.FileOutsideOfRootException;
-import org.cnv.shr.util.FileSystem;
 
 public class DownloadInstance
 {
@@ -255,7 +256,7 @@ public class DownloadInstance
 
 		try
 		{
-			FileSystem.move(tmpFile, outFile);
+			Files.move(Paths.get(tmpFile.getAbsolutePath()), Paths.get(outFile.getAbsolutePath()));
 		}
 		catch (IOException e)
 		{

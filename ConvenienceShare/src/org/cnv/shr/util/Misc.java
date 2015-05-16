@@ -6,6 +6,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Random;
 
 import org.cnv.shr.dmn.Services;
@@ -148,15 +151,22 @@ public class Misc
 		}
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	public static void rm(Path path) throws IOException
+	{
+		if (Files.isSymbolicLink(path) || Files.isRegularFile(path))
+		{
+			System.out.println("Would delete " + path.toString());
+//			Files.delete(path);
+		}
+		else if (Files.isDirectory(path))
+		{
+			DirectoryStream<Path> stream = Files.newDirectoryStream(path);
+			for (Path child : stream)
+			{
+				rm(child);
+			}
+		}
+	}
 	
 
 	public static String getJarPath()

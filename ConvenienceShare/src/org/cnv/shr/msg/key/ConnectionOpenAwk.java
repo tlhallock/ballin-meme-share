@@ -60,7 +60,7 @@ public class ConnectionOpenAwk extends KeyMessage
 		}
 		else
 		{
-			fail(connection);
+			fail("Connection Openned: unable lost pending naunce", connection);
 		}
 	}
 }

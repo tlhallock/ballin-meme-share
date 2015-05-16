@@ -11,18 +11,18 @@ public class DbLocals
 	
 	public DbObject getObject(DbTables.DbObjects type, int id)
 	{
-		return cache.get(getLocalsCache(type, id));
+		return cache.get(getLocalsCache(type, String.valueOf(id)));
 	}
 	
 	public DbLocals setObject(DbObject o)
 	{
-		cache.put(getLocalsCache(DbObjects.get(o), o.getId()), o);
+		cache.put(getLocalsCache(DbObjects.get(o), String.valueOf(o.getId())), o);
 		return this;
 	}
 	
 	public DbObject getObject(Connection c, DbObjects type, int id)
 	{
-		String key = getLocalsCache(type, id);
+		String key = getLocalsCache(type, String.valueOf(id));
 		Object object = cache.get(key);
 		if (object != null)
 		{
@@ -36,7 +36,7 @@ public class DbLocals
 		return o;
 	}
 	
-	private static String getLocalsCache(DbTables.DbObjects type, int id)
+	private static String getLocalsCache(DbTables.DbObjects type, String id)
 	{
 		return type.getTableName() + ":" + id;
 	}

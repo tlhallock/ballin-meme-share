@@ -34,7 +34,7 @@ public class DbMachines
 		{
 			return Services.localMachine;
 		}
-		
+
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement("select * from MACHINE where IDENT = ?"))
 		{
@@ -56,11 +56,6 @@ public class DbMachines
 			Services.logger.print(e);
 			return null;
 		}
-	}
-	public static Machine getMachine(int machineId)
-	{
-		Connection c = Services.h2DbCache.getConnection();
-		return null;
 	}
 
 	public static Integer getMachineId(String identifier)

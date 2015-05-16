@@ -53,6 +53,11 @@ public class ConnectionOpened extends KeyMessage
 	{
 		return TYPE;
 	}
+	
+	public String toString()
+	{
+		return "You are authenticated.";
+	}
 
 	@Override
 	public void perform(Communication connection) throws Exception
@@ -63,7 +68,7 @@ public class ConnectionOpened extends KeyMessage
 		}
 		else
 		{
-			fail(connection);
+			fail("Connection opened: failed first naunce.", connection);
 		}
 	}
 	

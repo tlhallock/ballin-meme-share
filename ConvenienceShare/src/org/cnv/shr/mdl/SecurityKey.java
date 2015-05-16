@@ -28,9 +28,18 @@ public class SecurityKey extends DbObject
 	}
 
 	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
+	public boolean save(Connection c) throws SQLException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		try (PreparedStatement stmt = c.prepareStatement("");)
+		{
+			stmt.executeUpdate();
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getInt(1);
+				return true;
+			}
+			return false;
+		}
 	}
 }

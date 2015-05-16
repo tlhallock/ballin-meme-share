@@ -50,6 +50,7 @@ public class DbTables
 		
 		public void delete(Connection c) throws SQLException
 		{
+			Services.logger.println("Deleting " + getTableName());
 			try (PreparedStatement stmt = c.prepareStatement("drop table if exists " + getTableName() + ";"))
 			{
 				stmt.execute();
@@ -58,28 +59,34 @@ public class DbTables
 		
 		public void debug(Connection c)
 		{
-//			new Exception().printStackTrace(ps);
-
 			try
 			{
-				Services.logger.println("Printing " + tableName);
-				Services.logger.println("----------------------------------------------");
+				StringBuilder builder = new StringBuilder();
+				
+				builder.append("Printing " + tableName).append('\n');
+				Services.logger.println(builder.toString()); builder.setLength(0);
+				builder.append("----------------------------------------------").append('\n');
+				Services.logger.println(builder.toString()); builder.setLength(0);
 				ResultSet executeQuery2 = c.prepareStatement("select * from " + tableName + ";").executeQuery();
 				int ncols = executeQuery2.getMetaData().getColumnCount();
 				for (int i = 1; i <= ncols; i++)
 				{
-					Services.logger.print(executeQuery2.getMetaData().getColumnName(i) + ",");
+					builder.append(executeQuery2.getMetaData().getColumnName(i)).append(",");
 				}
-				Services.logger.println();
+				builder.append('\n');
+				Services.logger.println(builder.toString()); builder.setLength(0);
+				
 				while (executeQuery2.next())
 				{
 					for (int i = 1; i <= ncols; i++)
 					{
-						Services.logger.print(executeQuery2.getObject(i) + ",");
+						builder.append(executeQuery2.getObject(i)).append(",");
 					}
-					Services.logger.println();
+					builder.append('\n');
+					Services.logger.println(builder.toString()); builder.setLength(0);
 				}
-				Services.logger.println("----------------------------------------------");
+				builder.append("----------------------------------------------").append('\n');
+				Services.logger.println(builder.toString()); builder.setLength(0);
 			}
 			catch (SQLException ex)
 			{
@@ -92,7 +99,7 @@ public class DbTables
 			switch(this)
 			{  
 				case PUBLIC_KEY       : return new SecurityKey    (row.getInt(pKey));    
-				case PELEM            : return new PathElement    (row.getInt(pKey));            
+				case PELEM            : return new PathElement    (row.getLong(pKey));            
 				case IGNORE_PATTERN   : return new IgnorePattern  (row.getInt(pKey));        
 				case PENDING_DOWNLOAD : return new Download       (row.getInt(pKey));
 				case MESSAGES         : return new UserMessage    (row.getInt(pKey));   
@@ -213,29 +220,10 @@ public class DbTables
 
 	static void createDb(Connection c) throws SQLException, IOException
 	{
-		execute(c, "/create_h2.sql");
-		try
-		{
-			c.prepareStatement("INSERT INTO PELEM VALUES (0, 0, FALSE, '          ');").execute();
-			c.prepareStatement("ALTER TABLE PELEM ADD FOREIGN KEY (PARENT) REFERENCES PELEM(P_ID);").execute();
-		}
-		catch(SQLException ex)
-		{
-			Services.logger.println("Unable to create constraint in initialization");
-			Services.logger.print(ex);
-		}
+		executeStatments(c, "/create_h2.sql");
 	}
 	
-	private static void execute(Connection c, String file) throws SQLException, IOException
-	{
-		for (PreparedStatement stmt : getStatements(c, file))
-		{
-			stmt.execute();
-			stmt.close();
-		}
-	}
-	
-	private static PreparedStatement[] getStatements(Connection c, String file) throws SQLException, IOException
+	private static PreparedStatement[] executeStatments(Connection c, String file) throws SQLException, IOException
 	{
 		StringBuilder builder = new StringBuilder();
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -253,9 +241,12 @@ public class DbTables
 
 		for (int i = 0; i < statements.length; i++)
 		{
-			returnValue[i] = c.prepareStatement(statements[i] + ";");
+			try (PreparedStatement stmt = c.prepareStatement(statements[i] + ";");)
+			{
+				stmt.execute();
+			}
 		}
-		
+
 		return returnValue;
 	}
 }

@@ -1,8 +1,10 @@
 package org.cnv.shr.test;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -19,29 +21,36 @@ public class TestUtils
 		
 	}
 	
-	public static LinkedList<File> makeSampleDirectories(String root, int depth, int filesPerDirectory, long fileSize) throws IOException
+	public static LinkedList<File> makeSampleDirectories(String root, int depth, int filesPerDirectory, long fileSize, int totalNumFiles) throws IOException
 	{
 		LinkedList<File> list = new LinkedList<File>();
-		makeSampleDirectory(root, 0, depth, filesPerDirectory, fileSize, list);
+		makeSampleDirectory(root, 0, depth, filesPerDirectory, fileSize, 0, totalNumFiles, list);
 		return list;
 	}
-	public static void makeSampleDirectory(String root, int depth, int maxDepth, int filesPerDirectory, long fileSize, LinkedList<File> returnValue) throws IOException
+	public static void makeSampleDirectory(String root, 
+			int depth, int maxDepth, 
+			int filesPerDirectory, long fileSize,
+			int totalFilesCreated, int totalNumFiles,
+			LinkedList<File> returnValue) throws IOException
 	{
-		if (depth >= maxDepth)
+		if (totalFilesCreated >= totalFilesCreated || depth >= maxDepth)
 		{
 			return;
 		}
-		int numToCreate = RANDOM.nextInt(filesPerDirectory);
+		int numToCreate = Math.min(totalNumFiles - totalFilesCreated, RANDOM.nextInt(filesPerDirectory));
 		for (int i = 0; i < numToCreate; i++)
 		{
-			returnValue.add(createFile(root + File.separator + Misc.getRandomString(15) + "." + Misc.getRandomString(3), RANDOM.nextInt((int) fileSize)));
+			String path = root + File.separator + Misc.getRandomString(15) + "." + Misc.getRandomString(3);
+			System.out.println("Creating file " + path);
+			returnValue.add(createFile(path, RANDOM.nextInt((int) fileSize)));
 		}
 		int numDirsToCreate = RANDOM.nextInt(filesPerDirectory);
 		for (int i = 0; i < numDirsToCreate; i++)
 		{
 			String path = root + File.separator + Misc.getRandomString(5);
+			System.out.println("Creating directory " + path);
 			Misc.ensureDirectory(path, false);
-			makeSampleDirectory(path, depth + 1, maxDepth, filesPerDirectory, fileSize, returnValue);
+			makeSampleDirectory(path, depth + 1, maxDepth, filesPerDirectory, fileSize, totalFilesCreated + numToCreate, totalNumFiles, returnValue);
 		}
 	}
 
@@ -49,7 +58,7 @@ public class TestUtils
 	{
 		Misc.ensureDirectory(path, true);
 		File file = new File(path);
-		try (FileOutputStream fileOutputStream = new FileOutputStream(file);)
+		try (OutputStream fileOutputStream = new BufferedOutputStream(new FileOutputStream(file));)
 		{
 			byte[] bytes = new byte[1];
 			for (long i = 0; i < length; i++)
@@ -59,5 +68,15 @@ public class TestUtils
 			}
 		}
 		return file;
+	}
+	
+	public static long sum(LinkedList<File> files)
+	{
+		long sum = 0;
+		for (File f : files)
+		{
+			sum += f.length();
+		}
+		return sum;
 	}
 }

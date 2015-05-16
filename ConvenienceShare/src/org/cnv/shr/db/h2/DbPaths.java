@@ -27,13 +27,12 @@ public class DbPaths
 
 	public static PathElement getPathElement(int pid)
 	{
-		Connection c = Services.h2DbCache.getConnection();
 		RStringBuilder builder = new RStringBuilder();
-		
 		
 		ArrayList<Integer> ids   = new ArrayList<>();
 		ArrayList<String> values = new ArrayList<>();
-		
+
+		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement("select PARENT, PELEM from PATH where P_ID = ?;"))
 		{
 			do
@@ -62,7 +61,7 @@ public class DbPaths
 	public static void setPathElementIds(PathElement root, PathElement[] pathElems)
 	{
 		Connection c = Services.h2DbCache.getConnection();
-		int pid = root.getId();
+		long pid = root.getId();
 		boolean exists = true;
 		int elemsIdx = 0;
 
@@ -73,7 +72,7 @@ public class DbPaths
 			{
 				if (exists)
 				{
-					existsStmt.setInt(1, pid);
+					existsStmt.setLong(1, pid);
 					existsStmt.setString(2, pathElems[elemsIdx].getName());
 					ResultSet results = existsStmt.executeQuery();
 					if (!results.next())
@@ -87,7 +86,7 @@ public class DbPaths
 				}
 				else
 				{
-					createStmt.setInt(1, pid);
+					createStmt.setLong(1, pid);
 					createStmt.setBoolean(2, pathElems[elemsIdx].isBroken());
 					createStmt.setString(3, pathElems[elemsIdx].getName());
 					createStmt.executeUpdate();
@@ -117,15 +116,15 @@ public class DbPaths
 	
 	public static DbIterator<PathElement> listPathElements(RootDirectory root, PathElement parent)
 	{
-		Connection c = Services.h2DbCache.getConnection();
 		try
 		{
+			Connection c = Services.h2DbCache.getConnection();
 			PreparedStatement stmt = c.prepareStatement(
 				"select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
 				"join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID " + 
 				"where PELEM.PARENT = ?;                                                        ");
 			stmt.setInt(1, root.getId());
-			stmt.setInt(2, parent.getId());
+			stmt.setLong(2, parent.getId());
 			return new DbIterator<PathElement>(c, stmt.executeQuery(), DbObjects.PELEM, new DbLocals()
 				.setObject(root)
 				.setObject(parent)
@@ -147,14 +146,14 @@ public class DbPaths
 			while (element.getParent() != element)
 			{
 				select.setInt(1, local.getId());
-				select.setInt(2, element.getId());
+				select.setLong(2, element.getId());
 				ResultSet results = select.executeQuery();
 				if (results.next() && results.getInt(1) > 0)
 				{
 					return;
 				}
 				update.setInt(1, local.getId());
-				update.setInt(2, element.getId());
+				update.setLong(2, element.getId());
 				update.execute();
 //				element = element.getParent();
 			}
@@ -176,7 +175,7 @@ public class DbPaths
 			while (element.getParent() != element)
 			{
 				stmt.setInt(1, local.getId());
-				stmt.setInt(2, element.getId());
+				stmt.setLong(2, element.getId());
 				stmt.execute();
 				
 				element = element.getParent();

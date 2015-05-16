@@ -7,24 +7,23 @@ import java.sql.SQLException;
 
 import org.cnv.shr.dmn.Services;
 
-public abstract class DbObject
+public abstract class DbObject<T>
 {
-	protected Integer id;
+	protected T id;
 	
-	public DbObject(Integer id)
+	public DbObject(T id)
 	{
 		this.id = id;
 	}
 	
 	public abstract void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException;
-	protected abstract PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException;
 	
 	public void setId(int i)
 	{
 		throw new RuntimeException("Fix this.");
 	}
 	
-	public Integer getId()
+	public T getId()
 	{
 		return id;
 	}
@@ -32,18 +31,5 @@ public abstract class DbObject
 	public final boolean save()    throws SQLException { return save(Services.h2DbCache.getConnection()); }
 	public final void    pull()    throws SQLException {      /*  pull(Services.h2DbCache.getConnection()); */}
 	
-	public final boolean save(Connection c) throws SQLException
-	{
-		try (PreparedStatement stmt = createPreparedUpdateStatement(c);)
-		{
-			stmt.executeUpdate();
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
-			{
-				id = generatedKeys.getInt(1);
-				return true;
-			}
-			return false;
-		}
-	}
+	public abstract boolean save(Connection c) throws SQLException;
 }

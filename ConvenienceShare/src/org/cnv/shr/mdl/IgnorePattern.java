@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 
-public class IgnorePattern extends DbObject
+public class IgnorePattern extends DbObject<Integer>
 {
 	public IgnorePattern(int int1)
 	{
@@ -21,11 +21,20 @@ public class IgnorePattern extends DbObject
 		// TODO Auto-generated method stub
 
 	}
-
+	
 	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c)
+	public boolean save(Connection c) throws SQLException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		try (PreparedStatement stmt = c.prepareStatement("");)
+		{
+			stmt.executeUpdate();
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next())
+			{
+				id = generatedKeys.getInt(1);
+				return true;
+			}
+			return false;
+		}
 	}
 }

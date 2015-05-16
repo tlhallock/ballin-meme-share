@@ -1,5 +1,8 @@
 package org.cnv.shr.mdl;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import org.cnv.shr.dmn.Services;
 
 public class RemoteFile extends SharedFile

@@ -50,7 +50,7 @@ public class Logger implements SettingListener
 	{
 		if (ps != null)
 		{
-			ps.print(new Date() + ":" + str);
+			ps.print(/*new Date() + ":" +*/ str);
 		}
 	}
 

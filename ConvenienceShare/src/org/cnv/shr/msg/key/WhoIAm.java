@@ -61,7 +61,7 @@ public class WhoIAm extends MachineFound
 	{
 		connection.setRemoteIdentifier(ident);
 		connection.getAuthentication().setMachineInfo(name, port, nports);
-		connection.getAuthentication().offerRemote(ident, connection.getIp());
+		connection.getAuthentication().offerRemote(ident, connection.getIp(), keys);
 	}
 
 	public boolean requiresAthentication()

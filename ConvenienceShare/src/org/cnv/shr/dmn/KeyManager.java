@@ -1,5 +1,6 @@
 package org.cnv.shr.dmn;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,6 +32,8 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
+import org.cnv.shr.util.ByteListBuffer;
+import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Misc;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
@@ -48,6 +51,8 @@ public class KeyManager
 	File keysFile;
 
 	private HashSet<String> pendingAuthenticationRequests = new HashSet<>();
+	
+	private static final int MAX_CIPHER_LENGTH = 117;
 	
 	public KeyManager(File keysFile)
 	{
@@ -194,7 +199,59 @@ public class KeyManager
 		return sentNaunce;
 	}
 
+	private static byte[] copyOf(byte[] original, int start, int end)
+	{
+		byte[] returnValue = new byte[end - start];
+		System.arraycopy(original, start, returnValue, 0, end - start);
+		return returnValue;
+	}
+	
 	public byte[] encrypt(PublicKey pKey, byte[] original)
+	{
+		try
+		{
+			ByteListBuffer buffer = new ByteListBuffer();
+
+			int offset = 0;
+			while (offset < original.length)
+			{
+				int end = Math.min(original.length, offset + MAX_CIPHER_LENGTH);
+				buffer.appendVarByteArray(encryptChunk(pKey, copyOf(original, offset, end)));
+			}
+
+			return buffer.getBytes();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			return new byte[0];
+		}
+	}
+
+	public byte[] decrypt(PublicKey pKey, byte[] encrypted)
+	{
+		ByteListBuffer buffer = new ByteListBuffer();
+		if (pKey == null) return buffer.getBytes();
+		PrivateKey privateKey = getPrivateKey(pKey);
+		if (privateKey == null) return buffer.getBytes();
+		
+		ByteArrayInputStream in = new ByteArrayInputStream(encrypted);
+		byte[] encryptedChunk;
+		try
+		{
+			while ((encryptedChunk = ByteReader.readVarByteArray(in)) != null)
+			{
+				buffer.append(decryptChunk(privateKey, encryptedChunk));
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		return buffer.getBytes();
+	}
+
+	public byte[] encryptChunk(PublicKey pKey, byte[] original)
 	{
 		try
 		{
@@ -207,12 +264,12 @@ public class KeyManager
 			}
 			byte[] byteArray = output.toByteArray();
 			
-			System.out.println("Encrypted");
-			System.out.println(Misc.format(original));
-			System.out.println("to");
-			System.out.println(Misc.format(byteArray));
-			System.out.println("with");
-			System.out.println(Misc.format(pKey.getEncoded()));
+//			System.out.println("Encrypted");
+//			System.out.println(Misc.format(original));
+//			System.out.println("to");
+//			System.out.println(Misc.format(byteArray));
+//			System.out.println("with");
+//			System.out.println(Misc.format(pKey.getEncoded()));
 
 			return byteArray;
 		}
@@ -232,11 +289,10 @@ public class KeyManager
 		}
 	}
 
-	public byte[] decrypt(PublicKey pKey, byte[] encrypted)
+	public byte[] decryptChunk(PrivateKey privateKey, byte[] encrypted)
 	{
 		try
 		{
-			PrivateKey privateKey = getPrivateKey(pKey);
 			Cipher cipher2 = Cipher.getInstance("RSA", "FlexiCore");
 			cipher2.init(Cipher.DECRYPT_MODE, privateKey);
 
@@ -251,12 +307,12 @@ public class KeyManager
 			}
 			byte[] bytes = output.toByteArray();
 
-			 System.out.println("Decrypted");
-			 System.out.println(Misc.format(encrypted));
-			 System.out.println("to");
-			 System.out.println(Misc.format(bytes));
-			 System.out.println("with");
-			 System.out.println(Misc.format(pKey.getEncoded()));
+//			 System.out.println("Decrypted");
+//			 System.out.println(Misc.format(encrypted));
+//			 System.out.println("to");
+//			 System.out.println(Misc.format(bytes));
+//			 System.out.println("with");
+//			 System.out.println(Misc.format(pKey.getEncoded()));
 
 			return bytes;
 		}

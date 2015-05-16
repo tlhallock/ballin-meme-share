@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -54,6 +55,11 @@ public class IpTester
 			// I guess this is not that useful.
 			return "Able to connect locally.";
 		}
+		catch (NoRouteToHostException e)
+		{
+			Services.logger.print(e);
+			return "No route to host.";
+		}
 		catch (UnknownHostException e)
 		{
 			Services.logger.print(e);
@@ -69,12 +75,5 @@ public class IpTester
 			Services.logger.print(e);
 			return "Unable to read.";
 		}
-	}
-	
-	public static void main(String[] args)
-	{
-		IpTester ipTester = new IpTester();
-		System.out.println(ipTester.getIpFromCanYouSeeMeDotOrg());
-		System.out.println(ipTester.testIp(ipTester.getIpFromCanYouSeeMeDotOrg(), 80));
 	}
 }

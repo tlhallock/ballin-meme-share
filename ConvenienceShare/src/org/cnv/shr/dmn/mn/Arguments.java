@@ -9,7 +9,7 @@ public class Arguments
 	// needs to have a quitting and testing...
 	public boolean connectedToTestStream = false;
 	public boolean deleteDb = false;
-	public Settings settings = new Settings(new File("/work/ballin-meme-share/runDir/settings1.props"));
+	public Settings settings = new Settings(new File("runDir" + File.separator + "settings.props"));
 	public Quiter quiter = new Quiter() {
 		@Override
 		public void doFinal()

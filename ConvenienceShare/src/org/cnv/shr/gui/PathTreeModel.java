@@ -303,9 +303,9 @@ public class PathTreeModel implements TreeModel
 			super(null);
 		}
 		
-		public Integer getId()
+		public Long getId()
 		{
-			return -1;
+			return -1L;
 		}
 
 		public String toString()
