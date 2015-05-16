@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.Message;
+import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
-public class DownloadDone extends Message
+public class DownloadDone extends DownloadMessage
 {
-	public DownloadDone() {}
+	public DownloadDone(SharedFileId descriptor) { super(descriptor); }
 
 	public DownloadDone(InputStream stream) throws IOException
 	{
@@ -19,10 +19,10 @@ public class DownloadDone extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException {}
+	protected void finishParsing(ByteReader reader) throws IOException {}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) {}
+	protected void finishWriting(AbstractByteWriter buffer) {}
 
 	public static int TYPE = 15;
 	@Override

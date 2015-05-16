@@ -6,6 +6,8 @@
 
 package org.cnv.shr.gui;
 
+import org.cnv.shr.cnctn.ConnectionStatistics;
+
 /**
  *
  * @author thallock
@@ -17,6 +19,11 @@ public class ConnectionStatus extends javax.swing.JPanel {
      */
     public ConnectionStatus() {
         initComponents();
+    }
+    
+    public void update(ConnectionStatistics stats)
+    {
+    	
     }
 
     /**

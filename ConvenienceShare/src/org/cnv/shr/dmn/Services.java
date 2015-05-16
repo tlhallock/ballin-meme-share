@@ -127,6 +127,7 @@ public class Services
 		}
 		
 		monitorTimer = new Timer();
+		downloads.initiatePendingDownloads();
 //		monitorTimer.schedule(new TimerTask() {
 //			@Override
 //			public void run()
@@ -172,6 +173,8 @@ public class Services
 			if (handlers[i] != null)
 				handlers[i].quit();
 		}
+		if (downloads != null)
+			downloads.quitAllDownloads();
 		if (application != null)
 			application.dispose();
 		if (monitorTimer != null)

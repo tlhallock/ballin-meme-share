@@ -93,6 +93,11 @@ public class DbTables
 				Services.logger.print(ex);
 			}
 		}
+
+		public void list()
+		{
+			
+		}
 		
 		public DbObject allocate(ResultSet row) throws SQLException
 		{

@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
+import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 import org.json.JSONArray;
@@ -69,38 +70,38 @@ public class Machine extends DbObject<Integer>
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
 				 "merge into MACHINE key(IDENT) values "
-				 + "(DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+				 + "((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
 				, Statement.RETURN_GENERATED_KEYS);)
 		{
 			int ndx = 1;
 			stmt.setString( ndx++, getIdentifier());
-			stmt.setString( ndx++, getName());
-			stmt.setString( ndx++, getIp());
-			stmt.setInt(    ndx++, getPort());
-			stmt.setInt(    ndx++, getNumberOfPorts());
-			stmt.setLong(   ndx++, System.currentTimeMillis());
-			stmt.setBoolean(ndx++, isSharing());
-			stmt.setString( ndx++, getIdentifier());
-			stmt.setBoolean(ndx++, isLocal());
-			stmt.setBoolean(ndx++, getAllowsMessages());
-			stmt.setBoolean(ndx++, acceptPeers);
+			writeMachine(stmt, ndx);
 			stmt.executeUpdate();
 			ResultSet generatedKeys = stmt.getGeneratedKeys();
 			if (generatedKeys.next())
 			{
 				id = generatedKeys.getInt(1);
-				return true;
 			}
-			return false;
 		}
+		if (id == null)
+		{
+			id = DbMachines.getMachineId(getIdentifier());
+		}
+		return true;
 	}
-	
-	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
-	{
-		PreparedStatement stmt = c.prepareStatement();
 
-		return stmt;
+	protected void writeMachine(PreparedStatement stmt, int ndx) throws SQLException
+	{
+		stmt.setString( ndx++, getName());
+		stmt.setString( ndx++, getIp());
+		stmt.setInt(    ndx++, getPort());
+		stmt.setInt(    ndx++, getNumberOfPorts());
+		stmt.setLong(   ndx++, System.currentTimeMillis());
+		stmt.setBoolean(ndx++, isSharing());
+		stmt.setString( ndx++, getIdentifier());
+		stmt.setBoolean(ndx++, isLocal());
+		stmt.setBoolean(ndx++, getAllowsMessages());
+		stmt.setBoolean(ndx++, getAcceptPeers());
 	}
 	
 	public int getNumberOfPorts()
@@ -186,6 +187,11 @@ public class Machine extends DbObject<Integer>
 	public boolean isSharing()
 	{
 		return sharing;
+	}
+	
+	public boolean getAcceptPeers()
+	{
+		return acceptPeers;
 	}
 
 	public boolean isLocal()
@@ -290,6 +296,29 @@ public class Machine extends DbObject<Integer>
 		public void setId()
 		{
 			id = DbMachines.getMachineId(getIdentifier());
+		}
+		@Override
+		public boolean save(Connection c) throws SQLException
+		{
+			try (PreparedStatement stmt = c.prepareStatement(
+					 "merge into MACHINE key(IS_LOCAL) values "
+					 + "((select M_ID from MACHINE where IS_LOCAL=true), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+					, Statement.RETURN_GENERATED_KEYS);)
+			{
+				int ndx = 1;
+				writeMachine(stmt, ndx);
+				stmt.executeUpdate();
+				ResultSet generatedKeys = stmt.getGeneratedKeys();
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getInt(1);
+				}
+			}
+			if (id == null)
+			{
+				id = DbMachines.getMachineId(getIdentifier());
+			}
+			return true;
 		}
 	}
 }

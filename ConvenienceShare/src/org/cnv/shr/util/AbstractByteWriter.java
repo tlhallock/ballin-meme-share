@@ -5,7 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.PublicKey;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.stng.Settings;
 
 /**
@@ -53,6 +53,11 @@ public abstract class AbstractByteWriter
 		append((byte) ((i >>  0L) & 0xff));
 		return this;
 	}
+	
+	public AbstractByteWriter append(boolean hasFile) throws IOException
+	{
+		return append((byte) (hasFile ? 1 : 0));
+	}
 
 	public AbstractByteWriter append(String str) throws IOException
 	{
@@ -97,6 +102,15 @@ public abstract class AbstractByteWriter
 			appendVarByteArray(((de.flexiprovider.core.rsa.RSAPublicKey) key).getN().toByteArray());
 			appendVarByteArray(((de.flexiprovider.core.rsa.RSAPublicKey) key).getE().toByteArray());
 		}
+		return this;
+	}
+
+	public AbstractByteWriter append(SharedFileId key) throws IOException
+	{
+		append(key.getMachineIdent());
+		append(key.getRootName());
+		append(key.getPath());
+		append(key.getChecksum());
 		return this;
 	}
 

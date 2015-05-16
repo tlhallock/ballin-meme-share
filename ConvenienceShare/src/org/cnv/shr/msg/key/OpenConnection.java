@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
@@ -32,11 +31,11 @@ public class OpenConnection extends KeyMessage
 	}
 	
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		sourcePublicKey      = ByteReader.readPublicKey(bytes);
-		destinationPublicKey = ByteReader.readPublicKey(bytes);
-		requestedNaunce      = ByteReader.readVarByteArray(bytes);
+		sourcePublicKey      = reader.readPublicKey();
+		destinationPublicKey = reader.readPublicKey();
+		requestedNaunce      = reader.readVarByteArray();
 	}
 
 	@Override

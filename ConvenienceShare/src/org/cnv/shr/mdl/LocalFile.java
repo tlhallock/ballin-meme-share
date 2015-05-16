@@ -146,6 +146,14 @@ public class LocalFile extends SharedFile
 		if (checksum == null)
 		{
 			checksum = Services.checksums.checksumBlocking(getFsFile());
+			try
+			{
+				save();
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 

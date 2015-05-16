@@ -3,6 +3,8 @@ package org.cnv.shr.dmn;
 import java.util.LinkedList;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.dmn.dwn.DownloadInstance;
+import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.RemoteDirectory;
 
@@ -53,12 +55,21 @@ public class Notifications
 		}
 	}
 	
-	public void downloadsChanged()
+	public void downloadAdded(DownloadInstance d)
+	{
+		
+	}
+	public void downloadRemoved(DownloadInstance d)
 	{
 		
 	}
 
-	public void servesChanged()
+	public void serveAdded(ServeInstance serveInstance)
+	{
+		
+	}
+
+	public void serveRemoved(ServeInstance serveInstance)
 	{
 		
 	}
@@ -87,8 +98,10 @@ public class Notifications
 		public void localChanged(LocalDirectory local)       {}
 		public void remotesChanged()                         {}
 		public void remotesChanged(RemoteDirectory remote)   {}
-		public void downloadsChanged()                       {}
-		public void servesChanged()                          {}
+		public void downloadAdded(DownloadInstance d)        {}
+		public void downloadRemoved(DownloadInstance d)      {}
+		public void serveAdded(ServeInstance s)              {}
+		public void serveRemoved(ServeInstance s)            {}
 		public void connectionOpened(Communication c)        {}
 		public void connectionClosed(Communication c)        {}
 		public void dbException(Exception ex)                {}

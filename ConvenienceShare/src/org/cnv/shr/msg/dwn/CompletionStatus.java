@@ -4,20 +4,20 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.Message;
+import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
-public class CompletionStatus extends Message
+public class CompletionStatus extends DownloadMessage
 {
 	public static int TYPE = 12;
 	
 	private double percentComplete;
 	
-	public CompletionStatus(double d)
+	public CompletionStatus(SharedFileId descriptor, double d)
 	{
+		super(descriptor);
 		percentComplete = d;
 	}
 
@@ -32,12 +32,12 @@ public class CompletionStatus extends Message
 		return TYPE;
 	}
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void finishParsing(ByteReader reader) throws IOException
 	{
-		percentComplete = ByteReader.readDouble(bytes);
+		percentComplete = reader.readDouble();
 	}
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void finishWriting(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(percentComplete);
 	}

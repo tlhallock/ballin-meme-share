@@ -4,34 +4,57 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
 
+import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.stng.Settings;
 
 import de.flexiprovider.common.math.FlexiBigInt;
 
 public class ByteReader
 {
-	public static int readByte(InputStream in) throws IOException
+	private InputStream in;
+	private ConnectionStatistics stats;
+	
+	public ByteReader(InputStream in, ConnectionStatistics stats)
+	{
+		this.in = in;
+		this.stats = stats;
+	}
+
+	public ByteReader(InputStream is)
+	{
+		this.in = is;
+		stats = new ConnectionStatistics();
+	}
+
+	public ConnectionStatistics getStatistics()
+	{
+		return stats;
+	}
+	
+	public int readByte() throws IOException
 	{
 		int read = in.read();
 		if (read < 0)
 		{
 			throw new IOException("Hit end of stream.");
 		}
+		stats.bytesRead(1);
 		return read & 0xff;
 	}
 
-	public static int readShort(InputStream in) throws IOException
+	public int readShort() throws IOException
 	{
 		int i = 0;
 
-		i |= (readByte(in)) << 8;
-		i |= (readByte(in)) << 0;
+		i |= (readByte()) << 8;
+		i |= (readByte()) << 0;
 
 		return i;
 	}
 	
-	public static long tryToReadInt(InputStream in) throws IOException
+	public long tryToReadInt() throws IOException
 	{
 		long i = 0;
 		
@@ -40,18 +63,19 @@ public class ByteReader
 		{
 			return -1;
 		}
+		stats.bytesRead(1);
 
 		i |=      firstByte << 24L;
-		i |= (readByte(in)) << 16L;
-		i |= (readByte(in)) <<  8L;
-		i |= (readByte(in)) <<  0L;
+		i |= (readByte()) << 16L;
+		i |= (readByte()) <<  8L;
+		i |= (readByte()) <<  0L;
 
 		return i;
 	}
 	
-	public static int readInt(InputStream in) throws IOException
+	public int readInt() throws IOException
 	{
-		long i = tryToReadInt(in);
+		long i = tryToReadInt();
 		if (i < 0)
 		{
 			throw new IOException("Hit end of stream.");
@@ -59,30 +83,30 @@ public class ByteReader
 		return (int) i;
 	}
 
-	public static long readLong(InputStream in) throws IOException
+	public long readLong() throws IOException
 	{
 		long i = 0;
 
-		i |= (readByte(in)) << 56L;
-		i |= (readByte(in)) << 48L;
-		i |= (readByte(in)) << 40L;
-		i |= (readByte(in)) << 32L;
-		i |= (readByte(in)) << 24L;
-		i |= (readByte(in)) << 16L;
-		i |= (readByte(in)) <<  8L;
-		i |= (readByte(in)) <<  0L;
+		i |= (readByte()) << 56L;
+		i |= (readByte()) << 48L;
+		i |= (readByte()) << 40L;
+		i |= (readByte()) << 32L;
+		i |= (readByte()) << 24L;
+		i |= (readByte()) << 16L;
+		i |= (readByte()) <<  8L;
+		i |= (readByte()) <<  0L;
 
 		return i;
 	}
 
-	public static String readString(InputStream in) throws IOException
+	public String readString() throws IOException
 	{
-		return new String(readVarByteArray(in), Settings.encoding);
+		return new String(readVarByteArray(), Settings.encoding);
 	}
 	
-	public static byte[] readVarByteArray(InputStream in) throws IOException
+	public byte[] readVarByteArray() throws IOException
 	{
-		int size = (int) readInt(in);
+		int size = (int) readInt();
 		if (size > Services.settings.maxStringSize.get())
 		{
 			throw new IOException("Received string that is way too big!! Size=" + size);
@@ -93,6 +117,7 @@ public class ByteReader
 		while (readSoFar < size && readSoFar >= 0)
 		{
 			readSoFar += in.read(returnValue, readSoFar, size - readSoFar);
+			stats.bytesRead(readSoFar);
 		}
 		if (readSoFar < size)
 		{
@@ -102,10 +127,10 @@ public class ByteReader
 		return returnValue;
 	}
 	
-	public static PublicKey readPublicKey(InputStream bytes) throws IOException
+	public PublicKey readPublicKey() throws IOException
 	{
-		byte[] readVarByteArray1 = readVarByteArray(bytes);
-		byte[] readVarByteArray2 = readVarByteArray(bytes);
+		byte[] readVarByteArray1 = readVarByteArray();
+		byte[] readVarByteArray2 = readVarByteArray();
 		if (readVarByteArray1.length == 0 || readVarByteArray2.length == 0)
 		{
 			return null;
@@ -114,9 +139,23 @@ public class ByteReader
 		FlexiBigInt puble = new FlexiBigInt(readVarByteArray2);
 		return new de.flexiprovider.core.rsa.RSAPublicKey(publn, puble);
 	}
-
-	public static double readDouble(InputStream bytes) throws IOException
+	
+	public SharedFileId readSharedFileId() throws IOException
 	{
-		return Double.parseDouble(readString(bytes));
+		return new org.cnv.shr.dmn.dwn.SharedFileId(
+				readString(),
+				readString(),
+				readString(),
+				readString());
+	}
+
+	public double readDouble() throws IOException
+	{
+		return Double.parseDouble(readString());
+	}
+
+	public boolean readBoolean() throws IOException
+	{
+		return readByte() == 1 ? true : false;
 	}
 }

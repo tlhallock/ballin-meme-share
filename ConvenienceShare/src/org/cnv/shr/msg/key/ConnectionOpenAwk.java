@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -28,10 +27,10 @@ public class ConnectionOpenAwk extends KeyMessage
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		decryptedNaunce = ByteReader.readVarByteArray(bytes);
-		naunceRequest   = ByteReader.readVarByteArray(bytes);
+		decryptedNaunce = reader.readVarByteArray();
+		naunceRequest   = reader.readVarByteArray();
 	}
 
 	@Override

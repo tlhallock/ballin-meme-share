@@ -98,8 +98,22 @@ public abstract class SharedFile extends DbObject<Integer>
 	@Override
 	public boolean save(Connection c) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement("");)
+		try (PreparedStatement stmt = c.prepareStatement(
+				 "merge into SFILE key(PELEM, ROOT) values ((select F_ID from S_FILE where PELEM=? and ROOT=?), ?, ?, ?, ?, ?, ?, ?, ?);"
+				, Statement.RETURN_GENERATED_KEYS);)
 		{
+			int ndx=1;
+			stmt.setLong(ndx++, path.getId());
+			stmt.setInt(ndx++, rootDirectory.getId());
+			
+			stmt.setLong(ndx++, getFileSize());
+			stmt.setString(ndx++, getTags());
+			stmt.setString(ndx++, checksum);
+			stmt.setLong(ndx++, path.getId());
+			stmt.setInt(ndx++, rootDirectory.getId());
+			stmt.setInt(ndx++, 0/*remote state*/);
+			stmt.setLong(ndx++, lastModified);
+			stmt.setInt(ndx++, 0 /*error*/);
 			stmt.executeUpdate();
 			ResultSet generatedKeys = stmt.getGeneratedKeys();
 			if (generatedKeys.next())
@@ -111,24 +125,6 @@ public abstract class SharedFile extends DbObject<Integer>
 		}
 	}
 	
-	
-	@Override
-	protected PreparedStatement createPreparedUpdateStatement(Connection c) throws SQLException
-	{
-		PreparedStatement stmt = c.prepareStatement(
-				 "merge into SFILE key(PELEM, ROOT) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?);"
-				, Statement.RETURN_GENERATED_KEYS);
-		int ndx = 1;
-		stmt.setLong(ndx++, getFileSize());
-		stmt.setString(ndx++, getTags());
-		stmt.setString(ndx++, checksum);
-		stmt.setLong(ndx++, path.getId());
-		stmt.setInt(ndx++, rootDirectory.getId());
-		stmt.setInt(ndx++, 0/*remote state*/);
-		stmt.setLong(ndx++, lastModified);
-		stmt.setInt(ndx++, 0 /*error*/);
-		return stmt;
-	}
 
 //	@Override
 //	public void read(InputStream bytes) throws IOException

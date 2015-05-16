@@ -6,13 +6,18 @@ import java.io.InputStream;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.msg.Failure;
+import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
-public class DownloadFailure extends Failure
+public class DownloadFailure extends DownloadMessage
 {
-	public DownloadFailure(String message)
+	private String message;
+	
+	public DownloadFailure(String message, SharedFileId descriptor)
 	{
-		super(message);
+		super(descriptor);
+		this.message = message;
 	}
 
 	public DownloadFailure(InputStream stream) throws IOException
@@ -30,8 +35,19 @@ public class DownloadFailure extends Failure
 	@Override
 	public void perform(Communication connection)
 	{
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(connection);
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor());
 		downloadInstance.removePeer(connection);
 	}
 
+	@Override
+	protected void finishParsing(ByteReader reader) throws IOException
+	{
+		message = reader.readString();
+	}
+
+	@Override
+	protected void finishWriting(AbstractByteWriter buffer) throws IOException
+	{
+		buffer.append(message);
+	}
 }

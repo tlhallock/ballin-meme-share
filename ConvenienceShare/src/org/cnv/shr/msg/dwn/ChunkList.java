@@ -6,15 +6,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.msg.Message;
+import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
-public class ChunkList extends Message
+public class ChunkList extends DownloadMessage
 {
 	private LinkedList<Chunk> chunks = new LinkedList<>();
 	private String checksum;
@@ -26,8 +25,9 @@ public class ChunkList extends Message
 		super(input);
 	}
 	
-	public ChunkList(HashMap<String, Chunk> chunks2, String checksum)
+	public ChunkList(HashMap<String, Chunk> chunks2, String checksum, SharedFileId descriptor)
 	{
+		super(descriptor);
 		for (Chunk c : chunks2.values())
 		{
 			chunks.add(c);
@@ -39,18 +39,19 @@ public class ChunkList extends Message
 	{
 		return TYPE;
 	}
+	
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void finishParsing(ByteReader reader) throws IOException
 	{
-		int numChunks = ByteReader.readInt(bytes);
+		int numChunks = reader.readInt();
 		for (int i = 0; i < numChunks; i++)
 		{
-			chunks.add(new Chunk(bytes));
+			chunks.add(new Chunk(reader));
 		}
-		checksum = ByteReader.readString(bytes);
+		checksum = reader.readString();
 	}
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void finishWriting(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(chunks.size());
 		for (Chunk c : chunks)
@@ -62,7 +63,7 @@ public class ChunkList extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(connection);
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor());
 		downloadInstance.foundChunks(chunks, checksum);
 	}
 	

@@ -235,11 +235,11 @@ public class KeyManager
 		PrivateKey privateKey = getPrivateKey(pKey);
 		if (privateKey == null) return buffer.getBytes();
 		
-		ByteArrayInputStream in = new ByteArrayInputStream(encrypted);
+		ByteReader reader = new ByteReader(new ByteArrayInputStream(encrypted));
 		byte[] encryptedChunk;
 		try
 		{
-			while ((encryptedChunk = ByteReader.readVarByteArray(in)) != null)
+			while ((encryptedChunk = reader.readVarByteArray()) != null)
 			{
 				buffer.append(decryptChunk(privateKey, encryptedChunk));
 			}

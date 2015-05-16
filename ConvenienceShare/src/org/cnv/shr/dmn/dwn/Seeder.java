@@ -22,9 +22,9 @@ public class Seeder
 		this.connection = openConnection;
 	}
 	
-	public ChunkRequest request(Chunk removeFirst)
+	public ChunkRequest request(SharedFileId descriptor, Chunk removeFirst)
 	{
-		ChunkRequest msg = new ChunkRequest(removeFirst);
+		ChunkRequest msg = new ChunkRequest(descriptor, removeFirst);
 		pending.put(System.currentTimeMillis(), msg);
 		connection.send(msg);
 		return msg;

@@ -69,7 +69,29 @@ public class DbFiles
 
 	public static SharedFile getFile(String checksum, long fileSize)
 	{
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public static SharedFile getFile(int int1)
+	{
+		Connection c = Services.h2DbCache.getConnection();
+		// Delete from pending too...
+		try (PreparedStatement stmt = c.prepareStatement("select * from SFILE where F_ID=?;");)
+		{
+			stmt.setInt(1, int1);
+			ResultSet executeQuery = stmt.executeQuery();
+			if (!executeQuery.next())
+			{
+				return null;
+			}
+			DbObject allocated = DbTables.DbObjects.RFILE.allocate(executeQuery);
+			allocated.fill(c, executeQuery, new DbLocals());
+			return (SharedFile) allocated;
+		}
+		catch (SQLException e)
+		{
+			Services.logger.print(e);
+			return null;
+		}
 	}
 }

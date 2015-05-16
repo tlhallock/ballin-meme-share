@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -35,13 +34,13 @@ public class KeyNotFound extends KeyMessage
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		int size = ByteReader.readInt(bytes);
+		int size = reader.readInt();
 		for (int i = 0; i < size; i++)
 		{
-			PublicKey readPublicKey = ByteReader.readPublicKey(bytes);
-			byte[] readVarByteArray = ByteReader.readVarByteArray(bytes);
+			PublicKey readPublicKey = reader.readPublicKey();
+			byte[] readVarByteArray = reader.readVarByteArray();
 			System.out.println(tests);
 			tests.put(readPublicKey, readVarByteArray);
 		}

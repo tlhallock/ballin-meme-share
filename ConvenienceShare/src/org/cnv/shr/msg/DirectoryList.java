@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.LinkedList;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
@@ -71,19 +70,19 @@ public class DirectoryList extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		name = ByteReader.readString(bytes);
-		currentPath = ByteReader.readString(bytes);
-		int numDirs = ByteReader.readInt(bytes);
+		name = reader.readString();
+		currentPath = reader.readString();
+		int numDirs = reader.readInt();
 		for (int i = 0; i < numDirs; i++)
 		{
-			subDirs.add(ByteReader.readString(bytes));
+			subDirs.add(reader.readString());
 		}
-		int numFiles = ByteReader.readInt(bytes);
+		int numFiles = reader.readInt();
 		for (int i = 0; i < numFiles; i++)
 		{
-			children.add(new Child(bytes));
+			children.add(new Child(reader));
 		}
 	}
 
@@ -164,13 +163,13 @@ public class DirectoryList extends Message
 			this.lastModified = l.getLastUpdated();
 		}
 		
-		Child (InputStream bytes) throws IOException
+		Child (ByteReader bytes) throws IOException
 		{
-			name = ByteReader.readString(bytes);
-			size = ByteReader.readLong(bytes);
-			checksum = ByteReader.readString(bytes);
-			tags = ByteReader.readString(bytes);
-			lastModified = ByteReader.readLong(bytes);
+			name = bytes.readString();
+			size = bytes.readLong();
+			checksum = bytes.readString();
+			tags = bytes.readString();
+			lastModified = bytes.readLong();
 		}
 		
 		public void write(AbstractByteWriter buffer) throws IOException

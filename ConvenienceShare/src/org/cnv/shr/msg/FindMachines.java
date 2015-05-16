@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
 public class FindMachines extends Message
 {
@@ -27,7 +27,7 @@ public class FindMachines extends Message
 	}
 	
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException {}
+	protected void parse(ByteReader reader) throws IOException {}
 
 	@Override
 	protected void write(AbstractByteWriter buffer) {}

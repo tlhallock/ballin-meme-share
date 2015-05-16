@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -31,10 +30,10 @@ public class ListPath extends Message
 	
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		rootName = ByteReader.readString(bytes);
-		path = ByteReader.readString(bytes);
+		rootName = reader.readString();
+		path = reader.readString();
 	}
 
 	@Override

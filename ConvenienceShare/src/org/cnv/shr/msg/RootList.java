@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
@@ -64,14 +63,14 @@ public class RootList extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		int numFolders = ByteReader.readInt(bytes);
+		int numFolders = reader.readInt();
 		for (int i = 0; i < numFolders; i++)
 		{
-			String name        = ByteReader.readString(bytes);
-			String tags        = ByteReader.readString(bytes);
-			String description = ByteReader.readString(bytes);
+			String name        = reader.readString();
+			String tags        = reader.readString();
+			String description = reader.readString();
 			
 			sharedDirectories.add(new RemoteDirectory(null, name, tags, description));
 		}

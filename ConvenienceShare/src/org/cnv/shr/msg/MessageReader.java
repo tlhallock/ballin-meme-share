@@ -6,9 +6,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.msg.dwn.ChecksumResponse;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.ChunkResponse;
@@ -68,6 +67,8 @@ public class MessageReader
 		add(new MessageIdentifier(WhoIAm.class                     ));
 		add(new MessageIdentifier(EmptyMessage.class               ));
 		add(new MessageIdentifier(DoneResponse.class               ));
+		add(new MessageIdentifier(ChunkRequest.class               ));
+		add(new MessageIdentifier(ChecksumResponse.class           ));
 
 		Services.logger.println("Message map:\n" + this);
 	}
@@ -93,9 +94,9 @@ public class MessageReader
 		identifiers.put(type, identifier);
 	}
 	
-	public Message readMsg(ConnectionStatistics stats, InputStream input) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	public Message readMsg(ByteReader input) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
-		long msgTypeL = ByteReader.tryToReadInt(input);
+		long msgTypeL = input.tryToReadInt();
 		if (msgTypeL < 0)
 		{
 			return null;
@@ -154,11 +155,11 @@ public class MessageReader
 			return type;
 		}
 		
-		Message create(InputStream stream) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException
+		Message create(ByteReader stream) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException
 		{
 				Services.logger.println("Received message of type " + name);
 				Message newInstance = constructor.newInstance(stream);
-				newInstance.parse(stream, null);
+				newInstance.parse(stream);
 				return newInstance;
 //			catch (Exception e)
 //			{

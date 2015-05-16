@@ -2,11 +2,10 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.OutputByteWriter;
 
 public abstract class Message
@@ -32,22 +31,19 @@ public abstract class Message
 		return builder.toString();
 	}
 	
-	public final void write(OutputStream output) throws IOException
+	public final void write(OutputByteWriter output) throws IOException
 	{
-		OutputByteWriter writer = new OutputByteWriter(output);
-		writer.append(getType());
-		write(writer);
-		output.flush();
+		output.append(getType());
+		write(output);
 	}
 	
-	public void read(InputStream stream, ConnectionStatistics stats) throws IOException
+	public void read(ByteReader reader) throws IOException
 	{
-		stats.lastActivity = System.currentTimeMillis();
-		parse(stream, stats);
+		parse(reader);
 	}
 
 	protected abstract int  getType();
-	protected abstract void parse(InputStream bytes, ConnectionStatistics stats) throws IOException;
+	protected abstract void parse(ByteReader reader) throws IOException;
 	protected abstract void write(AbstractByteWriter buffer) throws IOException;
 	public    abstract void perform(Communication connection) throws Exception;
 }

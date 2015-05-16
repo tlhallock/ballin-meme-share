@@ -58,7 +58,7 @@ public class DbKeys
 //		}
 		try (InputStream is = new ByteArrayInputStream(Misc.format(keyString));)
 		{
-			return ByteReader.readPublicKey(is);
+			return new ByteReader(is).readPublicKey();
 		}
 		catch (IOException e)
 		{

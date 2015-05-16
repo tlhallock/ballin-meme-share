@@ -4,22 +4,22 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.mdl.SharedFile;
-import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
-public class MachineHasFile extends Message
+public class MachineHasFile extends DownloadMessage
 {
 	private boolean hasFile;
-	private String path;
-	private String rootName;
 	
 	public static int TYPE = 17;
 	
 	public MachineHasFile(SharedFile file)
 	{
+		super(new SharedFileId(file));
+		
 		if (file == null)
 		{
 			hasFile = false;
@@ -27,8 +27,6 @@ public class MachineHasFile extends Message
 		else
 		{
 			hasFile = true;
-			path = file.getPath().getFullPath();
-			rootName = file.getRootDirectory().getName();
 		}
 	}
 
@@ -44,15 +42,15 @@ public class MachineHasFile extends Message
 	}
 	
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void finishParsing(ByteReader reader) throws IOException
 	{
-		
+		hasFile = reader.readBoolean();
 	}
 	
 	@Override
-	protected void write(AbstractByteWriter buffer)
+	protected void finishWriting(AbstractByteWriter buffer) throws IOException
 	{
-		
+		buffer.append(hasFile);
 	}
 	
 	@Override
@@ -63,14 +61,14 @@ public class MachineHasFile extends Message
 		// No.
 		if (!hasFile) return;
 
-		Services.downloads.getDownloadInstance(null).addSeeder(connection.getMachine(), connection);
+		Services.downloads.getDownloadInstance(getDescriptor()).addSeeder(connection.getMachine(), connection);
 	}
 	
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
 		
-		builder.append("I got it! ").append(hasFile).append(":").append(path);
+		builder.append("I got it! ").append(hasFile).append(":").append(getDescriptor());
 		
 		return builder.toString();
 	}

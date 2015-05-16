@@ -4,21 +4,22 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.msg.Message;
+import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
-public class ChunkResponse extends Message
+public class ChunkResponse extends DownloadMessage
 {
 	private Chunk chunk;
 	
 	public static int TYPE = 14;
 	
-	public ChunkResponse(Chunk c)
+	public ChunkResponse(SharedFileId descriptor, Chunk c)
 	{
+		super(descriptor);
 		chunk = c;
 	}
 	
@@ -34,12 +35,12 @@ public class ChunkResponse extends Message
 	}
 	
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void finishParsing(ByteReader reader) throws IOException
 	{
-		chunk = new Chunk(bytes);
+		chunk = new Chunk(reader);
 	}
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void finishWriting(AbstractByteWriter buffer) throws IOException
 	{
 		chunk.write(buffer);
 	}
@@ -47,7 +48,7 @@ public class ChunkResponse extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(connection);
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor());
 		downloadInstance.download(chunk, connection);
 	}
 	

@@ -5,10 +5,10 @@ import java.io.InputStream;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
 public class RevokeKey extends Message
 {
@@ -20,7 +20,7 @@ public class RevokeKey extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
 		// TODO Auto-generated method stub
 		

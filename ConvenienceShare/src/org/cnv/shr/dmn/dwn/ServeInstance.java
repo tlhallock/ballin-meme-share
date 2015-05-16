@@ -88,7 +88,7 @@ public class ServeInstance
 					outputStream.write(buffer, 0, nread);
 				}
 
-				Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest));
+				Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest), local.getChecksum());
 				Chunk oldChunk = chunks.put(chunk.toString(), chunk);
 				if (oldChunk != null)
 				{
@@ -103,7 +103,7 @@ public class ServeInstance
 	private void fail(String string)
 	{
 		System.out.println(string);
-		connection.send(new DownloadFailure(string));
+		connection.send(new DownloadFailure(string, new SharedFileId(local)));
 		connection.finish();
 	}
 
@@ -112,7 +112,7 @@ public class ServeInstance
 		try
 		{
 			String checksum = stage();
-			connection.send(new ChunkList(chunks, checksum));
+			connection.send(new ChunkList(chunks, checksum, new SharedFileId(local)));
 		}
 		catch (NoSuchAlgorithmException | IOException e)
 		{
@@ -132,7 +132,7 @@ public class ServeInstance
 
 		synchronized (connection.getOut())
 		{
-			connection.send(new ChunkResponse(myVersion));
+			connection.send(new ChunkResponse(new SharedFileId(local), myVersion));
 			try
 			{
 				ChunkData.write(myVersion, tmpFile, connection.getOut());

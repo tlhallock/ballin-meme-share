@@ -19,6 +19,7 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.UserActions;
+import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
@@ -37,7 +38,7 @@ public class DownloadInstance
 	
 	private DownloadState state;
 	
-	private LinkedList<Seeder> seeders = new LinkedList<>();
+	private HashMap<String, Seeder> seeders = new HashMap<>();
 	private RemoteFile remoteFile;
 	private File tmpFile;
 	
@@ -45,11 +46,12 @@ public class DownloadInstance
 	// These should be stored on file...
 	private LinkedList<Chunk> completed = new LinkedList<>();
 	private LinkedList<Chunk> upComing;
+	private Download download;
 	
-	DownloadInstance(RemoteFile remote)
+	DownloadInstance(Download d)
 	{
 		state = DownloadState.NOT_STARTED;
-		remoteFile = remote;
+		remoteFile = d.getFile();
 	}
 	
 	private long count(Collection<Chunk> chunks)
@@ -62,7 +64,7 @@ public class DownloadInstance
 		return returnValue;
 	}
 	
-	public Communication begin() throws UnknownHostException, IOException
+	public void begin() throws UnknownHostException, IOException
 	{
 		state = DownloadState.GETTING_META_DATA;
 		FileRequest request = new FileRequest(remoteFile, CHUNK_SIZE);
@@ -74,15 +76,13 @@ public class DownloadInstance
 		}
 		
 		Seeder seeder = new Seeder(machine, openConnection);
-		seeders.add(seeder);
+		seeders.put(openConnection.getUrl(), seeder);
 		seeder.send(request);
-		return openConnection;
 	}
 
 	public void addSeeder(Machine machine, Communication connection)
 	{
-		Services.downloads.addConnection(this, connection);
-		seeders.add(new Seeder(machine, connection));
+		seeders.put(connection.getUrl(), new Seeder(machine, connection));
 		queue();
 	}
 
@@ -210,7 +210,7 @@ public class DownloadInstance
 			}
 			Seeder seeder = seeders.get(random.nextInt(seeders.size()));
 			Chunk next = upComing.removeFirst();
-			pending.put(next.getChecksum(), seeder.request(next));
+			pending.put(next.getChecksum(), seeder.request(new SharedFileId(remoteFile), next));
 		}
 		
 		if (upComing.isEmpty() && pending.isEmpty())
@@ -230,12 +230,18 @@ public class DownloadInstance
 		ChunkData.read(chunkRequest.getChunk(), tmpFile, communication.getIn());
 		pending.remove(chunk.getChecksum());
 		completed.add(chunk);
-		communication.send(new CompletionStatus(getCompletionPercentage()));
+		communication.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
 		queue();
 	}
 	
 	private void complete()
 	{
+		download.remove();
+		for (Seeder seeder : seeders.values())
+		{
+			seeder.done();
+		}
+		
 		state = DownloadState.PLACING_IN_FS;
 		try
 		{
@@ -263,21 +269,28 @@ public class DownloadInstance
 			Services.logger.print(e);
 		}
 		
-		for (Seeder seeder : seeders)
-		{
-			seeder.done();
-		}
+		Services.downloads.remove(this);
+	}
+	
+	public Download getDownload()
+	{
+		return download;
+	}
+	
+	public String getChecksum()
+	{
+		return remoteFile.getChecksum();
+	}
+
+	public boolean contains(Communication c)
+	{
+		return seeders.get(c.getUrl()) != null;
 	}
 	
 	private boolean checkChecksum() throws IOException
 	{
 		String checksumBlocking = Services.checksums.checksumBlocking(tmpFile);
 		return checksumBlocking.equals(remoteFile.getChecksum());
-	}
-	
-	public DownloadState getCurrentState()
-	{
-		return state;
 	}
 
 	private long lastCountRefresh;
@@ -302,9 +315,9 @@ public class DownloadInstance
 	
 	public void sendCompletionStatus()
 	{
-		for (Seeder seeder : seeders)
+		for (Seeder seeder : seeders.values())
 		{
-			seeder.send(new CompletionStatus(getCompletionPercentage()));
+			seeder.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
 		}
 	}
 	
@@ -319,33 +332,27 @@ public class DownloadInstance
 		PLACING_IN_FS,
 	}
 	
-	private void fail(String string)
+	void fail(String string)
 	{
 		System.out.println(string);
-		Services.downloads.done(this);
+		for (Seeder seeder : seeders.values())
+		{
+			seeder.done();
+		}
+		Services.downloads.remove(this);
 	}
 
 	public void removePeer(Communication connection)
 	{
-		for (Seeder peer : seeders)
+		Seeder seeder = seeders.remove(connection.getUrl());
+		if (seeder != null)
 		{
-			if (peer.getConnection().getUrl().equals(connection.getUrl()))
-			{
-				Services.downloads.remove(peer);
-				seeders.remove(peer);
-			}
+			seeder.done();
 		}
 		
 		if (seeders.isEmpty())
 		{
-			Services.logger.println("There are no more seeders left!");
-			Services.downloads.done(this);
+			fail("There are no more seeders left!");
 		}
-		connection.finish();
-	}
-
-	public Collection<Seeder> getSeeders()
-	{
-		return seeders;
 	}
 }

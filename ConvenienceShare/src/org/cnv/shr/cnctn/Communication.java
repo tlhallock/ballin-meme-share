@@ -20,7 +20,11 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
+import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.OutputByteWriter;
 import org.cnv.shr.util.OutputStreamFlusher;
+
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
@@ -33,6 +37,8 @@ public class Communication implements Closeable
 	private InputStream input;
 	private OutputStream output;
 	private OutputStreamFlusher flusher;
+	private ByteReader reader;
+	private OutputByteWriter writer;
 	
 	// true if this connection was initiated by the remote.
 	private boolean receivedConnection;
@@ -48,6 +54,11 @@ public class Communication implements Closeable
 		socket = new Socket(ip, port);
 		output = socket.getOutputStream();
 		input =  socket.getInputStream();
+		
+		ConnectionStatistics stats = new ConnectionStatistics();
+		reader = new ByteReader(input, stats);
+		writer = new OutputByteWriter(output, stats);
+		
 		receivedConnection = false;
 		needsMore = true;
 		this.authentication = authentication;
@@ -59,6 +70,11 @@ public class Communication implements Closeable
 		this.socket = socket;
 		input =  socket.getInputStream();
 		output = socket.getOutputStream();
+		
+		ConnectionStatistics stats = new ConnectionStatistics();
+		reader = new ByteReader(input, stats);
+		writer = new OutputByteWriter(output, stats);
+		
 		receivedConnection = true;
 		needsMore = true;
 		this.authentication = authentication;
@@ -83,7 +99,7 @@ public class Communication implements Closeable
 		{
 			synchronized (output)
 			{
-				m.write(output);
+				m.write(writer);
 				output.flush();
 			}
 		}
@@ -107,6 +123,11 @@ public class Communication implements Closeable
 		return socket.isClosed();
 	}
 
+	public ByteReader getReader()
+	{
+		return reader;
+	}
+	
 	public OutputStream getOut()
 	{
 		return output;
@@ -157,12 +178,14 @@ public class Communication implements Closeable
 		if (receivedConnection)
 		{
 			input  = new CipherInputStream(input, cipherIn);
+			reader = new ByteReader(input, reader.getStatistics());
 			output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
 		}
 		else
 		{
 			output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
 			input  = new CipherInputStream(input, cipherIn);
+			reader = new ByteReader(input, reader.getStatistics());
 		}
 	}
 

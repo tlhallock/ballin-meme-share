@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.dmn.Services;
@@ -29,10 +28,10 @@ public class NewKey extends KeyMessage
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		newKey = ByteReader.readPublicKey(bytes);
-		naunceRequest = ByteReader.readVarByteArray(bytes);
+		newKey = reader.readPublicKey();
+		naunceRequest = reader.readVarByteArray();
 	}
 
 	@Override

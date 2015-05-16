@@ -1,7 +1,6 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Scanner;
 
 import org.cnv.shr.util.AbstractByteWriter;
@@ -9,6 +8,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class Chunk
 {
+	private String fileChecksum;
 	private String checksum;
 	private long begin;
 	private long end;
@@ -20,26 +20,29 @@ public class Chunk
 			begin = s.nextLong();
 			end = s.nextLong();
 			checksum = s.next();
+			fileChecksum = s.next();
 		}
 	}
 	
-	Chunk(long begin, long end, String checksum)
+	Chunk(long begin, long end, String checksum, String fileChecksum)
 	{
 		this.begin = begin;
 		this.end = end;
 		this.checksum = checksum;
+		this.fileChecksum = fileChecksum;
 	}
 
-	public Chunk(InputStream input) throws IOException
+	public Chunk(ByteReader input) throws IOException
 	{
 		read(input);
 	}
 
-	public void read(InputStream input) throws IOException
+	public void read(ByteReader input) throws IOException
 	{
-		begin =  ByteReader.readLong(input);
-		end = ByteReader.readLong(input);
-		checksum = ByteReader.readString(input);
+		begin =  input.readLong();
+		end = input.readLong();
+		checksum = input.readString();
+		fileChecksum = input.readString();
 	}
 
 	public void write(AbstractByteWriter buffer) throws IOException
@@ -47,11 +50,22 @@ public class Chunk
 		buffer.append(getBegin());
 		buffer.append(end);
 		buffer.append(checksum);
+		buffer.append(fileChecksum);
 	}
 	
 	public String toString()
 	{
-		return getBegin() + " " + end + " " + checksum;
+		return getBegin() + " " + end + " " + checksum + " " + fileChecksum;
+	}
+
+	public long getBegin()
+	{
+		return begin;
+	}
+	
+	public String getFileChecksum()
+	{
+		return fileChecksum;
 	}
 
 	public String getChecksum()
@@ -66,11 +80,9 @@ public class Chunk
 	
 	public boolean equals(Chunk other)
 	{
-		return checksum.equals(other.checksum) && getBegin() == other.getBegin() && end == other.end;
-	}
-
-	public long getBegin()
-	{
-		return begin;
+		return checksum.equals(other.checksum)
+				&& getBegin() == other.getBegin() 
+				&& end == other.end
+				&& fileChecksum.equals(other.fileChecksum);
 	}
 }

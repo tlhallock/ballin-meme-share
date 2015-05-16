@@ -4,19 +4,20 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
-import org.cnv.shr.msg.Message;
+import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
-public class ChunkRequest extends Message
+public class ChunkRequest extends DownloadMessage
 {
 	private Chunk chunk;
 
 	public static int TYPE = 16;
-	public ChunkRequest(Chunk removeFirst)
+	public ChunkRequest(SharedFileId descriptor, Chunk removeFirst)
 	{
+		super(descriptor);
 		this.chunk = removeFirst;
 	}
 	
@@ -32,12 +33,12 @@ public class ChunkRequest extends Message
 	}
 	
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void finishParsing(ByteReader reader) throws IOException
 	{
-		chunk = new Chunk(bytes);
+		chunk = new Chunk(reader);
 	}
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void finishWriting(AbstractByteWriter buffer) throws IOException
 	{
 		chunk.write(buffer);
 	}

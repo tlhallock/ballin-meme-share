@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.Message;
 
 public class ConnectionRunnable implements Runnable
@@ -26,7 +25,7 @@ public class ConnectionRunnable implements Runnable
 		{
 			while (connection.needsMore())
 			{
-				Message request = Services.msgReader.readMsg(stats, connection.getIn());
+				Message request = Services.msgReader.readMsg(connection.getReader());
 				if (request == null || !authentication.authenticate(request))
 				{
 					break;

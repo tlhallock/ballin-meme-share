@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -32,12 +31,12 @@ public class KeyChange extends KeyMessage
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		oldKey         = ByteReader.readPublicKey(bytes);
-		newKey         = ByteReader.readPublicKey(bytes);
-		decryptedProof = ByteReader.readVarByteArray(bytes);
-		naunceRequest  = ByteReader.readVarByteArray(bytes);
+		oldKey         = reader.readPublicKey();
+		newKey         = reader.readPublicKey();
+		decryptedProof = reader.readVarByteArray();
+		naunceRequest  = reader.readVarByteArray();
 	}
 
 	@Override

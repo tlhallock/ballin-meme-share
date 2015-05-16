@@ -16,7 +16,7 @@ public class DbIterator<T extends DbObject> implements Iterator<T>
 	private T next;
 	
 
-	protected DbIterator(Connection c, DbTables.DbObjects allocator) throws SQLException
+	public DbIterator(Connection c, DbTables.DbObjects allocator) throws SQLException
 	{
 		this (c, c.prepareStatement("select * from " + allocator.getTableName() + ";").executeQuery(), allocator);
 	}

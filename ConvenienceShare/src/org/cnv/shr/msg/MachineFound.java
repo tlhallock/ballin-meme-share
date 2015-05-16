@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
@@ -58,14 +57,14 @@ public class MachineFound extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException
+	protected void parse(ByteReader reader) throws IOException
 	{
-		ip          = ByteReader.readString(bytes);
-		port        = ByteReader.readInt(bytes);
-		name        = ByteReader.readString(bytes);
-		ident       = ByteReader.readString(bytes);
-		lastActive  = ByteReader.readLong(bytes);
-		nports      = ByteReader.readInt(bytes);
+		ip          = reader.readString();
+		port        = reader.readInt();
+		name        = reader.readString();
+		ident       = reader.readString();
+		lastActive  = reader.readLong();
+		nports      = reader.readInt();
 	}
 
 	@Override

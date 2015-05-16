@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
 
 public class ListRoots extends Message
 {
@@ -23,7 +23,7 @@ public class ListRoots extends Message
 	}
 
 	@Override
-	protected void parse(InputStream bytes, ConnectionStatistics stats) throws IOException {}
+	protected void parse(ByteReader reader) throws IOException {}
 
 	@Override
 	protected void write(AbstractByteWriter buffer) {}

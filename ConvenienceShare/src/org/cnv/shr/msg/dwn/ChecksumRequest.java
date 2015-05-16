@@ -4,31 +4,26 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
-public class RequestCompletionStatus extends DownloadMessage
+public class ChecksumRequest extends DownloadMessage
 {
-	public RequestCompletionStatus(SharedFileId descriptor) { super (descriptor); }
+	public static int TYPE = 31;
+
+	public ChecksumRequest(RemoteFile remoteFile)
+	{
+		super(new SharedFileId(remoteFile));
+	}
 	
-	public RequestCompletionStatus(InputStream stream) throws IOException
+	public ChecksumRequest(InputStream stream) throws IOException
 	{
 		super(stream);
 	}
-
-	@Override
-	public void perform(Communication connection) throws Exception
-	{
-		for (DownloadInstance instance : Services.downloads.getDownloadInstances(connection))
-		{
-			instance.sendCompletionStatus();
-		}
-	}
-
-	public static int TYPE = 20;
+	
 	@Override
 	protected int getType()
 	{
@@ -38,8 +33,18 @@ public class RequestCompletionStatus extends DownloadMessage
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
-		builder.append("Are you done yet?");
+		
+		builder.append("I wanna download " + getDescriptor());
+		
 		return builder.toString();
+	}
+
+	@Override
+	public void perform(Communication connection) throws Exception
+	{
+		LocalFile local = getDescriptor().getLocal();
+		local.ensureChecksummed();
+		connection.send(new ChecksumResponse(local));
 	}
 
 	@Override
