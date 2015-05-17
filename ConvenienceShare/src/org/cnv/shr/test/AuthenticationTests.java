@@ -1,8 +1,6 @@
 package org.cnv.shr.test;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.net.UnknownHostException;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;

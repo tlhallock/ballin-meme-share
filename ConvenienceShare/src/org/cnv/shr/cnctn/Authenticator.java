@@ -32,9 +32,9 @@ public class Authenticator
 	private PublicKey remotePublicKey;
 	private PublicKey localPublicKey;
 	
-	String claimedName;
-	int claimedPort;
-	int claimedNumPorts;
+	private String claimedName;
+	private int claimedPort;
+	private int claimedNumPorts;
 
 	private boolean acceptAnyKeys;
 	

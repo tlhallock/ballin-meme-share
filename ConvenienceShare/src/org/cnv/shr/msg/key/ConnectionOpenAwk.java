@@ -62,4 +62,9 @@ public class ConnectionOpenAwk extends KeyMessage
 			fail("Connection Openned: unable lost pending naunce", connection);
 		}
 	}
+	
+	public String toString()
+	{
+		return "You are authenticated too!";
+	}
 }

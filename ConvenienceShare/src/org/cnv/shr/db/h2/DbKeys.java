@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 
+import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
@@ -103,6 +104,7 @@ public class DbKeys
 				Statement.RETURN_GENERATED_KEYS))
 		{
 			String keyStr = getKeyString(key);
+			Services.logger.println("Adding key to " + machine.getName() + ": " + keyStr);
 			
 			int ndx = 1;
 			stmt.setString(ndx++, keyStr);
@@ -165,6 +167,7 @@ public class DbKeys
 	public static boolean machineHasKey(Machine machine, PublicKey oldKey)
 	{
 		Connection c = Services.h2DbCache.getConnection();
+		DbObjects.PUBLIC_KEY.debug(c);
 		try (PreparedStatement stmt = c.prepareStatement(
 				"select K_ID from PUBLIC_KEY where MID=? and KEYSTR=?;"))
 		{
