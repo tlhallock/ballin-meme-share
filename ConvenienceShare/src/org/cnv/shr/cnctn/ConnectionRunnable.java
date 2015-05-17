@@ -68,7 +68,7 @@ public class ConnectionRunnable implements Runnable
 			int ndx = 0;
 			while (!connection.isClosed())
 			{
-				if (ndx < 10)
+				if (ndx++ < 10)
 				{
 					Thread.sleep(200);
 					continue;

@@ -76,7 +76,8 @@ public class KeyNotFound extends KeyMessage
 				// able to verify self to remote, but change key
 				byte[] decrypted = Services.keyManager.decrypt(knownKey, test);
 				// still need to authenticate them.
-				byte[] naunceRequest = Services.keyManager.createTestNaunce(connection.getAuthentication(), connection.getAuthentication().getRemoteKey());
+				byte[] naunceRequest = Services.keyManager.createTestNaunce(connection.getAuthentication(), 
+						connection.getAuthentication().getRemoteKey());
 				connection.send(new KeyChange(knownKey, Services.keyManager.getPublicKey(), decrypted, naunceRequest));
 				return;
 			}
@@ -85,7 +86,8 @@ public class KeyNotFound extends KeyMessage
 		PublicKey localKey = Services.keyManager.getPublicKey();
 		connection.getAuthentication().setLocalKey(localKey);
 		connection.send(new NewKey(localKey, 
-				Services.keyManager.createTestNaunce(connection.getAuthentication(), connection.getAuthentication().getRemoteKey())));
+				Services.keyManager.createTestNaunce(connection.getAuthentication(), 
+						connection.getAuthentication().getRemoteKey())));
 	}
 
 	public String toString()

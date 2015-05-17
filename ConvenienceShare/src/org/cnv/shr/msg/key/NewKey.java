@@ -21,6 +21,7 @@ public class NewKey extends KeyMessage
 	{
 		super(stream);
 	}
+	
 	public NewKey(PublicKey publicKey, byte[] responseAwk)
 	{
 		this.newKey = publicKey;
@@ -51,9 +52,10 @@ public class NewKey extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (!connection.getAuthentication().newKey(newKey))
+		if (!connection.getAuthentication().newKey(newKey) || naunceRequest.length == 0)
 		{
 			DbMessages.addMessage(new UserMessage.AuthenticationRequest(connection.getMachine(), newKey));
+			Services.logger.println("We have no naunce to authenticate!");
 			fail("New key not accepted.", connection);
 			return;
 		}
@@ -65,5 +67,10 @@ public class NewKey extends KeyMessage
 		byte[] newRequest = Services.keyManager.createTestNaunce(connection.getAuthentication(), newKey);
 		connection.send(new ConnectionOpenAwk(decrypted, newRequest));
 		return;
+	}
+	
+	public String toString()
+	{
+		return "Here is a new key: " + newKey + " with naunce length=" + naunceRequest.length;
 	}
 }

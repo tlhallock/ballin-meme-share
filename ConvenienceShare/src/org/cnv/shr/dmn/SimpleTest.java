@@ -22,11 +22,11 @@ public class SimpleTest
 //		System.out.println(Misc.format(naunce));
 //		System.out.println(Misc.format(Misc.format(Misc.format(naunce))));
 		
-		KeyManager keyManager1 = new KeyManager(new File("./keys.txt"));
+		KeysService keyManager1 = new KeysService(new File("./keys.txt"));
 		keyManager1.writeKeys();
 		keyManager1.readKeys();
 		
-		KeyManager keyManager2 = new KeyManager(new File("./keys.txt"));
+		KeysService keyManager2 = new KeysService(new File("./keys.txt"));
 		keyManager2.writeKeys();
 		keyManager2.readKeys();
 		

@@ -29,7 +29,6 @@ import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.cnctn.Authenticator;
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.ByteListBuffer;
@@ -44,7 +43,7 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 import de.flexiprovider.core.rsa.RSAPrivateCrtKey;
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
-public class KeyManager
+public class KeysService
 {
 	HashMap<String, KeyPairObject> keys = new HashMap<>();
 	KeyPairObject primaryKey;
@@ -54,7 +53,7 @@ public class KeyManager
 	
 	private static final int MAX_CIPHER_LENGTH = 117;
 	
-	public KeyManager(File keysFile)
+	public KeysService(File keysFile)
 	{
 		this.keysFile = keysFile;
 		Security.addProvider(new FlexiCoreProvider());
@@ -191,6 +190,7 @@ public class KeyManager
 	{
 		if (remoteKey == null)
 		{
+			Services.logger.println("Unable to create naunce: remote key is null.");
 			return new byte[0];
 		}
 		final byte[] original = Misc.createNaunce();
@@ -217,7 +217,10 @@ public class KeyManager
 			{
 				int end = Math.min(original.length, offset + MAX_CIPHER_LENGTH);
 				buffer.appendVarByteArray(encryptChunk(pKey, copyOf(original, offset, end)));
+				offset = end;
 			}
+			
+			buffer.appendVarByteArray(null);
 
 			return buffer.getBytes();
 		}
@@ -239,7 +242,7 @@ public class KeyManager
 		byte[] encryptedChunk;
 		try
 		{
-			while ((encryptedChunk = reader.readVarByteArray()) != null)
+			while ((encryptedChunk = reader.readVarByteArray()).length > 0)
 			{
 				buffer.append(decryptChunk(privateKey, encryptedChunk));
 			}

@@ -160,7 +160,7 @@ public class MessageReader
 		Message create(ByteReader stream) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException
 		{
 				Services.logger.println("Received message of type " + name);
-				Message newInstance = constructor.newInstance(stream);
+				Message newInstance = constructor.newInstance(DUMMY_STREAM);
 				newInstance.parse(stream);
 				return newInstance;
 //			catch (Exception e)
@@ -184,4 +184,10 @@ public class MessageReader
 			return type + "->" + name;
 		}
 	}
+	private static final InputStream DUMMY_STREAM = new InputStream() {
+		@Override
+		public int read() throws IOException
+		{
+			return -1;
+		}};
 }

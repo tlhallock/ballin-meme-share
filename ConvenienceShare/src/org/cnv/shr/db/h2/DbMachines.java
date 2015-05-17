@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RootDirectory;
 
 public class DbMachines
 {
@@ -130,5 +131,27 @@ public class DbMachines
 		{
 			DbKeys.addKey(machine, key);
 		}
+	}
+	
+	public static long getTotalNumFiles(Machine machine)
+	{
+		long returnValue = 0;
+		DbIterator<RootDirectory> list = DbRoots.list(machine);
+		while (list.hasNext())
+		{
+			returnValue += list.next().numFiles();
+		}
+		return returnValue;
+	}
+	
+	public static long getTotalDiskspace(Machine machine)
+	{
+		long returnValue = 0;
+		DbIterator<RootDirectory> list = DbRoots.list(machine);
+		while (list.hasNext())
+		{
+			returnValue += list.next().diskSpace();
+		}
+		return returnValue;
 	}
 }

@@ -9,8 +9,8 @@ import org.cnv.shr.util.ByteReader;
 
 public class ListRoots extends Message
 {
-	public ListRoots() {
-		}
+	public ListRoots() {}
+	
 	public ListRoots(InputStream stream) throws IOException
 	{
 		super(stream);
@@ -33,7 +33,6 @@ public class ListRoots extends Message
 	{
 		return TYPE;
 	}
-
 	
 	public String toString()
 	{

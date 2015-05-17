@@ -30,21 +30,19 @@ public class SynchronizationTests extends RemotesTest
 	@Test
 	public void testLocalSync() throws Exception
 	{
-		try (Closeable c2 = launchLocalMachine();)
+		try (Closeable c2 = launchLocalMachine(true);)
 		{
 			Path createTempDirectory = Files.createTempDirectory("root");
 			String path = createTempDirectory.toFile().getAbsolutePath();
 			String rootName = Misc.getRandomString(15);
 			
-			LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 20);
+			LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 50);
 			
 			UserActions.addLocal(createTempDirectory.toFile(), false, rootName);
 			Thread.sleep(1000);
 			Assert.assertNotNull(DbRoots.getLocal(path));
 			UserActions.sync(DbRoots.getLocal(path));
 			
-			Thread.sleep(10000);
-
 			long diskSpace = TestUtils.sum(makeSampleDirectories);
 			LocalDirectory local = DbRoots.getLocal(path);
 			Assert.assertEquals(diskSpace, local.diskSpace());
@@ -56,8 +54,8 @@ public class SynchronizationTests extends RemotesTest
 	@Test
 	public void testSyncToRemote() throws Exception
 	{
-		try (Closeable c2 = launchLocalMachine();
-			 Closeable c1 = getMachineInfo(0).launch())
+		try (Closeable c2 = launchLocalMachine(true);
+			 Closeable c1 = getMachineInfo(0).launch(true))
 		{
 			UserActions.addMachine(getMachineInfo(0).getUrl());
 			Thread.sleep(1000);
@@ -66,12 +64,15 @@ public class SynchronizationTests extends RemotesTest
 			String path = createTempDirectory.toFile().getAbsolutePath();
 			String rootName = Misc.getRandomString(15);
 			
-			LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024 * 1024, 114);
+			LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 114);
 			getMachineInfo(0).send(new TestActions.ADD_LOCAL(createTempDirectory.toFile().getAbsolutePath(), rootName));
 			Thread.sleep(5000);
 			
 			Machine machine = DbMachines.getMachine(getMachineInfo(0).getIdent());
 			Assert.assertNotNull(machine);
+			UserActions.syncRoots(machine);
+			
+			Thread.sleep(5000);
 			Assert.assertNotNull(DbRoots.getRoot(machine, rootName));
 			
 			UserActions.syncRemote(DbRoots.getRoot(machine, rootName));
@@ -87,22 +88,24 @@ public class SynchronizationTests extends RemotesTest
 	@Test
 	public void testOtherSync() throws Exception
 	{
-		try (    Closeable c2 = launchLocalMachine();
-				 Closeable c1 = getMachineInfo(0).launch())
+		try (    Closeable c2 = launchLocalMachine(true);
+				 Closeable c1 = getMachineInfo(0).launch(true))
 			{
-				UserActions.addMachine(getMachineInfo(0).getUrl());
+				getMachineInfo(0).send(new TestActions.AddMachine(getLocalUrl()));
 				Thread.sleep(1000);
 				
 				Path createTempDirectory = Files.createTempDirectory("root");
 				String path = createTempDirectory.toFile().getAbsolutePath();
 				String rootName = Misc.getRandomString(15);
 				
-				LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024 * 1024, 114);
+				LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 114);
 				UserActions.addLocal(createTempDirectory.toFile(), true, rootName);
 				Thread.sleep(5000);
 				
 				getMachineInfo(0).send(new TestActions.SYNC_ROOTS(Services.localMachine.getIdentifier()));
+				Thread.sleep(2000);
 				getMachineInfo(0).send(new TestActions.SYNC_REMOTE(Services.localMachine.getIdentifier(), rootName));
+				Thread.sleep(2000);
 				
 				Machine machine = DbMachines.getMachine(getMachineInfo(0).getIdent());
 				Assert.assertNotNull(machine);

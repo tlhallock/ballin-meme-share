@@ -12,6 +12,8 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.gui.UserActions;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RootDirectory;
 
 public class TestActions
 {
@@ -124,7 +126,9 @@ public class TestActions
 		
 		public void perform()
 		{
-			DbRoots.getRoot(DbMachines.getMachine(ident), name).synchronize(null);
+			Machine machine = DbMachines.getMachine(ident);
+			RootDirectory root = DbRoots.getRoot(machine, name);
+			root.synchronize(null);
 		}
 	};
 	public static class REMOVE_LOCAL extends TestAction

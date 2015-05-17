@@ -49,7 +49,7 @@ public class Services
 	public static ConnectionManager networkManager;
 	public static RequestHandler[] handlers;
 	public static MessageReader msgReader;
-	public static KeyManager keyManager;
+	public static KeysService keyManager;
 	public static Timer monitorTimer;
 	public static Application application;
 	public static LocalMachine localMachine;
@@ -80,7 +80,7 @@ public class Services
 		h2DbCache = new DbConnectionCache(deleteDb);
         
 		notifications = new Notifications();
-		keyManager = new KeyManager(settings.keysFile.get());
+		keyManager = new KeysService(settings.keysFile.get());
 		keyManager.readKeys();
 		localMachine = new Machine.LocalMachine();
 		if (!localMachine.save())

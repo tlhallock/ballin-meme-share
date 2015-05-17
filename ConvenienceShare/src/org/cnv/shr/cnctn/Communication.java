@@ -175,18 +175,18 @@ public class Communication implements Closeable
 		Cipher cipherOut = Cipher.getInstance("AES128_CBC", "FlexiCore"); cipherOut.init(Cipher.ENCRYPT_MODE, aesKey);
 		Cipher cipherIn  = Cipher.getInstance("AES128_CBC", "FlexiCore");  cipherIn.init(Cipher.DECRYPT_MODE, aesKey);
 
-		if (receivedConnection)
-		{
-			input  = new CipherInputStream(input, cipherIn);
-			reader = new ByteReader(input, reader.getStatistics());
-			output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
-		}
-		else
-		{
-			output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
-			input  = new CipherInputStream(input, cipherIn);
-			reader = new ByteReader(input, reader.getStatistics());
-		}
+//		if (receivedConnection)
+//		{
+//			input  = new CipherInputStream(input, cipherIn);
+//			reader = new ByteReader(input, reader.getStatistics());
+//			output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
+//		}
+//		else
+//		{
+//			output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
+//			input  = new CipherInputStream(input, cipherIn);
+//			reader = new ByteReader(input, reader.getStatistics());
+//		}
 	}
 
 	boolean needsMore()
@@ -211,6 +211,7 @@ public class Communication implements Closeable
 	{
 		try
 		{
+			needsMore = false;
 			socket.shutdownInput();
 		}
 		catch (IOException e)

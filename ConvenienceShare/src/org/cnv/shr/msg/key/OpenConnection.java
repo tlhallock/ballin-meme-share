@@ -65,11 +65,17 @@ public class OpenConnection extends KeyMessage
 		PublicKey[] knownKeys = DbKeys.getKeys(machine);
 		if (knownKeys != null && knownKeys.length > 0)
 		{
+			Services.logger.println("We have a different key for the remote.");
 			connection.send(new KeyNotFound(connection, knownKeys));
 			return;
 		}
 		
 		fail("Open connection: has keys, but not claimed keys.", connection);
+	}
+	
+	public String toString()
+	{
+		return "Please open a connection to me. my key=" + sourcePublicKey + " your key= " + destinationPublicKey;
 	}
 	
 }

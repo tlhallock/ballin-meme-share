@@ -17,7 +17,7 @@ public class LocalMachineTest
 	private static int LOCAL_PORT = 6990;
 	protected boolean quit;
 	
-	public Closeable launchLocalMachine() throws Exception
+	public Closeable launchLocalMachine(boolean deleteDb) throws Exception
 	{
 		String root = "bin" + File.separator + "localInstance";
 		Settings stgs = new Settings( new File(root + File.separator + "settings.props"));
@@ -34,7 +34,7 @@ public class LocalMachineTest
 		
 		Arguments args = new Arguments();
 		args.settings = stgs;
-		args.deleteDb = true;
+		args.deleteDb = deleteDb;
 		args.quiter = new Quiter() {
 			@Override
 			public void doFinal()

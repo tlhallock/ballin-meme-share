@@ -155,7 +155,7 @@ public class Misc
 	{
 		if (Files.isSymbolicLink(path) || Files.isRegularFile(path))
 		{
-			System.out.println("Would delete " + path.toString());
+			System.out.println("Deleting " + path.toString());
 			Files.delete(path);
 		}
 		else if (Files.isDirectory(path))

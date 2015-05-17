@@ -29,7 +29,6 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.stng.Setting;
 import org.cnv.shr.sync.DebugListener;
-import org.cnv.shr.util.Misc;
 
 /**
  * 
@@ -108,12 +107,12 @@ public class Application extends javax.swing.JFrame
 		while (listLocals.hasNext())
 		{
             	LocalDirectory local = listLocals.next();
-                model.addRow(new String[] {
+                model.addRow(new Object[] {
                     local.getPathElement().getFullPath(),
                     local.getDescription(),
                     local.getTags(),
-                    local.getTotalNumberOfFiles(),
-                    local.getTotalFileSize(),
+                    new NumberOfFiles(local.numFiles()),
+                    new DiskUsage(local.diskSpace()),
                 });
 		}
 	}
@@ -136,12 +135,13 @@ public class Application extends javax.swing.JFrame
 	{
 		DefaultTableModel model = (DefaultTableModel) machinesList.getModel();
 		TableListener.removeIfExists(model, "Id", machine.getIdentifier());
-        model.addRow(new String[] {
+        model.addRow(new Object[] {
         		machine.getName(),
         		machine.getIp() + ":" + machine.getPort(),
         		machine.getIdentifier(),
                 String.valueOf(machine.isSharing()),
-                "(Not yet supported)", "(Not yet supported)"
+                new DiskUsage(DbMachines.getTotalDiskspace(machine)),
+                new NumberOfFiles(DbMachines.getTotalNumFiles(machine))
             });
 	}
 
@@ -165,25 +165,19 @@ public class Application extends javax.swing.JFrame
 			model.removeRow(0);
 		}
 
-                model.addRow(new String[] {
-                    Services.localMachine.getName() + " (Local machine)",
-                    Services.localMachine.getIp() + ":" + Services.localMachine.getPort(),
-                    Services.localMachine.getIdentifier(),
-                    String.valueOf(Services.localMachine.isSharing()),
-                    "0", "0"
-                });
+        model.addRow(new Object[] {
+        	"Local machine: " + Services.localMachine.getName(),
+            Services.localMachine.getIp() + ":" + Services.localMachine.getPort(),
+            Services.localMachine.getIdentifier(),
+            String.valueOf(Services.localMachine.isSharing()),
+            new DiskUsage(DbMachines.getTotalDiskspace(Services.localMachine)),
+            new NumberOfFiles(DbMachines.getTotalNumFiles(Services.localMachine))
+        });
 
 		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
 		while (listRemoteMachines.hasNext())
 		{
-            	Machine remote = listRemoteMachines.next();
-                model.addRow(new String[] {
-                    remote.getName(),
-                    remote.getIp() + ":" + remote.getPort(),
-                    remote.getIdentifier(),
-                    String.valueOf(remote.isSharing()),
-                    "(Not yet supported)", "(Not yet supported)"
-                });
+			refreshRemote(listRemoteMachines.next());
 		}
 	}
 
@@ -317,7 +311,7 @@ public class Application extends javax.swing.JFrame
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
             };
             boolean[] canEdit = new boolean [] {
                 false, false, false, false, false, false
@@ -392,7 +386,7 @@ public class Application extends javax.swing.JFrame
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
             };
             boolean[] canEdit = new boolean [] {
                 false, true, true, false, false
@@ -406,6 +400,7 @@ public class Application extends javax.swing.JFrame
                 return canEdit [columnIndex];
             }
         });
+        localsView.setToolTipText("");
         jScrollPane5.setViewportView(localsView);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -547,7 +542,7 @@ public class Application extends javax.swing.JFrame
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 65, Short.MAX_VALUE)
+            .addGap(0, 64, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout settingsPanelLayout = new javax.swing.GroupLayout(settingsPanel);
@@ -992,8 +987,8 @@ public class Application extends javax.swing.JFrame
 				}
 				
 				lastGuiUpdate = now;
-				model.setValueAt(Misc.formatDiskUsage(startSize + bytesAdded), dirRow, 4);
-				model.setValueAt(Misc.formatNumberOfFiles(startNumFiles + filesAdded - filesRemoved), dirRow, 3);
+				model.setValueAt(new DiskUsage(startSize + bytesAdded), dirRow, 4);
+				model.setValueAt(new NumberOfFiles(startNumFiles + filesAdded - filesRemoved), dirRow, 3);
 			}
 		};
 	}

@@ -266,27 +266,6 @@ public class MachineView extends javax.swing.JPanel
 		((PathTreeModel) filesTree.getModel()).setRoot(directory);
     }
     
-    static final class FileSize implements Comparable<FileSize>
-    {
-    	private long size;
-    	
-    	FileSize(long fSize)
-    	{
-    		this.size = fSize;
-    	}
-    	
-    	public String toString()
-    	{
-    		return Misc.formatDiskUsage(size);
-    	}
-
-		@Override
-		public int compareTo(FileSize arg0)
-		{
-			return Long.compare(size, arg0.size);
-		}
-    }
-    
     private synchronized void listFiles(List<SharedFile> files)
     {
     	DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
@@ -308,7 +287,7 @@ public class MachineView extends javax.swing.JPanel
     		model.addRow(new Object[] {
     				String.valueOf(relPath               ),
     	    		String.valueOf(name                  ),
-    	    		new FileSize  (next.getFileSize()    ),
+    	    		new DiskUsage  (next.getFileSize()   ),
     	    		String.valueOf(next.getChecksum()    ),
     	    		String.valueOf(next.getTags()        ),
     	    		new Date      (next.getLastUpdated() ),

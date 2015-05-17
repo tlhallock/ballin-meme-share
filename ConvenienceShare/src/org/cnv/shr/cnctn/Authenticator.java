@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.Message;
@@ -67,11 +68,15 @@ public class Authenticator
 			return;
 		}
 
+		if (remotePublicKey == null && keys.length > 0)
+		{
+			remotePublicKey = keys[0];
+		}
+
 		if (DbMachines.getMachine(id) != null)
 		{
 			return;
 		}
-
 		Services.logger.println("Found new machine!");
 		updateMachineInfo(id, ip, keys);
 	}
@@ -173,18 +178,24 @@ public class Authenticator
 	
 	public boolean canAuthenticateRemote(Machine machine, PublicKey remote, PublicKey local) throws IOException
 	{
+		this.localPublicKey = local;
+		this.remotePublicKey = remote;
+		
 		// authenticate remote...
 		if (DbKeys.machineHasKey(machine, remote))
 		{
+			Services.logger.println("We have a the key for the remote.");
 			return true;
 		}
 
 		if (acceptKey(remote))
 		{
+			Services.logger.println("We have accepted the key for the remote.");
 			DbKeys.addKey(machine, remote);
 			return true;
 		}
 
+		Services.logger.println("Unable to accept remote key.");
 		// add message
 		return false;
 	}
@@ -194,6 +205,7 @@ public class Authenticator
 		PublicKey publicKey = Services.keyManager.getPublicKey();
 		if (!Services.keyManager.containsKey(localPublicKey))
 		{
+			Services.logger.println("The remote's key for us will not do.");
 			// not able to verify self to remote, add key
 			localPublicKey = publicKey;
 			final byte[] sentNaunce = Services.keyManager.createTestNaunce(this, remotePublicKey);
@@ -205,12 +217,14 @@ public class Authenticator
 		byte[] naunceRequest = Services.keyManager.createTestNaunce(this, remotePublicKey);
 		if (!Arrays.equals(publicKey.getEncoded(), localPublicKey.getEncoded()))
 		{
+			Services.logger.println("We have the required key from the remote, but it is old.");
 			// able to verify self to remote, but change key
 			connection.send(new KeyChange(localPublicKey, publicKey, decrypted, naunceRequest));
 			localPublicKey = publicKey;
 			return;
 		}
 
+		Services.logger.println("The remote has the correct key.");
 		connection.send(new ConnectionOpenAwk(decrypted, naunceRequest));
 	}
 

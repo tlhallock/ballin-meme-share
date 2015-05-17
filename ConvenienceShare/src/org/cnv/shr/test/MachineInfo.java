@@ -66,11 +66,11 @@ public class MachineInfo
 		commandStream.flush();
 	}
 	
-	public Closeable launch() throws IOException
+	public Closeable launch(boolean deleteDb) throws IOException
 	{
 		processSettings.write();
 		
-		ServerSocket socket = new ServerSocket(0);
+		server = new ServerSocket(0);
 		
 		String[] args = new String[]
 		{
@@ -78,12 +78,12 @@ public class MachineInfo
 				"-cp",
 				Misc.getClassPath(),
 				Misc.getJarName(),
-				"-d",
+				deleteDb ? "-d" : "pass",
 				"-k",  String.valueOf(10000L),
 				"-f",
 				processSettings.getSettingsFile().getAbsolutePath(),
 				"-t",
-				InetAddress.getLoopbackAddress().getHostAddress(), String.valueOf(socket.getLocalPort()),
+				InetAddress.getLoopbackAddress().getHostAddress(), String.valueOf(server.getLocalPort()),
 		};
 		process = Runtime.getRuntime().exec(args, null, new File(Misc.getJarPath()));
 
@@ -102,7 +102,7 @@ public class MachineInfo
 		new OutputThread(name, System.err, new BufferedReader(new InputStreamReader(process.getErrorStream()))).start();
 		new OutputThread(name, System.out, new BufferedReader(new InputStreamReader(process.getInputStream()))).start();
 		
-		current = socket.accept();
+		current = server.accept();
 		commandStream = new ObjectOutputStream(current.getOutputStream());
 		
 		return new Closeable() {
