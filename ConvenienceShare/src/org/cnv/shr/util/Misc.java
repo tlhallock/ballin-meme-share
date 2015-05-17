@@ -156,7 +156,7 @@ public class Misc
 		if (Files.isSymbolicLink(path) || Files.isRegularFile(path))
 		{
 			System.out.println("Would delete " + path.toString());
-//			Files.delete(path);
+			Files.delete(path);
 		}
 		else if (Files.isDirectory(path))
 		{
@@ -165,9 +165,9 @@ public class Misc
 			{
 				rm(child);
 			}
+			Files.delete(path);
 		}
 	}
-	
 
 	public static String getJarPath()
 	{

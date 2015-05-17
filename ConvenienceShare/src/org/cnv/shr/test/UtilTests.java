@@ -1,5 +1,11 @@
 package org.cnv.shr.test;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.dmn.IpTester;
 import org.cnv.shr.dmn.Logger;
@@ -9,15 +15,8 @@ import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.CircularOutputStream;
 import org.cnv.shr.util.Find;
 import org.cnv.shr.util.Misc;
-import org.junit.Assert;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -26,7 +25,7 @@ public class UtilTests
 	static File settingsFile = new File("test_settings.props");
 	
 	@BeforeClass
-	public void setUpClass()
+	public static void setUpClass()
 	{
 		Services.settings = new Settings(settingsFile);
 		Services.settings.logToFile.set(false);
@@ -34,7 +33,7 @@ public class UtilTests
 	}
 
 	@AfterClass
-	public void tearDown() throws Exception
+	public static void tearDown() throws Exception
 	{
 		settingsFile.delete();
 	}
@@ -104,5 +103,14 @@ public class UtilTests
 		
 		// TODO: asserts...
 		file.delete();
+	}
+	
+	@Test
+	public void testFs() throws IOException
+	{
+		Path createTempDirectory = Files.createTempDirectory("root");
+		String path = createTempDirectory.toFile().getAbsolutePath();
+		TestUtils.makeSampleDirectories(path, 3, 10, 1024, 20);
+		Misc.rm(createTempDirectory);
 	}
 }
