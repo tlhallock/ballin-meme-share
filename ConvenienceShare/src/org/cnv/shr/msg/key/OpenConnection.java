@@ -39,7 +39,7 @@ public class OpenConnection extends KeyMessage
 	}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void print(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(sourcePublicKey);
 		buffer.append(destinationPublicKey);

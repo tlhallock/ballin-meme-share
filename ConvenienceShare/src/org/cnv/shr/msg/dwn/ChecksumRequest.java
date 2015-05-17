@@ -12,7 +12,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class ChecksumRequest extends DownloadMessage
 {
-	public static int TYPE = 31;
+	public static int TYPE = 32;
 
 	public ChecksumRequest(RemoteFile remoteFile)
 	{

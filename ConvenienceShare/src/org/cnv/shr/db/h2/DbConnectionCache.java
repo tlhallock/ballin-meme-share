@@ -6,7 +6,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Hashtable;
 
-import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 
@@ -23,7 +22,6 @@ public class DbConnectionCache
 		{
 			Services.logger.println("Deleting database.");
 			DbTables.deleteDb(c);
-			DbObjects.PELEM.debug(c);
 		}
 		Services.logger.println("Creating database.");
 		DbTables.createDb(c);

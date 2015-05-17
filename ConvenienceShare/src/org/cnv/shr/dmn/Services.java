@@ -1,6 +1,5 @@
 package org.cnv.shr.dmn;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -9,7 +8,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateEncodingException;
 import java.security.spec.InvalidKeySpecException;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
@@ -26,7 +24,6 @@ import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.dwn.DownloadManager;
 import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.dmn.mn.Arguments;
-import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.mn.Quiter;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.mdl.Machine;
@@ -143,7 +140,7 @@ public class Services
 		
 //		Also need to attempt remote authentications...
 		
-		java.awt.EventQueue.invokeLater(new Runnable()
+		userThreads.execute(new Runnable()
 		{
 			public void run()
 			{
@@ -168,6 +165,7 @@ public class Services
 
 	public static void deInitialize()
 	{
+		if (handlers != null)
 		for (int i = 0; i < handlers.length; i++)
 		{
 			if (handlers[i] != null)

@@ -45,9 +45,9 @@ public class WhoIAm extends MachineFound
 	}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void print(AbstractByteWriter buffer) throws IOException
 	{
-		super.write(buffer);
+		super.print(buffer);
 		buffer.append(keys.length);
 		for (PublicKey key : keys)
 		{

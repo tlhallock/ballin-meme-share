@@ -22,7 +22,7 @@ public class DoneMessage extends Message
 	protected void parse(ByteReader reader) throws IOException {}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void print(AbstractByteWriter buffer) throws IOException
 	{
 		for (int i = 0; i < DONE_PADDING; i++)
 		{

@@ -33,7 +33,7 @@ public class TestUtils
 			int totalFilesCreated, int totalNumFiles,
 			LinkedList<File> returnValue) throws IOException
 	{
-		if (totalFilesCreated >= totalFilesCreated || depth >= maxDepth)
+		if (totalFilesCreated >= totalNumFiles || depth >= maxDepth)
 		{
 			return;
 		}

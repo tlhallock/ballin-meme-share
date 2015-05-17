@@ -87,7 +87,7 @@ public class DirectoryList extends Message
 	}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void print(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(name);
 		buffer.append(currentPath);

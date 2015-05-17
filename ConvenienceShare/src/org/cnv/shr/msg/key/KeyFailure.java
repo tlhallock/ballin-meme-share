@@ -25,7 +25,7 @@ public class KeyFailure extends KeyMessage
 	protected void parse(ByteReader reader) throws IOException {}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) {}
+	protected void print(AbstractByteWriter buffer) {}
 
 	public static int TYPE = 26;
 	@Override

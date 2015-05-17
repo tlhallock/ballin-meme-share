@@ -14,7 +14,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class ChecksumResponse extends DownloadMessage
 {
-	public static int TYPE = 32;
+	public static int TYPE = 33;
 
 	public ChecksumResponse(SharedFile shared)
 	{

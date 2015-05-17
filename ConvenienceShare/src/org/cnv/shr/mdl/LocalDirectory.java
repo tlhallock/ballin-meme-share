@@ -13,11 +13,18 @@ public class LocalDirectory extends RootDirectory
 {
 	private PathElement path;
 	
-	public LocalDirectory(PathElement path) throws IOException
+	public LocalDirectory(PathElement path, String name) throws IOException
 	{
 		super(null);
 		machine = Services.localMachine;
-		name = path.getUnbrokenName();
+		if (name == null)
+		{
+			this.name = path.getUnbrokenName();
+		}
+		else
+		{
+			this.name = name;
+		}
 		this.path = path;
 		totalFileSize = -1;
 		totalNumFiles = -1;

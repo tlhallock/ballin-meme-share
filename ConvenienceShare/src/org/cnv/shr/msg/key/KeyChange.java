@@ -40,7 +40,7 @@ public class KeyChange extends KeyMessage
 	}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void print(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(oldKey        );
 		buffer.append(newKey        );

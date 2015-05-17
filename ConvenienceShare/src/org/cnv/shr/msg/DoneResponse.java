@@ -27,7 +27,7 @@ public class DoneResponse extends Message
 	protected void parse(ByteReader reader) throws IOException {}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException {}
+	protected void print(AbstractByteWriter buffer) throws IOException {}
 
 	@Override
 	public void perform(Communication connection) throws Exception

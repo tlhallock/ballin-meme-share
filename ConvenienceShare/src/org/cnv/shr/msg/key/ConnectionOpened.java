@@ -40,7 +40,7 @@ public class ConnectionOpened extends KeyMessage
 	}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void print(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.appendVarByteArray(decryptedNaunce);
 		buffer.appendVarByteArray(encryptedAesKey);

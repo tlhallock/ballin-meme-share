@@ -27,7 +27,7 @@ public class RevokeKey extends Message
 	}
 
 	@Override
-	protected void write(AbstractByteWriter buffer)
+	protected void print(AbstractByteWriter buffer)
 	{
 		// TODO Auto-generated method stub
 		

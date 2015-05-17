@@ -99,15 +99,16 @@ public class TestActions
 	public static class ADD_LOCAL extends TestAction
 	{
 		String local;
+		String name;
 		
-		ADD_LOCAL(String local)
+		ADD_LOCAL(String local, String name)
 		{
 			this.local = local;
 		}
 		
 		public void perform()
 		{
-			UserActions.addLocal(new File(local), true);
+			UserActions.addLocal(new File(local), true, name);
 		}
 	};
 	public static class SYNC_REMOTE extends TestAction

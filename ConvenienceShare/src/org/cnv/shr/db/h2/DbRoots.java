@@ -115,15 +115,14 @@ public class DbRoots
 				local.fill(c, executeQuery, new DbLocals().setObject(Services.localMachine).setObject(pathElement));
 				return local;
 			}
-			
-			
-			LocalDirectory local = new LocalDirectory(pathElement);
-			local.save();
-			DbPaths.pathLiesIn(pathElement, local);
-			Services.notifications.localChanged(local);
-			return local;
+//			LocalDirectory local = new LocalDirectory(pathElement);
+//			local.save();
+//			DbPaths.pathLiesIn(pathElement, local);
+//			Services.notifications.localChanged(local);
+//			return local;
+			return null;
 		}
-		catch (SQLException | IOException e)
+		catch (SQLException e)
 		{
 			Services.logger.print(e);
 			return null;

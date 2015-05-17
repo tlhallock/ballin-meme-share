@@ -62,7 +62,9 @@ public abstract class RootDirectory extends DbObject<Integer>
 	@Override
 	public boolean save(Connection c) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement("merge into ROOT key(PELEM) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?);");)
+		try (PreparedStatement stmt = c.prepareStatement("merge into ROOT key(PELEM) VALUES ("
+				+ "(select R_ID from ROOT where MID=? and RNAME=?)"
+				+ ", ?, ?, ?, ?, ?, ?, ?, ?);");)
 		{
 			int ndx = 1;
 			
@@ -75,10 +77,13 @@ public abstract class RootDirectory extends DbObject<Integer>
 //				stmt = c.prepareStatement("merge into ROOT key(R_ID)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
 //				stmt.setInt(ndx++, getId());
 //			}
+			stmt.setInt(ndx++, getMachine().getId());
+			stmt.setString(ndx++, getName());
+			
 			stmt.setLong(ndx++, getPathElement().getId());
 			stmt.setString(ndx++, getTags());
 			stmt.setString(ndx++, getDescription());
-			stmt.setInt(ndx++, machine.getId());
+			stmt.setInt(ndx++, getMachine().getId());
 			stmt.setBoolean(ndx++, isLocal());
 			stmt.setLong(ndx++, totalFileSize);
 			stmt.setLong(ndx++, totalNumFiles);

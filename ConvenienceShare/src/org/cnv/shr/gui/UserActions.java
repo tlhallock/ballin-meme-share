@@ -2,17 +2,20 @@ package org.cnv.shr.gui;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.LinkedList;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.FindMachines;
@@ -144,7 +147,7 @@ public class UserActions
 		});
 	}
 
-	public static void addLocal(final File localDirectory, final boolean sync)
+	public static void addLocal(final File localDirectory, final boolean sync, final String name)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -153,13 +156,19 @@ public class UserActions
 				try
 				{
 					Services.logger.println("Sharing " + localDirectory);
-					LocalDirectory local = DbRoots.getLocal(localDirectory.getCanonicalPath());
+					PathElement pathElement = DbPaths.getPathElement(localDirectory.getCanonicalPath());
+					
+					LocalDirectory local = new LocalDirectory(pathElement, name);
+					local.save();
+					DbPaths.pathLiesIn(pathElement, local);
+					Services.notifications.localChanged(local);
+					
 					if (sync)
 					{
 						sync(local);
 					}
 				}
-				catch (IOException e1)
+				catch (SQLException | IOException e1)
 				{
 					Services.logger.println("Unable to get file path to share: " + localDirectory);
 					Services.logger.print(e1);

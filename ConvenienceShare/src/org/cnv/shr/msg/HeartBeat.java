@@ -39,7 +39,7 @@ public class HeartBeat extends Message
 	protected void parse(ByteReader reader) throws IOException {}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) {}
+	protected void print(AbstractByteWriter buffer) {}
 	
 	public static int TYPE = 5;
 	protected int getType()

@@ -248,6 +248,7 @@ public class DbTables
 		{
 			try (PreparedStatement stmt = c.prepareStatement(statements[i] + ";");)
 			{
+				System.out.println("Executing " + statements[i]);
 				stmt.execute();
 			}
 		}

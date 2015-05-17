@@ -47,7 +47,7 @@ public class KeyNotFound extends KeyMessage
 	}
 
 	@Override
-	protected void write(AbstractByteWriter buffer) throws IOException
+	protected void print(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(tests.size());
 		for (Entry<PublicKey, byte[]> entry : tests.entrySet())

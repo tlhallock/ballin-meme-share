@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.msg.dwn.ChecksumRequest;
 import org.cnv.shr.msg.dwn.ChecksumResponse;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkRequest;
@@ -67,7 +68,7 @@ public class MessageReader
 		add(new MessageIdentifier(WhoIAm.class                     ));
 		add(new MessageIdentifier(EmptyMessage.class               ));
 		add(new MessageIdentifier(DoneResponse.class               ));
-		add(new MessageIdentifier(ChunkRequest.class               ));
+		add(new MessageIdentifier(ChecksumRequest.class            ));
 		add(new MessageIdentifier(ChecksumResponse.class           ));
 
 		Services.logger.println("Message map:\n" + this);
@@ -86,7 +87,8 @@ public class MessageReader
 		MessageIdentifier messageIdentifier = identifiers.get(type);
 		if (messageIdentifier != null)
 		{
-			Services.logger.println("Type " + type + " is already used by " + messageIdentifier.name + " so " + identifier.name + " cannot also use it.");
+			Services.logger.println("Type " + type + " is already used by " + messageIdentifier.name 
+					+ " so " + identifier.name + " cannot also use it.");
 			Services.logger.println(this);
 			Services.quiter.quit();
 			return;

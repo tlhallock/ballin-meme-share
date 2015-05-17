@@ -746,7 +746,7 @@ public class Application extends javax.swing.JFrame
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-        	UserActions.addLocal(fc.getSelectedFile(), true);
+        	UserActions.addLocal(fc.getSelectedFile(), true, null);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 

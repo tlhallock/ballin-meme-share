@@ -99,7 +99,7 @@ public abstract class SharedFile extends DbObject<Integer>
 	public boolean save(Connection c) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-				 "merge into SFILE key(PELEM, ROOT) values ((select F_ID from S_FILE where PELEM=? and ROOT=?), ?, ?, ?, ?, ?, ?, ?, ?);"
+				 "merge into SFILE key(PELEM, ROOT) values ((select F_ID from SFILE where PELEM=? and ROOT=?), ?, ?, ?, ?, ?, ?, ?, ?);"
 				, Statement.RETURN_GENERATED_KEYS);)
 		{
 			int ndx=1;

@@ -30,7 +30,7 @@ public abstract class DownloadMessage extends Message
 	}
 
 	@Override
-	protected final void write(AbstractByteWriter buffer) throws IOException
+	protected final void print(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(descriptor);
 		finishWriting(buffer);
