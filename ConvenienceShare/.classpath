@@ -2,8 +2,10 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="libs/org.json-20120521.jar"/>
-	<classpathentry kind="lib" path="libs/sqlite-jdbc-3.8.7.jar"/>
-	<classpathentry kind="lib" path="libs/h2-1.4.187.jar"/>
+	<classpathentry kind="lib" path="lib/FlexiProvider-1.7p7.signed.jar"/>
+	<classpathentry kind="lib" path="lib/CoDec-build17-jdk13.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="lib/h2-1.4.187.jar"/>
+	<classpathentry kind="lib" path="lib/portmapper-2.0.0-alpha1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

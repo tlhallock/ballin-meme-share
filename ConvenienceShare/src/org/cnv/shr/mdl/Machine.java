@@ -11,12 +11,7 @@ import java.util.LinkedList;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
-import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.util.Misc;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class Machine extends DbObject<Integer>
 {
@@ -32,7 +27,6 @@ public class Machine extends DbObject<Integer>
 	private int nports;
 	private boolean allowsMessages;
 	
-	private LinkedList<PublicKey> publicKeys = new LinkedList<>();
 	protected boolean acceptPeers;
 	
 	
@@ -207,23 +201,6 @@ public class Machine extends DbObject<Integer>
 	public String getUrl()
 	{
 		return getIp() + ":" + getPort();
-	}
-	
-	
-	public void append(JSONArray machines) throws JSONException
-	{
-		LinkedList<String> keys = new LinkedList<>();
-		for (PublicKey key : publicKeys)
-		{
-			keys.add(Misc.format(key.getEncoded()));
-		}
-		JSONObject object = new JSONObject();
-		object.put("ip", ip);
-		object.put("port", port);
-		object.put("keys", new JSONArray(keys));
-		object.put("lastActive", lastActive);
-		
-		machines.put(machines.length(), object);
 	}
 	
 	public static class LocalMachine extends Machine
