@@ -1,9 +1,12 @@
 package org.cnv.shr.cnctn;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,22 +26,30 @@ public class ConnectionManager
 		if (index < 0)
 		{
 			// Should try all other ports too...
-			return openConnection(url, Services.settings.servePortBegin.get(), null, acceptKeys);
+			return openConnection(url, Services.settings.servePortBegin.get(), 1, null, acceptKeys);
 		}
 		else
 		{
-			return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), null, acceptKeys);
+			return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), 1, null, acceptKeys);
 		}
 	}
 	public Communication openConnection(Machine m, boolean acceptKeys) throws UnknownHostException, IOException
 	{
-		return openConnection(m.getIp(), m.getPort(), DbKeys.getKey(m), acceptKeys);
+		return openConnection(m.getIp(), m.getPort(), m.getNumberOfPorts(), DbKeys.getKey(m), acceptKeys);
 	}
 	
-	private synchronized Communication openConnection(String ip, int port, final PublicKey remoteKey, boolean acceptAnyKeys) throws UnknownHostException, IOException
+	private synchronized Communication openConnection(String ip, 
+			int portBegin,
+			int numPorts,
+			final PublicKey remoteKey, 
+			boolean acceptAnyKeys) throws UnknownHostException, IOException
 	{
 		Authenticator authentication = new Authenticator(acceptAnyKeys, remoteKey, Services.keyManager.getPublicKey());
-		final Communication connection = new Communication(authentication, ip, port);
+		Communication connection = connect(authentication, ip, portBegin, portBegin + Math.min(50, numPorts));
+		if (connection == null)
+		{
+			return null;
+		}
 		connection.send(new WhoIAm());
 		connection.send(new OpenConnection(remoteKey, Services.keyManager.createTestNaunce(authentication, remoteKey)));
 		Services.notifications.connectionOpened(connection);
@@ -46,6 +57,29 @@ public class ConnectionManager
 		synchronized (runnables) { runnables.add(connectionRunnable); }
 		Services.connectionThreads.execute(connectionRunnable);
 		return authentication.waitForAuthentication() ? connection : null;
+	}
+	
+	private static Communication connect(Authenticator authentication, String ip, int portBegin, int portEnd) throws UnknownHostException, IOException
+	{
+		ArrayList<Integer> possibles = new ArrayList<>(portEnd - portBegin);
+		for (int port = portBegin; port < portEnd; port++)
+		{
+			possibles.add(port);
+		}
+		Collections.shuffle(possibles);
+		for (int port : possibles)
+		{
+			try
+			{
+				return new Communication(authentication, ip, port);
+			}
+			catch (ConnectException ex)
+			{
+				Services.logger.println("Unable to connect, trying others if available.");
+				Services.logger.print(ex);
+			}
+		}
+		return null;
 	}
 	
 	public synchronized void handleConnection(Socket accepted)

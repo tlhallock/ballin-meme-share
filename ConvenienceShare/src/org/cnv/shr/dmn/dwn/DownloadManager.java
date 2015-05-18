@@ -7,21 +7,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionManager;
-import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
-import org.cnv.shr.mdl.LocalDirectory;
-import org.cnv.shr.mdl.LocalFile;
-import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.dwn.ChecksumRequest;
 
@@ -29,22 +19,24 @@ public class DownloadManager
 {
 	private HashMap<SharedFileId, DownloadInstance> downloads = new HashMap<>();
 
-	public void download(SharedFile remoteFile) throws UnknownHostException, IOException
+	public DownloadInstance download(SharedFile remoteFile) throws UnknownHostException, IOException
 	{
 		if (remoteFile.isLocal())
 		{
 			Services.logger.println("Trying to download local file " + remoteFile);
-			return;
+			return null;
 		}
-		download((RemoteFile) remoteFile);
+		return download((RemoteFile) remoteFile);
 	}
 	
 	public DownloadInstance download(RemoteFile file) throws UnknownHostException, IOException
 	{
-		return download(new Download(file));
+		DownloadInstance download = createDownload(new Download(file));
+		download.begin();
+		return download;
 	}
 	
-	public synchronized DownloadInstance download(Download d) throws UnknownHostException, IOException
+	public synchronized DownloadInstance createDownload(Download d) throws UnknownHostException, IOException
 	{
 		DownloadInstance prev = downloads.get(d.getFile().getId());
 		if (prev != null)
@@ -66,6 +58,7 @@ public class DownloadManager
 		if (checksum == null)
 		{
 			requestChecksum(d.getFile());
+			return null;
 		}
 		
 		DownloadInstance instance = new DownloadInstance(d);
@@ -104,15 +97,21 @@ public class DownloadManager
 			while (dbIterator.hasNext())
 			{
 				final Download next = dbIterator.next();
-				Services.userThreads.execute(new Runnable() { public void run() {
-				try
+				Services.userThreads.execute(new Runnable()
 				{
-					download(next);
-				}
-				catch (IOException e)
-				{
-					Services.logger.print(e);
-				}}});
+					@Override
+					public void run()
+					{
+						try
+						{
+							createDownload(next).begin();
+						}
+						catch (IOException e)
+						{
+							Services.logger.print(e);
+						}
+					}
+				});
 			}
 		}
 		catch (SQLException e)

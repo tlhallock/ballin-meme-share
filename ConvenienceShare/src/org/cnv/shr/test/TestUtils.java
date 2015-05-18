@@ -1,14 +1,18 @@
 package org.cnv.shr.test;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.Random;
 
 import org.cnv.shr.util.Misc;
+import org.junit.Assert;
 
 public class TestUtils
 {
@@ -18,7 +22,21 @@ public class TestUtils
 	
 	public static void assertFilesAreEqual(File f1, File f2)
 	{
-		
+		try (InputStream in1 = new BufferedInputStream(new FileInputStream(f1));
+			 InputStream in2 = new BufferedInputStream(new FileInputStream(f2));)
+		{
+			int readByte;
+			do
+			{
+				readByte = in1.read();
+				Assert.assertEquals(readByte, in2.read());
+			} while (readByte >= 0);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			Assert.fail("Had exception.");
+		}
 	}
 	
 	public static LinkedList<File> makeSampleDirectories(String root, int depth, int filesPerDirectory, long fileSize, int totalNumFiles) throws IOException

@@ -57,11 +57,24 @@ public class Notifications
 	
 	public void downloadAdded(DownloadInstance d)
 	{
-		
+		for (NotificationListener listener : listeners)
+		{
+			listener.downloadAdded(d);
+		}
 	}
 	public void downloadRemoved(DownloadInstance d)
 	{
-		
+		for (NotificationListener listener : listeners)
+		{
+			listener.downloadRemoved(d);
+		}
+	}
+	public void downloadDone(DownloadInstance d)
+	{
+		for (NotificationListener listener : listeners)
+		{
+			listener.downloadDone(d);
+		}
 	}
 
 	public void serveAdded(ServeInstance serveInstance)
@@ -92,7 +105,7 @@ public class Notifications
 		}
 	}
 	
-	abstract class NotificationListener
+	public static abstract class NotificationListener
 	{
 		public void localsChanged()                          {}
 		public void localChanged(LocalDirectory local)       {}
@@ -100,6 +113,7 @@ public class Notifications
 		public void remotesChanged(RemoteDirectory remote)   {}
 		public void downloadAdded(DownloadInstance d)        {}
 		public void downloadRemoved(DownloadInstance d)      {}
+		public void downloadDone(DownloadInstance d)         {}
 		public void serveAdded(ServeInstance s)              {}
 		public void serveRemoved(ServeInstance s)            {}
 		public void connectionOpened(Communication c)        {}

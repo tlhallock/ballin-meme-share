@@ -1,7 +1,6 @@
 
 package org.cnv.shr.sync;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -22,19 +21,20 @@ import org.cnv.shr.util.FileOutsideOfRootException;
  * Instead, this keeps a stack inside the LocalDirectorySyncIterator of synchronization tasks to be performed.
  *
  */
-public abstract class RootSynchronizer implements Closeable
+public abstract class RootSynchronizer implements Runnable
 {
 	private static final Pair[] dummy = new Pair[0];
 	
-	int changeCount;
+	private int changeCount;
 
-	String currentFile;
-	SyncrhonizationTaskIterator iterator;
-	RootDirectory local;
-	LinkedList<SynchronizationListener> listeners = new LinkedList<>();
-	boolean quit;
+	protected RootDirectory local;
 	
-	public RootSynchronizer(RootDirectory remoteDirectory, SyncrhonizationTaskIterator iterator) throws IOException
+	private String currentFile;
+	private SyncrhonizationTaskIterator iterator;
+	private LinkedList<SynchronizationListener> listeners = new LinkedList<>();
+	private boolean quit;
+	
+	public RootSynchronizer(final RootDirectory remoteDirectory, final SyncrhonizationTaskIterator iterator) throws IOException
 	{
 		this.iterator = iterator;
 		this.local = remoteDirectory;
@@ -43,19 +43,28 @@ public abstract class RootSynchronizer implements Closeable
 	public void quit()
 	{
 		quit = true;
+		try
+		{
+			iterator.close();
+		}
+		catch (final IOException e)
+		{
+			Services.logger.print(e);
+		}
 	}
 	
-	public void addListener(SynchronizationListener listener)
+	public void addListener(final SynchronizationListener listener)
 	{
 		listeners.add(listener);
 	}
 	
-	public void removeListener(SynchronizationListener listener)
+	public void removeListener(final SynchronizationListener listener)
 	{
 		listeners.remove(listener);
 	}
 	
-	public void synchronize()
+	@Override
+	public void run()
 	{
 		SynchronizationTask task = null;
 		while (!quit && (task = iterator.next()) != null)
@@ -66,14 +75,26 @@ public abstract class RootSynchronizer implements Closeable
 		{
 			Services.notifications.localsChanged();
 		}
+		try
+		{
+			iterator.close();
+		}
+		catch (final IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
-	private void synchronize(SynchronizationTask task)
+	private void synchronize(final SynchronizationTask task)
 	{
-		HashMap<String, FileSource> files = key(task.files);
-		HashSet<String> accountedFor = new HashSet<>();
+		final HashMap<String, FileSource> files = key(task.files);
+		final HashSet<String> accountedFor = new HashSet<>();
 		
 		currentFile = task.current.getFullPath();
+		for (final SynchronizationListener listener : listeners)
+		{
+			listener.beganDirectory(currentFile);
+		}
 
 		if (false)
 		{
@@ -82,27 +103,27 @@ public abstract class RootSynchronizer implements Closeable
 			Services.logger.println("DB: " + task.dbPaths);
 		}
 		
-		LinkedList<Pair<? extends FileSource>> subDirectories = new LinkedList<>();
+		final LinkedList<Pair> subDirectories = new LinkedList<>();
 		
-		for (PathElement element : task.dbPaths)
+		for (final PathElement element : task.dbPaths)
 		{
 			try
 			{
 				testOnFs(files, accountedFor, subDirectories, element);
 			}
-			catch (Exception e)
+			catch (final Exception e)
 			{
 				Services.logger.print(e);
 			}
 		}
 		
-		for (FileSource f : files.values())
+		for (final FileSource f : files.values())
 		{
 			try
 			{
 				testInDb(task, accountedFor, subDirectories, f);
 			}
-			catch (IOException e)
+			catch (final IOException e)
 			{
 				Services.logger.print(e);
 			}
@@ -112,18 +133,21 @@ public abstract class RootSynchronizer implements Closeable
 		Thread.yield();
 	}
 
-	private void testInDb(SynchronizationTask task, HashSet<String> accountedFor, LinkedList<Pair<? extends FileSource>> subDirectories, FileSource f) throws IOException
+	private void testInDb(final SynchronizationTask task, 
+			final HashSet<String> accountedFor, 
+			final LinkedList<Pair> subDirectories, 
+			final FileSource f) throws IOException
 	{
-		String name = PathElement.sanitizeFilename(f);
+		final String name = PathElement.sanitizeFilename(f);
 		if (name == null 
-				|| accountedFor.contains(f.getName())
+				|| accountedFor.contains(name)
 				|| !local.pathIsSecure(f.getCanonicalPath()))
 		{
 			return;
 		}
 		
 		// add path to database
-		PathElement element = DbPaths.getPathElement(task.current, name);
+		final PathElement element = DbPaths.getPathElement(task.current, name);
 		DbPaths.pathLiesIn(element, local);
 		
 		if (f.isFile())
@@ -137,12 +161,12 @@ public abstract class RootSynchronizer implements Closeable
 		}
 	}
 
-	private void testOnFs(HashMap<String, FileSource> files, HashSet<String> accountedFor, LinkedList<Pair<? extends FileSource>> subDirectories, PathElement element) throws IOException, SQLException
+	private void testOnFs(final HashMap<String, FileSource> files, final HashSet<String> accountedFor, final LinkedList<Pair> subDirectories, final PathElement element) throws IOException, SQLException
 	{
 		accountedFor.add(element.getUnbrokenName());
 
-		FileSource fsCopy = files.get(element.getUnbrokenName());
-		SharedFile dbVersion = DbFiles.getFile(local, element);
+		final FileSource fsCopy = files.get(element.getUnbrokenName());
+		final SharedFile dbVersion = DbFiles.getFile(local, element);
 		if (fsCopy == null)
 		{
 			if (dbVersion != null)
@@ -181,13 +205,13 @@ public abstract class RootSynchronizer implements Closeable
 		update(dbVersion);
 	}
 
-	private void remove(SharedFile dbVersion) throws SQLException
+	private void remove(final SharedFile dbVersion) throws SQLException
 	{
 		// delete stale file
 		DbFiles.delete(dbVersion);
 		changeCount++;
 
-		for (SynchronizationListener listener : listeners)
+		for (final SynchronizationListener listener : listeners)
 		{
 			listener.fileRemoved(dbVersion);
 		}
@@ -195,7 +219,7 @@ public abstract class RootSynchronizer implements Closeable
 
 	protected abstract boolean updateFile(SharedFile file) throws SQLException;
 	
-	private void update(SharedFile dbVersion) throws SQLException
+	private void update(final SharedFile dbVersion) throws SQLException
 	{
 		// update file
 		if (!updateFile(dbVersion))
@@ -203,47 +227,47 @@ public abstract class RootSynchronizer implements Closeable
 			return;
 		}
 		changeCount++;
-		for (SynchronizationListener listener : listeners)
+		for (final SynchronizationListener listener : listeners)
 		{
 			listener.fileUpdated(dbVersion);
 		}
 	}
 
-	private void addFile(PathElement element, FileSource fsCopy)
+	private void addFile(final PathElement element, final FileSource fsCopy)
 	{
 		try
 		{
-			SharedFile lFile = fsCopy.create(local, element);
+			final SharedFile lFile = fsCopy.create(local, element);
 			if (lFile.save())
 			{
 				changeCount++;
-				for (SynchronizationListener listener : listeners)
+				for (final SynchronizationListener listener : listeners)
 				{
 					listener.fileAdded(lFile);
 				}
 			}
 		}
-		catch (FileOutsideOfRootException ex)
+		catch (final FileOutsideOfRootException ex)
 		{
 			Services.logger.println("Skipping symbolic link: "  + fsCopy);
 		}
-		catch (IOException ex)
+		catch (final IOException ex)
 		{
 			Services.logger.println("Unable to get path of file: " + fsCopy);
 			Services.logger.print(ex);
 		}
-		catch (SQLException e)
+		catch (final SQLException e)
 		{
 			Services.logger.print(e);
 		}
 	}
 
-	private static HashMap<String, FileSource> key(ArrayList<FileSource> files)
+	private static HashMap<String, FileSource> key(final ArrayList<FileSource> files)
 	{
-		HashMap<String, FileSource> returnValue = new HashMap<>();
-		for (FileSource file : files)
+		final HashMap<String, FileSource> returnValue = new HashMap<>();
+		for (final FileSource file : files)
 		{
-			String name = PathElement.sanitizeFilename(file);
+			final String name = PathElement.sanitizeFilename(file);
 			if (name != null)
 			{
 				returnValue.put(name, file);
@@ -252,13 +276,9 @@ public abstract class RootSynchronizer implements Closeable
 		return returnValue;
 	}
 	
-	public void close() throws IOException
-	{
-		iterator.close();
-	}
-
 	public static interface SynchronizationListener
 	{
+		void beganDirectory(String str);
 		void fileAdded(SharedFile f);
 		void fileRemoved(SharedFile f);
 		void fileUpdated(SharedFile f);

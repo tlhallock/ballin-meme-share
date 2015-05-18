@@ -49,7 +49,7 @@ public class MessageReader
 		add(new MessageIdentifier(MachineFound.class               ));
 		add(new MessageIdentifier(UpdateCode.class                 ));
 		add(new MessageIdentifier(DoneMessage.class                ));
-		add(new MessageIdentifier(DirectoryList.class              ));
+		add(new MessageIdentifier(PathList.class              ));
 		add(new MessageIdentifier(RootList.class                   ));
 		add(new MessageIdentifier(FindMachines.class               ));
 		add(new MessageIdentifier(RequestAccess.class              ));

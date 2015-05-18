@@ -20,6 +20,7 @@ public class FileFileSource implements FileSource
 {
 	private Path f;
 	
+	
 	public FileFileSource(File f)
 	{
 		this.f = Paths.get(f.getPath());
@@ -41,11 +42,12 @@ public class FileFileSource implements FileSource
 	}
 
 	@Override
-	public Iterator<FileSource> listFiles() throws IOException
+	public FileSourceIterator listFiles() throws IOException
 	{
-		return new Iterator<FileSource>()
+		return new FileSourceIterator()
 		{
-			DirectoryStream<Path> stream = Files.newDirectoryStream(f);
+			private DirectoryStream<Path> stream = Files.newDirectoryStream(f);
+			
 			Iterator<Path> it = stream.iterator();
 
 			@Override
@@ -65,20 +67,15 @@ public class FileFileSource implements FileSource
 			{
 				it.remove();
 			}
-			
-			public void finalize()
+
+			@Override
+			public void close() throws IOException
 			{
-				try
-				{
-					stream.close();
-				}
-				catch (IOException e)
-				{
-					Services.logger.print(e);
-				}
+				stream.close();
 			}
 		};
 	}
+	
 	@Override
 	public String getName()
 	{
@@ -107,6 +104,7 @@ public class FileFileSource implements FileSource
 			return f.toFile().getAbsolutePath();
 		}
 	}
+	
 	@Override
 	public long getFileSize()
 	{
@@ -118,6 +116,4 @@ public class FileFileSource implements FileSource
 	{
 		return new LocalFile((LocalDirectory) local2, element);
 	}
-	@Override
-	public void close() throws IOException {}
 }

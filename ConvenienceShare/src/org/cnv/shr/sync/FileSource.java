@@ -9,10 +9,10 @@ import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.FileOutsideOfRootException;
 
-public interface FileSource extends Closeable
+public interface FileSource
 {
 	boolean stillExists();
-	Iterator<FileSource> listFiles() throws IOException;
+	FileSourceIterator listFiles() throws IOException;
 	String getName();
 	boolean isDirectory();
 	boolean isFile();
@@ -21,7 +21,7 @@ public interface FileSource extends Closeable
 	SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException;
 	
 
-	static Iterator<FileSource> NULL_ITERATOR = new Iterator<FileSource>()
+	static FileSourceIterator NULL_ITERATOR = new FileSourceIterator()
 	{
 		@Override
 		public boolean hasNext()
@@ -37,5 +37,10 @@ public interface FileSource extends Closeable
 
 		@Override
 		public void remove() {}
+
+		@Override
+		public void close() throws IOException {}
 	};
+	
+	interface FileSourceIterator extends Iterator<FileSource>, Closeable {}
 }

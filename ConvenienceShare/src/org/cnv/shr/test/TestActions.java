@@ -10,7 +10,6 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
@@ -41,6 +40,7 @@ public class TestActions
 			this.url = url;
 		}
 		
+		@Override
 		public void perform()
 		{
 			UserActions.addMachine(url);
@@ -63,6 +63,7 @@ public class TestActions
 		{
 			this.ident = ident;
 		}
+		@Override
 		public void perform()
 		{
 			UserActions.syncRoots(DbMachines.getMachine(ident));
@@ -72,6 +73,7 @@ public class TestActions
 	{
 		private String ident;
 		
+		@Override
 		public void perform()
 		{
 			UserActions.findMachines(DbMachines.getMachine(ident));
@@ -79,6 +81,7 @@ public class TestActions
 	};
 	public static class SYNC_ALL_LOCAL extends TestAction
 	{
+		@Override
 		public void perform()
 		{
 			UserActions.syncAllLocals();
@@ -93,6 +96,7 @@ public class TestActions
 			this.local = local;
 		}
 		
+		@Override
 		public void perform()
 		{
 			UserActions.sync(DbRoots.getLocal(local));
@@ -106,8 +110,10 @@ public class TestActions
 		ADD_LOCAL(String local, String name)
 		{
 			this.local = local;
+			this.name = name;
 		}
 		
+		@Override
 		public void perform()
 		{
 			UserActions.addLocal(new File(local), true, name);
@@ -124,6 +130,7 @@ public class TestActions
 			this.ident = ident;
 		}
 		
+		@Override
 		public void perform()
 		{
 			Machine machine = DbMachines.getMachine(ident);
@@ -140,6 +147,7 @@ public class TestActions
 			this.local = local;
 		}
 		
+		@Override
 		public void perform()
 		{
 			UserActions.remove(DbRoots.getLocal(local));
@@ -156,6 +164,7 @@ public class TestActions
 			this.share = share;
 		}
 		
+		@Override
 		public void perform()
 		{
 			UserActions.shareWith(DbMachines.getMachine(ident), share);
@@ -167,6 +176,14 @@ public class TestActions
 		String name;
 		String path;
 		
+		public DOWNLOAD(String ident, String name, String path)
+		{
+			this.ident = ident;
+			this.name = name;
+			this.path = path;
+		}
+		
+		@Override
 		public void perform()
 		{
 			UserActions.download(

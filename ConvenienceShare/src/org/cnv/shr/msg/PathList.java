@@ -15,11 +15,11 @@ import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
-import org.cnv.shr.sync.RemoteSynchronizers;
+import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
-public class DirectoryList extends Message
+public class PathList extends Message
 {
 	public static int TYPE = 19;
 	
@@ -28,18 +28,18 @@ public class DirectoryList extends Message
 	private LinkedList<String> subDirs = new LinkedList<>();
 	private LinkedList<Child> children = new LinkedList<>();
 
-	public DirectoryList(InputStream input) throws IOException
+	public PathList(final InputStream input) throws IOException
 	{
 		super(input);
 	}	
 
-	public DirectoryList(LocalDirectory localByName, PathElement pathElement)
+	public PathList(final LocalDirectory localByName, final PathElement pathElement)
 	{
 		name = localByName.getName();
 		currentPath = pathElement.getFullPath();
-		for (PathElement element : pathElement.list(localByName))
+		for (final PathElement element : pathElement.list(localByName))
 		{
-			SharedFile local = DbFiles.getFile(localByName, element);
+			final SharedFile local = DbFiles.getFile(localByName, element);
 			if (local == null)
 			{
 				subDirs.add(element.getUnbrokenName());
@@ -51,35 +51,37 @@ public class DirectoryList extends Message
 		}
 	}
 	
+	@Override
 	public String toString()
 	{
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 		
-		System.out.println("[" + name + ":" + currentPath + "]:");
-		for (String subdir : subDirs)
+		System.out.println("[machine=" + name + "   currentpath=" + currentPath + "]:");
+		builder.append("Subdirectories:\n");
+		for (final String subdir : subDirs)
 		{
-			builder.append(subdir).append(":");
+			builder.append('\t').append(subdir).append('\n');
 		}
-		builder.append("=");
-		for (Child c : children)
+		builder.append("Files:\n");
+		for (final Child c : children)
 		{
-			builder.append(c.name).append(":");
+			builder.append('\t').append(c.name).append('\n');
 		}
 		
 		return builder.toString();
 	}
 
 	@Override
-	protected void parse(ByteReader reader) throws IOException
+	protected void parse(final ByteReader reader) throws IOException
 	{
 		name = reader.readString();
 		currentPath = reader.readString();
-		int numDirs = reader.readInt();
+		final int numDirs = reader.readInt();
 		for (int i = 0; i < numDirs; i++)
 		{
 			subDirs.add(reader.readString());
 		}
-		int numFiles = reader.readInt();
+		final int numFiles = reader.readInt();
 		for (int i = 0; i < numFiles; i++)
 		{
 			children.add(new Child(reader));
@@ -87,27 +89,27 @@ public class DirectoryList extends Message
 	}
 
 	@Override
-	protected void print(AbstractByteWriter buffer) throws IOException
+	protected void print(final AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(name);
 		buffer.append(currentPath);
 		buffer.append(subDirs.size());
-		for (String sub : subDirs)
+		for (final String sub : subDirs)
 		{
 			buffer.append(sub);
 		}
 		buffer.append(children.size());
-		for (Child c : children)
+		for (final Child c : children)
 		{
 			c.write(buffer);
 		}
 	}
 
 	@Override
-	public void perform(Communication connection) throws Exception
+	public void perform(final Communication connection) throws Exception
 	{
 		getRoot(connection.getMachine());
-		RemoteSynchronizers.RemoteSynchronizerQueue sync = Services.syncs.getSynchronizer(connection, getRoot());
+		final RemoteSynchronizerQueue sync = Services.syncs.getSynchronizer(connection, getRoot());
 		if (sync == null)
 		{
 			Services.logger.println("Lost synchronizer?");
@@ -122,7 +124,7 @@ public class DirectoryList extends Message
 	}
 	
 	RemoteDirectory rootCache;
-	RemoteDirectory getRoot(Machine machine)
+	RemoteDirectory getRoot(final Machine machine)
 	{
 		if (rootCache != null)
 		{
@@ -154,7 +156,7 @@ public class DirectoryList extends Message
 		private String tags;
 		private long lastModified;
 		
-		Child(SharedFile l)
+		Child(final SharedFile l)
 		{
 			this.name = l.getPath().getUnbrokenName();
 			this.size = l.getFileSize();
@@ -163,7 +165,7 @@ public class DirectoryList extends Message
 			this.lastModified = l.getLastUpdated();
 		}
 		
-		Child (ByteReader bytes) throws IOException
+		Child (final ByteReader bytes) throws IOException
 		{
 			name = bytes.readString();
 			size = bytes.readLong();
@@ -172,7 +174,7 @@ public class DirectoryList extends Message
 			lastModified = bytes.readLong();
 		}
 		
-		public void write(AbstractByteWriter buffer) throws IOException
+		public void write(final AbstractByteWriter buffer) throws IOException
 		{
 			buffer.append(name);
 			buffer.append(size);
@@ -183,7 +185,7 @@ public class DirectoryList extends Message
 		
 		public RemoteFile create() 
 		{
-			PathElement pathElement = DbPaths.getPathElement(getPath(), name);
+			final PathElement pathElement = DbPaths.getPathElement(getPath(), name);
 			return new RemoteFile(getRoot(), pathElement,
 					size, checksum, tags, lastModified);
 		}

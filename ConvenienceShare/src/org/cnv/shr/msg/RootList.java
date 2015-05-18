@@ -3,6 +3,7 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,9 +43,11 @@ public class RootList extends Message
 	@Override
 	public void perform(Communication connection)
 	{
+		HashSet<String> accountedFor = new HashSet<>();
 		boolean changed = true;
 		for (RootDirectory root : sharedDirectories)
 		{
+			accountedFor.add(root.getName());
 			root.setMachine(connection.getMachine());
 			try
 			{
@@ -54,6 +57,18 @@ public class RootList extends Message
 			{
 				Services.logger.print(e);
 			}
+		}
+		
+		DbIterator<RootDirectory> list = DbRoots.list(connection.getMachine());
+		while (list.hasNext())
+		{
+			RootDirectory next = list.next();
+			if (accountedFor.contains(next.getName()))
+			{
+				continue;
+			}
+			Services.logger.println("Should delete root: " + next);
+			changed = true;
 		}
 		
 		if (changed)
@@ -90,12 +105,14 @@ public class RootList extends Message
 	}
 	
 	public static int TYPE = 3;
+	@Override
 	protected int getType()
 	{
 		return TYPE;
 	}
 
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

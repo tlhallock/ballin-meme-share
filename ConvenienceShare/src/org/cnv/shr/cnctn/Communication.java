@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
@@ -11,8 +12,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.db.h2.DbMachines;
@@ -23,8 +22,6 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.OutputByteWriter;
 import org.cnv.shr.util.OutputStreamFlusher;
-
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
@@ -51,7 +48,8 @@ public class Communication implements Closeable
 	/** Initiator **/
 	public Communication(Authenticator authentication, String ip, int port) throws UnknownHostException, IOException
 	{
-		socket = new Socket(ip, port);
+		socket = new Socket();
+		socket.connect(new InetSocketAddress(ip, port), 2000);
 		output = socket.getOutputStream();
 		input =  socket.getInputStream();
 		
@@ -147,6 +145,7 @@ public class Communication implements Closeable
 		return DbMachines.getMachine(remoteIdentifier);
 	}
 	
+	@Override
 	public void close()
 	{
 		try
@@ -231,6 +230,7 @@ public class Communication implements Closeable
 	}
 	
 	// todo: remove this. can be done by breaking up whoiam and changing runnable exception to throwable
+	@Override
 	public void finalize()
 	{
 		try

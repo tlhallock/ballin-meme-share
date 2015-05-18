@@ -69,9 +69,9 @@ public class ServeInstance
 				int chunkOffset = 0;
 
 				MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
-				for (;;)
+				while (chunkOffset < chunkSize)
 				{
-					int nextReadSize = Math.min(buffer.length - chunkOffset, chunkSize - chunkOffset);
+					int nextReadSize = Math.min(buffer.length, chunkSize - chunkOffset);
 					int nread = inputStream.read(buffer, 0, nextReadSize);
 
 					if (nread < 0)
@@ -111,7 +111,9 @@ public class ServeInstance
 	{
 		try
 		{
+			Services.logger.println("Staging.");
 			String checksum = stage();
+			Services.logger.println("Sending chunks.");
 			connection.send(new ChunkList(chunks, checksum, new SharedFileId(local)));
 		}
 		catch (NoSuchAlgorithmException | IOException e)

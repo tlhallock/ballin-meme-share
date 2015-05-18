@@ -1,29 +1,28 @@
 package org.cnv.shr.sync;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.sync.FileSource.FileSourceIterator;
 
-public class ConsecutiveDirectorySyncIterator implements SyncrhonizationTaskIterator
+public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterator
 {
 	private boolean first;
 	private LinkedList<Node> stack = new LinkedList<>();
 	private RootDirectory root;
-	FileSource source;
 		
-	public ConsecutiveDirectorySyncIterator(RootDirectory remoteDirectory, FileSource f) throws IOException
+	public ConsecutiveDirectorySyncIterator(final RootDirectory remoteDirectory, final FileSource f) throws IOException
 	{
 		root = remoteDirectory;
-		source = f;
 		stack.addLast(new Node(new SynchronizationTask(DbPaths.ROOT, root, f.listFiles())));
 		first = true;
 	}
 
+	@Override
 	public SynchronizationTask next()
 	{
 		if (first)
@@ -46,7 +45,7 @@ public class ConsecutiveDirectorySyncIterator implements SyncrhonizationTaskIter
 		private SynchronizationTask sync;
 		private int index = 0;
 
-		Node(SynchronizationTask sync)
+		Node(final SynchronizationTask sync)
 		{
 			this.sync = sync;
 			this.index = 0;
@@ -59,47 +58,34 @@ public class ConsecutiveDirectorySyncIterator implements SyncrhonizationTaskIter
 		{
 			while (index < sync.synchronizedResults.length)
 			{
-				FileSource childFile = sync.synchronizedResults[index].getFsCopy();
-				PathElement dbDir = sync.synchronizedResults[index].getPathElement();
+				final FileSource childFile = sync.synchronizedResults[index].getFsCopy();
+				final PathElement dbDir = sync.synchronizedResults[index].getPathElement();
 				if (!childFile.stillExists())
 				{
 					// make sure it is not in the database...
 					index++;
 					continue;
 				}
-				Iterator<FileSource> grandChildren;
-				try
+				
+				try (FileSourceIterator grandChildren = childFile.listFiles();)
 				{
-					grandChildren = childFile.listFiles();
+					stack.addLast(new Node(new SynchronizationTask(dbDir, root, grandChildren)));
+					index++;
+					return true;
 				}
-				catch (IOException e)
+				catch (final IOException e)
 				{
 					Services.logger.print(e);
 					index++;
 					continue;
 				}
-				if (grandChildren == null)
-				{
-					index++;
-					continue;
-				}
-
-				stack.addLast(new Node(new SynchronizationTask(dbDir, root, grandChildren)));
-				index++;
-				return true;
 			}
-			Node last = stack.removeLast();
+			final Node last = stack.removeLast();
 			if (!last.equals(this))
 			{
 				throw new RuntimeException("This should be the last element on the stack.");
 			}
 			return false;
 		}
-	}
-
-	@Override
-	public void close() throws IOException
-	{
-		source.close();
 	}
 }

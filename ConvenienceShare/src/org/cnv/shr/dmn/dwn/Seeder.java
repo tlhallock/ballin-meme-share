@@ -44,4 +44,9 @@ public class Seeder
 	{
 		return connection;
 	}
+
+	public boolean is(Machine remote)
+	{
+		return remote.getId() == machine.getId();
+	}
 }

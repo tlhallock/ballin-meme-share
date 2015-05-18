@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
@@ -29,12 +28,12 @@ public abstract class RootDirectory extends DbObject<Integer>
 	protected String description;
 	protected String tags;
 	
-	protected RootDirectory(Integer id)
+	protected RootDirectory(final Integer id)
 	{
 		super(id);
 	}
 
-	public RootDirectory(Machine machine2, String name, String tags2, String description2)
+	public RootDirectory(final Machine machine2, final String name, final String tags2, final String description2)
 	{
 		super(null);
 		this.machine = machine2;
@@ -43,7 +42,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 		this.description = description2;
 	}
 
-	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+	@Override
+	public void fill(final Connection c, final ResultSet row, final DbLocals locals) throws SQLException
 	{
 		id                               = row.getInt   ("R_ID"           );
 		tags                             = row.getString("TAGS"           );
@@ -58,28 +58,17 @@ public abstract class RootDirectory extends DbObject<Integer>
 
 	protected abstract void setPath(PathElement object);
 
-
 	@Override
-	public boolean save(Connection c) throws SQLException
+	public boolean save(final Connection c) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement("merge into ROOT key(PELEM) VALUES ("
+		try (PreparedStatement stmt = c.prepareStatement("merge into ROOT key(R_ID) VALUES ("
 				+ "(select R_ID from ROOT where MID=? and RNAME=?)"
 				+ ", ?, ?, ?, ?, ?, ?, ?, ?);");)
 		{
 			int ndx = 1;
-			
-//			if (id == null)
-//			{
-//				stmt = c.prepareStatement("", Statement.RETURN_GENERATED_KEYS);
-//			}
-//			else
-//			{
-//				stmt = c.prepareStatement("merge into ROOT key(R_ID)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
-//				stmt.setInt(ndx++, getId());
-//			}
 			stmt.setInt(ndx++, getMachine().getId());
 			stmt.setString(ndx++, getName());
-			
+
 			stmt.setLong(ndx++, getPathElement().getId());
 			stmt.setString(ndx++, getTags());
 			stmt.setString(ndx++, getDescription());
@@ -87,9 +76,10 @@ public abstract class RootDirectory extends DbObject<Integer>
 			stmt.setBoolean(ndx++, isLocal());
 			stmt.setLong(ndx++, totalFileSize);
 			stmt.setLong(ndx++, totalNumFiles);
-			stmt.setString(ndx++, name);
+			stmt.setString(ndx++, getName());
+			
 			stmt.executeUpdate();
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			final ResultSet generatedKeys = stmt.getGeneratedKeys();
 			if (generatedKeys.next())
 			{
 				id = generatedKeys.getInt(1);
@@ -106,12 +96,13 @@ public abstract class RootDirectory extends DbObject<Integer>
 		return machine;
 	}
 	
-	public final void synchronize(List<? extends SynchronizationListener> listeners)
+	public final void synchronize(final List<? extends SynchronizationListener> listeners)
 	{
 		Services.logger.println("Synchronizing " + getPathElement().getFullPath());
 
-		try (RootSynchronizer localSynchronizer = createSynchronizer();)
+		try
 		{
+			final RootSynchronizer localSynchronizer = createSynchronizer();
 			if (!startSynchronizing(this, localSynchronizer))
 			{
 				return;
@@ -119,24 +110,24 @@ public abstract class RootDirectory extends DbObject<Integer>
 			
 			if (listeners != null)
 			{
-				for (SynchronizationListener listener : listeners)
+				for (final SynchronizationListener listener : listeners)
 				{
 					localSynchronizer.addListener(listener);
 				}
 			}
-			DebugListener debugListener = new DebugListener(this);
+			final DebugListener debugListener = new DebugListener(this);
 			localSynchronizer.addListener(debugListener);
 			
-			Timer t = new Timer();
+			final Timer t = new Timer();
 			t.scheduleAtFixedRate(debugListener, DebugListener.DEBUG_REPEAT, DebugListener.DEBUG_REPEAT);
-			localSynchronizer.synchronize();
+			localSynchronizer.run();
 			t.cancel();
 			setStats();
 			sendNotifications();
 
 			Services.logger.println("Done synchronizing " + getPathElement().getFullPath());
 		}
-		catch (Exception ex)
+		catch (final Exception ex)
 		{
 			Services.logger.print(ex);
 		}
@@ -154,7 +145,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 			totalFileSize = DbRoots.getTotalFileSize(this);
 			save();
 		}
-		catch (SQLException e)
+		catch (final SQLException e)
 		{
 			Services.logger.print(e);
 		}
@@ -182,32 +173,32 @@ public abstract class RootDirectory extends DbObject<Integer>
 		return description;
 	}
 
-	public void setMachine(Machine machine)
+	public void setMachine(final Machine machine)
 	{
 		this.machine = machine;
 	}
 
-	public void setTotalFileSize(long totalFileSize)
+	public void setTotalFileSize(final long totalFileSize)
 	{
 		this.totalFileSize = totalFileSize;
 	}
 
-	public void setTotalNumFiles(long totalNumFiles)
+	public void setTotalNumFiles(final long totalNumFiles)
 	{
 		this.totalNumFiles = totalNumFiles;
 	}
 
-	public void setId(Integer id)
+	public void setId(final Integer id)
 	{
 		this.id = id;
 	}
 
-	public void setDescription(String description)
+	public void setDescription(final String description)
 	{
 		this.description = description;
 	}
 
-	public void setTags(String tags)
+	public void setTags(final String tags)
 	{
 		this.tags = tags;
 	}
@@ -242,9 +233,9 @@ public abstract class RootDirectory extends DbObject<Integer>
 	
 
 	private static HashMap<String, RootSynchronizer> synchronizing = new HashMap<>();
-	private static synchronized boolean startSynchronizing(RootDirectory d, RootSynchronizer sync)
+	private static synchronized boolean startSynchronizing(final RootDirectory d, final RootSynchronizer sync)
 	{
-		RootSynchronizer rootSynchronizer = synchronizing.get(d.getPathElement().getFullPath());
+		final RootSynchronizer rootSynchronizer = synchronizing.get(d.getPathElement().getFullPath());
 		if (rootSynchronizer == null)
 		{
 			synchronizing.put(d.getPathElement().getFullPath(), sync);
@@ -252,9 +243,9 @@ public abstract class RootDirectory extends DbObject<Integer>
 		}
 		return false;
 	}
-	private static synchronized void stopSynchronizing(RootDirectory d)
+	private static synchronized void stopSynchronizing(final RootDirectory d)
 	{
-		RootSynchronizer remove = synchronizing.remove(d.getPathElement().getFullPath());
+		final RootSynchronizer remove = synchronizing.remove(d.getPathElement().getFullPath());
 		if (remove != null)
 		{
 			remove.quit();
