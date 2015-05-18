@@ -12,8 +12,8 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
-import org.cnv.shr.msg.PathList;
 import org.cnv.shr.msg.ListPath;
+import org.cnv.shr.msg.PathList;
 
 public class RemoteSynchronizerQueue implements Closeable
 {

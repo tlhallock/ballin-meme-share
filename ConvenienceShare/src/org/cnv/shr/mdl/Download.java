@@ -15,6 +15,7 @@ public class Download extends DbObject<Integer>
 	private RemoteFile file;
 	private SharedFileState currentState;
 	private long added;
+	private int priority;
 	
 	public Download(RemoteFile remote)
 	{
@@ -42,6 +43,7 @@ public class Download extends DbObject<Integer>
 		this.file = (RemoteFile) DbFiles.getFile(row.getInt(ndx++));
 		this.added = row.getLong(ndx++);
 		this.currentState = SharedFileState.getState(row.getInt(ndx++));
+		this.priority = row.getInt(ndx++);
 	}
 	public void remove()
 	{
@@ -62,13 +64,14 @@ public class Download extends DbObject<Integer>
 	public boolean save(Connection c) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-				"merge into PENDING_DOWNLOAD key(FID) values ((select Q_ID from PENDING_DOWNLOAD where FID=?), ?, ?, ?)");)
+				"merge into PENDING_DOWNLOAD key(FID) values ((select Q_ID from PENDING_DOWNLOAD where FID=?), ?, ?, ?, ?)");)
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, file.getId());
 			stmt.setInt(ndx++, file.getId());
 			stmt.setLong(ndx++, added);
 			stmt.setInt(ndx++, currentState.dbValue);
+			stmt.setInt(ndx++, priority);
 			stmt.executeUpdate();
 			ResultSet generatedKeys = stmt.getGeneratedKeys();
 			if (generatedKeys.next())

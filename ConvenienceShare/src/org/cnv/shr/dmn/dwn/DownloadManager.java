@@ -2,6 +2,7 @@ package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -93,7 +94,10 @@ public class DownloadManager
 	{
 		try
 		{
-			DbIterator<Download> dbIterator = new DbIterator<Download>(Services.h2DbCache.getConnection(), DbObjects.PENDING_DOWNLOAD);
+			Connection connection = Services.h2DbCache.getConnection();
+			DbIterator<Download> dbIterator = new DbIterator<Download>(connection, connection.prepareStatement(
+					"select * from Download order by PRIORITY").executeQuery(),
+					DbObjects.PENDING_DOWNLOAD);
 			while (dbIterator.hasNext())
 			{
 				final Download next = dbIterator.next();

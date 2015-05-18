@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.sql.SQLException;
-import java.util.Date;
 
 import org.cnv.shr.stng.SettingListener;
 import org.cnv.shr.util.CircularOutputStream;

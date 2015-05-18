@@ -20,7 +20,7 @@ public class DbIterator<T extends DbObject> implements Iterator<T>
 	{
 		this (c, c.prepareStatement("select * from " + allocator.getTableName() + ";").executeQuery(), allocator);
 	}
-	protected DbIterator(Connection c, ResultSet results, DbTables.DbObjects allocator) throws SQLException
+	public DbIterator(Connection c, ResultSet results, DbTables.DbObjects allocator) throws SQLException
 	{
 		this(c, results, allocator, new DbLocals());
 	}

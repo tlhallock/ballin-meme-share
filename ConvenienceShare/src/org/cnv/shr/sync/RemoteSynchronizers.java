@@ -6,7 +6,6 @@ import java.util.Hashtable;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 
 public class RemoteSynchronizers

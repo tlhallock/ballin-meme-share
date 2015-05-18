@@ -11,7 +11,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.stng.Settings;
 

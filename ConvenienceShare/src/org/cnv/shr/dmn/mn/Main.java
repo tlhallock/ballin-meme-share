@@ -13,27 +13,34 @@ public class Main
 	public static void main(String[] args) throws Exception
 	{
         System.out.println("Starting from " + Misc.getJarPath());
-		
-		// look into ExtendedWatchEventModifier
-		// all syncs on the same thread
-		// monitor free space
-		// add temp   <---------------      ?????????
-		// make sure downloaded files are in a mirror...
-		
-		
-		
-		// Right now the locals are not showing their respective number of files and total file sizes because they are not being written to the db.
-		
-		// black list
-		// larger auth in first message
-		// make standalone key server
-		// make database text size correct
 
-		// add setting for checksum
-		// add setting for ip address
-		// add setting for sync repeat
-		
-		// start on startup
+        // get code updater working
+        // add setting for ip address
+        // start on startup
+        // look for column, don't just set value
+        // try to start pending downloads
+        // set sharing rules
+        // show messages
+        // make installer
+        
+        
+        // make sure sockets close
+        // fix connection/statement cache
+        // add download priority
+        // make connections show
+        // make downloads show
+        // figure out why sort on file size doesn't work
+        
+        // compress data
+        // make aes flush
+        // add setting for sync repeat
+        
+        // black list
+        // keep full keys (including date/expire)
+        
+		// look into ExtendedWatchEventModifier
+		// monitor free space
+        // make standalone key server
 
 		Arguments a = new Arguments();
 		parseArgs(args, a);

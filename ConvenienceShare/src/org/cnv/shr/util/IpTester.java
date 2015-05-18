@@ -1,4 +1,4 @@
-package org.cnv.shr.dmn;
+package org.cnv.shr.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,6 +10,8 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.cnv.shr.dmn.Services;
 
 public class IpTester
 {

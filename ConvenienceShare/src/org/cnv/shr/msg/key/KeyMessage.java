@@ -10,7 +10,6 @@ import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.Message;
 
 public abstract class KeyMessage extends Message

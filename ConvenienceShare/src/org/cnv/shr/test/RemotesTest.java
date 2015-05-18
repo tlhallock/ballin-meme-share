@@ -3,10 +3,10 @@ package org.cnv.shr.test;
 import java.io.File;
 import java.net.UnknownHostException;
 
-import org.junit.Assert;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 
 public class RemotesTest extends LocalMachineTest
