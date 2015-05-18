@@ -12,7 +12,7 @@ public class ConnectionRunnable implements Runnable
 	Authenticator authentication;
 	ConnectionStatistics stats;
 	
-	public ConnectionRunnable(Communication c, Authenticator authentication)
+	public ConnectionRunnable(final Communication c, final Authenticator authentication)
 	{
 		this.connection = c;
 		this.authentication = authentication;
@@ -25,7 +25,7 @@ public class ConnectionRunnable implements Runnable
 		{
 			while (connection.needsMore())
 			{
-				Message request = Services.msgReader.readMsg(connection.getReader());
+				final Message request = Services.msgReader.readMsg(connection.getReader());
 				if (request == null || !authentication.authenticate(request))
 				{
 					break;
@@ -35,7 +35,7 @@ public class ConnectionRunnable implements Runnable
 				{
 					request.perform(connection);
 				}
-				catch (Exception e)
+				catch (final Exception e)
 				{
 					Services.logger.println("Error performing message task:");
 					Services.logger.print(e);
@@ -49,7 +49,7 @@ public class ConnectionRunnable implements Runnable
 			Services.logger.print(e);
 			Services.quiter.quit();
 		}
-		catch (Exception ex)
+		catch (final Exception ex)
 		{
 			Services.logger.println("Error with connection:");
 			Services.logger.print(ex);
@@ -77,19 +77,19 @@ public class ConnectionRunnable implements Runnable
 				System.out.println("Closed");
 			}
 		}
-		catch (InterruptedException e)
+		catch (final InterruptedException e)
 		{
 			Services.logger.print(e);
 			try
 			{
 				connection.getSocket().close();
 			}
-			catch (IOException e1)
+			catch (final IOException e1)
 			{
 				Services.logger.print(e1);
 			}
 		}
-		catch (IOException e)
+		catch (final IOException e)
 		{
 			Services.logger.print(e);
 		}
@@ -101,7 +101,7 @@ public class ConnectionRunnable implements Runnable
 		{
 			connection.getSocket().close();
 		}
-		catch (IOException e)
+		catch (final IOException e)
 		{
 			e.printStackTrace();
 		}

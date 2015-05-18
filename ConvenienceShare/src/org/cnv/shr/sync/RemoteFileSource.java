@@ -5,45 +5,48 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
-import org.cnv.shr.msg.DirectoryList;
-import org.cnv.shr.msg.DirectoryList.Child;
-import org.cnv.shr.sync.RemoteSynchronizers.RemoteSynchronizerQueue;
+import org.cnv.shr.msg.PathList;
+import org.cnv.shr.msg.PathList.Child;
 import org.cnv.shr.util.FileOutsideOfRootException;
 
 public class RemoteFileSource implements FileSource
 {
 	private RemoteSynchronizerQueue sync;
-	private PathElement e;
-	private RemoteFile r;
-	private boolean descend;
+	private PathElement pathElement;
+	private RemoteFile remoteFile;
 
-	public RemoteFileSource(RemoteDirectory r, boolean descend) throws UnknownHostException, IOException
+	public RemoteFileSource(RemoteDirectory r, RemoteSynchronizerQueue queue) throws UnknownHostException, IOException
 	{
-		sync = Services.syncs.createRemoteSynchronizer(r.getMachine(), r);
-		this.e = DbPaths.ROOT;
-		this.descend = descend;
+		this.sync = queue;
+		this.pathElement = DbPaths.ROOT;
 	}
+	
 	private RemoteFileSource(RemoteSynchronizerQueue s, RemoteFile f)
 	{
 		sync = s;
-		r = f;
-		e = f.getPath();
+		remoteFile = f;
+		pathElement = f.getPath();
 	}
+	
 	private RemoteFileSource(RemoteSynchronizerQueue s, PathElement p, String name)
 	{
 		sync = s;
-		e = DbPaths.getPathElement(p, name);
+		pathElement = DbPaths.getPathElement(p, name);
+	}
+	
+	RemoteSynchronizerQueue getQueue()
+	{
+		return sync;
 	}
 	
 	public String toString()
 	{
-		return e.getFullPath();
+		return pathElement.getFullPath();
 	}
 
 	@Override
@@ -54,30 +57,22 @@ public class RemoteFileSource implements FileSource
 	}
 
 	@Override
-	public Iterator<FileSource> listFiles() throws IOException
+	public FileSourceIterator listFiles() throws IOException
 	{
-		if (r != null)
+		if (remoteFile != null)
 		{
 			return FileSource.NULL_ITERATOR;
 		}
 		
-		DirectoryList directoryList = sync.getDirectoryList(e);
+		PathList directoryList = sync.getDirectoryList(pathElement);
 		if (directoryList == null)
 		{
 			return FileSource.NULL_ITERATOR;
 		}
 		
-		if (descend)
-		{
-			for (String subDir : directoryList.getSubDirs())
-			{
-				sync.queueDirectoryList(DbPaths.getPathElement(e, subDir));
-			}
-		}
-		
 		final Iterator<String> subDirs = directoryList.getSubDirs().iterator();
 		final Iterator<Child> children = directoryList.getChildren().iterator();
-		return new Iterator<FileSource>()
+		return new FileSourceIterator()
 		{
 			boolean onFiles;
 			
@@ -89,7 +84,7 @@ public class RemoteFileSource implements FileSource
 					return true;
 				}
 				onFiles = true;
-				return descend && subDirs.hasNext();
+				return subDirs.hasNext();
 			}
 
 			@Override
@@ -97,7 +92,7 @@ public class RemoteFileSource implements FileSource
 			{
 				if (onFiles)
 				{
-					return new RemoteFileSource(sync, e, subDirs.next());
+					return new RemoteFileSource(sync, pathElement, subDirs.next());
 				}
 				else
 				{
@@ -107,47 +102,45 @@ public class RemoteFileSource implements FileSource
 
 			@Override
 			public void remove() {}
+
+			@Override
+			public void close() throws IOException {}
 		};
 	}
 
 	@Override
 	public String getName()
 	{
-		return e.getUnbrokenName();
+		return pathElement.getUnbrokenName();
 	}
 
 	@Override
 	public boolean isDirectory()
 	{
-		return r == null;
+		return remoteFile == null;
 	}
 
 	@Override
 	public boolean isFile()
 	{
-		return r != null;
+		return remoteFile != null;
 	}
 
 	@Override
 	public String getCanonicalPath()
 	{
-		return e.getFullPath();
+		return pathElement.getFullPath();
 	}
 
 	@Override
 	public long getFileSize()
 	{
-		return r.getFileSize();
+		return remoteFile.getFileSize();
 	}
 	
 	@Override
 	public SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException
 	{
-		return r;
-	}
-	@Override
-	public void close()
-	{
-		sync.close();
+		return remoteFile;
 	}
 }

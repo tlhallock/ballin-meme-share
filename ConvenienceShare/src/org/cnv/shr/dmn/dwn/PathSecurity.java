@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.cnv.shr.dmn.Services;
@@ -38,10 +39,10 @@ class PathSecurity
 		
 		String filename = pathElems.removeLast();
 		
-		File prev = new File(root);
-		for (String pathElem : pathElems)
+		File next = new File(root);
+		Iterator<String> iterator = pathElems.iterator();
+		do
 		{
-			File next = new File(prev.getPath() + File.separator + pathElem);
 			if (!next.exists())
 			{
 				next.mkdirs();
@@ -50,11 +51,11 @@ class PathSecurity
 			{
 				return null;
 			}
-			prev = next;
-		}
+		} while (iterator.hasNext() && (next = new File(next.getPath() + File.separator + iterator.next())) != null);
 
-		File next = new File(prev.getPath() + File.separator + filename);
-		if (!next.exists())
+		next = new File(next.getPath() + File.separator + filename);
+		boolean alreadyExisted = next.exists();
+		if (!alreadyExisted)
 		{
 			try
 			{
@@ -69,6 +70,10 @@ class PathSecurity
 		if (!next.isFile() || !isSecure(root, next))
 		{
 			return null;
+		}
+		if (!alreadyExisted)
+		{
+			next.delete();
 		}
 		
 		return next;

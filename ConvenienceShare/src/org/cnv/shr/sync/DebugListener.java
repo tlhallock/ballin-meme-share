@@ -46,6 +46,12 @@ public class DebugListener extends TimerTask implements SynchronizationListener
 		changed();
 	}
 
+	@Override
+	public void beganDirectory(String str)
+	{
+		currentFile = str;
+	}
+
 	public static long DEBUG_REPEAT = 5000;
 	private long lastDebug = System.currentTimeMillis();
 	@Override

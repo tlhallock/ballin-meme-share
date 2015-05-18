@@ -2,28 +2,28 @@ package org.cnv.shr.sync;
 
 import org.cnv.shr.mdl.PathElement;
 
-public class Pair<T extends FileSource>
+public class Pair
 {
-	private T fsCopy;
+	private FileSource fsCopy;
 	private PathElement dbCopy;
 	
-	public Pair(T f, PathElement pathElement)
+	public Pair(final FileSource f, final PathElement pathElement)
 	{
 		fsCopy = f;
 		dbCopy = pathElement;
 	}
 	
-	T getFsCopy()
+	FileSource getFsCopy()
 	{
 		return fsCopy;
 	}
 	
-	PathElement getPathElement()
+	public PathElement getPathElement()
 	{
 		return dbCopy;
 	}
 
-	public T getSource()
+	public FileSource getSource()
 	{
 		return fsCopy;
 	}

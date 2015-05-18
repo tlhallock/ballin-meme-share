@@ -8,7 +8,6 @@ package org.cnv.shr.gui;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -21,12 +20,10 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.gui.PathTreeModel.Node;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
-import org.cnv.shr.util.Misc;
 
 /**
  *
@@ -52,7 +49,7 @@ public class MachineView extends javax.swing.JPanel
 		
 		filesTree.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e)
+			public void mouseClicked(final MouseEvent e)
 			{
 				filesTree.setVisibleRowCount(filesTree.getRowCount());
 				if (e.getClickCount() < 2)
@@ -60,16 +57,9 @@ public class MachineView extends javax.swing.JPanel
 					return;
 				}
 				
-				TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
-				Node n = (Node) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-				if (getRoot().isLeaf(n))
-				{
-					listFiles(Collections.singletonList(n.getFile()));
-				}
-				else
-				{
-					listFiles(getRoot().getList(n));
-				}
+				final TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
+				final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+				listFiles(n.getFileList());
 			}});
 		filesTree.setScrollsOnExpand(true);
 		filesTree.setLargeModel(true);
@@ -80,14 +70,14 @@ public class MachineView extends javax.swing.JPanel
 		return machine;
 	}
 
-	public void refreshRoot(RemoteDirectory remote)
+	public void refreshRoot(final RemoteDirectory remote)
 	{
 		if (machine.getId() != remote.getMachine().getId())
 		{
 			return;
 		}
 		
-		DefaultTableModel model2 = (DefaultTableModel) pathsTable.getModel();
+		final DefaultTableModel model2 = (DefaultTableModel) pathsTable.getModel();
 		while (model2.getRowCount() > 0)
 		{
 			model2.removeRow(0);
@@ -111,14 +101,14 @@ public class MachineView extends javax.swing.JPanel
 		tableListener.addListener(new TableListener.TableRowListener()
 		{
 			@Override
-			public void run(int row)
+			public void run(final int row)
 			{
 				try
 				{
-					String dirname = tableListener.getTableValue("Path", row);
-					String basename = tableListener.getTableValue("Name", row);
-					String fullPath = dirname + basename; 
-					SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
+					final String dirname = tableListener.getTableValue("Path", row);
+					final String basename = tableListener.getTableValue("Name", row);
+					final String fullPath = dirname + basename; 
+					final SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
 					if (remoteFile == null)
 					{
 						Services.logger.println("Unable to get remote file " + fullPath);
@@ -126,7 +116,7 @@ public class MachineView extends javax.swing.JPanel
 					}
 					UserActions.download(remoteFile);
 				}
-				catch (Exception ex)
+				catch (final Exception ex)
 				{
 					Services.logger.println("Unable to show machine at index " + row);
 					Services.logger.print(ex);
@@ -147,7 +137,7 @@ public class MachineView extends javax.swing.JPanel
 		tableListener.addListener(new TableListener.TableRowListener()
 		{
 			@Override
-			public void run(int row)
+			public void run(final int row)
 			{
 				try
 				{
@@ -164,7 +154,7 @@ public class MachineView extends javax.swing.JPanel
 						{
 							try
 							{
-								RootDirectory root = DbRoots.getRoot(machine, mId);
+								final RootDirectory root = DbRoots.getRoot(machine, mId);
 								if (root == null)
 								{
 									Services.logger.println("Unable to find root mid=" + machine + " name=" + mId);
@@ -175,7 +165,7 @@ public class MachineView extends javax.swing.JPanel
 									view(root);
 								}
 							}
-							catch(Exception ex)
+							catch(final Exception ex)
 							{
 								Services.logger.println("Unable to show directory " + mId);
 								Services.logger.print(ex);
@@ -183,7 +173,7 @@ public class MachineView extends javax.swing.JPanel
 						}
 					});
 				}
-				catch (Exception ex)
+				catch (final Exception ex)
 				{
 					Services.logger.println("Unable to show machine at index " + row);
 					Services.logger.print(ex);
@@ -207,26 +197,26 @@ public class MachineView extends javax.swing.JPanel
     	return model;
     }
     
-    public void setMachine(Machine machine)
+    public void setMachine(final Machine machine)
     {
     	isSharing.setEnabled(machine.isLocal());
         this.machine = machine;
         this.isSharing.setSelected(machine.isSharing());
         machineLabel.setText(machine.getName());
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
 //        for (String str : machine.getKeys())
 //        {
 //        	builder.append(str).append(";");
 //        }
         keysLabel.setText(builder.toString());
 
-    	DefaultTableModel model = (DefaultTableModel) pathsTable.getModel();
+    	final DefaultTableModel model = (DefaultTableModel) pathsTable.getModel();
         while (model.getRowCount() > 0)
         {
         	model.removeRow(0);
         }
         
-        DbIterator<? extends RootDirectory> listRemoteDirectories = DbRoots.list(machine);
+        final DbIterator<? extends RootDirectory> listRemoteDirectories = DbRoots.list(machine);
         while (listRemoteDirectories.hasNext())
         {
         	model.addRow(new String[] { listRemoteDirectories.next().getName() });
@@ -254,7 +244,7 @@ public class MachineView extends javax.swing.JPanel
         }
     }
     
-    private void view(RootDirectory directory)
+    private void view(final RootDirectory directory)
     {
     	Services.logger.println("Showing directory " + directory.getPathElement());
         this.directory = directory;
@@ -266,28 +256,28 @@ public class MachineView extends javax.swing.JPanel
 		((PathTreeModel) filesTree.getModel()).setRoot(directory);
     }
     
-    private synchronized void listFiles(List<SharedFile> files)
+    private synchronized void listFiles(final List<SharedFile> files)
     {
-    	DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
+    	final DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
         while (model.getRowCount() > 0)
         {
         	model.removeRow(0);
         }
-    	for (SharedFile next : files)
+    	for (final SharedFile next : files)
     	{
-    		String path  = next.getPath().getFullPath();
+    		final String path  = next.getPath().getFullPath();
     		
-    		int indexSlh = path.lastIndexOf('/');
-    		String name    = indexSlh < 0 ? path : path.substring(indexSlh + 1);
-    		String relPath = indexSlh < 0 ? ""   : path.substring(0, indexSlh + 1);
+    		final int indexSlh = path.lastIndexOf('/');
+    		final String name    = indexSlh < 0 ? path : path.substring(indexSlh + 1);
+    		final String relPath = indexSlh < 0 ? ""   : path.substring(0, indexSlh + 1);
 
-    		int indexExt = name.lastIndexOf('.');
-    		String ext     = indexExt < 0 ?  ""  : name.substring(indexExt);
+    		final int indexExt = name.lastIndexOf('.');
+    		final String ext     = indexExt < 0 ?  ""  : name.substring(indexExt);
     		
     		model.addRow(new Object[] {
     				String.valueOf(relPath               ),
     	    		String.valueOf(name                  ),
-    	    		new DiskUsage  (next.getFileSize()   ),
+    	    		new DiskUsage (next.getFileSize()    ),
     	    		String.valueOf(next.getChecksum()    ),
     	    		String.valueOf(next.getTags()        ),
     	    		new Date      (next.getLastUpdated() ),
@@ -410,7 +400,7 @@ public class MachineView extends javax.swing.JPanel
                         .addGap(44, 44, 44)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 316, Short.MAX_VALUE)
+                                .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 371, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton7))
                             .addComponent(keysLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -502,7 +492,7 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton1)
                     .addComponent(filterText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 233, Short.MAX_VALUE))
         );
 
         jSplitPane1.setLeftComponent(jPanel3);
@@ -555,7 +545,7 @@ public class MachineView extends javax.swing.JPanel
                     .addComponent(jButton2)
                     .addComponent(tablseFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 233, Short.MAX_VALUE))
         );
 
         jSplitPane1.setRightComponent(jPanel4);
@@ -568,7 +558,7 @@ public class MachineView extends javax.swing.JPanel
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 278, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Files", jPanel6);
@@ -732,21 +722,21 @@ public class MachineView extends javax.swing.JPanel
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 304, Short.MAX_VALUE))
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 307, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void jButton2ActionPerformed(final java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
 //        RowFilter rowFilter = RowFilter.regexFilter(this.tablseFilter.getText());
 //        EnvelopeTableModel m = ((EnvolopeTableModel) filesTable.getMaximumSize());
 //        filesTable.getRowSorter().setRowFilter(rowFilter);                
     }//GEN-LAST:event_jButton2ActionPerformed
 
-    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+    private void jButton9ActionPerformed(final java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
     	UserActions.syncRemote(directory);
     }//GEN-LAST:event_jButton9ActionPerformed
 
-    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+    private void jButton8ActionPerformed(final java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
         UserActions.syncRoots(machine);
     }//GEN-LAST:event_jButton8ActionPerformed
 

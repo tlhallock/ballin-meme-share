@@ -56,7 +56,7 @@ public class ListPath extends Message
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
 		PathElement pathElement = DbPaths.getPathElement(path);
-		DirectoryList msg = new DirectoryList(localByName, pathElement);
+		PathList msg = new PathList(localByName, pathElement);
 
 		System.out.println("Listing " + rootName + ":" + path);
 		System.out.println("Msg: " + msg);

@@ -62,7 +62,7 @@ public class Download extends DbObject<Integer>
 	public boolean save(Connection c) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-				"merge into PENDING_DOWNLOAD key(F_ID) values ((select Q_ID from PENDING_DOWNLOAD where FID=?), ?, ?, ?)");)
+				"merge into PENDING_DOWNLOAD key(FID) values ((select Q_ID from PENDING_DOWNLOAD where FID=?), ?, ?, ?)");)
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, file.getId());

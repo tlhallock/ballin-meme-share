@@ -11,7 +11,9 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import org.cnv.shr.cnctn.Communication;
@@ -41,6 +43,7 @@ public class DownloadInstance
 	private HashMap<String, Seeder> seeders = new HashMap<>();
 	private RemoteFile remoteFile;
 	private File tmpFile;
+	private File destinationFile;
 	
 	private HashMap<String, ChunkRequest> pending = new HashMap<>();
 	// These should be stored on file...
@@ -50,6 +53,7 @@ public class DownloadInstance
 	
 	DownloadInstance(Download d)
 	{
+		this.download = d;
 		state = DownloadState.NOT_STARTED;
 		remoteFile = d.getFile();
 	}
@@ -64,8 +68,12 @@ public class DownloadInstance
 		return returnValue;
 	}
 	
-	public void begin() throws UnknownHostException, IOException
+	public synchronized void begin() throws UnknownHostException, IOException
 	{
+		if (!state.equals(DownloadState.NOT_STARTED))
+		{
+			return;
+		}
 		state = DownloadState.GETTING_META_DATA;
 		FileRequest request = new FileRequest(remoteFile, CHUNK_SIZE);
 		Machine machine = remoteFile.getRootDirectory().getMachine();
@@ -90,9 +98,20 @@ public class DownloadInstance
 	{
 		state = DownloadState.FINDING_PEERS;
 		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
+		
+		outer:
 		while (listRemoteMachines.hasNext())
 		{
 			final Machine remote = listRemoteMachines.next();
+			
+			for (Seeder seeder : seeders.values())
+			{
+				if (seeder.is(remote))
+				{
+					continue outer;
+				}
+			}
+			
 			Services.userThreads.execute(new Runnable() {
 				@Override
 				public void run()
@@ -116,11 +135,11 @@ public class DownloadInstance
 		}
 	}
 
-	public void foundChunks(LinkedList<Chunk> chunks, String checksum) throws IOException
+	public void foundChunks(LinkedList<Chunk> chunks) throws IOException
 	{
 		if (remoteFile.getChecksum() == null)
 		{
-			remoteFile.setChecksum(checksum);
+//			remoteFile.setChecksum(checksum);
 			try
 			{
 				remoteFile.save();
@@ -129,6 +148,7 @@ public class DownloadInstance
 			{
 				Services.logger.print(e);
 			}
+			throw new RuntimeException("The remote file should already have a checksum.");
 		}
 		
 		upComing = chunks;
@@ -142,7 +162,6 @@ public class DownloadInstance
 		requestSeeders();
 		allocate();
 		recover();
-		allocate();
 		queue();
 	}
 	
@@ -209,7 +228,7 @@ public class DownloadInstance
 			{
 				return;
 			}
-			Seeder seeder = seeders.get(random.nextInt(seeders.size()));
+			Seeder seeder = getRandomSeeder();
 			Chunk next = upComing.removeFirst();
 			pending.put(next.getChecksum(), seeder.request(new SharedFileId(remoteFile), next));
 		}
@@ -218,6 +237,21 @@ public class DownloadInstance
 		{
 			complete();
 		}
+	}
+
+	private Seeder getRandomSeeder()
+	{
+		if (seeders.size() == 1)
+		{
+			return seeders.entrySet().iterator().next().getValue();
+		}
+		int index = random.nextInt(seeders.size() - 1);
+		Iterator<Entry<String, Seeder>> iterator = seeders.entrySet().iterator();
+		for (int i = 0; i < index; i++)
+		{
+			iterator.next();
+		}
+		return iterator.next().getValue();
 	}
 
 	public synchronized void download(Chunk chunk, Communication communication) throws IOException, NoSuchAlgorithmException
@@ -246,24 +280,20 @@ public class DownloadInstance
 		state = DownloadState.PLACING_IN_FS;
 		try
 		{
-			checkChecksum();
+			if (!checkChecksum())
+			{
+				Services.logger.println("Checksums did not match!!!");
+			}
 		}
 		catch (IOException e)
 		{
 			Services.logger.print(e);
 		}
 		
-		File localRoot = ((RemoteDirectory) remoteFile.getRootDirectory()).getLocalRoot();
-		String str = remoteFile.getPath().getFullPath();
-		File outFile = PathSecurity.secureMakeDirs(localRoot, str);
-		if (outFile == null)
-		{
-			fail("Unable to copy...");
-		}
 
 		try
 		{
-			Files.move(Paths.get(tmpFile.getAbsolutePath()), Paths.get(outFile.getAbsolutePath()));
+			Files.move(Paths.get(tmpFile.getAbsolutePath()), Paths.get(getDestinationFile().getAbsolutePath()));
 		}
 		catch (IOException e)
 		{
@@ -271,6 +301,26 @@ public class DownloadInstance
 		}
 		
 		Services.downloads.remove(this);
+		Services.notifications.downloadDone(this);
+	}
+
+	public File getDestinationFile()
+	{
+		if (destinationFile == null)
+		{
+			File localRoot = ((RemoteDirectory) remoteFile.getRootDirectory()).getLocalRoot();
+			String str = remoteFile.getPath().getFullPath();
+			do
+			{
+				destinationFile = PathSecurity.secureMakeDirs(localRoot, str);
+				if (destinationFile == null)
+				{
+					fail("Unable to copy to destination...");
+				}
+				str = str + ".new";
+			} while (destinationFile.exists());
+		}
+		return destinationFile;
 	}
 	
 	public Download getDownload()
@@ -341,6 +391,7 @@ public class DownloadInstance
 			seeder.done();
 		}
 		Services.downloads.remove(this);
+		Services.notifications.downloadRemoved(this);
 	}
 
 	public void removePeer(Communication connection)

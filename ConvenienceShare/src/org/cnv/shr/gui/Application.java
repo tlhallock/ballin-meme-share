@@ -140,8 +140,8 @@ public class Application extends javax.swing.JFrame
         		machine.getIp() + ":" + machine.getPort(),
         		machine.getIdentifier(),
                 String.valueOf(machine.isSharing()),
+                new NumberOfFiles(DbMachines.getTotalNumFiles(machine)),
                 new DiskUsage(DbMachines.getTotalDiskspace(machine)),
-                new NumberOfFiles(DbMachines.getTotalNumFiles(machine))
             });
 	}
 
@@ -170,8 +170,8 @@ public class Application extends javax.swing.JFrame
             Services.localMachine.getIp() + ":" + Services.localMachine.getPort(),
             Services.localMachine.getIdentifier(),
             String.valueOf(Services.localMachine.isSharing()),
+            new NumberOfFiles(DbMachines.getTotalNumFiles(Services.localMachine)),
             new DiskUsage(DbMachines.getTotalDiskspace(Services.localMachine)),
-            new NumberOfFiles(DbMachines.getTotalNumFiles(Services.localMachine))
         });
 
 		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
@@ -217,6 +217,7 @@ public class Application extends javax.swing.JFrame
 
 		java.awt.EventQueue.invokeLater(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				viewer.setBounds(0, 0, 
@@ -292,7 +293,8 @@ public class Application extends javax.swing.JFrame
 
         jButton2.setText("Add...");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -317,11 +319,13 @@ public class Application extends javax.swing.JFrame
                 false, false, false, false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+			public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -365,14 +369,16 @@ public class Application extends javax.swing.JFrame
 
         jButton1.setText("Add...");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
         jButton4.setText("Synchronize All");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
             }
         });
@@ -392,11 +398,13 @@ public class Application extends javax.swing.JFrame
                 false, true, true, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+			public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -451,11 +459,13 @@ public class Application extends javax.swing.JFrame
                 false, false, false, false, false, false, false, false, false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+			public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -527,7 +537,8 @@ public class Application extends javax.swing.JFrame
 
         Debug.setText("Print Debug Info");
         Debug.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 DebugActionPerformed(evt);
             }
         });
@@ -560,7 +571,8 @@ public class Application extends javax.swing.JFrame
 
         jButton3.setText("Delete Database!");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -658,11 +670,13 @@ public class Application extends javax.swing.JFrame
                 false, false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+			public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -863,7 +877,7 @@ public class Application extends javax.swing.JFrame
 					Services.logger.println("Unable to find local directory " + mId);
 					return;
 				}
-				UserActions.remove((LocalDirectory) root);
+				UserActions.remove(root);
 			}
 
 			@Override
@@ -978,6 +992,7 @@ public class Application extends javax.swing.JFrame
 			long startNumFiles = root.numFiles();
 			long lastGuiUpdate = 0;
 			
+			@Override
 			protected void changed()
 			{
 				long now = System.currentTimeMillis();

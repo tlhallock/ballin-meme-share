@@ -1,6 +1,5 @@
 package org.cnv.shr.sync;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -13,21 +12,9 @@ import org.cnv.shr.util.FileOutsideOfRootException;
 
 public class LocalSynchronizer extends RootSynchronizer
 {
-	public LocalSynchronizer(LocalDirectory remoteDirectory) throws IOException
+	public LocalSynchronizer(LocalDirectory rootDirectory, SyncrhonizationTaskIterator iterator) throws IOException
 	{
-		super(remoteDirectory, new ConsecutiveDirectorySyncIterator(remoteDirectory, new FileFileSource(new File(remoteDirectory.getPathElement().getFullPath()))));
-
-//		if (Files.isSymbolicLink(Paths.get(f.getCanonicalPath())) || !f.isDirectory())
-//		{
-//			try
-//			{
-//				remoteDirectory.delete();
-//			}
-//			{
-//				Services.logger.print(e);
-//			}
-//			throw new RuntimeException("Symbolic link: " + remoteDirectory + ". Skipping");
-//		}
+		super(rootDirectory, iterator);
 	}
 
 	protected SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException

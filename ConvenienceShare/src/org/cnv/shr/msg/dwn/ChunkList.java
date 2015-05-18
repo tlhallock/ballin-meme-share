@@ -16,7 +16,6 @@ import org.cnv.shr.util.ByteReader;
 public class ChunkList extends DownloadMessage
 {
 	private LinkedList<Chunk> chunks = new LinkedList<>();
-	private String checksum;
 
 	public static int TYPE = 11;
 	
@@ -48,7 +47,6 @@ public class ChunkList extends DownloadMessage
 		{
 			chunks.add(new Chunk(reader));
 		}
-		checksum = reader.readString();
 	}
 	@Override
 	protected void finishWriting(AbstractByteWriter buffer) throws IOException
@@ -58,15 +56,15 @@ public class ChunkList extends DownloadMessage
 		{
 			c.write(buffer);
 		}
-		buffer.append(checksum);
 	}
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor());
-		downloadInstance.foundChunks(chunks, checksum);
+		downloadInstance.foundChunks(chunks);
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
