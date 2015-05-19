@@ -36,7 +36,7 @@ public class UserActions
 		});
 	}
 
-	public static void addMachine(final String url)
+	public static void addMachine(final String url, final boolean acceptKeys, final boolean share)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -44,7 +44,7 @@ public class UserActions
 			{
 				try
 				{
-					Communication openConnection = Services.networkManager.openConnection(url, true);
+					Communication openConnection = Services.networkManager.openConnection(url, acceptKeys);
 					if (openConnection == null)
 					{
 						Services.keyManager.addPendingAuthentication(url);
@@ -52,6 +52,12 @@ public class UserActions
 					}
 					openConnection.send(new MachineFound());
 					openConnection.send(new FindMachines());
+                                        
+                                        if (share)
+                                        {
+                                            // TODO share local directories with remote...
+                                        }
+                                        
 					openConnection.finish();
 				}
 				catch (IOException e)

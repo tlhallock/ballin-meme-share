@@ -52,9 +52,11 @@ public class NewKey extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (!connection.getAuthentication().newKey(newKey) || naunceRequest.length == 0)
+		if (!connection.getAuthentication().newKey(connection, newKey) || naunceRequest.length == 0)
 		{
-			DbMessages.addMessage(new UserMessage.AuthenticationRequest(connection.getMachine(), newKey));
+//			DbMessages.addMessage(new UserMessage.AuthenticationRequest(connection.getMachine(), newKey));
+                        
+                        
 			Services.logger.println("We have no naunce to authenticate!");
 			fail("New key not accepted.", connection);
 			return;
@@ -69,6 +71,7 @@ public class NewKey extends KeyMessage
 		return;
 	}
 	
+	@Override
 	public String toString()
 	{
 		return "Here is a new key: " + newKey + " with naunce length=" + naunceRequest.length;

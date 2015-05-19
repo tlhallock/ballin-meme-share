@@ -28,7 +28,7 @@ public class DbTables
 		PUBLIC_KEY       ("PUBLIC_KEY         ".trim(), "K_ID"),
 		PELEM            ("PELEM              ".trim(), "P_ID"),
 		IGNORE_PATTERN   ("IGNORE_PATTERN     ".trim(), "I_ID"),
-		PENDING_DOWNLOAD ("PENDING_DOWNLOAD   ".trim(), "Q_ID"),
+		PENDING_DOWNLOAD ("DOWNLOAD           ".trim(), "Q_ID"),
 		MESSAGES         ("MESSAGE            ".trim(), "M_ID"), 
 		LROOT            ("ROOT               ".trim(), "R_ID"),
 		RROOT            ("ROOT               ".trim(), "R_ID"),

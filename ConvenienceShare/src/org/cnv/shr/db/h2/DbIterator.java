@@ -1,5 +1,6 @@
 package org.cnv.shr.db.h2;
 
+import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,7 +8,7 @@ import java.util.Iterator;
 
 import org.cnv.shr.dmn.Services;
 
-public class DbIterator<T extends DbObject> implements Iterator<T>
+public class DbIterator<T extends DbObject> implements Iterator<T>, Closeable
 {
 	private ResultSet results;
 	private DbTables.DbObjects tableInfo;
@@ -49,15 +50,7 @@ public class DbIterator<T extends DbObject> implements Iterator<T>
 		{
 			return true;
 		}
-		try
-		{
-			results.getStatement().close();
-		}
-		catch (SQLException e)
-		{
-			Services.logger.println("Unable to close query.");
-			Services.logger.print(e);
-		}
+		close();
 		return false;
 	}
 	
@@ -108,6 +101,24 @@ public class DbIterator<T extends DbObject> implements Iterator<T>
 			throw new UnsupportedOperationException("Deletion is not enabled");
 		}
 
+		@Override
 		protected T findNext() { return null; }
+	}
+
+	boolean closed;
+	@Override
+	public void close()
+	{
+		if (closed) return;
+		closed = true;
+		try
+		{
+			results.getStatement().close();
+		}
+		catch (SQLException e)
+		{
+			Services.logger.println("Unable to close query.");
+			Services.logger.print(e);
+		}
 	}
 }

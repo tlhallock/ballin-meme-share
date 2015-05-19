@@ -116,6 +116,11 @@ public class Communication implements Closeable
 		}
 	}
 
+	public ConnectionStatistics getStatistics()
+	{
+		return this.getReader().getStatistics();
+	}
+
 	public boolean isClosed()
 	{
 		return socket.isClosed();
@@ -142,6 +147,7 @@ public class Communication implements Closeable
 	
 	public Machine getMachine()
 	{
+		if (remoteIdentifier == null) return null;
 		return DbMachines.getMachine(remoteIdentifier);
 	}
 	

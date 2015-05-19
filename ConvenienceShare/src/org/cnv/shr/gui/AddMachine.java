@@ -5,6 +5,8 @@
  */
 package org.cnv.shr.gui;
 
+import org.cnv.shr.dmn.Services;
+
 /**
  *
  * @author rever
@@ -16,6 +18,7 @@ public class AddMachine extends javax.swing.JFrame {
      */
     public AddMachine() {
         initComponents();
+		setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
     }
 
     /**
@@ -35,10 +38,21 @@ public class AddMachine extends javax.swing.JFrame {
         jCheckBox2 = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Add machine...");
 
         jButton1.setText("Add");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         jButton2.setText("Cancel");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         jLabel1.setText("Url:");
 
@@ -92,6 +106,15 @@ public class AddMachine extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        UserActions.addMachine(jTextField1.getText(), jCheckBox1.isSelected(), jCheckBox2.isSelected());
+        dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        dispose();
+    }//GEN-LAST:event_jButton2ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

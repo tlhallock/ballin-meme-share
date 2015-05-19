@@ -41,6 +41,4 @@ public class ConnectionStatistics
 		lastKbpsRefresh = now;
 		activity = false;
 	}
-	
-	
 }

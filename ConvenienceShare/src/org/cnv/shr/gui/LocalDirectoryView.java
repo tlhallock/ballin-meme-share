@@ -6,10 +6,17 @@
 
 package org.cnv.shr.gui;
 
+import java.awt.GridLayout;
 import java.sql.SQLException;
+import java.util.LinkedList;
 
+import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.Machine;
 
 /**
  *
@@ -17,18 +24,20 @@ import org.cnv.shr.mdl.RootDirectory;
  */
 public class LocalDirectoryView extends javax.swing.JFrame
 {
-	RootDirectory r;
+	LocalDirectory local;
+        LinkedList<LocalSharePermission> permissions = new LinkedList<>();
 
     /**
      * Creates new form LocalDirectoryView
      */
     public LocalDirectoryView() {
         initComponents();
+        setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
     }
 
-	public void view(RootDirectory root)
+	public void view(LocalDirectory root)
 	{
-		this.r = root;
+		this.local = root;
 		setTitle("Unable to open directory.");
 		if (root == null)
 		{
@@ -40,34 +49,49 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		descriptionString.setText(root.getDescription());
 		
 		StringBuilder builder = new StringBuilder();
-//		for (String string : Services.db.getIgnores(root))
-//		{
-//			builder.append(string).append('\n');
-//		}
+		for (String string : DbRoots.getIgnores(root))
+		{
+			builder.append(string).append('\n');
+		}
 		ignoreTextArea.setText(builder.toString());
-		
-		return;
+                
+                permissions.clear();
+                sharePanel.removeAll();
+                sharePanel.setLayout(new GridLayout(0, 1));
+                DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
+                while (listRemoteMachines.hasNext())
+                {
+                    Machine machine = listRemoteMachines.next();
+                    LocalSharePermission permission = new LocalSharePermission(machine, root);
+                    sharePanel.add(permission);
+                    permissions.add(permission);
+                }
 	}
 	
 	private void save()
 	{
-		if (r == null)
+		if (local == null)
 		{
 			return;
 		}
 		
-		r.setDescription(descriptionString.getText());
-		r.setTags(tagsString.getText());
+		local.setDescription(descriptionString.getText());
+		local.setTags(tagsString.getText());
 		
 		try
 		{
-			r.save();
+			local.save();
 		}
 		catch (SQLException e)
 		{
 			Services.logger.print(e);
 		}
-//		Services.db.setIgnores(r, ignoreTextArea.getText().split("\n"));
+                
+                for (LocalSharePermission permission : permissions)
+                {
+                    permission.save();
+                }
+                DbRoots.setIgnores(local, ignoreTextArea.getText().split("\n"));
 	}
 
     /**
@@ -93,7 +117,8 @@ public class LocalDirectoryView extends javax.swing.JFrame
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         sharePanel = new javax.swing.JPanel();
-        Sharing = new javax.swing.JCheckBox();
+        jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -168,7 +193,19 @@ public class LocalDirectoryView extends javax.swing.JFrame
 
         jSplitPane1.setRightComponent(jPanel2);
 
-        Sharing.setText("Sharing");
+        jButton2.setText("Synchronize");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        jButton3.setText("Do not share");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -187,13 +224,14 @@ public class LocalDirectoryView extends javax.swing.JFrame
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(tagsString)
                             .addComponent(descriptionString)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(pathLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(Sharing)))
+                            .addComponent(pathLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addContainerGap())))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButton3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButton2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton1)
                 .addContainerGap())
         );
@@ -203,8 +241,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(pathLabel)
-                    .addComponent(Sharing))
+                    .addComponent(pathLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tags)
@@ -216,7 +253,10 @@ public class LocalDirectoryView extends javax.swing.JFrame
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSplitPane1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton1)
+                    .addComponent(jButton2)
+                    .addComponent(jButton3))
                 .addContainerGap())
         );
 
@@ -227,11 +267,25 @@ public class LocalDirectoryView extends javax.swing.JFrame
         save();
     }//GEN-LAST:event_jButton1ActionPerformed
 
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        
+        for (LocalSharePermission permission : permissions)
+        {
+            permission.setSharing(SharingState.INVISIBLE);
+            permission.save();
+        }
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        UserActions.sync(local);
+    }//GEN-LAST:event_jButton2ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBox Sharing;
     private javax.swing.JTextField descriptionString;
     private javax.swing.JTextArea ignoreTextArea;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;

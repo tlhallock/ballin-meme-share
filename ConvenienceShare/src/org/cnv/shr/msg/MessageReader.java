@@ -52,7 +52,7 @@ public class MessageReader
 		add(new MessageIdentifier(PathList.class              ));
 		add(new MessageIdentifier(RootList.class                   ));
 		add(new MessageIdentifier(FindMachines.class               ));
-		add(new MessageIdentifier(RequestAccess.class              ));
+		add(new MessageIdentifier(UserMessageMessage.class              ));
 		add(new MessageIdentifier(Failure.class                    ));
 		add(new MessageIdentifier(Wait.class                       ));
 		add(new MessageIdentifier(HeartBeat.class                  ));

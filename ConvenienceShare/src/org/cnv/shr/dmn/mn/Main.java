@@ -37,6 +37,7 @@ public class Main
         
         // black list
         // keep full keys (including date/expire)
+        // able to require password to log in.
         
 		// look into ExtendedWatchEventModifier
 		// monitor free space

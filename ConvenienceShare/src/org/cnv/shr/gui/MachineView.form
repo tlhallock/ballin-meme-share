@@ -31,7 +31,7 @@
       <Dimension value="[5, 5]"/>
     </Property>
     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-      <Dimension value="[5, 5]"/>
+      <Dimension value="[250, 250]"/>
     </Property>
   </Properties>
   <AuxValues>
@@ -50,7 +50,7 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Component id="jPanel1" max="32767" attributes="0"/>
-          <Component id="jSplitPane2" alignment="0" pref="0" max="32767" attributes="0"/>
+          <Component id="jSplitPane2" alignment="0" pref="942" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -58,7 +58,7 @@
           <Group type="102" alignment="0" attributes="0">
               <Component id="jPanel1" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jSplitPane2" pref="307" max="32767" attributes="0"/>
+              <Component id="jSplitPane2" pref="362" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -90,7 +90,7 @@
                           <EmptySpace min="-2" pref="44" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" attributes="0">
-                                  <Component id="machineLabel" pref="371" max="32767" attributes="0"/>
+                                  <Component id="machineLabel" max="32767" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButton7" min="-2" max="-2" attributes="0"/>
                               </Group>
@@ -209,6 +209,9 @@
                 <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                   <Dimension value="[15, 5]"/>
                 </Property>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[75, 20]"/>
+                </Property>
               </Properties>
             </Component>
           </SubComponents>
@@ -239,7 +242,7 @@
                 </DimensionLayout>
                 <DimensionLayout dim="1">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="jSplitPane1" alignment="0" pref="278" max="32767" attributes="0"/>
+                      <Component id="jSplitPane1" alignment="0" pref="333" max="32767" attributes="0"/>
                   </Group>
                 </DimensionLayout>
               </Layout>
@@ -283,7 +286,7 @@
                                       <Component id="filterText" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jScrollPane5" pref="233" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane5" pref="288" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                         </DimensionLayout>
@@ -308,11 +311,6 @@
                               <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
                               <SubComponents>
                                 <Component class="javax.swing.JTree" name="filesTree">
-                                  <Properties>
-                                    <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                                      <Dimension value="[0, 0]"/>
-                                    </Property>
-                                  </Properties>
                                   <AuxValues>
                                     <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new JTree(getRoot())"/>
                                   </AuxValues>
@@ -357,7 +355,7 @@
                                       <Component id="tablseFilter" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jScrollPane3" pref="233" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane3" pref="288" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                         </DimensionLayout>

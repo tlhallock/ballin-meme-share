@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
@@ -183,4 +185,57 @@ public class DbRoots
 			Services.logger.print(e);
 		}
 	}
+        
+        private static final String[] DUMMY = new String[0];
+        public static String[] getIgnores(LocalDirectory local)
+        {
+            LinkedList<String> returnValue = new LinkedList<>();
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement s1 = c.prepareStatement("select PATTERN from IGNORE_PATTERN where RID=?;");)
+		{
+			s1.setInt(1, local.getId());
+                        ResultSet results = s1.executeQuery();
+                        while (results.next())
+                        {
+                            returnValue.add(results.getString(1));
+                        }
+		}
+		catch (SQLException e)
+		{
+			Services.logger.print(e);
+		}
+                return returnValue.toArray(DUMMY);
+        }
+        
+        public static void setIgnores(LocalDirectory local, String[] ignores)
+        {
+            Connection c = Services.h2DbCache.getConnection();
+            try (PreparedStatement s1 = c.prepareStatement("delete from IGNORE_PATTERN where RID=?;");) {
+                s1.setInt(1, local.getId());
+                s1.execute();
+            } catch (SQLException ex) {
+                Services.logger.println(ex);
+            }
+            HashSet<String> ignoresAdded = new HashSet<>();
+            try (PreparedStatement s1 = c.prepareStatement("insert into IGNORE_PATTERN values (DEFAULT, ?, ?);");) {
+                for (String ignore : ignores)
+                {
+                    ignore = ignore.trim();
+                    if (ignore.length() > 1024)
+                    {
+                        Services.logger.println("Unable to add ignore because it is bigger than the maximum ignore pattern: " + ignore);
+                        continue;
+                    }
+                    if (!ignoresAdded.add(ignore))
+                    {
+                        continue;
+                    }
+                    s1.setInt(1, local.getId());
+                    s1.setString(2, ignore);
+                    s1.execute();
+                }
+            } catch (SQLException ex) {
+                Services.logger.println(ex);
+            }
+        }
 }

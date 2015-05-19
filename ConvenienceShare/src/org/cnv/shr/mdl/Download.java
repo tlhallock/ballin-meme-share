@@ -13,7 +13,7 @@ import org.cnv.shr.dmn.Services;
 public class Download extends DbObject<Integer>
 {
 	private RemoteFile file;
-	private SharedFileState currentState;
+	private DownloadState currentState;
 	private long added;
 	private int priority;
 	
@@ -21,7 +21,7 @@ public class Download extends DbObject<Integer>
 	{
 		super(null);
 		this.file = remote;
-		this.currentState = SharedFileState.DOWNLOADING;
+		this.currentState = DownloadState.QUEUED;
 		this.added = System.currentTimeMillis();
 	}
 
@@ -42,14 +42,42 @@ public class Download extends DbObject<Integer>
 		this.id = row.getInt(ndx++);
 		this.file = (RemoteFile) DbFiles.getFile(row.getInt(ndx++));
 		this.added = row.getLong(ndx++);
-		this.currentState = SharedFileState.getState(row.getInt(ndx++));
+		this.currentState = DownloadState.getState(row.getInt(ndx++));
 		this.priority = row.getInt(ndx++);
 	}
-	public void remove()
+	
+	public void setState(DownloadState state)
+	{
+		this.currentState = state;
+		Connection c = Services.h2DbCache.getConnection();
+		try (PreparedStatement stmt = c.prepareStatement(
+				"update DOWNLOAD set DSTATE=? where Q_ID=?");)
+		{
+			stmt.setInt(1, DownloadState.ALL_DONE.dbValue);
+			stmt.setInt(2, id);
+			stmt.execute();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public long getAdded()
+	{
+		return added;
+	}
+	
+	public int getPriority()
+	{
+		return priority;
+	}
+	
+	public void delete()
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement(
-				"delete from PENDING_DOWNLOAD where FID=?");)
+				"delete from DOWNLOAD where FID=?");)
 		{
 			stmt.setInt(1, file.getId());
 			stmt.execute();
@@ -64,7 +92,7 @@ public class Download extends DbObject<Integer>
 	public boolean save(Connection c) throws SQLException
 	{
 		try (PreparedStatement stmt = c.prepareStatement(
-				"merge into PENDING_DOWNLOAD key(FID) values ((select Q_ID from PENDING_DOWNLOAD where FID=?), ?, ?, ?, ?)");)
+				"merge into DOWNLOAD key(FID) values ((select Q_ID from DOWNLOAD where FID=?), ?, ?, ?, ?)");)
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, file.getId());
@@ -82,6 +110,57 @@ public class Download extends DbObject<Integer>
 			return false;
 		}
 	}
+
+	public DownloadState getState()
+	{
+		return currentState;
+	}
+	
+	public enum DownloadState
+	{
+		QUEUED              (1),
+		NOT_STARTED         (2),
+		GETTING_META_DATA   (3),
+		FINDING_PEERS       (4),
+		RECOVERING          (5),
+		ALLOCATING          (6),
+		DOWNLOADING         (7),
+		PLACING_IN_FS       (8),
+		ALL_DONE            (9),
+		
+		;
+
+		int dbValue;
+
+		DownloadState(int value)
+		{
+			this.dbValue = value;
+		}
+
+		public int toInt()
+		{
+			return dbValue;
+		}
+
+		static DownloadState getState(int dbValue)
+		{
+			for (DownloadState s : DownloadState.values())
+			{
+				if (s.dbValue == dbValue)
+				{
+					return s;
+				}
+			}
+			Services.logger.println("Unknown file state: " + dbValue);
+			return null;
+		}
+
+		public String humanReadable()
+		{
+			return name();
+		}
+	}
+	
 	public enum SharedFileState
 	{
 		LOCAL          (0),

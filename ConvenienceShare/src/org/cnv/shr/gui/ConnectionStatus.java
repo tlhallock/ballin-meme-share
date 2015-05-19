@@ -6,7 +6,9 @@
 
 package org.cnv.shr.gui;
 
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.ConnectionStatistics;
+import org.cnv.shr.mdl.Machine;
 
 /**
  *
@@ -14,16 +16,43 @@ import org.cnv.shr.cnctn.ConnectionStatistics;
  */
 public class ConnectionStatus extends javax.swing.JPanel {
 
+    
+    private Communication connection;
+    private ConnectionStatistics stats;
     /**
      * Creates new form ConnectionStatus
      */
-    public ConnectionStatus() {
+    public ConnectionStatus(Communication connection) {
+        this.connection = connection;
+        this.stats = connection.getStatistics();
         initComponents();
+        refresh();
     }
     
-    public void update(ConnectionStatistics stats)
+    boolean shows(Communication c)
     {
-    	
+    	return connection.equals(c);
+    }
+    
+    void refresh()
+    {
+        long now = System.currentTimeMillis();
+        this.ipLabel.setText(connection.getUrl());
+        this.lastActivityLabel.setText(stats.isActive() ? "is active" : "not active");
+        this.sentLabel.setText("Not supported yet.");
+        this.receivedLabel.setText("Not supported yet.");
+        this.downLabel.setText(stats.getBitsDown(now));
+        this.upLabel.setText(stats.getBitsUp(now));
+        Machine machine = connection.getMachine();
+        if (machine == null)
+        {
+        	this.machineNameLabel.setText("Unknown");
+        }
+        else
+        {
+        	this.machineNameLabel.setText(machine.getName());
+        }
+        stats.setLastRefresh(now);
     }
 
     /**
@@ -45,8 +74,12 @@ public class ConnectionStatus extends javax.swing.JPanel {
         sentLabel = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         jLabel9 = new javax.swing.JLabel();
-        kbsLabel = new javax.swing.JLabel();
+        upLabel = new javax.swing.JLabel();
         machineNameLabel = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        downLabel = new javax.swing.JLabel();
+
+        setBorder(javax.swing.BorderFactory.createTitledBorder("Open Connection"));
 
         jLabel1.setText("Connection to:");
 
@@ -58,19 +91,28 @@ public class ConnectionStatus extends javax.swing.JPanel {
 
         jLabel5.setText("Last message sent:");
 
-        jLabel6.setText("Kbs:");
+        jLabel6.setText("Up speed:");
 
         lastActivityLabel.setText("jLabel7");
 
         sentLabel.setText("jLabel8");
 
         jButton1.setText("Close");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         jLabel9.setText("Last message received:");
 
-        kbsLabel.setText("jLabel10");
+        upLabel.setText("jLabel10");
 
-        machineNameLabel.setText("jLabel11");
+        machineNameLabel.setText("Loading");
+
+        jLabel2.setText("Down speed:");
+
+        downLabel.setText("jLabel4");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -94,13 +136,17 @@ public class ConnectionStatus extends javax.swing.JPanel {
                             .addComponent(lastActivityLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(sentLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 168, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(kbsLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 536, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel9)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(receivedLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(receivedLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, 168, Short.MAX_VALUE)
+                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(upLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 526, Short.MAX_VALUE)
+                            .addComponent(downLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -129,26 +175,36 @@ public class ConnectionStatus extends javax.swing.JPanel {
                 .addGap(4, 4, 4)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
-                    .addComponent(kbsLabel))
+                    .addComponent(upLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(downLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jButton1)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        connection.close();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel downLabel;
     private javax.swing.JLabel ipLabel;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JLabel kbsLabel;
     private javax.swing.JLabel lastActivityLabel;
     private javax.swing.JLabel machineNameLabel;
     private javax.swing.JLabel receivedLabel;
     private javax.swing.JLabel sentLabel;
+    private javax.swing.JLabel upLabel;
     // End of variables declaration//GEN-END:variables
 }

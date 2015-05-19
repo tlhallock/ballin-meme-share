@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.AcceptKey;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.key.ConnectionOpenAwk;
@@ -174,10 +175,12 @@ public class Authenticator
 		return returnValue;
 	}
 	
-	public boolean canAuthenticateRemote(Machine machine, PublicKey remote, PublicKey local) throws IOException
+	public boolean canAuthenticateRemote(Communication connection, PublicKey remote, PublicKey local) throws IOException
 	{
 		this.localPublicKey = local;
 		this.remotePublicKey = remote;
+		
+		Machine machine = connection.getMachine();
 		
 		// authenticate remote...
 		if (DbKeys.machineHasKey(machine, remote))
@@ -186,7 +189,7 @@ public class Authenticator
 			return true;
 		}
 
-		if (acceptKey(remote))
+		if (acceptKey(connection, remote, machine))
 		{
 			Services.logger.println("We have accepted the key for the remote.");
 			DbKeys.addKey(machine, remote);
@@ -226,9 +229,25 @@ public class Authenticator
 		connection.send(new ConnectionOpenAwk(decrypted, naunceRequest));
 	}
 
-	public boolean acceptKey(PublicKey remote)
+	public boolean newKey(Communication connection, PublicKey newKey)
 	{
-		return acceptAnyKeys || Services.settings.acceptNewKeys.get();
+		if (authenticated != null 
+				&& authenticated 
+				&& remotePublicKey != null 
+				&& Arrays.equals(newKey.getEncoded(), remotePublicKey.getEncoded()))
+		{
+			return true;
+		}
+		return acceptKey(connection, newKey, connection.getMachine());
+	}
+
+	public boolean acceptKey(Communication connection, PublicKey remote, Machine machine)
+	{
+		return acceptAnyKeys || Services.settings.acceptNewKeys.get() || AcceptKey.showAcceptDialog(
+				connection.getUrl(),
+				machine.getName(),
+				machine.getIdentifier(),
+				Misc.format(remote.getEncoded()));
 	}
 
 	public void assertCanSend(Message m)
@@ -238,17 +257,5 @@ public class Authenticator
 			throw new RuntimeException("Trying to send message on connection not yet authenticated.\n"
 					+ "type = " + m.getClass().getName() + "\nmsg=\"" + m + "\"");
 		}
-	}
-
-	public boolean newKey(PublicKey newKey)
-	{
-		if (authenticated != null 
-				&& authenticated 
-				&& remotePublicKey != null 
-				&& Arrays.equals(newKey.getEncoded(), remotePublicKey.getEncoded()))
-		{
-			return true;
-		}
-		return acceptKey(newKey);
 	}
 }

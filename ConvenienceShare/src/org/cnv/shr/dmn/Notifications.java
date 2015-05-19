@@ -7,6 +7,7 @@ import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.RemoteDirectory;
+import org.cnv.shr.mdl.UserMessage;
 
 public class Notifications
 {
@@ -26,32 +27,32 @@ public class Notifications
 	
 	public void localsChanged()
 	{
-		if (Services.application != null)
+		for (NotificationListener listener : listeners)
 		{
-			Services.application.refreshLocals();
+			listener.localsChanged();
 		}
 	}
 
 	public void localChanged(LocalDirectory local)
 	{
-		if (Services.application != null)
+		for (NotificationListener listener : listeners)
 		{
-			Services.application.refreshLocal(local);
+			listener.localChanged(local);
 		}
 	}
 	
 	public void remotesChanged()
 	{
-		if (Services.application != null)
+		for (NotificationListener listener : listeners)
 		{
-			Services.application.refreshRemotes();
+			listener.remotesChanged();
 		}
 	}
 	public void remotesChanged(RemoteDirectory remote)
 	{
-		if (Services.application != null)
+		for (NotificationListener listener : listeners)
 		{
-			Services.application.refreshRemote(remote);
+			listener.remotesChanged(remote);
 		}
 	}
 	
@@ -79,22 +80,34 @@ public class Notifications
 
 	public void serveAdded(ServeInstance serveInstance)
 	{
-		
+		for (NotificationListener listener : listeners)
+		{
+			listener.serveAdded(serveInstance);
+		}
 	}
 
 	public void serveRemoved(ServeInstance serveInstance)
 	{
-		
+		for (NotificationListener listener : listeners)
+		{
+			listener.serveRemoved(serveInstance);
+		}
 	}
 	
 	public void connectionOpened(Communication c)
 	{
-		
+		for (NotificationListener listener : listeners)
+		{
+			listener.connectionOpened(c);
+		}
 	}
 	
 	public void connectionClosed(Communication c)
 	{
-		
+		for (NotificationListener listener : listeners)
+		{
+			listener.connectionClosed(c);
+		}
 	}
 	
 	public void dbException(Exception ex)
@@ -104,10 +117,19 @@ public class Notifications
 			listener.dbException(ex);
 		}
 	}
+
+	public void messageReceived(UserMessage message)
+	{
+		for (NotificationListener listener : listeners)
+		{
+			listener.messageReceived(message);
+		}
+	}
 	
 	public static abstract class NotificationListener
 	{
 		public void localsChanged()                          {}
+		public void messageReceived(UserMessage message)     {}
 		public void localChanged(LocalDirectory local)       {}
 		public void remotesChanged()                         {}
 		public void remotesChanged(RemoteDirectory remote)   {}

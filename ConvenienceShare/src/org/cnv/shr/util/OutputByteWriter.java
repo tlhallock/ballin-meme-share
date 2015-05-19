@@ -10,6 +10,12 @@ public class OutputByteWriter extends AbstractByteWriter
 	private OutputStream output;
 	ConnectionStatistics stats;
 	long length;
+
+	public OutputByteWriter(OutputStream output)
+	{
+		this.output = output;
+		this.stats = new ConnectionStatistics();
+	}
 	
 	public OutputByteWriter(OutputStream output, ConnectionStatistics stats)
 	{
@@ -17,6 +23,7 @@ public class OutputByteWriter extends AbstractByteWriter
 		this.stats = stats;
 	}
 
+	@Override
 	public AbstractByteWriter append(byte[] bytes)  throws IOException
 	{
 		output.write(bytes);

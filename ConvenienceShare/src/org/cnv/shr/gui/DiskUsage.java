@@ -4,13 +4,14 @@ import org.cnv.shr.util.Misc;
 
 class DiskUsage implements Comparable<DiskUsage>
 {
-	private long size;
+	private final long size;
 	
 	DiskUsage(long fSize)
 	{
 		this.size = fSize;
 	}
 	
+        @Override
 	public String toString()
 	{
 		return Misc.formatDiskUsage(size);
@@ -25,13 +26,14 @@ class DiskUsage implements Comparable<DiskUsage>
 
 class NumberOfFiles implements Comparable<NumberOfFiles>
 {
-	private long numFiles;
+	private final long numFiles;
 	
 	NumberOfFiles(long fSize)
 	{
 		this.numFiles = fSize;
 	}
 	
+        @Override
 	public String toString()
 	{
 		return Misc.formatNumberOfFiles(numFiles);

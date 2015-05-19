@@ -95,16 +95,20 @@ public class TableListener extends MouseAdapter
 	
 	public String getTableValue(String colName, int row)
 	{
-		for (int i = 0; i < table.getColumnCount(); i++)
+		synchronized (table)
 		{
-			if (table.getColumnName(i).equals(colName))
+			for (int i = 0; i < table.getColumnCount(); i++)
 			{
-				return (String) table.getValueAt(row, i);
+				if (table.getColumnName(i).equals(colName))
+				{
+					return (String) table.getValueAt(row, i);
+				}
 			}
 		}
 		return null;
 	}
 
+	// synchronized...
 	public static void removeIfExists(
 			DefaultTableModel model,
 			String columnName,

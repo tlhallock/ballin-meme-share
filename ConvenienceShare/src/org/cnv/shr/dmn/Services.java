@@ -80,7 +80,7 @@ public class Services
 		h2DbCache = new DbConnectionCache(deleteDb);
         
 		notifications = new Notifications();
-		keyManager = new KeysService(settings.keysFile.get());
+		keyManager = new KeysService();
 		keyManager.readKeys();
 		localMachine = new Machine.LocalMachine();
 		if (!localMachine.save())
@@ -142,6 +142,7 @@ public class Services
 		
 		userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				try
@@ -149,9 +150,6 @@ public class Services
 					application = new Application();
 					application.setVisible(true);
 					application.refreshAll();
-
-					application.refreshLocals();
-					application.refreshRemotes();
 				}
 				catch (Exception ex)
 				{

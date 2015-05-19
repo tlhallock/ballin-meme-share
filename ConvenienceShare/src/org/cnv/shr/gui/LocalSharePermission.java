@@ -6,19 +6,84 @@
 
 package org.cnv.shr.gui;
 
+import org.cnv.shr.db.h2.DbPermissions;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
+import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.Machine;
+
 /**
  *
  * @author thallock
  */
 public class LocalSharePermission extends javax.swing.JPanel {
 
+    private final Machine machine;
+    private final LocalDirectory local;
     /**
      * Creates new form SharePermission
      */
-    public LocalSharePermission() {
+    public LocalSharePermission(Machine remote, LocalDirectory local) {
+        this.machine = remote;
+        this.local = local;
         initComponents();
+        setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
+        refresh();
     }
 
+    public void save()
+    {
+        if (!listBox.isSelected()) {
+            DbPermissions.share(machine, local, SharingState.INVISIBLE);
+            return;
+        }
+        if (!downloadableBox.isSelected()) {
+            DbPermissions.share(machine, local, SharingState.VISIBLE);
+            return;
+        }
+        DbPermissions.share(machine, local, SharingState.DOWNLOADABLE);
+    }
+    
+    public final void refresh()
+    {
+        this.machineLabel.setText(machine.getName());
+        setSharing(DbPermissions.isSharing(machine, local));
+    }
+    
+    public final void setSharing(SharingState state)
+    {
+        switch (state)
+        {
+        case INVISIBLE: // Fall through
+        case NOT_SET:
+            listBox.setSelected(false);
+            downloadableBox.setSelected(false);
+            break;
+        case VISIBLE:
+            listBox.setSelected(true);
+            downloadableBox.setSelected(false);
+            break;
+        case DOWNLOADABLE:
+            listBox.setSelected(true);
+            downloadableBox.setSelected(true);
+            break;
+        }
+        updateEditable();
+    }
+    
+    public void updateEditable()
+    {
+        if (listBox.isSelected())
+        {
+            downloadableBox.setEnabled(true);
+        }
+        else
+        {
+            downloadableBox.setSelected(false);
+            downloadableBox.setEnabled(false);
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -29,20 +94,34 @@ public class LocalSharePermission extends javax.swing.JPanel {
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jCheckBox1 = new javax.swing.JCheckBox();
-        jCheckBox2 = new javax.swing.JCheckBox();
+        machineLabel = new javax.swing.JLabel();
+        listBox = new javax.swing.JCheckBox();
+        downloadableBox = new javax.swing.JCheckBox();
+        saveButton = new javax.swing.JButton();
 
         jLabel1.setText("Machine:");
 
-        jLabel2.setText("loading");
+        machineLabel.setText("loading");
 
-        jCheckBox1.setText("Can list");
+        listBox.setText("Can list");
+        listBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                listBoxStateChanged(evt);
+            }
+        });
 
-        jCheckBox2.setText("Can download");
-        jCheckBox2.addActionListener(new java.awt.event.ActionListener() {
+        downloadableBox.setText("Can download");
+        downloadableBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                downloadableBoxStateChanged(evt);
+            }
+        });
+
+        saveButton.setText("Save");
+        saveButton.setToolTipText("");
+        saveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBox2ActionPerformed(evt);
+                saveButtonActionPerformed(evt);
             }
         });
 
@@ -54,11 +133,13 @@ public class LocalSharePermission extends javax.swing.JPanel {
                 .addContainerGap()
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 578, Short.MAX_VALUE)
+                .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 498, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jCheckBox1)
+                .addComponent(listBox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jCheckBox2)
+                .addComponent(downloadableBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(saveButton)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -67,22 +148,32 @@ public class LocalSharePermission extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(jLabel2)
-                    .addComponent(jCheckBox1)
-                    .addComponent(jCheckBox2))
+                    .addComponent(machineLabel)
+                    .addComponent(listBox)
+                    .addComponent(downloadableBox)
+                    .addComponent(saveButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jCheckBox2ActionPerformed
+    private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
+        save();
+    }//GEN-LAST:event_saveButtonActionPerformed
+
+    private void downloadableBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_downloadableBoxStateChanged
+        updateEditable();
+    }//GEN-LAST:event_downloadableBoxStateChanged
+
+    private void listBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_listBoxStateChanged
+        updateEditable();
+    }//GEN-LAST:event_listBoxStateChanged
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBox jCheckBox1;
-    private javax.swing.JCheckBox jCheckBox2;
+    private javax.swing.JCheckBox downloadableBox;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
+    private javax.swing.JCheckBox listBox;
+    private javax.swing.JLabel machineLabel;
+    private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables
 }

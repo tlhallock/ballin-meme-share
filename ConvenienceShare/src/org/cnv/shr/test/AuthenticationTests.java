@@ -7,6 +7,7 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.UserMessage;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,7 +21,11 @@ public class AuthenticationTests extends RemotesTest
 		try (Closeable c2 = launchLocalMachine(true);
 			 Closeable c1 = getMachineInfo(0).launch(true);)
 		{
-			UserActions.addMachine(getMachineInfo(0).getUrl());
+			new UserMessage(Services.localMachine, UserMessage.MessageType.TEXT.getDbValue(), "foobar").save();
+			
+			
+			
+			UserActions.addMachine(getMachineInfo(0).getUrl(), true, true);
 			
 			Thread.sleep(5000);
 			
@@ -53,7 +58,7 @@ public class AuthenticationTests extends RemotesTest
 		try (Closeable c2 = launchLocalMachine(true);
 			 Closeable c1 = getMachineInfo(0).launch(true);)
 		{
-			UserActions.addMachine(getMachineInfo(0).getUrl());
+			UserActions.addMachine(getMachineInfo(0).getUrl(), true, true);
 			
 			Thread.sleep(5000);
 			

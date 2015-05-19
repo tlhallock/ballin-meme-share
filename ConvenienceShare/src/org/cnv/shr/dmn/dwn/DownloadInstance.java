@@ -22,6 +22,7 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
+import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
@@ -38,8 +39,6 @@ public class DownloadInstance
 	static int CHUNK_SIZE = 1024 * 1024; // long numChunks = (remoteFile.getFileSize() / CHUNK_SIZE) + 1;
 	static long COMPLETION_REFRESH_RATE = 5 * 1000;
 	
-	private DownloadState state;
-	
 	private HashMap<String, Seeder> seeders = new HashMap<>();
 	private RemoteFile remoteFile;
 	private File tmpFile;
@@ -54,7 +53,7 @@ public class DownloadInstance
 	DownloadInstance(Download d)
 	{
 		this.download = d;
-		state = DownloadState.NOT_STARTED;
+		d.setState(DownloadState.NOT_STARTED);
 		remoteFile = d.getFile();
 	}
 	
@@ -70,11 +69,11 @@ public class DownloadInstance
 	
 	public synchronized void begin() throws UnknownHostException, IOException
 	{
-		if (!state.equals(DownloadState.NOT_STARTED))
+		if (!download.getState().equals(DownloadState.NOT_STARTED))
 		{
 			return;
 		}
-		state = DownloadState.GETTING_META_DATA;
+		download.setState(DownloadState.GETTING_META_DATA);
 		FileRequest request = new FileRequest(remoteFile, CHUNK_SIZE);
 		Machine machine = remoteFile.getRootDirectory().getMachine();
 		Communication openConnection = Services.networkManager.openConnection(machine, false);
@@ -96,7 +95,7 @@ public class DownloadInstance
 
 	private void requestSeeders()
 	{
-		state = DownloadState.FINDING_PEERS;
+		download.setState(DownloadState.FINDING_PEERS);
 		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
 		
 		outer:
@@ -167,7 +166,7 @@ public class DownloadInstance
 	
 	private void recover()
 	{
-		state = DownloadState.RECOVERING;
+		download.setState(DownloadState.RECOVERING);
 		for (Chunk chunk : upComing)
 		{
 			try
@@ -190,7 +189,7 @@ public class DownloadInstance
 	
 	private void allocate() throws IOException
 	{
-		state = DownloadState.ALLOCATING;
+		download.setState(DownloadState.ALLOCATING);
 		File file = PathSecurity.getMirrorDirectory(remoteFile);
 		
 		// ensure that we are sharing this mirror...
@@ -271,13 +270,12 @@ public class DownloadInstance
 	
 	private void complete()
 	{
-		download.remove();
 		for (Seeder seeder : seeders.values())
 		{
 			seeder.done();
 		}
-		
-		state = DownloadState.PLACING_IN_FS;
+
+		download.setState(DownloadState.PLACING_IN_FS);
 		try
 		{
 			if (!checkChecksum())
@@ -302,6 +300,7 @@ public class DownloadInstance
 		
 		Services.downloads.remove(this);
 		Services.notifications.downloadDone(this);
+		download.setState(DownloadState.ALL_DONE);
 	}
 
 	public File getDestinationFile()
@@ -370,17 +369,6 @@ public class DownloadInstance
 		{
 			seeder.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
 		}
-	}
-	
-	enum DownloadState
-	{
-		NOT_STARTED,
-		GETTING_META_DATA,
-		FINDING_PEERS,
-		RECOVERING,
-		ALLOCATING,
-		DOWNLOADING,
-		PLACING_IN_FS,
 	}
 	
 	void fail(String string)

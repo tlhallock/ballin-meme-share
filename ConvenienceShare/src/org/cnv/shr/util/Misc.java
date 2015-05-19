@@ -192,6 +192,6 @@ public class Misc
 	}
 	public static String getClassPath()
 	{
-		return "../libs/h2-1.4.187.jar:../libs/org.json-20120521.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:.";
+		return "../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:.";
 	}
 }

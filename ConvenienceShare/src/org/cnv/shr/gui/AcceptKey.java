@@ -5,17 +5,61 @@
  */
 package org.cnv.shr.gui;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.cnv.shr.dmn.Services;
+
 /**
  *
  * @author rever
  */
 public class AcceptKey extends javax.swing.JFrame {
 
+    Boolean result;
+    
+    Lock lock = new ReentrantLock();
+    Condition condition = lock.newCondition();
     /**
      * Creates new form AcceptKey
      */
     public AcceptKey() {
         initComponents();
+	setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
+    }
+    
+    public static boolean showAcceptDialog(String url, String machineName, String machineIdentifier, String key)
+    {
+        AcceptKey acceptKey = new AcceptKey();
+        acceptKey.jLabel6.setText(url);
+        acceptKey.jLabel7.setText(machineName);
+        acceptKey.jLabel8.setText(machineIdentifier);
+        acceptKey.jLabel5.setText(key);
+        
+        acceptKey.lock.lock();
+        try
+        {
+            acceptKey.setVisible(true);
+            int count = 0;
+            while (acceptKey.result == null && count++ < 10)
+            {
+                acceptKey.condition.await(1, TimeUnit.SECONDS);
+            }
+            acceptKey.dispose();
+        }
+        catch (InterruptedException ex)
+        {
+        	acceptKey.dispose();
+        	Services.logger.print(ex);
+        	return false;
+        }
+        finally
+        {
+            acceptKey.lock.unlock();
+        }
+        return acceptKey.result != null && acceptKey.result;
     }
 
     /**
@@ -57,8 +101,20 @@ public class AcceptKey extends javax.swing.JFrame {
         jLabel8.setText("jLabel8");
 
         jButton1.setText("Accept");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         jButton2.setText("Reject");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -117,6 +173,28 @@ public class AcceptKey extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        lock.lock();
+        try {
+            result = false;
+            condition.notifyAll();
+        } finally {
+            lock.unlock();
+        }
+        dispose();
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        lock.lock();
+        try {
+            result = true;
+            condition.notifyAll();
+        } finally {
+            lock.unlock();
+        }
+        dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -43,7 +43,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.addMachine(url);
+			UserActions.addMachine(url, true, true);
 		}
 	};
 	

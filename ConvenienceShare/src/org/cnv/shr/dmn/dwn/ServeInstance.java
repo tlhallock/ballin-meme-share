@@ -13,6 +13,8 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.ChecksumManager;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.DownloadFailure;
@@ -36,6 +38,16 @@ public class ServeInstance
 		this.local = local;
 		this.connection = communication;
 		this.chunkSize = chunkSize;
+	}
+
+	public Machine getMachine()
+	{
+		return connection.getMachine();
+	}
+	
+	public SharedFile getFile()
+	{
+		return local;
 	}
 	
 	private String stage() throws FileNotFoundException, IOException, NoSuchAlgorithmException

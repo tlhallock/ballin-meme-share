@@ -1,6 +1,8 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
@@ -10,12 +12,12 @@ public class ServeManager
 {
 	private HashMap<String, ServeInstance> serves = new HashMap<>();
 	
-	public ServeInstance getServeInstance(Communication communication)
+	public synchronized ServeInstance getServeInstance(Communication communication)
 	{
 		return serves.get(communication.getUrl());
 	}
 
-	public ServeInstance serve(LocalFile file, Communication c, int chunkSize)
+	public synchronized ServeInstance serve(LocalFile file, Communication c, int chunkSize)
 	{
 		ServeInstance instance = new ServeInstance(c, file, chunkSize);
 		serves.put(c.getUrl(), instance);
@@ -23,10 +25,17 @@ public class ServeManager
 		return instance;
 	}
 	
-	public void done(Communication c)
+	public synchronized void done(Communication c)
 	{
 		ServeInstance serveInstance = serves.get(c.getUrl());
 		Services.notifications.serveRemoved(serveInstance);
 		serves.remove(c.getUrl());
+	}
+
+	public synchronized List<ServeInstance> getServeInstances()
+	{
+		LinkedList<ServeInstance> returnValue = new LinkedList<>();
+		returnValue.addAll(serves.values());
+		return returnValue;
 	}
 }

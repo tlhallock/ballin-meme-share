@@ -53,6 +53,8 @@ class PathSecurity
 			}
 		} while (iterator.hasNext() && (next = new File(next.getPath() + File.separator + iterator.next())) != null);
 
+		// Somebody could create a file that looks like a symbolic link to this OS as the second to last path element.
+		// We should create the file to check if it doesn't exist.
 		next = new File(next.getPath() + File.separator + filename);
 		boolean alreadyExisted = next.exists();
 		if (!alreadyExisted)

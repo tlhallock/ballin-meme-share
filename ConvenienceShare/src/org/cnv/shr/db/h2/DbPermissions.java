@@ -11,7 +11,7 @@ import org.cnv.shr.mdl.RootDirectory;
 
 public class DbPermissions
 {
-	public void share(Machine machine, RootDirectory root, SharingState share)
+	public static void share(Machine machine, RootDirectory root, SharingState share)
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement("merge into SHARE_ROOT key(RID, MID) values (?, ?, ?);"))
@@ -28,7 +28,7 @@ public class DbPermissions
 		}
 	}
 
-	public SharingState isSharing(Machine machine, RootDirectory root, boolean share)
+	public static SharingState isSharing(Machine machine, RootDirectory root)
 	{
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement stmt = c.prepareStatement("select IS_SHARING from SHARE_ROOT where RID=? and MID=?;"))

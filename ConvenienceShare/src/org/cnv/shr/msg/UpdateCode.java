@@ -2,8 +2,10 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -12,12 +14,14 @@ public class UpdateCode extends Message
 	public static int TYPE = 9;
 	
 	private String url;
+	byte[] decryptedCodeNaunce;
 
 	public UpdateCode(InputStream i) throws IOException
 	{
 		super(i);
 	}
 	
+	@Override
 	protected int getType()
 	{
 		return TYPE;
@@ -38,10 +42,18 @@ public class UpdateCode extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		// TODO Auto-generated method stub
-		
+		if (!Arrays.equals(
+				connection.getAuthentication().getRemoteKey().getEncoded(),
+				Services.keyManager.getCodeUpdateKey().getEncoded()))
+		{
+			Services.logger.println("Not able to update code: key failure.");
+			return;
+		}
+		// download
+		// restart
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

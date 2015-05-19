@@ -24,13 +24,14 @@ import org.junit.Test;
 
 public class DownloadTest extends RemotesTest
 {
+	// Assert the notifications too...
 	@Test
 	public void testDownloadFromRemote() throws Exception
 	{
 		try (Closeable c2 = launchLocalMachine(true);
 			 Closeable c1 = getMachineInfo(0).launch(true))
 		{
-			UserActions.addMachine(getMachineInfo(0).getUrl());
+			UserActions.addMachine(getMachineInfo(0).getUrl(), true, true);
 			Thread.sleep(1000);
 			
 			final Path createTempDirectory = Files.createTempDirectory("root");

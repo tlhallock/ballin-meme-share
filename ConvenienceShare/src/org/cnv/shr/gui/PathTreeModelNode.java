@@ -109,6 +109,9 @@ public class PathTreeModelNode implements TaskListener
 		}
 	}
 	
+    void ensureExpanded() {
+        if (!isLeaf() && children == null) expand();
+    }
 	synchronized void expand()
 	{
 		System.out.println("Expanding " + element.getFullPath());

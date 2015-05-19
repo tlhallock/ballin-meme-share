@@ -11,6 +11,7 @@ public final class ByteListBuffer extends AbstractByteWriter
 	private byte[] currentBuffer = new byte[BUFFER_LENGTH];
 	private int offset;
 
+	@Override
 	public ByteListBuffer append(byte[] bytes)
 	{
 		length += bytes.length;
@@ -29,6 +30,7 @@ public final class ByteListBuffer extends AbstractByteWriter
 		return this;
 	}
 	
+	@Override
 	public ByteListBuffer append(byte i)
 	{
 		checkEnd();
@@ -66,8 +68,135 @@ public final class ByteListBuffer extends AbstractByteWriter
 		offset = 0;
 	}
 	
+	@Override
 	public long getLength()
 	{
 		return length;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+//	@Override
+//	public ByteListBuffer append(boolean hasFile)
+//	{
+//		try
+//		{
+//			return (ByteListBuffer) super.append(hasFile);
+//		}
+//		catch (IOException e)
+//		{
+//			e.printStackTrace();
+//			return this;
+//		}
+//	}
+//
+//	@Override
+//	public ByteListBuffer append(String str)
+//	{
+//		try
+//		{
+//			return (ByteListBuffer) super.append(str);
+//		}
+//		catch (IOException e)
+//		{
+//			e.printStackTrace();
+//			return this;
+//		}
+//	}
+//
+//	@Override
+//	public ByteListBuffer appendVarByteArray(byte[] bytes)
+//	{
+//		try
+//		{
+//			return (ByteListBuffer) super.appendVarByteArray(bytes);
+//		}
+//		catch (IOException e)
+//		{
+//			e.printStackTrace();
+//			return this;
+//		}
+//	}
+//
+//	@Override
+//	public ByteListBuffer append(PublicKey key)
+//	{
+//		try
+//		{
+//			return (ByteListBuffer) super.append(key);
+//		}
+//		catch (IOException e)
+//		{
+//			e.printStackTrace();
+//			return this;
+//		}
+//	}
+//
+//	@Override
+//	public ByteListBuffer append(SharedFileId key)
+//	{
+//		try
+//		{
+//			return (ByteListBuffer) super.append(key);
+//		}
+//		catch (IOException e)
+//		{
+//			e.printStackTrace();
+//			return this;
+//		}
+//	}
+//
+//	@Override
+//	public ByteListBuffer append(double percentComplete)
+//	{
+//		try
+//		{
+//			return (ByteListBuffer) super.append(percentComplete);
+//		}
+//		catch (IOException e)
+//		{
+//			e.printStackTrace();
+//			return this;
+//		}
+//	}
 }

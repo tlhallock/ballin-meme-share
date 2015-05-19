@@ -71,7 +71,7 @@ public class SynchronizationTests extends RemotesTest
 		try (Closeable c2 = launchLocalMachine(true);
 			 Closeable c1 = getMachineInfo(0).launch(true))
 		{
-			UserActions.addMachine(getMachineInfo(0).getUrl());
+			UserActions.addMachine(getMachineInfo(0).getUrl(), true, true);
 			Thread.sleep(1000);
 			
 			final Path createTempDirectory = Files.createTempDirectory("root");
@@ -103,7 +103,7 @@ public class SynchronizationTests extends RemotesTest
 		try (final Closeable c2 = launchLocalMachine(true);
 			 final Closeable c1 = getMachineInfo(0).launch(true))
 		{
-			UserActions.addMachine(getMachineInfo(0).getUrl());
+			UserActions.addMachine(getMachineInfo(0).getUrl(), true, true);
 			Thread.sleep(1000);
 			
 			final Path createTempDirectory = Files.createTempDirectory("root");

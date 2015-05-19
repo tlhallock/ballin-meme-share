@@ -2,11 +2,13 @@ package org.cnv.shr.dmn;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -18,6 +20,7 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.security.cert.CertificateEncodingException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -34,8 +37,7 @@ import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Misc;
-
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import org.cnv.shr.util.OutputByteWriter;
 
 import de.flexiprovider.common.math.FlexiBigInt;
 import de.flexiprovider.core.FlexiCoreProvider;
@@ -45,23 +47,22 @@ import de.flexiprovider.core.rsa.RSAPublicKey;
 
 public class KeysService
 {
-	HashMap<String, KeyPairObject> keys = new HashMap<>();
-	KeyPairObject primaryKey;
-	File keysFile;
+	private HashMap<String, KeyPairObject> keys = new HashMap<>();
+	private KeyPairObject primaryKey;
+	private PublicKey codeUpdateKey;
 
 	private HashSet<String> pendingAuthenticationRequests = new HashSet<>();
 	
 	private static final int MAX_CIPHER_LENGTH = 117;
 	
-	public KeysService(File keysFile)
+	public KeysService()
 	{
-		this.keysFile = keysFile;
 		Security.addProvider(new FlexiCoreProvider());
 	}
 	
 	public void writeKeys() throws IOException
 	{
-		try (PrintStream ps = new PrintStream(new FileOutputStream(keysFile)))
+		try (PrintStream ps = new PrintStream(new FileOutputStream(Services.settings.keysFile.get())))
 		{
 			ps.println(keys.size());
 			for (KeyPairObject pair : keys.values())
@@ -79,7 +80,7 @@ public class KeysService
 	
 	public void readKeys() throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, IOException, CertificateEncodingException, InvalidKeySpecException, ClassNotFoundException
 	{
-		try (Scanner scanner = new Scanner(new FileReader(keysFile)))
+		try (Scanner scanner = new Scanner(new FileReader(Services.settings.keysFile.get())))
 		{
 			int length = scanner.nextInt();
 			for (int i = 0; i < length; i++)
@@ -261,7 +262,7 @@ public class KeysService
 			Cipher cipher2 = Cipher.getInstance("RSA", "FlexiCore");
 			cipher2.init(Cipher.ENCRYPT_MODE, pKey);
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			try (InputStream input = new ByteInputStream(original, 0, original.length);)
+			try (InputStream input = new ByteArrayInputStream(original, 0, original.length);)
 			{
 				Misc.copy(new CipherInputStream(input, cipher2), output);
 			}
@@ -300,7 +301,7 @@ public class KeysService
 			cipher2.init(Cipher.DECRYPT_MODE, privateKey);
 
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			try (ByteInputStream input = new ByteInputStream(encrypted, 0, encrypted.length);)
+			try (ByteArrayInputStream input = new ByteArrayInputStream(encrypted, 0, encrypted.length);)
 			{
 				Misc.copy(new CipherInputStream(input, cipher2), output);
 			}
@@ -412,6 +413,45 @@ public class KeysService
 			Services.logger.print(e);
 			Services.quiter.quit();
 			return null;
+		}
+	}
+	
+	public PublicKey getCodeUpdateKey()
+	{
+		if (codeUpdateKey != null)
+		{
+			return codeUpdateKey;
+		}
+
+		try (InputStream input = new FileInputStream(Services.settings.codeUpdateKey.get());)
+		{
+			codeUpdateKey = new ByteReader(input).readPublicKey();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		return codeUpdateKey;
+	}
+	public void updateCodeUpdateKeyIfNecessary(PublicKey oldKey, PublicKey newKey) throws FileNotFoundException
+	{
+		if (oldKey == null || newKey == null || codeUpdateKey == null)
+		{
+			return;
+		}
+		if (!Arrays.equals(getCodeUpdateKey().getEncoded(), oldKey.getEncoded()))
+		{
+			return;
+		}
+		codeUpdateKey = newKey;
+		try (OutputStream output = new FileOutputStream(Services.settings.codeUpdateKey.get());)
+		{
+			new OutputByteWriter(output).append(codeUpdateKey);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
 		}
 	}
 }

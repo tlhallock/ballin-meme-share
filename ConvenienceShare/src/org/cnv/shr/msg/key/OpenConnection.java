@@ -7,7 +7,6 @@ import java.security.PublicKey;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -55,14 +54,13 @@ public class OpenConnection extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		Machine machine = connection.getMachine();
-		if (connection.getAuthentication().canAuthenticateRemote(machine, sourcePublicKey, destinationPublicKey))
+		if (connection.getAuthentication().canAuthenticateRemote(connection, sourcePublicKey, destinationPublicKey))
 		{
 			connection.getAuthentication().authenticateToTarget(connection, requestedNaunce);
 			return;
 		}
-		
-		PublicKey[] knownKeys = DbKeys.getKeys(machine);
+
+		PublicKey[] knownKeys = DbKeys.getKeys(connection.getMachine());
 		if (knownKeys != null && knownKeys.length > 0)
 		{
 			Services.logger.println("We have a different key for the remote.");
@@ -73,6 +71,7 @@ public class OpenConnection extends KeyMessage
 		fail("Open connection: has keys, but not claimed keys.", connection);
 	}
 	
+	@Override
 	public String toString()
 	{
 		return "Please open a connection to me. my key=" + sourcePublicKey + " your key= " + destinationPublicKey;
