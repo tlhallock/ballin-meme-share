@@ -78,5 +78,15 @@ public class DbPermissions
 		{
 			return state == i;
 		}
+		
+		public boolean canList()
+		{
+			return this.equals(DOWNLOADABLE) || this.equals(VISIBLE);
+		}
+		
+		public boolean canDownload()
+		{
+			return this.equals(DOWNLOADABLE);
+		}
 	}
 }

@@ -13,6 +13,9 @@ public class Main
 	public static void main(String[] args) throws Exception
 	{
         System.out.println("Starting from " + Misc.getJarPath());
+        
+        // Need to break up chunkList
+        // Need to break up PathList
 
         // get code updater working
         // add setting for ip address

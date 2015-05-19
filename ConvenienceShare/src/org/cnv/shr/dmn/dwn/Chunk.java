@@ -1,14 +1,21 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Scanner;
 
+import org.cnv.shr.db.h2.DbLocals;
+import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class Chunk
 {
-	private String fileChecksum;
 	private String checksum;
 	private long begin;
 	private long end;
@@ -20,16 +27,14 @@ public class Chunk
 			begin = s.nextLong();
 			end = s.nextLong();
 			checksum = s.next();
-			fileChecksum = s.next();
 		}
 	}
 	
-	Chunk(long begin, long end, String checksum, String fileChecksum)
+	Chunk(long begin, long end, String checksum)
 	{
 		this.begin = begin;
 		this.end = end;
 		this.checksum = checksum;
-		this.fileChecksum = fileChecksum;
 	}
 
 	public Chunk(ByteReader input) throws IOException
@@ -42,7 +47,6 @@ public class Chunk
 		begin =  input.readLong();
 		end = input.readLong();
 		checksum = input.readString();
-		fileChecksum = input.readString();
 	}
 
 	public void write(AbstractByteWriter buffer) throws IOException
@@ -50,22 +54,16 @@ public class Chunk
 		buffer.append(getBegin());
 		buffer.append(end);
 		buffer.append(checksum);
-		buffer.append(fileChecksum);
 	}
 	
 	public String toString()
 	{
-		return getBegin() + " " + end + " " + checksum + " " + fileChecksum;
+		return getBegin() + " " + end + " " + checksum;
 	}
 
 	public long getBegin()
 	{
 		return begin;
-	}
-	
-	public String getFileChecksum()
-	{
-		return fileChecksum;
 	}
 
 	public String getChecksum()
@@ -82,7 +80,6 @@ public class Chunk
 	{
 		return checksum.equals(other.checksum)
 				&& getBegin() == other.getBegin() 
-				&& end == other.end
-				&& fileChecksum.equals(other.fileChecksum);
+				&& end == other.end;
 	}
 }

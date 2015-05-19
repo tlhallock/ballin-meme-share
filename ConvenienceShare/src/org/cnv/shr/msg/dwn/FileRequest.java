@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.db.h2.DbPermissions;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.dmn.dwn.SharedFileId;
@@ -48,6 +50,13 @@ public class FileRequest extends DownloadMessage
 	public void perform(Communication connection) throws Exception
 	{
 		LocalFile local = getDescriptor().getLocal();
+		SharingState sharing = DbPermissions.isSharing(connection.getMachine(), local.getRootDirectory());
+		if (!sharing.canList())
+		{
+//			fail("Not downloadable");
+			connection.finish();
+			return;
+		}
 		ServeInstance serve = Services.server.serve(local, connection, chunkSize);
 		serve.sendChunks();
 	}

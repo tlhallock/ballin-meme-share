@@ -20,6 +20,7 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SecurityKey;
 import org.cnv.shr.mdl.UserMessage;
+import org.cnv.shr.stng.Settings;
 
 public class DbTables
 {
@@ -36,6 +37,7 @@ public class DbTables
 		RFILE            ("SFILE              ".trim(), "F_ID"),
 		LMACHINE         ("MACHINE            ".trim(), "M_ID"),
 		RMACHINE         ("MACHINE            ".trim(), "M_ID"),
+		CHUNK            ("CHUNK              ".trim(), "C_ID"),
 		ROOT_CONTAINS    ("ROOT_CONTAINS      ".trim(), ""),
 		SHARE_ROOT       ("SHARE_ROOT         ".trim(), ""),
 		;
@@ -113,7 +115,8 @@ public class DbTables
 				case LFILE            : return new LocalFile      (row.getInt(pKey));  
 				case RFILE            : return new RemoteFile     (row.getInt(pKey));  
 				case RMACHINE         : return new Machine        (row.getInt(pKey));
-				case LMACHINE         : return Services.localMachine;
+				case LMACHINE         : return Services.localMachine;  
+				case CHUNK            : throw new RuntimeException("Chunk doesn't write to db.");
 				default:
 				return null;
 			}
@@ -232,7 +235,7 @@ public class DbTables
 	{
 		StringBuilder builder = new StringBuilder();
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-				ClassLoader.getSystemResourceAsStream(Services.settings.getSqlDir() + file))))
+				ClassLoader.getSystemResourceAsStream(Settings.SQL_DIR + file))))
 		{
 			String line;
 			while ((line = reader.readLine()) != null)

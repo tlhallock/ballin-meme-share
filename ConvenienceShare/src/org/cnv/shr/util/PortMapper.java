@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -139,34 +140,34 @@ public class PortMapper {
 		}
 	}
 
-	public static boolean currentRulesMatch(int[] ports) throws IOException,
+	public static boolean currentRulesMatch(HashMap<Integer, Integer> ports) throws IOException,
 			InterruptedException {
 		HashMap<Integer, Integer> listPorts = listPorts();
-		if (listPorts.size() != ports.length) {
+		if (listPorts.size() != ports.size()) {
 			return false;
 		}
 
-		for (int port : ports) {
-			Integer mapped = listPorts.get(new Integer(port));
+		for (Entry<Integer, Integer> port : ports.entrySet()) {
+			Integer mapped = listPorts.get(new Integer(port.getKey()));
 			if (mapped == null) {
 				return false;
 			}
-			if (mapped != port) {
+			if (mapped != port.getValue()) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	static boolean map(int[] ports, String knownIp) throws IOException,
+	static boolean map(HashMap<Integer, Integer> ports, String knownIp) throws IOException,
 			InterruptedException {
 		if (currentRulesMatch(ports)) {
 			return true;
 		}
 		System.out.println("Current mappings did not match.");
 		removeAllMappings();
-		for (int port : ports) {
-			if (!mapPort(port, port, knownIp)) {
+		for (Entry<Integer, Integer> port : ports.entrySet()) {
+			if (!mapPort(port.getKey(), port.getValue(), knownIp)) {
 				return false;
 			}
 		}
@@ -180,17 +181,18 @@ public class PortMapper {
 		{
 			// restart server threads too...
 
-			int beginPort = Services.settings.servePortBegin.get();
-			int nports = Services.settings.servePortBegin.get();
-
-			int[] ports = new int[nports];
+			int beginPortI = Services.settings.servePortBeginI.get();
+			int beginPortE = Services.settings.servePortBeginE.get();
+			
+			int nports = Services.settings.maxServes.get();
+			HashMap<Integer, Integer> mappings = new HashMap<>();
 			for (int i = 0; i < nports; i++)
 			{
-				ports[i] = beginPort + i;
+				mappings.put(beginPortE + i, beginPortI + i);
 			}
 			try
 			{
-				if (!map(ports, "idk what ip to use"))
+				if (!map(mappings, "idk what ip to use"))
 				{
 					Services.logger.println("That sux.");
 				}

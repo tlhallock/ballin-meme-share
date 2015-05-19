@@ -56,9 +56,27 @@ public class ConnectionRunnable implements Runnable
 		}
 		finally
 		{
+			cleanup();
+		}
+	}
+
+	private void cleanup()
+	{
+		try
+		{
 			ensureClosed();
 		}
-		Services.networkManager.remove(this);
+		finally
+		{
+			try
+			{
+				Services.notifications.connectionClosed(connection);
+			}
+			finally
+			{
+				Services.networkManager.remove(this);
+			}
+		}
 	}
 
 	private void ensureClosed()

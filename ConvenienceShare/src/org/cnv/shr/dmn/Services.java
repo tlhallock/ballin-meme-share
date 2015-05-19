@@ -1,7 +1,22 @@
 package org.cnv.shr.dmn;
 
+import java.awt.AWTException;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.security.NoSuchAlgorithmException;
@@ -17,6 +32,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.NoSuchPaddingException;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
 
 import org.cnv.shr.cnctn.ConnectionManager;
 import org.cnv.shr.db.h2.DbConnectionCache;
@@ -40,14 +59,13 @@ public class Services
 	/** To handle outgoing network traffic **/
 	public static ExecutorService connectionThreads;
 	/** To handle incoming network traffic **/
-	public static ExecutorService serveThreads;
+	public static RequestHandler[] handlers;
 	public static Settings settings;
 	public static Logger logger;
 	/** delete this **/
 	public static Notifications notifications;
 	public static ChecksumManager checksums;
 	public static ConnectionManager networkManager;
-	public static RequestHandler[] handlers;
 	public static MessageReader msgReader;
 	public static KeysService keyManager;
 	public static Timer monitorTimer;
@@ -68,7 +86,7 @@ public class Services
 		testStartUp();
 		startServices();
 	}
-	private static void createServices(Settings stgs, boolean deleteDb) throws FileNotFoundException, IOException, SQLException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, CertificateEncodingException, InvalidKeySpecException, InterruptedException
+	private static void createServices(Settings stgs, boolean deleteDb) throws FileNotFoundException, IOException, SQLException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, CertificateEncodingException, InvalidKeySpecException, InterruptedException, AWTException
 	{
 		settings = stgs;
 		logger = new Logger();
@@ -103,15 +121,25 @@ public class Services
 		handlers = new RequestHandler[numServeThreads];
 		for (int i = 0; i < handlers.length; i++)
 		{
-			int port = settings.servePortBegin.get() + i;
-			handlers[i] = new RequestHandler(new ServerSocket(port));
+			int port = settings.servePortBeginI.get() + i;
+			handlers[i] = new RequestHandler(port);
 		}
 		
 		userThreads        = Executors.newCachedThreadPool();
 		connectionThreads  = new ThreadPoolExecutor(0, settings.maxDownloads.get(), 
 				60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
-		serveThreads       = Executors.newFixedThreadPool(numServeThreads);
 		checksums = new ChecksumManager();
+		
+		if (SystemTray.isSupported())
+		{
+			startSystemTray();
+		}
+		else
+		{
+			Services.logger.println("Your system does not support the System tray.");
+			Services.logger.println("This makes it hard to keep the application running.");
+			Services.application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		}
 	}
 
 	private static void startServices()
@@ -120,7 +148,7 @@ public class Services
 		checksums.start();
 		for (int i = 0; i < handlers.length; i++)
 		{
-			serveThreads.execute(handlers[i]);
+			handlers[i].start();
 		}
 		
 		monitorTimer = new Timer();
@@ -160,6 +188,36 @@ public class Services
 			}
 		});
 	}
+	
+	private static void startSystemTray() throws IOException, AWTException
+	{
+		PopupMenu menu = new PopupMenu();
+		MenuItem item = new MenuItem("Show");
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				if (application != null)
+				{
+					application.setVisible(true);
+				}
+			}});
+		menu.add(item);
+		item = new MenuItem("Quit");
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				quiter.quit();
+			}});
+		menu.add(item);
+		
+		BufferedImage read = ImageIO.read(ClassLoader.getSystemResourceAsStream(Settings.IMG_DIR + "icon.png"));
+		Image scaledInstance = read.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH);
+		TrayIcon icon = new TrayIcon(scaledInstance, "Convenience Share");
+		icon.setPopupMenu(menu);
+		SystemTray.getSystemTray().add(icon);
+	}
 
 	public static void deInitialize()
 	{
@@ -183,8 +241,6 @@ public class Services
 			userThreads.shutdownNow();
 		if (connectionThreads != null)
 			connectionThreads.shutdownNow();
-		if (serveThreads != null)
-			serveThreads.shutdownNow();
 		if (h2DbCache != null)
 			h2DbCache.close();
 		if (networkManager != null)
@@ -193,9 +249,13 @@ public class Services
 			logger.close();
 	}
 	
-	public static void testStartUp() throws UnsupportedEncodingException
+	public static void testStartUp() throws Exception
 	{
 		"foo".getBytes(Settings.encoding);
+		if (!SystemTray.isSupported())
+		{
+			throw new Exception("SystemTray not supported on this OS.");
+		}
 		// So far, check ip, check String.getBytes(), check sha1, check encryption, check port
 	}
 }

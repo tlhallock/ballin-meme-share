@@ -30,9 +30,6 @@ public class ServeInstance
 	
 	private double lastCompletionPercentage;
 	
-	// This should be stored on file...
-	private HashMap<String, Chunk> chunks = new HashMap<>();
-	
 	ServeInstance(Communication communication, LocalFile local, int chunkSize)
 	{
 		this.local = local;
@@ -50,7 +47,7 @@ public class ServeInstance
 		return local;
 	}
 	
-	private String stage() throws FileNotFoundException, IOException, NoSuchAlgorithmException
+	private String stage(HashMap<String, Chunk> chunks) throws FileNotFoundException, IOException, NoSuchAlgorithmException
 	{
 		local.ensureChecksummed();
 		
@@ -124,7 +121,8 @@ public class ServeInstance
 		try
 		{
 			Services.logger.println("Staging.");
-			String checksum = stage();
+			HashMap<String, Chunk> chunks = new HashMap<>();
+			String checksum = stage(chunks);
 			Services.logger.println("Sending chunks.");
 			connection.send(new ChunkList(chunks, checksum, new SharedFileId(local)));
 		}
@@ -136,20 +134,13 @@ public class ServeInstance
 	
 	public void serve(Chunk chunk)
 	{
-		Chunk myVersion = chunks.get(chunk.toString());
-		if (!myVersion.equals(chunk))
-		{
-			// Should still send the chunk...
-			fail("Unkown chunk");
-			return;
-		}
-
 		synchronized (connection.getOut())
 		{
-			connection.send(new ChunkResponse(new SharedFileId(local), myVersion));
+			connection.send(new ChunkResponse(new SharedFileId(local), chunk));
 			try
 			{
-				ChunkData.write(myVersion, tmpFile, connection.getOut());
+				// Right here I could check that the checksum matches...
+				ChunkData.write(chunk, tmpFile, connection.getOut());
 			}
 			catch (IOException e)
 			{

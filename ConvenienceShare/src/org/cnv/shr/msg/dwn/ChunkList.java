@@ -61,7 +61,7 @@ public class ChunkList extends DownloadMessage
 	public void perform(Communication connection) throws Exception
 	{
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor());
-		downloadInstance.foundChunks(chunks);
+		downloadInstance.foundChunks(connection.getMachine(), chunks);
 	}
 	
 	@Override

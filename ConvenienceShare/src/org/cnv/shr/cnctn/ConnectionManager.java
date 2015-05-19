@@ -26,7 +26,7 @@ public class ConnectionManager
 		if (index < 0)
 		{
 			// Should try all other ports too...
-			return openConnection(url, Services.settings.servePortBegin.get(), 1, null, acceptKeys);
+			return openConnection(url, Services.settings.servePortBeginE.get(), 1, null, acceptKeys);
 		}
 		else
 		{
@@ -93,7 +93,6 @@ public class ConnectionManager
 			ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
 			synchronized (runnables) { runnables.add(connectionRunnable); }
 			connectionRunnable.run();
-			Services.notifications.connectionClosed(connection);
 		}
 		catch (IOException ex)
 		{

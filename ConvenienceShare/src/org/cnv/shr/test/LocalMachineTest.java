@@ -28,7 +28,8 @@ public class LocalMachineTest
 		stgs.downloadsDirectory.set(  new File(root + File.separator + "downloads"));
 		stgs.servingDirectory.set(    new File(root + File.separator + "serve"));
 		stgs.stagingDirectory.set(    new File(root + File.separator + "stage"));
-		stgs.servePortBegin.set(LOCAL_PORT);
+		stgs.servePortBeginI.set(LOCAL_PORT);
+		stgs.servePortBeginE.set(LOCAL_PORT);
 		stgs.machineIdentifier.set("6mkDuKhkiTpjpM3vS6LGEKN72dEB4tmsaKslTJc2ZDrXLGplYE");
 		stgs.write();
 		

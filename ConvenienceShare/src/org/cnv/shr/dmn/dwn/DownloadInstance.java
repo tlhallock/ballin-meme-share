@@ -46,8 +46,6 @@ public class DownloadInstance
 	
 	private HashMap<String, ChunkRequest> pending = new HashMap<>();
 	// These should be stored on file...
-	private LinkedList<Chunk> completed = new LinkedList<>();
-	private LinkedList<Chunk> upComing;
 	private Download download;
 	
 	DownloadInstance(Download d)
@@ -134,8 +132,12 @@ public class DownloadInstance
 		}
 	}
 
-	public void foundChunks(LinkedList<Chunk> chunks) throws IOException
+	public void foundChunks(Machine machine, LinkedList<Chunk> chunks) throws IOException
 	{
+		if (remoteFile.getRootDirectory().getMachine().getId() != machine.getId())
+		{
+			return;
+		}
 		if (remoteFile.getChecksum() == null)
 		{
 //			remoteFile.setChecksum(checksum);

@@ -1,5 +1,6 @@
 package org.cnv.shr.dmn;
 
+import java.io.IOException;
 import java.util.LinkedList;
 
 import org.cnv.shr.cnctn.Communication;
@@ -107,6 +108,17 @@ public class Notifications
 		for (NotificationListener listener : listeners)
 		{
 			listener.connectionClosed(c);
+		}
+		try
+		{
+			if (!c.getSocket().isClosed())
+			{
+				c.getSocket().close();
+			}
+		}
+		catch(IOException e)
+		{
+			Services.logger.print(e);
 		}
 	}
 	

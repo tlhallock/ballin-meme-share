@@ -44,7 +44,8 @@ public class MachineInfo
 		processSettings.downloadsDirectory.set(  new File(root + File.separator + "downloads"));
 		processSettings.servingDirectory.set(    new File(root + File.separator + "serve"));
 		processSettings.stagingDirectory.set(    new File(root + File.separator + "stage"));
-		processSettings.servePortBegin.set(port);
+		processSettings.servePortBeginI.set(port);
+		processSettings.servePortBeginE.set(port);
 		processSettings.machineIdentifier.set(id);
 		
 		url = InetAddress.getLoopbackAddress().getHostAddress() + ":" + port;

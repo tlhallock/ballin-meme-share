@@ -335,7 +335,7 @@ public class Application extends javax.swing.JFrame
 
 	private void refreshSettings()
 	{
-            addressLabel.setText(Services.settings.getLocalIp() + ":" + Services.settings.servePortBegin);
+		addressLabel.setText(Services.settings.getLocalIp() + ":" + Services.settings.servePortBeginE);
 	}
 
 	/**
@@ -397,7 +397,6 @@ public class Application extends javax.swing.JFrame
         refreshConnections = new javax.swing.JButton();
         jPanel12 = new javax.swing.JPanel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Convenience Share");
 
         jButton2.setText("Add...");
@@ -704,7 +703,7 @@ public class Application extends javax.swing.JFrame
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(22, Short.MAX_VALUE)
+                .addContainerGap(21, Short.MAX_VALUE)
                 .addComponent(jButton8)
                 .addContainerGap())
         );
@@ -1366,7 +1365,7 @@ public class Application extends javax.swing.JFrame
 					if (s.shows(c))
 					{
 						connections.remove(s);
-						connectionsPanel.add(s);
+						connectionsPanel.remove(s);
 						break;
 					}
 				}
