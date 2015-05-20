@@ -5,51 +5,117 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidKeyException;
 import java.security.Security;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.cnv.shr.dmn.KeysService;
+import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.FlushableEncryptionStreams.FlushableEncryptionInputStream;
 import org.cnv.shr.util.FlushableEncryptionStreams.FlushableEncryptionOutputStream;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import de.flexiprovider.core.FlexiCoreProvider;
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
 public class EncryptionTests
 {
+	static Random random = new Random();
 
-
-	public void testIt() throws InvalidKeyException, IOException
+	@BeforeClass
+	public static void beforeClass()
 	{
 		Security.addProvider(new FlexiCoreProvider());
+	}
+	
+	@Test
+	public void testSmall() throws InvalidKeyException, IOException
+	{
 		RijndaelKey aesKey = KeysService.createAesKey();
+		RelayStream relay = new RelayStream();
+		final FlushableEncryptionInputStream flushableEncryptionInputStream = new FlushableEncryptionInputStream(aesKey, relay.input);
+		final FlushableEncryptionOutputStream flushableEncryptionOutputStream = new FlushableEncryptionOutputStream(aesKey, relay.output);
+		int b = random.nextInt(50);
+		flushableEncryptionOutputStream.write(b);
+		flushableEncryptionOutputStream.close();
+		Assert.assertEquals(flushableEncryptionInputStream.read(),  b);
+		Assert.assertEquals(flushableEncryptionInputStream.read(), -1);
+	}
+	@Test
+	public void testNone() throws IOException, InvalidKeyException
+	{
+		RijndaelKey aesKey = KeysService.createAesKey();
+		RelayStream relay = new RelayStream();
+		final FlushableEncryptionInputStream flushableEncryptionInputStream = new FlushableEncryptionInputStream(aesKey, relay.input);
+		final FlushableEncryptionOutputStream flushableEncryptionOutputStream = new FlushableEncryptionOutputStream(aesKey, relay.output);
+		flushableEncryptionOutputStream.close();
+		Assert.assertEquals(flushableEncryptionInputStream.read(), -1);
+	}
+	@Test
+	public void testLarge() throws InvalidKeyException, IOException
+	{
+		RijndaelKey aesKey = KeysService.createAesKey();
+		RelayStream relay = new RelayStream();
+		final FlushableEncryptionInputStream flushableEncryptionInputStream = new FlushableEncryptionInputStream(aesKey, relay.input);
+		final FlushableEncryptionOutputStream flushableEncryptionOutputStream = new FlushableEncryptionOutputStream(aesKey, relay.output);
+		
+		byte[] inputBytes = new byte[2 * FlushableEncryptionStreams.BUFFER_SIZE];
+		random.nextBytes(inputBytes);
+		
+		for (int i = 0; i < inputBytes.length; i++)
+		{
+			flushableEncryptionOutputStream.write(inputBytes[i]);
+		}
+		flushableEncryptionOutputStream.close();
 
+		for (int i = 0; i < inputBytes.length; i++)
+		{
+			Assert.assertEquals(flushableEncryptionInputStream.read(), inputBytes[i] & 0xff);
+		}
+		Assert.assertEquals(flushableEncryptionInputStream.read(), -1);
+	}
+
+	@Test
+	public void testRandomness() throws InvalidKeyException, IOException
+	{
+		RijndaelKey aesKey = KeysService.createAesKey();
 		RelayStream relay = new RelayStream();
 		final FlushableEncryptionInputStream flushableEncryptionInputStream = new FlushableEncryptionInputStream(aesKey, relay.input);
 		final FlushableEncryptionOutputStream flushableEncryptionOutputStream = new FlushableEncryptionOutputStream(aesKey, relay.output);
 
 //		new Thread(new CopyStream(flushableEncryptionInputStream, System.out)).start();
 		
-		for (int i = 0; i < 100; i++)
+		byte[] inputBytes = new byte[500];
+		random.nextBytes(inputBytes);
+		
+		HashSet<Integer> flushOffsets = new HashSet<>();
+		for (int i = 0; i < 10; i++)
 		{
-			int num = (int) (Math.random() * 50);
-			for (int j = 0; j < num; j++)
+			flushOffsets.add(random.nextInt(inputBytes.length));
+		}
+		
+		for (int i = 0; i < inputBytes.length; i++)
+		{
+			flushableEncryptionOutputStream.write(inputBytes[i]);
+			if (flushOffsets.contains(i))
 			{
-				flushableEncryptionOutputStream.write((int)(Math.random() * 50));
+				flushableEncryptionOutputStream.flush();
 			}
-			flushableEncryptionOutputStream.flush();
 		}
 		flushableEncryptionOutputStream.close();
-		
-		
-		int read;
-		while ((read = flushableEncryptionInputStream.read()) >= 0)
+
+		for (int i = 0; i < inputBytes.length; i++)
 		{
-			System.out.println(read);
+			Assert.assertEquals(flushableEncryptionInputStream.read(), inputBytes[i] & 0xff);
 		}
+		Assert.assertEquals(flushableEncryptionInputStream.read(), -1);
 
 //		String line;
 //		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));

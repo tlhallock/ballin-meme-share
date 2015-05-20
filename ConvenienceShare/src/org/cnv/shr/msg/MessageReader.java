@@ -16,6 +16,7 @@ import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.DownloadDone;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.msg.dwn.MachineHasFile;
+import org.cnv.shr.msg.dwn.NewAesKey;
 import org.cnv.shr.msg.dwn.RequestCompletionStatus;
 import org.cnv.shr.msg.key.ConnectionOpenAwk;
 import org.cnv.shr.msg.key.ConnectionOpened;
@@ -70,6 +71,7 @@ public class MessageReader
 		add(new MessageIdentifier(DoneResponse.class               ));
 		add(new MessageIdentifier(ChecksumRequest.class            ));
 		add(new MessageIdentifier(ChecksumResponse.class           ));
+		add(new MessageIdentifier(NewAesKey.class                  ));
 
 		Services.logger.println("Message map:\n" + this);
 	}

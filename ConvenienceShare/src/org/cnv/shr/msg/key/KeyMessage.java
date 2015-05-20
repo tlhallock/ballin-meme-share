@@ -27,7 +27,7 @@ public abstract class KeyMessage extends Message
 		return false;
 	}
 	
-	public void fail(String message, Communication connection)
+	public void fail(String message, Communication connection) throws IOException
 	{
 		try
 		{
@@ -39,7 +39,7 @@ public abstract class KeyMessage extends Message
 		}
 		try
 		{
-			connection.setAuthenticated(null);
+			connection.setAuthenticated(false);
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e)
 		{

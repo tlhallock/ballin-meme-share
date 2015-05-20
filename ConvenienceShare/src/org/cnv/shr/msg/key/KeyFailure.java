@@ -43,6 +43,6 @@ public class KeyFailure extends KeyMessage
 	public void perform(Communication connection) throws Exception
 	{
 		Services.logger.println("Key failure");
-		connection.setAuthenticated(null);
+		connection.setAuthenticated(false);
 	}
 }

@@ -79,4 +79,10 @@ public class Main
 			}
 		}
 	}
+	
+	public static void restart()
+	{
+		Services.quiter = new Restart();
+		Services.quiter.quit();
+	}
 }

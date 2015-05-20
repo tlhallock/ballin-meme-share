@@ -43,7 +43,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.addMachine(url, true, true);
+			UserActions.addMachine(url, new org.cnv.shr.gui.AddMachine.AddMachineParams(true));
 		}
 	};
 	

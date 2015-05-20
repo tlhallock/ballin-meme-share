@@ -14,10 +14,12 @@ import java.security.NoSuchProviderException;
 import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.dmn.KeysService;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
+import org.cnv.shr.msg.dwn.NewAesKey;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.OutputByteWriter;
@@ -31,9 +33,12 @@ public class Communication implements Closeable
 {
 	// The streams
 	private Socket socket;
+	
+	private InputStream inputOrig;
+	private OutputStream outputOrig;
 	private InputStream input;
 	private OutputStream output;
-	private OutputStreamFlusher flusher;
+	
 	private ByteReader reader;
 	private OutputByteWriter writer;
 	
@@ -50,8 +55,8 @@ public class Communication implements Closeable
 	{
 		socket = new Socket();
 		socket.connect(new InetSocketAddress(ip, port), 2000);
-		output = socket.getOutputStream();
-		input =  socket.getInputStream();
+		outputOrig = output = socket.getOutputStream();
+		inputOrig  = input =  socket.getInputStream();
 		
 		ConnectionStatistics stats = new ConnectionStatistics();
 		reader = new ByteReader(input, stats);
@@ -66,8 +71,8 @@ public class Communication implements Closeable
 	public Communication(Authenticator authentication, Socket socket) throws IOException
 	{
 		this.socket = socket;
-		input =  socket.getInputStream();
-		output = socket.getOutputStream();
+		inputOrig  = input =  socket.getInputStream();
+		outputOrig = output = socket.getOutputStream();
 		
 		ConnectionStatistics stats = new ConnectionStatistics();
 		reader = new ByteReader(input, stats);
@@ -95,6 +100,7 @@ public class Communication implements Closeable
 
 		synchronized (output)
 		{
+			// Should re-encrypt every so often...
 			m.write(writer);
 			output.flush();
 		}
@@ -102,10 +108,7 @@ public class Communication implements Closeable
 
 	public void flush() throws IOException
 	{
-		if (flusher != null)
-		{
-			flusher.flushPending();
-		}
+		output.flush();
 	}
 
 	public ConnectionStatistics getStatistics()
@@ -161,26 +164,12 @@ public class Communication implements Closeable
 	}
 
 	// make this a method...
-	public void setAuthenticated(RijndaelKey aesKey) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException
+	public synchronized void setAuthenticated(boolean isAuthenticated) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, IOException
 	{
-		authentication.notifyAuthentication(remoteIdentifier, getIp(), aesKey != null);
-		
-		if (aesKey == null)
+		authentication.notifyAuthentication(remoteIdentifier, getIp(), isAuthenticated);
+		if (isAuthenticated)
 		{
-			return;
-		}
-
-		if (receivedConnection)
-		{
-			input  = FlushableEncryptionStreams.createEncryptedInputStream(input, aesKey);
-			reader = new ByteReader(input, reader.getStatistics());
-			output = FlushableEncryptionStreams.createEncryptedOutputStream(output, aesKey);
-		}
-		else
-		{
-			output = FlushableEncryptionStreams.createEncryptedOutputStream(output, aesKey);
-			input  = FlushableEncryptionStreams.createEncryptedInputStream(input, aesKey);
-			reader = new ByteReader(input, reader.getStatistics());
+			encrypt();
 		}
 	}
 
@@ -244,5 +233,21 @@ public class Communication implements Closeable
 		{
 			Services.logger.print(e);
 		}
+	}
+	
+	
+	public synchronized void encrypt() throws InvalidKeyException, IOException
+	{
+		RijndaelKey key = KeysService.createAesKey();
+		send(new NewAesKey(key, authentication.getRemoteKey()));
+		output.flush();
+		output = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key);
+		writer = new OutputByteWriter(output);
+	}
+	
+	public synchronized void decrypt(RijndaelKey key) throws InvalidKeyException
+	{
+		input = FlushableEncryptionStreams.createEncryptedInputStream(input, key);
+		reader = new ByteReader(input, reader.getStatistics());
 	}
 }

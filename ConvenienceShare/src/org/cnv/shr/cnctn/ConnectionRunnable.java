@@ -25,7 +25,13 @@ public class ConnectionRunnable implements Runnable
 		{
 			while (connection.needsMore())
 			{
-				final Message request = Services.msgReader.readMsg(connection.getReader());
+				Message request;
+				
+				synchronized (connection)
+				{
+					request = Services.msgReader.readMsg(connection.getReader());
+				}
+				
 				if (request == null || !authentication.authenticate(request))
 				{
 					break;

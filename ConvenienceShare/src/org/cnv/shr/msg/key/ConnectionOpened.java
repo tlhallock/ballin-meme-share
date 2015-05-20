@@ -18,32 +18,27 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 public class ConnectionOpened extends KeyMessage
 {
 	private byte[] decryptedNaunce;
-	private byte[] encryptedAesKey;
 	
 	public ConnectionOpened(InputStream stream) throws IOException
 	{
 		super(stream);
 	}
 	
-	public ConnectionOpened(RijndaelKey aesKey, byte[] encoded, PublicKey pKey) throws IOException
+	public ConnectionOpened(byte[] encoded) throws IOException
 	{
 		this.decryptedNaunce = encoded;
-		Services.keyManager.encrypt(pKey, aesKey.getEncoded());
-		this.encryptedAesKey = getBytes(pKey, aesKey);
 	}
 
 	@Override
 	protected void parse(ByteReader reader) throws IOException
 	{
 		decryptedNaunce = reader.readVarByteArray();
-		encryptedAesKey = reader.readVarByteArray();
 	}
 
 	@Override
 	protected void print(AbstractByteWriter buffer) throws IOException
 	{
 		buffer.appendVarByteArray(decryptedNaunce);
-		buffer.appendVarByteArray(encryptedAesKey);
 	}
 
 	public static int TYPE = 24;
@@ -63,7 +58,7 @@ public class ConnectionOpened extends KeyMessage
 	{
 		if (connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
 		{
-			connection.setAuthenticated(getKey(connection.getAuthentication().getLocalKey(), encryptedAesKey));
+			connection.setAuthenticated(true);
 		}
 		else
 		{
@@ -71,22 +66,6 @@ public class ConnectionOpened extends KeyMessage
 		}
 	}
 	
-	private static RijndaelKey getKey(PublicKey pKey, byte[] bytes) throws IOException, ClassNotFoundException
-	{
-		try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(
-				Services.keyManager.decrypt(pKey, bytes)));)
-		{
-			return (RijndaelKey) objectInputStream.readObject();
-		}
-	}
 	
-	private static byte[] getBytes(PublicKey key, RijndaelKey aesKey) throws IOException
-	{
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);)
-		{
-			objectOutputStream.writeObject(aesKey);
-		}
-		return Services.keyManager.encrypt(key, byteArrayOutputStream.toByteArray());
-	}
+	
 }

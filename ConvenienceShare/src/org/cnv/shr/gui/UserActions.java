@@ -9,10 +9,13 @@ import java.util.LinkedList;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.AddMachine.AddMachineParams;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
@@ -36,7 +39,7 @@ public class UserActions
 		});
 	}
 
-	public static void addMachine(final String url, final boolean acceptKeys, final boolean share)
+	public static void addMachine(final String url, final AddMachineParams params)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -44,7 +47,7 @@ public class UserActions
 			{
 				try
 				{
-					Communication openConnection = Services.networkManager.openConnection(url, acceptKeys);
+					Communication openConnection = Services.networkManager.openConnection(url, params.acceptKeys);
 					if (openConnection == null)
 					{
 						Services.keyManager.addPendingAuthentication(url);
@@ -52,12 +55,22 @@ public class UserActions
 					}
 					openConnection.send(new MachineFound());
 					openConnection.send(new FindMachines());
+
+					if (params.message)
+					{
+                                            // enable messaging
+					}
                                         
-                                        if (share)
+                                        if (params.share)
                                         {
-                                            // TODO share local directories with remote...
+                                            // set sharing
                                         }
                                         
+                                        if (params.visible)
+                                        {
+                                            // can list roots...
+                                        }
+
 					openConnection.finish();
 				}
 				catch (IOException e)

@@ -243,6 +243,7 @@ public class Authenticator
 
 	public boolean acceptKey(Communication connection, PublicKey remote, Machine machine)
 	{
+		if (remote == null) return false;
 		return acceptAnyKeys || Services.settings.acceptNewKeys.get() || AcceptKey.showAcceptDialog(
 				connection.getUrl(),
 				machine.getName(),

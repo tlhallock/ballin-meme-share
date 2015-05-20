@@ -4,12 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.dmn.KeysService;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
-
-import de.flexiprovider.core.rijndael.RijndaelKey;
 
 public class ConnectionOpenAwk extends KeyMessage
 {
@@ -53,10 +50,9 @@ public class ConnectionOpenAwk extends KeyMessage
 	{
 		if (connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
 		{
-			RijndaelKey aesKey = KeysService.createAesKey();
 			byte[] decrypted = Services.keyManager.decrypt(connection.getAuthentication().getLocalKey(), naunceRequest);
-			connection.send(new ConnectionOpened(aesKey, decrypted, connection.getAuthentication().getRemoteKey()));
-			connection.setAuthenticated(aesKey);
+			connection.send(new ConnectionOpened(decrypted));
+			connection.setAuthenticated(true);
 		}
 		else
 		{

@@ -26,6 +26,7 @@ import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.dwn.DownloadManager;
 import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.dmn.mn.Arguments;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.mn.Quiter;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.gui.TaskMenu;
@@ -199,6 +200,14 @@ public class Services
 			public void actionPerformed(ActionEvent e)
 			{
 				quiter.quit();
+			}});
+		menu.add(item);
+		item = new MenuItem("Restart");
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				Main.restart();
 			}});
 		menu.add(item);
 		

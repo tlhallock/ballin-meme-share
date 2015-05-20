@@ -14,6 +14,7 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Notifications.NotificationListener;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
+import org.cnv.shr.gui.AddMachine;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
@@ -31,7 +32,7 @@ public class DownloadTest extends RemotesTest
 		try (Closeable c2 = launchLocalMachine(true);
 			 Closeable c1 = getMachineInfo(0).launch(true))
 		{
-			UserActions.addMachine(getMachineInfo(0).getUrl(), true, true);
+			UserActions.addMachine(getMachineInfo(0).getUrl(), new AddMachine.AddMachineParams(true));
 			Thread.sleep(1000);
 			
 			final Path createTempDirectory = Files.createTempDirectory("root");

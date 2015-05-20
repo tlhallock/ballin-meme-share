@@ -36,7 +36,7 @@ public class RequestHandler extends Thread
 		while (!quit)
 		{
 
-			Socket accept = null;
+			Socket accept;
 			try
 			{
 				if (socket.isClosed())
