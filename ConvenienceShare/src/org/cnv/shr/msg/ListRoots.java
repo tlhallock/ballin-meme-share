@@ -17,8 +17,14 @@ public class ListRoots extends Message
 	}
 	
 	@Override
-	public void perform(Communication connection)
+	public void perform(Communication connection) throws IOException
 	{
+		if (!checkPermissionsSharing(connection.getMachine()))
+		{
+//			fail("Not sharing");
+			connection.finish();
+			return;
+		}
 		connection.send(new RootList());
 	}
 
@@ -29,11 +35,13 @@ public class ListRoots extends Message
 	protected void print(AbstractByteWriter buffer) {}
 	
 	public static int TYPE = 6;
+	@Override
 	protected int getType()
 	{
 		return TYPE;
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

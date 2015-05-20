@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -60,10 +61,17 @@ public class MachineHasFile extends DownloadMessage
 		// Maybe this should be to remove the connection already present.
 		// No.
 		if (!hasFile) return;
+		
 
-		Services.downloads.getDownloadInstance(getDescriptor()).addSeeder(connection.getMachine(), connection);
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor(), connection);
+		if (downloadInstance == null)
+		{
+			return;
+		}
+		downloadInstance.addSeeder(connection.getMachine(), connection);
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

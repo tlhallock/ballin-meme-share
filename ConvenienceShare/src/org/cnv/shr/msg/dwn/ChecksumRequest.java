@@ -30,6 +30,7 @@ public class ChecksumRequest extends DownloadMessage
 		return TYPE;
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
@@ -43,6 +44,12 @@ public class ChecksumRequest extends DownloadMessage
 	public void perform(Communication connection) throws Exception
 	{
 		LocalFile local = getDescriptor().getLocal();
+		if (!checkPermissionsDownloadable(connection.getMachine(), local.getRootDirectory()))
+		{
+			// fail();
+			connection.finish();
+			return;
+		}
 		local.ensureChecksummed();
 		connection.send(new ChecksumResponse(local));
 	}

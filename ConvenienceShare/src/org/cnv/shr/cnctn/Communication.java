@@ -11,7 +11,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
-import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.db.h2.DbMachines;
@@ -20,6 +19,7 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.OutputByteWriter;
 import org.cnv.shr.util.OutputStreamFlusher;
 
@@ -87,28 +87,20 @@ public class Communication implements Closeable
 		return getIp() + ":" + socket.getPort();
 	}
 	
-	public synchronized void send(Message m)
+	public synchronized void send(Message m) throws IOException
 	{
 		authentication.assertCanSend(m);
 		
 		Services.logger.println("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
-		
-		try
+
+		synchronized (output)
 		{
-			synchronized (output)
-			{
-				m.write(writer);
-				output.flush();
-			}
-		}
-		catch (IOException e)
-		{
-			Services.logger.println("Unable to send message: " + m.getClass().getName());
-			Services.logger.print(e);
+			m.write(writer);
+			output.flush();
 		}
 	}
-	
-	public void flush()
+
+	public void flush() throws IOException
 	{
 		if (flusher != null)
 		{
@@ -168,6 +160,7 @@ public class Communication implements Closeable
 		}
 	}
 
+	// make this a method...
 	public void setAuthenticated(RijndaelKey aesKey) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException
 	{
 		authentication.notifyAuthentication(remoteIdentifier, getIp(), aesKey != null);
@@ -176,22 +169,19 @@ public class Communication implements Closeable
 		{
 			return;
 		}
-		
-		Cipher cipherOut = Cipher.getInstance("AES128_CBC", "FlexiCore"); cipherOut.init(Cipher.ENCRYPT_MODE, aesKey);
-		Cipher cipherIn  = Cipher.getInstance("AES128_CBC", "FlexiCore");  cipherIn.init(Cipher.DECRYPT_MODE, aesKey);
 
-//		if (receivedConnection)
-//		{
-//			input  = new CipherInputStream(input, cipherIn);
-//			reader = new ByteReader(input, reader.getStatistics());
-//			output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
-//		}
-//		else
-//		{
-//			output = new CipherOutputStream(flusher = new OutputStreamFlusher(this, output), cipherOut);
-//			input  = new CipherInputStream(input, cipherIn);
-//			reader = new ByteReader(input, reader.getStatistics());
-//		}
+		if (receivedConnection)
+		{
+			input  = FlushableEncryptionStreams.createEncryptedInputStream(input, aesKey);
+			reader = new ByteReader(input, reader.getStatistics());
+			output = FlushableEncryptionStreams.createEncryptedOutputStream(output, aesKey);
+		}
+		else
+		{
+			output = FlushableEncryptionStreams.createEncryptedOutputStream(output, aesKey);
+			input  = FlushableEncryptionStreams.createEncryptedInputStream(input, aesKey);
+			reader = new ByteReader(input, reader.getStatistics());
+		}
 	}
 
 	boolean needsMore()
@@ -201,7 +191,14 @@ public class Communication implements Closeable
 
 	public void finish()
 	{
-		send(new DoneMessage());
+		try
+		{
+			send(new DoneMessage());
+		}
+		catch (IOException e1)
+		{
+			e1.printStackTrace();
+		}
 		try
 		{
 			socket.shutdownOutput();

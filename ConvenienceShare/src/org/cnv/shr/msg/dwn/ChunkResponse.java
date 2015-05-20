@@ -48,10 +48,11 @@ public class ChunkResponse extends DownloadMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor());
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor(), connection);
 		downloadInstance.download(chunk, connection);
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

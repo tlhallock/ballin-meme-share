@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.IgnorePattern;
@@ -96,11 +97,6 @@ public class DbTables
 			}
 		}
 
-		public void list()
-		{
-			
-		}
-		
 		public DbObject allocate(ResultSet row) throws SQLException
 		{
 			switch(this)
@@ -116,7 +112,7 @@ public class DbTables
 				case RFILE            : return new RemoteFile     (row.getInt(pKey));  
 				case RMACHINE         : return new Machine        (row.getInt(pKey));
 				case LMACHINE         : return Services.localMachine;  
-				case CHUNK            : throw new RuntimeException("Chunk doesn't write to db.");
+				case CHUNK            : return new DbChunk        (row.getInt(pKey));
 				default:
 				return null;
 			}
@@ -135,6 +131,7 @@ public class DbTables
 			if (object instanceof RemoteFile     ) return RFILE           ; 
 			if (object instanceof LocalMachine   ) return LMACHINE        ;
 			if (object instanceof Machine        ) return RMACHINE        ;
+			if (object instanceof DbChunk        ) return CHUNK           ;
 			return null;
 		}
 		
@@ -196,6 +193,7 @@ public class DbTables
 		DbObjects.LMACHINE        ,
 		DbObjects.ROOT_CONTAINS   ,
 		DbObjects.SHARE_ROOT      ,
+		DbObjects.CHUNK           ,
 	};
 
 	public static void debugDb()

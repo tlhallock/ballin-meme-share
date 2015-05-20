@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbFiles;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.dwn.MachineHasFile;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -50,6 +51,17 @@ public class LookingFor extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		connection.send(new MachineHasFile(DbFiles.getFile(checksum, fileSize)));
+		SharedFile file = DbFiles.getFile(checksum, fileSize);
+		Machine machine = connection.getMachine();
+		if (file != null && !checkPermissionsDownloadable(machine, file.getRootDirectory()))
+		{
+			connection.finish();
+			return;
+		}
+		if (file == null && !checkPermissionsSharing(machine))
+		{
+			connection.finish();
+		}
+		connection.send(new MachineHasFile(file));
 	}
 }

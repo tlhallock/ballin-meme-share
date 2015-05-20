@@ -1,5 +1,6 @@
 package org.cnv.shr.dmn.dwn;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import org.cnv.shr.cnctn.Communication;
@@ -22,7 +23,7 @@ public class Seeder
 		this.connection = openConnection;
 	}
 	
-	public ChunkRequest request(SharedFileId descriptor, Chunk removeFirst)
+	public ChunkRequest request(SharedFileId descriptor, Chunk removeFirst) throws IOException
 	{
 		ChunkRequest msg = new ChunkRequest(descriptor, removeFirst);
 		pending.put(System.currentTimeMillis(), msg);
@@ -30,7 +31,7 @@ public class Seeder
 		return msg;
 	}
 
-	public void send(Message message)
+	public void send(Message message) throws IOException
 	{
 		connection.send(message);
 	}

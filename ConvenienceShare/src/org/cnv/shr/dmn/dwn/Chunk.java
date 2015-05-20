@@ -1,16 +1,8 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Scanner;
 
-import org.cnv.shr.db.h2.DbLocals;
-import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -30,7 +22,7 @@ public class Chunk
 		}
 	}
 	
-	Chunk(long begin, long end, String checksum)
+	public Chunk(long begin, long end, String checksum)
 	{
 		this.begin = begin;
 		this.end = end;
@@ -53,12 +45,23 @@ public class Chunk
 	{
 		buffer.append(getBegin());
 		buffer.append(end);
-		buffer.append(checksum);
+		buffer.append(checksum == null ? "" : checksum);
 	}
 	
+	@Override
 	public String toString()
 	{
 		return getBegin() + " " + end + " " + checksum;
+	}
+
+	public void setChecksum(String checksum2)
+	{
+		this.checksum = checksum2;
+	}
+
+	public long getEnd()
+	{
+		return end;
 	}
 
 	public long getBegin()

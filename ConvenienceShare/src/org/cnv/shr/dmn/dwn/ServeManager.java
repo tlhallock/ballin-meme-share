@@ -19,6 +19,13 @@ public class ServeManager
 
 	public synchronized ServeInstance serve(LocalFile file, Communication c, int chunkSize)
 	{
+		for (ServeInstance instance : serves.values())
+		{
+			if (instance.isServing(c, file))
+			{
+				return instance;
+			}
+		}
 		ServeInstance instance = new ServeInstance(c, file, chunkSize);
 		serves.put(c.getUrl(), instance);
 		Services.notifications.serveAdded(instance);

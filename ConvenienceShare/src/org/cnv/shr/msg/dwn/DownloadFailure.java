@@ -35,7 +35,7 @@ public class DownloadFailure extends DownloadMessage
 	@Override
 	public void perform(Communication connection)
 	{
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor());
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor(), connection);
 		downloadInstance.removePeer(connection);
 	}
 

@@ -13,20 +13,13 @@ public class RequestHandler extends Thread
 	public RequestHandler(int port) throws IOException
 	{
 		this.port = port;
+		Services.logger.println("Starting on port " + port);
 		this.socket = new ServerSocket(port);
 	}
 	
 	public void quit()
 	{
 		quit = true;
-		// kick the socket
-		try (Socket s = new Socket(socket.getInetAddress(), socket.getLocalPort()))
-		{
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
 		try
 		{
 			socket.close();
@@ -37,10 +30,13 @@ public class RequestHandler extends Thread
 		}
 	}
 	
+	@Override
 	public void run()
 	{
 		while (!quit)
 		{
+
+			Socket accept = null;
 			try
 			{
 				if (socket.isClosed())
@@ -49,14 +45,22 @@ public class RequestHandler extends Thread
 				}
 				socket.setReuseAddress(true);
 				// socket.setSoTimeout(5000);
-				Socket accept = socket.accept();
-				Services.networkManager.handleConnection(accept);
+				accept = socket.accept();
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
-				Services.logger.println("Quitting:");
+				Services.logger.println("Unable to connect on " + port + ": " + e.getMessage());
+				continue;
+			}
+			try
+			{
+				Services.networkManager.handleConnection(accept);
+			}
+			catch (Exception t)
+			{
+				Services.logger.println(t);
 			}
 		}
+		Services.logger.println("Quitting on port " + port);
 	}
 }

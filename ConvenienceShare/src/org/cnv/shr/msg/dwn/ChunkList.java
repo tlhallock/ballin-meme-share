@@ -2,8 +2,8 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
@@ -15,7 +15,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class ChunkList extends DownloadMessage
 {
-	private LinkedList<Chunk> chunks = new LinkedList<>();
+	private List<Chunk> chunks = new LinkedList<>();
 
 	public static int TYPE = 11;
 	
@@ -24,13 +24,10 @@ public class ChunkList extends DownloadMessage
 		super(input);
 	}
 	
-	public ChunkList(HashMap<String, Chunk> chunks2, String checksum, SharedFileId descriptor)
+	public ChunkList(List<Chunk> chunks2, String checksum, SharedFileId descriptor)
 	{
 		super(descriptor);
-		for (Chunk c : chunks2.values())
-		{
-			chunks.add(c);
-		}
+		chunks = chunks2;
 	}
 
 	@Override
@@ -60,7 +57,11 @@ public class ChunkList extends DownloadMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor());
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor(), connection);
+		if (downloadInstance == null)
+		{
+			///
+		}
 		downloadInstance.foundChunks(connection.getMachine(), chunks);
 	}
 	

@@ -19,7 +19,7 @@ public class OutputStreamFlusher extends OutputStream
 		this.inner = inner;
 	}
 	
-	public void flushPending()
+	public void flushPending() throws IOException
 	{
 		written = false;
 		EmptyMessage flusher = new EmptyMessage(DoneMessage.DONE_PADDING);

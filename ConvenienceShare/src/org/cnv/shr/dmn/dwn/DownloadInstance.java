@@ -9,14 +9,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.db.h2.DbChunks;
+import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
@@ -53,16 +54,6 @@ public class DownloadInstance
 		this.download = d;
 		d.setState(DownloadState.NOT_STARTED);
 		remoteFile = d.getFile();
-	}
-	
-	private long count(Collection<Chunk> chunks)
-	{
-		long returnValue = 0;
-		for (Chunk c : chunks)
-		{
-			returnValue += c.getSize();
-		}
-		return returnValue;
 	}
 	
 	public synchronized void begin() throws UnknownHostException, IOException
@@ -132,7 +123,7 @@ public class DownloadInstance
 		}
 	}
 
-	public void foundChunks(Machine machine, LinkedList<Chunk> chunks) throws IOException
+	public void foundChunks(Machine machine, List<Chunk> chunks) throws IOException
 	{
 		if (remoteFile.getRootDirectory().getMachine().getId() != machine.getId())
 		{
@@ -140,52 +131,50 @@ public class DownloadInstance
 		}
 		if (remoteFile.getChecksum() == null)
 		{
-//			remoteFile.setChecksum(checksum);
-			try
-			{
-				remoteFile.save();
-			}
-			catch (SQLException e)
-			{
-				Services.logger.print(e);
-			}
 			throw new RuntimeException("The remote file should already have a checksum.");
 		}
 		
-		upComing = chunks;
-		for (Chunk c : upComing)
+		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
 		{
-			if (c.getSize() > Services.settings.maxChunkSize.get())
-			{
-				
-			}
+			requestSeeders();
+			allocate();
+			recover();
+			queue();
 		}
-		requestSeeders();
-		allocate();
-		recover();
-		queue();
 	}
 	
 	private void recover()
 	{
 		download.setState(DownloadState.RECOVERING);
-		for (Chunk chunk : upComing)
+		try (DbIterator<DbChunks.DbChunk> iterator = DbChunks.getAllChunks(download))
 		{
-			try
+			while (iterator.hasNext())
 			{
-				if (ChunkData.test(chunk, tmpFile))
+				DbChunk next = iterator.next();
+				if (ChunkData.test(next.chunk, tmpFile))
 				{
-					completed.add(chunk);
+					if (!next.done)
+					{
+						DbChunks.chunkDone(download, next.chunk, true);
+					}
+				}
+				else if (next.done)
+				{
+					DbChunks.chunkDone(download, next.chunk, false);
 				}
 			}
-			catch (Exception e)
-			{
-				Services.logger.print(e);
-			}
 		}
-		for (Chunk c : completed)
+		catch (NoSuchAlgorithmException e)
 		{
-			upComing.remove(c);
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		catch (SQLException e1)
+		{
+			e1.printStackTrace();
 		}
 	}
 	
@@ -221,22 +210,36 @@ public class DownloadInstance
 		}
 	}
 	
-	private void queue()
+	private synchronized void queue()
 	{
-		while (pending.size() < NUM_PENDING_CHUNKS && !upComing.isEmpty())
+		while (pending.size() < NUM_PENDING_CHUNKS)
 		{
-			if (seeders.isEmpty())
+			List<Chunk> upComing = DbChunks.getNextChunks(download, NUM_PENDING_CHUNKS - pending.size());
+			if (upComing.isEmpty())
 			{
+				if (pending.isEmpty())
+				{
+					complete();
+				}
 				return;
 			}
-			Seeder seeder = getRandomSeeder();
-			Chunk next = upComing.removeFirst();
-			pending.put(next.getChecksum(), seeder.request(new SharedFileId(remoteFile), next));
-		}
-		
-		if (upComing.isEmpty() && pending.isEmpty())
-		{
-			complete();
+			for (Chunk c : upComing)
+			{
+				if (seeders.isEmpty())
+				{
+					fail("There are no more seeders left!");
+					return;
+				}
+				Seeder seeder = getRandomSeeder();
+				try
+				{
+					pending.put(c.getChecksum(), seeder.request(new SharedFileId(remoteFile), c));
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 
@@ -265,7 +268,7 @@ public class DownloadInstance
 		}
 		ChunkData.read(chunkRequest.getChunk(), tmpFile, communication.getIn());
 		pending.remove(chunk.getChecksum());
-		completed.add(chunk);
+		DbChunks.chunkDone(download, chunk, true);
 		communication.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
 		queue();
 	}
@@ -290,7 +293,6 @@ public class DownloadInstance
 			Services.logger.print(e);
 		}
 		
-
 		try
 		{
 			Files.move(Paths.get(tmpFile.getAbsolutePath()), Paths.get(getDestinationFile().getAbsolutePath()));
@@ -303,6 +305,7 @@ public class DownloadInstance
 		Services.downloads.remove(this);
 		Services.notifications.downloadDone(this);
 		download.setState(DownloadState.ALL_DONE);
+		DbChunks.allChunksDone(download);
 	}
 
 	public File getDestinationFile()
@@ -355,25 +358,25 @@ public class DownloadInstance
 			return completionSatus;
 		}
 		lastCountRefresh = now;
-		long done = count(completed);
-		long comingUp = count(upComing);
-		for (ChunkRequest r : pending.values())
-		{
-			comingUp += r.getChunk().getSize();
-		}
-		
-		return completionSatus = done / (double) (comingUp + done);
+		return completionSatus = DbChunks.getDownloadPercentage(download);
 	}
 	
 	public void sendCompletionStatus()
 	{
 		for (Seeder seeder : seeders.values())
 		{
-			seeder.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
+			try
+			{
+				seeder.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 	
-	void fail(String string)
+	public void fail(String string)
 	{
 		System.out.println(string);
 		for (Seeder seeder : seeders.values())
@@ -396,5 +399,10 @@ public class DownloadInstance
 		{
 			fail("There are no more seeders left!");
 		}
+	}
+
+	public String getSpeed()
+	{
+		return "Speed will go here...";
 	}
 }

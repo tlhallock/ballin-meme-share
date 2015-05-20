@@ -82,22 +82,18 @@ public class ConnectionManager
 		return null;
 	}
 	
-	public synchronized void handleConnection(Socket accepted)
+	public synchronized void handleConnection(Socket accepted) throws IOException
 	{
-		try
+		Authenticator authentication = new Authenticator();
+		Communication connection = new Communication(authentication, accepted);
+		connection.send(new WhoIAm());
+		Services.notifications.connectionOpened(connection);
+		ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
+		synchronized (runnables)
 		{
-			Authenticator authentication = new Authenticator();
-			Communication connection = new Communication(authentication, accepted);
-			Services.notifications.connectionOpened(connection);
-			connection.send(new WhoIAm());
-			ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
-			synchronized (runnables) { runnables.add(connectionRunnable); }
-			connectionRunnable.run();
+			runnables.add(connectionRunnable);
 		}
-		catch (IOException ex)
-		{
-			Services.logger.print(ex);
-		}
+		connectionRunnable.run();
 	}
 	
 	public void closeAll()

@@ -105,9 +105,27 @@ public class DownloadManager
 		return returnValue;
 	}
 
-	public synchronized DownloadInstance getDownloadInstance(SharedFileId descriptor)
+	public synchronized DownloadInstance getDownloadInstanceForGui(SharedFileId descriptor)
 	{
-		return downloads.get(descriptor);
+		DownloadInstance downloadInstance = downloads.get(descriptor);
+		if (downloadInstance == null)
+		{
+			return null;
+		}
+		return downloadInstance;
+	}
+	public synchronized DownloadInstance getDownloadInstance(SharedFileId descriptor, Communication connection)
+	{
+		DownloadInstance downloadInstance = downloads.get(descriptor);
+		if (downloadInstance == null)
+		{
+			return null;
+		}
+		if (!downloadInstance.contains(connection))
+		{
+			return null;
+		}
+		return downloadInstance;
 	}
 
 	public void initiatePendingDownloads()

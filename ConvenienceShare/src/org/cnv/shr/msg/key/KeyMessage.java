@@ -21,6 +21,7 @@ public abstract class KeyMessage extends Message
 		super(stream);
 	}
 
+	@Override
 	public boolean requiresAthentication()
 	{
 		return false;
@@ -28,7 +29,14 @@ public abstract class KeyMessage extends Message
 	
 	public void fail(String message, Communication connection)
 	{
-		connection.send(new KeyFailure(message));
+		try
+		{
+			connection.send(new KeyFailure(message));
+		}
+		catch (IOException e1)
+		{
+			e1.printStackTrace();
+		}
 		try
 		{
 			connection.setAuthenticated(null);

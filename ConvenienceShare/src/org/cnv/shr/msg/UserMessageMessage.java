@@ -2,7 +2,6 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
@@ -45,35 +44,35 @@ public class UserMessageMessage extends Message
 	@Override
 	protected void print(AbstractByteWriter buffer) throws IOException
 	{
-            if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
-            {
-                messageStr = messageStr.substring(0, UserMessage.MAX_MESSAGE_LENGTH);
-            }
+		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
+		{
+			messageStr = messageStr.substring(0, UserMessage.MAX_MESSAGE_LENGTH);
+		}
 		buffer.append(type);
-                buffer.append(messageStr);
+		buffer.append(messageStr);
 	}
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-            if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
-            {
-                Services.logger.println("Bad message: too long.");
-                return;
-            }
-            Machine machine = connection.getMachine();
-            if (machine == null)
-            {
-                Services.logger.println("Bad message: no machine.");
-                return;
-            }
-            if (!machine.getAllowsMessages())
-            {
-                Services.logger.println("Not accepting messages from " + machine.getName());
-                return;
-            }
-            UserMessage message = new UserMessage(machine, type, messageStr);
-            message.save();
-            Services.notifications.messageReceived(message);
+		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
+		{
+			Services.logger.println("Bad message: too long.");
+			return;
+		}
+		Machine machine = connection.getMachine();
+		if (machine == null)
+		{
+			Services.logger.println("Bad message: no machine.");
+			return;
+		}
+		if (!machine.getAllowsMessages())
+		{
+			Services.logger.println("Not accepting messages from " + machine.getName());
+			return;
+		}
+		UserMessage message = new UserMessage(machine, type, messageStr);
+		message.save();
+		Services.notifications.messageReceived(message);
 	}
 	
 	@Override

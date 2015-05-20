@@ -69,7 +69,7 @@ public class ChunkData
 		}
 	}
 	
-	public static boolean test(Chunk chunk, File f) throws IOException, NoSuchAlgorithmException
+	public static String getChecksum(Chunk chunk, File f) throws NoSuchAlgorithmException, IOException
 	{
 		MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 		
@@ -86,13 +86,18 @@ public class ChunkData
 				int nread = toRead.read(buffer, 0, Math.min(numberOfBytes - offset, buffer.length));
 				if (nread < 0 && offset < numberOfBytes)
 				{
-					return false;
+					return null;
 				}
 				offset += nread;
 				digest.update(buffer, 0, nread);
 			}
 		}
 		
-		return ChecksumManager.digestToString(digest).equals(chunk.getChecksum());
+		return ChecksumManager.digestToString(digest);
+	}
+	
+	public static boolean test(Chunk chunk, File f) throws IOException, NoSuchAlgorithmException
+	{
+		return getChecksum(chunk, f).equals(chunk.getChecksum());
 	}
 }

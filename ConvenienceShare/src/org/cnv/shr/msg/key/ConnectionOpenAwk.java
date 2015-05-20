@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.dmn.KeysService;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -52,7 +53,7 @@ public class ConnectionOpenAwk extends KeyMessage
 	{
 		if (connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
 		{
-			RijndaelKey aesKey = Services.keyManager.createAesKey();
+			RijndaelKey aesKey = KeysService.createAesKey();
 			byte[] decrypted = Services.keyManager.decrypt(connection.getAuthentication().getLocalKey(), naunceRequest);
 			connection.send(new ConnectionOpened(aesKey, decrypted, connection.getAuthentication().getRemoteKey()));
 			connection.setAuthenticated(aesKey);
@@ -63,6 +64,7 @@ public class ConnectionOpenAwk extends KeyMessage
 		}
 	}
 	
+	@Override
 	public String toString()
 	{
 		return "You are authenticated too!";

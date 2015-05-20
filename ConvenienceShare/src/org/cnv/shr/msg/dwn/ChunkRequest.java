@@ -46,6 +46,12 @@ public class ChunkRequest extends DownloadMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
+		if (!checkPermissionsDownloadable(connection.getMachine(), getDescriptor().getLocal().getRootDirectory()))
+		{
+			// fail();
+			connection.finish();
+			return;
+		}
 		Services.server.getServeInstance(connection).serve(chunk);
 	}
 
@@ -54,6 +60,7 @@ public class ChunkRequest extends DownloadMessage
 		return chunk;
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

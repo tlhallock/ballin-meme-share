@@ -1,6 +1,7 @@
 package org.cnv.shr.sync;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
@@ -79,7 +80,15 @@ public class RemoteSynchronizerQueue implements Closeable
 			{
 				return null;
 			}
-			ensureQueued(pathElement);
+			try
+			{
+				ensureQueued(pathElement);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+				return null;
+			}
 			return waitForDirectory(path);
 		}
 		finally
@@ -104,7 +113,7 @@ public class RemoteSynchronizerQueue implements Closeable
 		}
 	}
 	
-	private void ensureQueued(final PathElement path)
+	private void ensureQueued(final PathElement path) throws IOException
 	{
 		if (queue.contains(path.getFullPath())
 				|| directories.containsKey(path.getFullPath()))
@@ -120,7 +129,7 @@ public class RemoteSynchronizerQueue implements Closeable
 		queue.add(path.getFullPath());
 	}
 	
-	public void queueDirectoryList(final PathElement path)
+	public void queueDirectoryList(final PathElement path) throws IOException
 	{
 		lock.lock();
 		try

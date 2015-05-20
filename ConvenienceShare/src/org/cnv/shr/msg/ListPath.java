@@ -5,8 +5,6 @@ import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbPermissions;
-import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
@@ -57,8 +55,7 @@ public class ListPath extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
-		SharingState sharing = DbPermissions.isSharing(connection.getMachine(), localByName);
-		if (!sharing.canList())
+		if (!checkPermissionsVisible(connection.getMachine(), localByName))
 		{
 //			fail("Not visible");
 			connection.finish();
@@ -73,6 +70,7 @@ public class ListPath extends Message
 		connection.send(msg);
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

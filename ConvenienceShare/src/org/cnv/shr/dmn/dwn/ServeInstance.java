@@ -7,7 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
+import java.util.List;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.ChecksumManager;
@@ -47,10 +47,22 @@ public class ServeInstance
 		return local;
 	}
 	
-	private String stage(HashMap<String, Chunk> chunks) throws FileNotFoundException, IOException, NoSuchAlgorithmException
+	private String stage(List<Chunk> chunks) throws FileNotFoundException, IOException, NoSuchAlgorithmException
 	{
 		local.ensureChecksummed();
 		
+		if (tmpFile != null)
+		{
+			for (Chunk c : chunks)
+			{
+				c.setChecksum(ChunkData.getChecksum(c, tmpFile));
+			}
+			
+			return local.getChecksum();
+		}
+		
+
+		Services.logger.println("Staging.");
 		tmpFile = PathSecurity.secureMakeDirs(Services.settings.servingDirectory.get(),
 					local.getRootDirectory().getName()
 					+ File.separator + local.getPath().getFullPath());
@@ -97,12 +109,13 @@ public class ServeInstance
 					outputStream.write(buffer, 0, nread);
 				}
 
-				Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest), local.getChecksum());
-				Chunk oldChunk = chunks.put(chunk.toString(), chunk);
-				if (oldChunk != null)
-				{
-					fail("Duplicate chunk checksum");
-				}
+				Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest));
+				chunks.add(chunk);
+//				Chunk oldChunk = chunks.add(chunk.toString(), chunk);
+//				if (oldChunk != null)
+//				{
+//					fail("Duplicate chunk checksum");
+//				}
 			}
 		}
 
@@ -112,16 +125,21 @@ public class ServeInstance
 	private void fail(String string)
 	{
 		System.out.println(string);
-		connection.send(new DownloadFailure(string, new SharedFileId(local)));
+		try
+		{
+			connection.send(new DownloadFailure(string, new SharedFileId(local)));
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 		connection.finish();
 	}
 
-	public void sendChunks()
+	public void sendChunks(List<Chunk> chunks)
 	{
 		try
 		{
-			Services.logger.println("Staging.");
-			HashMap<String, Chunk> chunks = new HashMap<>();
 			String checksum = stage(chunks);
 			Services.logger.println("Sending chunks.");
 			connection.send(new ChunkList(chunks, checksum, new SharedFileId(local)));
@@ -136,9 +154,10 @@ public class ServeInstance
 	{
 		synchronized (connection.getOut())
 		{
-			connection.send(new ChunkResponse(new SharedFileId(local), chunk));
 			try
 			{
+				Services.logger.println("Sending chunk " + chunk);
+				connection.send(new ChunkResponse(new SharedFileId(local), chunk));
 				// Right here I could check that the checksum matches...
 				ChunkData.write(chunk, tmpFile, connection.getOut());
 			}
@@ -164,6 +183,11 @@ public class ServeInstance
 	public double getCompletionPercentage()
 	{
 		return lastCompletionPercentage;
+	}
+
+	public boolean isServing(Communication c, LocalFile file)
+	{
+		return c.equals(connection);
 	}
 	
 	enum ServeState

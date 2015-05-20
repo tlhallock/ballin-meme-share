@@ -402,7 +402,7 @@ public class KeysService
 		}
 	}
 
-	public RijndaelKey createAesKey()
+	public static RijndaelKey createAesKey()
 	{
 		try
 		{

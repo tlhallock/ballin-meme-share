@@ -63,11 +63,13 @@ public class SharedFileId
 		return checksum;
 	}
 	
+	@Override
 	public int hashCode()
 	{
 		return (machineIdent + ":" + rootName + ":" + path).hashCode();
 	}
 	
+	@Override
 	public boolean equals(Object other)
 	{
 		if (!(other instanceof SharedFileId))
@@ -85,7 +87,7 @@ public class SharedFileId
 	{
 		PathElement pathElement = DbPaths.getPathElement(path);
 		LocalDirectory local = DbRoots.getLocalByName(rootName);
-		return (LocalFile) DbFiles.getFile(local, pathElement);
+		return DbFiles.getFile(local, pathElement);
 	}
 	
 	public RemoteFile getRemote()
@@ -96,6 +98,7 @@ public class SharedFileId
 		return (RemoteFile) DbFiles.getFile(root, pathElement);
 	}
 	
+	@Override
 	public String toString()
 	{
 		return machineIdent + " : " + rootName + " : " + path + " : " + checksum;
