@@ -182,7 +182,7 @@ public class EncryptionTests
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 	}
@@ -214,7 +214,7 @@ public class EncryptionTests
 						}
 						catch (InterruptedException e)
 						{
-							e.printStackTrace();
+							Services.logger.print(e);
 						}
 					}
 					return bytes.removeLast();

@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.UserActions;
@@ -167,7 +168,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.shareWith(DbMachines.getMachine(ident), share);
+			UserActions.shareWith(DbMachines.getMachine(ident), share ? SharingState.DOWNLOADABLE : SharingState.DO_NOT_SHARE);
 		}
 	};
 	public static class DOWNLOAD extends TestAction

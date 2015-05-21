@@ -59,7 +59,7 @@ public class Download extends DbObject<Integer>
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
@@ -84,7 +84,7 @@ public class Download extends DbObject<Integer>
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
@@ -114,6 +114,11 @@ public class Download extends DbObject<Integer>
 	public DownloadState getState()
 	{
 		return currentState;
+	}
+
+	public String getTargetFile()
+	{
+		return file.getTargetFile().getAbsolutePath(); 
 	}
 	
 	public enum DownloadState

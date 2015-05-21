@@ -85,7 +85,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			error("Unable to write settings file.");
 		}
 

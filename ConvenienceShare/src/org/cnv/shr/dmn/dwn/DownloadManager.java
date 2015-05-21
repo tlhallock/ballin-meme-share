@@ -61,7 +61,7 @@ public class DownloadManager
 		catch (SQLException e)
 		{
 			Services.logger.println("Unable to write new download to database.");
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 
 		String checksum = d.getFile().getChecksum();

@@ -152,7 +152,7 @@ public class LocalFile extends SharedFile
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 	}

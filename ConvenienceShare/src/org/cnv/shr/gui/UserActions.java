@@ -91,7 +91,7 @@ public class UserActions
 				}
 				catch (SQLException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 			}
 		});
@@ -237,13 +237,22 @@ public class UserActions
 		});
 	}
 
-	public static void shareWith(Machine m, boolean share)
+	public static void shareWith(final Machine m, final SharingState share)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
 			@Override
 			public void run()
 			{
+				m.setSharing(share);
+				try
+				{
+					m.save();
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
 			}
 		});
 	}

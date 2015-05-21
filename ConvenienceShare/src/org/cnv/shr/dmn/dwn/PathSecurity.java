@@ -12,7 +12,7 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.Misc;
 
-class PathSecurity
+public class PathSecurity
 {
 	static File secureMakeDirs(File rootFile, String path)
 	{

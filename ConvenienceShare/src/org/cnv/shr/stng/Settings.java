@@ -68,7 +68,7 @@ public class Settings implements SettingListener
 		catch (UnknownHostException e)
 		{
 			localAddress = "127.0.0.1";
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		System.out.println("Local host is " + localAddress);
 	}

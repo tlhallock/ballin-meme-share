@@ -12,6 +12,8 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 
+import org.cnv.shr.dmn.Services;
+
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
 public class FlushableEncryptionStreams
@@ -172,7 +174,7 @@ public class FlushableEncryptionStreams
 				}
 				catch (InvalidKeyException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 				cipherStream = new CipherInputStream(buffer, cipher);
 			}
@@ -237,7 +239,7 @@ public class FlushableEncryptionStreams
 			}
 			catch (InvalidKeyException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 			cipherStream = new CipherOutputStream(buffer, cipher);
 		}

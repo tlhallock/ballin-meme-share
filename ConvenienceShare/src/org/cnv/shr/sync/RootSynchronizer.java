@@ -81,7 +81,7 @@ public abstract class RootSynchronizer implements Runnable
 		}
 		catch (final IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	

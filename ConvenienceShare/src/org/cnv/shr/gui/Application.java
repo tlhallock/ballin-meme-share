@@ -293,7 +293,7 @@ public class Application extends javax.swing.JFrame
 						new Date(download.getAdded()),
 						download.getState().humanReadable(),
 						String.valueOf(download.getPriority()),
-						downloadInstance == null ? "N/A" : downloadInstance.getDestinationFile().getAbsolutePath(),
+						downloadInstance == null ? download.getTargetFile() : downloadInstance.getDestinationFile().getAbsolutePath(),
 						downloadInstance == null ? "N/A" : downloadInstance.getSpeed(),
 						download.getState().equals(DownloadState.ALL_DONE) ?  "100%" : 
 							(downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage())),
@@ -1212,6 +1212,25 @@ public class Application extends javax.swing.JFrame
 				return "Show";
 			}
 		}, true).addListener(new TableRowListener()
+		{
+			@Override
+			public void run(int row)
+			{
+				final String mId = tableListener.getTableValue("Id", row);
+				if (mId == null)
+				{
+					return;
+				}
+				Machine machine = DbMachines.getMachine(mId);
+				UserActions.syncRoots(machine);
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Synchronize";
+			}
+		}).addListener(new TableRowListener()
 		{
 			@Override
 			public void run(int row)

@@ -59,7 +59,7 @@ public class RemoteSynchronizerQueue implements Closeable
 			catch (final InterruptedException e)
 			{
 				// TODO: Make sure this is handled well...
-				e.printStackTrace();
+				Services.logger.print(e);
 				communication.close();
 				return null;
 			}
@@ -88,7 +88,7 @@ public class RemoteSynchronizerQueue implements Closeable
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 				return null;
 			}
 			return waitForDirectory(path);

@@ -1,10 +1,11 @@
 package org.cnv.shr.mdl;
 
+import java.io.File;
+
 
 public class RemoteFile extends SharedFile
 {
-	RemoteDirectory d;
-	String localCopy;
+	private String localCopy;
 
 	public RemoteFile(int int1)
 	{
@@ -27,5 +28,11 @@ public class RemoteFile extends SharedFile
 	public boolean isLocal()
 	{
 		return false;
+	}
+	
+	public File getTargetFile()
+	{
+		return new File(((RemoteDirectory) getRootDirectory()).getLocalRoot().getAbsolutePath()
+				+ File.separator + getPath().getFullPath());
 	}
 }

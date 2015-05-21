@@ -25,12 +25,7 @@ public class ConnectionRunnable implements Runnable
 		{
 			while (connection.needsMore())
 			{
-				Message request;
-				
-				synchronized (connection)
-				{
-					request = Services.msgReader.readMsg(connection.getReader());
-				}
+				Message request = Services.msgReader.readMsg(connection.getReader());
 				
 				if (request == null || !authentication.authenticate(request))
 				{
@@ -129,7 +124,7 @@ public class ConnectionRunnable implements Runnable
 		}
 		catch (final IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 }

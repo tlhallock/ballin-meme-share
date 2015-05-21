@@ -105,7 +105,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		return false;
 	}
@@ -128,7 +128,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		return returnValue;
 	}
@@ -149,7 +149,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 
@@ -164,7 +164,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 	
@@ -187,7 +187,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		return done / (double) d.getFile().getFileSize();
 	}

@@ -52,7 +52,7 @@ public class Restart extends Quiter
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		finally
 		{

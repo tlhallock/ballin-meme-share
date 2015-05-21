@@ -129,6 +129,7 @@ public class MachineViewer extends javax.swing.JFrame
 			public void windowClosing(WindowEvent evt)
 			{
 				Services.notifications.remove(listener);
+				model.closeConnections();
 			}
 		});
 		
@@ -164,7 +165,7 @@ public class MachineViewer extends javax.swing.JFrame
 				}
 				catch (SQLException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 			}
 		});
@@ -194,7 +195,7 @@ public class MachineViewer extends javax.swing.JFrame
 				}
 				catch (SQLException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 			}
 		});

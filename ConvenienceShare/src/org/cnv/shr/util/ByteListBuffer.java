@@ -125,7 +125,7 @@ public final class ByteListBuffer extends AbstractByteWriter
 //		}
 //		catch (IOException e)
 //		{
-//			e.printStackTrace();
+//			Services.logger.print(e);
 //			return this;
 //		}
 //	}
@@ -139,7 +139,7 @@ public final class ByteListBuffer extends AbstractByteWriter
 //		}
 //		catch (IOException e)
 //		{
-//			e.printStackTrace();
+//			Services.logger.print(e);
 //			return this;
 //		}
 //	}
@@ -153,7 +153,7 @@ public final class ByteListBuffer extends AbstractByteWriter
 //		}
 //		catch (IOException e)
 //		{
-//			e.printStackTrace();
+//			Services.logger.print(e);
 //			return this;
 //		}
 //	}
@@ -167,7 +167,7 @@ public final class ByteListBuffer extends AbstractByteWriter
 //		}
 //		catch (IOException e)
 //		{
-//			e.printStackTrace();
+//			Services.logger.print(e);
 //			return this;
 //		}
 //	}
@@ -181,7 +181,7 @@ public final class ByteListBuffer extends AbstractByteWriter
 //		}
 //		catch (IOException e)
 //		{
-//			e.printStackTrace();
+//			Services.logger.print(e);
 //			return this;
 //		}
 //	}
@@ -195,7 +195,7 @@ public final class ByteListBuffer extends AbstractByteWriter
 //		}
 //		catch (IOException e)
 //		{
-//			e.printStackTrace();
+//			Services.logger.print(e);
 //			return this;
 //		}
 //	}

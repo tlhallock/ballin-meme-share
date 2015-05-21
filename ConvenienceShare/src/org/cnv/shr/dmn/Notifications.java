@@ -167,7 +167,7 @@ public class Notifications
 //		}
 //		catch (IOException e)
 //		{
-//			e.printStackTrace();
+//			Services.logger.print(e);
 //		}
 	}
 	

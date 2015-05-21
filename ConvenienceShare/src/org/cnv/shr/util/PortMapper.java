@@ -49,7 +49,7 @@ public class PortMapper {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 
 		p.waitFor();
@@ -94,7 +94,7 @@ public class PortMapper {
 				System.out.println(line);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 
 		return listPorts().containsKey(new Integer(gateway));
@@ -127,7 +127,7 @@ public class PortMapper {
 				System.out.println(line);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		return !listPorts().containsKey(new Integer(externalPort));
 	}

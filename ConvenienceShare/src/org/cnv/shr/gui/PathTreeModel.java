@@ -41,7 +41,7 @@ public class PathTreeModel implements TreeModel
 		root = new PathTreeModelNode(null, this, new NoPath());
 	}
 	
-	private void closeConnections()
+	void closeConnections()
 	{
 		if (synchronizer != null)
 		{

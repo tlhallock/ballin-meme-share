@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.Random;
 
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 import org.junit.Assert;
 
@@ -34,7 +35,7 @@ public class TestUtils
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			Assert.fail("Had exception.");
 		}
 	}

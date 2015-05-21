@@ -48,6 +48,15 @@ public class Main
 
 		Arguments a = new Arguments();
 		parseArgs(args, a);
+		
+		if (false)
+		{
+			a.settings = new Settings(new File("bin/i2/settings.props"));
+		}
+		else
+		{
+			a.settings = new Settings(new File("bin/i1/settings.props"));
+		}
 
 //		if (!a.settings.getSettingsFile().exists())
 //		{

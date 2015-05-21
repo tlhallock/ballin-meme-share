@@ -166,11 +166,11 @@ public class DownloadInstance
 		}
 		catch (NoSuchAlgorithmException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		catch (SQLException e1)
 		{
@@ -237,7 +237,7 @@ public class DownloadInstance
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 			}
 		}
@@ -371,7 +371,7 @@ public class DownloadInstance
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 	}

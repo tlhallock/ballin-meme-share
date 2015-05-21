@@ -135,7 +135,7 @@ public class UserMessage extends DbObject<Integer>
 			}
 			catch (SQLException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 		}
 	}

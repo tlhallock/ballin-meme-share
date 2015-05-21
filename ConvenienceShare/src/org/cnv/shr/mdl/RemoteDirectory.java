@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.dwn.PathSecurity;
 import org.cnv.shr.sync.ConsecutiveDirectorySyncIterator;
 import org.cnv.shr.sync.RemoteFileSource;
 import org.cnv.shr.sync.RemoteSynchronizer;
@@ -19,7 +20,10 @@ public class RemoteDirectory extends RootDirectory
 	public RemoteDirectory(final Machine machine, final String name, final String tags, final String description)
 	{
 		super(machine, name, tags, description);
-		path = DbPaths.getPathElement(Services.settings.downloadsDirectory.get().getAbsolutePath() + "/" + getName());
+		path = DbPaths.getPathElement(
+				Services.settings.downloadsDirectory.get().getAbsolutePath() + File.separator
+				+ PathSecurity.getFsName(machine.getName()) + File.separator
+				+ PathSecurity.getFsName(getName()) + File.separator);
 	}
 
 	public RemoteDirectory(final int int1)

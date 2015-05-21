@@ -95,7 +95,7 @@ public class MachineInfo
 		}
 		catch (InterruptedException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 
 		System.out.println(Arrays.toString(args));
@@ -118,7 +118,7 @@ public class MachineInfo
 				}
 				catch (InterruptedException e)
 				{
-					e.printStackTrace();
+					Services.logger.print(e);
 				}
 				kill();
 			}};
@@ -132,7 +132,7 @@ public class MachineInfo
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		try
 		{
@@ -140,7 +140,7 @@ public class MachineInfo
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		try
 		{
@@ -148,7 +148,7 @@ public class MachineInfo
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		try
 		{
@@ -156,7 +156,7 @@ public class MachineInfo
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 

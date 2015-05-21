@@ -227,7 +227,7 @@ public class KeysService
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 			return new byte[0];
 		}
 	}
@@ -250,7 +250,7 @@ public class KeysService
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		return buffer.getBytes();
 	}
@@ -307,7 +307,7 @@ public class KeysService
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+				Services.logger.print(e);
 			}
 			byte[] bytes = output.toByteArray();
 
@@ -429,7 +429,7 @@ public class KeysService
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 
 		return codeUpdateKey;
@@ -451,7 +451,7 @@ public class KeysService
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 	}
 }

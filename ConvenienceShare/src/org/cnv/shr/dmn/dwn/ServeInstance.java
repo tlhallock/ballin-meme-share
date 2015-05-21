@@ -131,7 +131,7 @@ public class ServeInstance
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			Services.logger.print(e);
 		}
 		connection.finish();
 	}

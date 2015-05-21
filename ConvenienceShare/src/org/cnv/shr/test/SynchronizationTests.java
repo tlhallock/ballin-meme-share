@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
@@ -83,9 +84,57 @@ public class SynchronizationTests extends RemotesTest
 			getMachineInfo(0).send(new TestActions.ADD_LOCAL(createTempDirectory.toFile().getAbsolutePath(), rootName));
 			Thread.sleep(5000);
 			
+			getMachineInfo(0).send(new TestActions.SHARE_WITH(Services.localMachine.getIdentifier(), true));
+			
 			final Machine machine = DbMachines.getMachine(getMachineInfo(0).getIdent());
 			Assert.assertNotNull(machine);
 			UserActions.syncRoots(machine);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+
+			ReentrantLock reentrantLock = new ReentrantLock();
+			reentrantLock.lock();
+			reentrantLock.newCondition().await();
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
 			
 			Thread.sleep(5000);
 			Assert.assertNotNull(DbRoots.getRoot(machine, rootName));
@@ -160,7 +209,7 @@ public class SynchronizationTests extends RemotesTest
 						catch (final IOException e)
 						{
 							fail = true;
-							e.printStackTrace();
+							Services.logger.print(e);
 						}
 					}
 				}

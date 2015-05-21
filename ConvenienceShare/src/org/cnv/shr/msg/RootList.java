@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -93,6 +94,7 @@ public class RootList extends Message
 	@Override
 	protected void parse(ByteReader reader) throws IOException
 	{
+		Machine machine = DbMachines.getMachine(reader.readString());
 		int numFolders = reader.readInt();
 		for (int i = 0; i < numFolders; i++)
 		{
@@ -100,14 +102,14 @@ public class RootList extends Message
 			String tags        = reader.readString();
 			String description = reader.readString();
 			
-			sharedDirectories.add(new RemoteDirectory(null, name, tags, description));
+			sharedDirectories.add(new RemoteDirectory(machine, name, tags, description));
 		}
 	}
-	
 
 	@Override
 	protected void print(AbstractByteWriter buffer) throws IOException
 	{
+		buffer.append(Services.localMachine.getIdentifier());
 		buffer.append(sharedDirectories.size());
 		for (RootDirectory dir : sharedDirectories)
 		{
