@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
+import org.cnv.shr.db.h2.DbRoots.IgnorePatterns;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
@@ -19,17 +20,21 @@ import org.cnv.shr.util.FileOutsideOfRootException;
 public class FileFileSource implements FileSource
 {
 	private Path f;
+	IgnorePatterns patterns;
 	
-	
-	public FileFileSource(File f)
+	public FileFileSource(File f, IgnorePatterns ignores)
 	{
 		this.f = Paths.get(f.getPath());
-	}
-	FileFileSource(Path f)
-	{
-		this.f = f;
+		this.patterns = ignores;
 	}
 	
+	FileFileSource(Path f, IgnorePatterns ignores)
+	{
+		this.f = f;
+		this.patterns = ignores;
+	}
+	
+	@Override
 	public String toString()
 	{
 		return f.toString();
@@ -38,7 +43,7 @@ public class FileFileSource implements FileSource
 	@Override
 	public boolean stillExists()
 	{
-		return f.toFile().exists();
+		return f.toFile().exists() && !patterns.blocks(f.toFile().getAbsolutePath());
 	}
 
 	@Override
@@ -49,17 +54,20 @@ public class FileFileSource implements FileSource
 			private DirectoryStream<Path> stream = Files.newDirectoryStream(f);
 			
 			Iterator<Path> it = stream.iterator();
+			Path next = findNext();
 
 			@Override
 			public boolean hasNext()
 			{
-				return it.hasNext();
+				return next != null;
 			}
 
 			@Override
 			public FileSource next()
 			{
-				return new FileFileSource(it.next());
+				FileSource returnValue = new FileFileSource(next, patterns);
+				next = findNext();
+				return returnValue;
 			}
 
 			@Override
@@ -73,9 +81,23 @@ public class FileFileSource implements FileSource
 			{
 				stream.close();
 			}
+			
+			protected Path findNext()
+			{
+				while (it.hasNext())
+				{
+					Path maybeNext = it.next();
+					if (!patterns.blocks(maybeNext.toFile().getAbsolutePath()))
+					{
+						return maybeNext;
+					}
+				}
+				return null;
+			}
 		};
 	}
 	
+
 	@Override
 	public String getName()
 	{

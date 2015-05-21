@@ -71,6 +71,10 @@ public class UserMessageMessage extends Message
 			return;
 		}
 		UserMessage message = new UserMessage(machine, type, messageStr);
+		if (message.checkInsane())
+		{
+			return;
+		}
 		message.save();
 		Services.notifications.messageReceived(message);
 	}

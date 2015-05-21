@@ -32,7 +32,6 @@ public class LocalDirectoryView extends javax.swing.JFrame
      */
     public LocalDirectoryView() {
         initComponents();
-        setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
     }
 
 	public void view(LocalDirectory root)
@@ -49,7 +48,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		descriptionString.setText(root.getDescription());
 		
 		StringBuilder builder = new StringBuilder();
-		for (String string : DbRoots.getIgnores(root))
+		for (String string : DbRoots.getIgnores(root).getPatterns())
 		{
 			builder.append(string).append('\n');
 		}
@@ -132,7 +131,8 @@ public class LocalDirectoryView extends javax.swing.JFrame
 
         jButton1.setText("Save");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
@@ -195,14 +195,16 @@ public class LocalDirectoryView extends javax.swing.JFrame
 
         jButton2.setText("Synchronize");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
 
         jButton3.setText("Do not share");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -271,7 +273,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
         
         for (LocalSharePermission permission : permissions)
         {
-            permission.setSharing(SharingState.INVISIBLE);
+            permission.setSharing(SharingState.DO_NOT_SHARE);
             permission.save();
         }
     }//GEN-LAST:event_jButton3ActionPerformed

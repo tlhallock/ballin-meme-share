@@ -96,7 +96,6 @@ public class DbMachines
 		}
 	}
 	
-//	new PublicKey[0]
 	// Should be in the same transaction...
 	public static void updateMachineInfo(
 			String ident,
@@ -110,6 +109,8 @@ public class DbMachines
 		if (machine == null)
 		{
 			machine = new Machine(ident);
+			// By default, we will accept messages from other machines...
+			machine.setAllowsMessages(true);
 		}
 		
 		machine.setIp(ip);
@@ -120,6 +121,8 @@ public class DbMachines
 		try
 		{
 			machine.save();
+			// Is the first of these two really necessary?
+			Services.notifications.remoteChanged(machine);
 			Services.notifications.remotesChanged();
 		}
 		catch (SQLException e)

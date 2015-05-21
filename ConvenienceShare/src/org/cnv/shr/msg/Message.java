@@ -6,8 +6,10 @@ import java.io.InputStream;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.msg.key.PermissionFailure;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.OutputByteWriter;
@@ -30,9 +32,7 @@ public abstract class Message
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
-		
 		builder.append("Please implement toString() in class " + getClass().getName());
-		
 		return builder.toString();
 	}
 	
@@ -53,20 +53,53 @@ public abstract class Message
 	public    abstract void perform(Communication connection) throws Exception;
 	
 	
-	protected boolean checkPermissionsVisible(Machine machine, RootDirectory root)
+	protected void checkPermissionsVisible(Communication c, Machine machine, RootDirectory root, String action) throws PermissionException, IOException
 	{
+		if (Services.settings.shareWithEveryone.get())
+		{
+			return;
+		}
 		SharingState sharing = DbPermissions.isSharing(machine, root);
-		return sharing != null && sharing.canList();
+		if (sharing != null && sharing.canList())
+		{
+			return;
+		}
+		
+		PermissionFailure permissionFailure = new PermissionFailure(root.getName(), sharing, action);
+		c.send(permissionFailure);
+		throw new PermissionException(action);
 	}
 	
-	protected boolean checkPermissionsDownloadable(Machine machine, RootDirectory root)
+	protected void checkPermissionsDownloadable(Communication c, Machine machine, RootDirectory root, String action) throws PermissionException, IOException
 	{
+		if (Services.settings.shareWithEveryone.get())
+		{
+			return;
+		}
 		SharingState sharing = DbPermissions.isSharing(machine, root);
-		return sharing != null && sharing.canDownload();
+		if (sharing != null && sharing.canDownload())
+		{
+			return;
+		}
+		
+		PermissionFailure permissionFailure = new PermissionFailure(root.getName(), sharing, action);
+		c.send(permissionFailure);
+		throw new PermissionException(action);
 	}
 	
-	protected boolean checkPermissionsSharing(Machine machine)
+	protected void checkPermissionsViewable(Communication c, Machine machine, String action) throws PermissionException, IOException
 	{
-		return machine.isSharing();
+		if (Services.settings.shareWithEveryone.get())
+		{
+			return;
+		}
+		if (machine.isSharing().canList())
+		{
+			return;
+		}
+		
+		PermissionFailure permissionFailure = new PermissionFailure(null, machine.isSharing(), action);
+		c.send(permissionFailure);
+		throw new PermissionException(action);
 	}
 }

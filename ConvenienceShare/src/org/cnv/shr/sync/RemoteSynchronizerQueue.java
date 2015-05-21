@@ -26,10 +26,11 @@ public class RemoteSynchronizerQueue implements Closeable
 	
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
+	private HashSet<String> queue = new HashSet<>();
+	
 	private HashMap<String, PathList> directories = new HashMap<>();
 	Communication communication;
 	RemoteDirectory root;
-	private HashSet<String> queue = new HashSet<>();
 	
 	public RemoteSynchronizerQueue(final Communication c, final RemoteDirectory root)
 	{
@@ -73,13 +74,14 @@ public class RemoteSynchronizerQueue implements Closeable
 	PathList getDirectoryList(final PathElement pathElement)
 	{
 		final String path = pathElement.getFullPath();
+
+		if (communication.isClosed())
+		{
+			return null;
+		}
 		lock.lock();
 		try
 		{
-			if (communication.isClosed())
-			{
-				return null;
-			}
 			try
 			{
 				ensureQueued(pathElement);

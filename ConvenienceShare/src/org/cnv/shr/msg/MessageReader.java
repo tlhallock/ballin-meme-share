@@ -25,6 +25,7 @@ import org.cnv.shr.msg.key.KeyFailure;
 import org.cnv.shr.msg.key.KeyNotFound;
 import org.cnv.shr.msg.key.NewKey;
 import org.cnv.shr.msg.key.OpenConnection;
+import org.cnv.shr.msg.key.PermissionFailure;
 import org.cnv.shr.msg.key.RevokeKey;
 import org.cnv.shr.msg.key.WhoIAm;
 import org.cnv.shr.util.ByteReader;
@@ -72,6 +73,7 @@ public class MessageReader
 		add(new MessageIdentifier(ChecksumRequest.class            ));
 		add(new MessageIdentifier(ChecksumResponse.class           ));
 		add(new MessageIdentifier(NewAesKey.class                  ));
+		add(new MessageIdentifier(PermissionFailure.class          ));
 
 		Services.logger.println("Message map:\n" + this);
 	}
@@ -117,6 +119,7 @@ public class MessageReader
 		return messageIdentifier.create(input);
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();
@@ -181,6 +184,7 @@ public class MessageReader
 //			}
 		}
 		
+		@Override
 		public String toString()
 		{
 			return type + "->" + name;

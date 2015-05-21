@@ -9,9 +9,8 @@ import java.util.LinkedList;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbPermissions;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
@@ -31,9 +30,12 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				DbMachines.delete(remote);
+				// Is the first of these two really necessary?
+				Services.notifications.remoteChanged(remote);
 				Services.notifications.remotesChanged();
 			}
 		});
@@ -43,6 +45,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				try
@@ -53,23 +56,31 @@ public class UserActions
 						Services.keyManager.addPendingAuthentication(url);
 						return;
 					}
-					openConnection.send(new MachineFound());
-					openConnection.send(new FindMachines());
 
+					Machine machine = openConnection.getMachine();
 					if (params.message)
 					{
-                                            // enable messaging
+						// enable messaging
+						machine.setAllowsMessages(true);
+						machine.save();
 					}
-                                        
-                                        if (params.share)
-                                        {
-                                            // set sharing
-                                        }
-                                        
-                                        if (params.visible)
-                                        {
-                                            // can list roots...
-                                        }
+
+					if (params.visible)
+					{
+						if (params.share)
+						{
+							machine.setSharing(SharingState.DOWNLOADABLE);
+							machine.save();
+						}
+						else
+						{
+							machine.setSharing(SharingState.SHARE_PATHS);
+							machine.save();
+						}
+					}
+					
+					openConnection.send(new MachineFound());
+					openConnection.send(new FindMachines());
 
 					openConnection.finish();
 				}
@@ -77,6 +88,10 @@ public class UserActions
 				{
 					Services.logger.println("Unable to discover " + url);
 					Services.logger.print(e);
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
 				}
 			}
 		});
@@ -86,6 +101,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				String url = m.getUrl();
@@ -98,6 +114,7 @@ public class UserActions
 					}
 					openConnection.send(new ListRoots());
 					openConnection.finish();
+					Services.notifications.remoteChanged(openConnection.getMachine());
 				}
 				catch (IOException e)
 				{
@@ -112,6 +129,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				try
@@ -137,6 +155,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				
@@ -151,6 +170,7 @@ public class UserActions
 					sync(local);
 				}
 //				Services.db.removeUnusedPaths();
+                                Services.notifications.localsChanged();
 			}
 		});
 	}
@@ -159,6 +179,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				directory.synchronize(null);
@@ -170,6 +191,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				try
@@ -207,6 +229,7 @@ public class UserActions
 		l.stopSynchronizing();
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				DbRoots.deleteRoot(l);
@@ -218,6 +241,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 			}
@@ -251,6 +275,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				DbTables.debugDb();
@@ -262,6 +287,7 @@ public class UserActions
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
 				DbTables.deleteDb(Services.h2DbCache.getConnection());

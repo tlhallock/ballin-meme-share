@@ -9,6 +9,12 @@ import org.cnv.shr.util.Misc;
 
 public class Restart extends Quiter
 {
+	private File launchDir;
+	
+	public Restart() { this (new File("./bin")); }
+	
+	public Restart(File launch) { this.launchDir = launch; }
+	
 	@Override
 	public void doFinal()
 	{
@@ -26,7 +32,7 @@ public class Restart extends Quiter
 			args.add("java");
 			args.add("-cp");
 			args.add(Misc.getClassPath());
-			args.add(Misc.getJarName());
+			args.add("org.cnv.shr.dmn.mn.Main");
 			args.add("-f");
 			args.add(Services.settings.getSettingsFile().getAbsolutePath());
 			
@@ -40,7 +46,7 @@ public class Restart extends Quiter
 
 			ProcessBuilder builder = new ProcessBuilder();
 			builder.command(args);
-			builder.directory(new File("./bin").getAbsoluteFile());
+			builder.directory(launchDir.getAbsoluteFile());
 
 			builder.start();
 		}

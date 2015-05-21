@@ -53,15 +53,7 @@ public class LookingFor extends Message
 	{
 		SharedFile file = DbFiles.getFile(checksum, fileSize);
 		Machine machine = connection.getMachine();
-		if (file != null && !checkPermissionsDownloadable(machine, file.getRootDirectory()))
-		{
-			connection.finish();
-			return;
-		}
-		if (file == null && !checkPermissionsSharing(machine))
-		{
-			connection.finish();
-		}
+		checkPermissionsViewable(connection, machine, "Reporting file");
 		connection.send(new MachineHasFile(file));
 	}
 }

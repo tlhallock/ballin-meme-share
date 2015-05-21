@@ -12,6 +12,7 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -44,14 +45,17 @@ public class RootList extends Message
 	public void perform(Communication connection)
 	{
 		HashSet<String> accountedFor = new HashSet<>();
+		Machine machine = connection.getMachine();
+		
 		boolean changed = true;
 		for (RootDirectory root : sharedDirectories)
 		{
 			accountedFor.add(root.getName());
-			root.setMachine(connection.getMachine());
+			root.setMachine(machine);
 			try
 			{
 				root.save();
+				changed = true;
 			}
 			catch (SQLException e)
 			{
@@ -59,21 +63,30 @@ public class RootList extends Message
 			}
 		}
 		
-		DbIterator<RootDirectory> list = DbRoots.list(connection.getMachine());
+		List<RootDirectory> toDelete = new LinkedList<>();
+		DbIterator<RootDirectory> list = DbRoots.list(machine);
 		while (list.hasNext())
 		{
-			RootDirectory next = list.next();
+			final RootDirectory next = list.next();
 			if (accountedFor.contains(next.getName()))
 			{
 				continue;
 			}
-			Services.logger.println("Should delete root: " + next);
+			toDelete.add(next);
+			DbRoots.deleteRoot(next);
 			changed = true;
+		}
+		
+		for (RootDirectory root : toDelete)
+		{
+			DbRoots.deleteRoot(root);
+			// should be deleted...
+			Services.notifications.remoteDirectoryChanged((RemoteDirectory) root);
 		}
 		
 		if (changed)
 		{
-			Services.notifications.remotesChanged();
+			Services.notifications.remoteChanged(machine);
 		}
 	}
 

@@ -31,6 +31,7 @@ public class LocalMachineTest
 		stgs.servePortBeginI.set(LOCAL_PORT);
 		stgs.servePortBeginE.set(LOCAL_PORT);
 		stgs.machineIdentifier.set("6mkDuKhkiTpjpM3vS6LGEKN72dEB4tmsaKslTJc2ZDrXLGplYE");
+		stgs.shareWithEveryone.set(true);
 		stgs.write();
 		
 		Arguments args = new Arguments();

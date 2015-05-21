@@ -69,6 +69,6 @@ public class RemoteDirectory extends RootDirectory
 	@Override
 	protected void sendNotifications()
 	{
-		Services.notifications.remotesChanged(this);
+		Services.notifications.remoteDirectoryChanged(this);
 	}
 }

@@ -17,6 +17,7 @@ public class DbPaths
 {
 	public static PathElement ROOT = new PathElement(null, 0, "")
 	{
+		@Override
 		public PathElement getParent()
 		{
 			return ROOT;
@@ -212,9 +213,11 @@ public class DbPaths
 	public static void removeUnusedPaths()
 	{
 		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("delete from PELEM "
-				+ "where not exists (select R_ID from ROOT where ROOT.PELEM = PELEM.P_ID) "
-				+ "and not exists (select F_ID from SFILE where SFILE.PELEM = PELEM.P_ID);");)
+		try (PreparedStatement stmt = c.prepareStatement("delete from PELEM as del"
+				+ " where not exists (select R_ID from ROOT where ROOT.PELEM = del.P_ID) "
+				+ " and not exists (select F_ID from SFILE where SFILE.PELEM = del.P_ID)"
+				+ " and not exists (select RID from ROOT_CONTAINS where ROOTS_CONTAINS.PELEM = del.P_ID)"
+				+ " and not exists (select P_ID from PELEM as child where child.PARENT=del.P_ID);");)
 		{
 			stmt.execute();
 		}

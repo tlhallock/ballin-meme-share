@@ -48,6 +48,13 @@ public class Main
 
 		Arguments a = new Arguments();
 		parseArgs(args, a);
+
+//		if (!a.settings.getSettingsFile().exists())
+//		{
+//			new NewMachineFrame().setVisible(true);
+//			return;
+//		}
+
 		try
 		{
 			Services.initialize(a);

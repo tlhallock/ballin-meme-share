@@ -9,8 +9,6 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
@@ -51,7 +49,6 @@ import org.cnv.shr.util.IpTester;
  */
 public class Application extends javax.swing.JFrame
 {
-    public LinkedList<MachineViewer> remoteViewers = new LinkedList<>();
     LinkedList<String> logMessages = new LinkedList<>();
     LinkedList<ConnectionStatus> connections = new LinkedList<>();
     NotificationListener listener;
@@ -68,7 +65,6 @@ public class Application extends javax.swing.JFrame
 		initializeMessages();
 		initializeDownloads();
 		
-		setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
 		connectionsPanel.setLayout(new GridLayout(0, 1));
 		machinesList.setAutoCreateRowSorter(true);
 		localsView.setAutoCreateRowSorter(true);
@@ -192,13 +188,6 @@ public class Application extends javax.swing.JFrame
 	private void refreshRemote(RemoteDirectory remote)
 	{
 		refreshRemote(remote.getMachine());
-		for (MachineViewer view : remoteViewers)
-		{
-			if (view.getMachine().equals(remote.getMachine()))
-			{
-				view.refreshRoot(remote);
-			}
-		}
 	}
 
 	// should sync the machines table...
@@ -232,17 +221,9 @@ public class Application extends javax.swing.JFrame
 	private void showRemote(final Machine machine)
 	{
 		final MachineViewer viewer = new MachineViewer(machine);
+		Services.notifications.registerWindow(viewer);
 		viewer.setBounds(getBounds());
 		viewer.setTitle("Machine " + machine.getName());
-		remoteViewers.add(viewer);
-		viewer.addWindowListener(new WindowAdapter()
-		{
-			@Override
-			public void windowClosing(WindowEvent evt)
-			{
-				remoteViewers.remove(viewer);
-			}
-		});
 		viewer.setVisible(true);
 		Services.logger.println("Showing remote " + machine.getName());
 	}
@@ -997,7 +978,9 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        new AddMachine().setVisible(true);
+        AddMachine addMachine = new AddMachine();
+        Services.notifications.registerWindow(addMachine);
+		addMachine.setVisible(true);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void DebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DebugActionPerformed
@@ -1124,6 +1107,7 @@ public class Application extends javax.swing.JFrame
 					public void run()
 					{
 						LocalDirectoryView localDirectoryView = new LocalDirectoryView();
+						Services.notifications.registerWindow(localDirectoryView);
 						localDirectoryView.view(root);
 						localDirectoryView.setVisible(true);
 						Services.logger.println("Displaying " + mId);
@@ -1211,7 +1195,13 @@ public class Application extends javax.swing.JFrame
 					@Override
 					public void run()
 					{
-						showRemote(DbMachines.getMachine(mId));
+						Machine machine = DbMachines.getMachine(mId);
+						if (machine == null)
+						{
+							Services.logger.println("Unable to find machine: " + mId);
+							return;
+						}
+						showRemote(machine);
 					}
 				});
 			}
@@ -1374,7 +1364,7 @@ public class Application extends javax.swing.JFrame
 			}
 
 			@Override
-			public void localChanged(LocalDirectory local)
+			public void localDirectoryChanged(LocalDirectory local)
 			{
 				refreshLocal(local);
 			}
@@ -1384,9 +1374,16 @@ public class Application extends javax.swing.JFrame
 			{
 				refreshRemotes();
 			}
+			
+			@Override
+			public void remoteChanged(Machine remote)
+			{
+				// Should check if it was deleted...
+				refreshRemote(remote);
+			}
 
 			@Override
-			public void remotesChanged(RemoteDirectory remote)
+			public void remoteDirectoryChanged(RemoteDirectory remote)
 			{
 				refreshRemote(remote);
 			}

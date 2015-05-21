@@ -54,14 +54,14 @@ public class DbPermissions
 		{
 			Services.logger.print(e);
 		}
-		return SharingState.INVISIBLE;
+		return SharingState.DO_NOT_SHARE;
 	}
 	
 	
 	public enum SharingState
 	{
-		INVISIBLE   (0),
-		VISIBLE     (1),
+		DO_NOT_SHARE(0),
+		SHARE_PATHS (1),
 		DOWNLOADABLE(2),
 		NOT_SET     (3),
 		
@@ -81,12 +81,29 @@ public class DbPermissions
 		
 		public boolean canList()
 		{
-			return this.equals(DOWNLOADABLE) || this.equals(VISIBLE);
+			return this.equals(DOWNLOADABLE) || this.equals(SHARE_PATHS);
 		}
 		
 		public boolean canDownload()
 		{
 			return this.equals(DOWNLOADABLE);
+		}
+		
+		public static SharingState get(int dbValue)
+		{
+			for (SharingState s : values())
+			{
+				if (s.state == dbValue)
+				{
+					return s;
+				}
+			}
+			return SharingState.NOT_SET;
+		}
+
+		public int getDbValue()
+		{
+			return state;
 		}
 	}
 }

@@ -10,32 +10,38 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.security.PublicKey;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.TreePath;
-import org.cnv.shr.cnctn.Communication;
 
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.dmn.Notifications;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.UserMessageMessage;
+import org.cnv.shr.msg.key.PermissionFailure.PermissionFailureEvent;
 import org.cnv.shr.util.Misc;
-
 
 /**
  *
@@ -46,12 +52,12 @@ public class MachineViewer extends javax.swing.JFrame
     private Machine machine;
     private RootDirectory directory;
     private PathTreeModel model;
+    private Notifications.NotificationListener listener;
     /**
      * Creates new form RemoteViewer
      */
-    public MachineViewer(Machine machine) {
+    public MachineViewer(Machine rMachine) {
         initComponents();
-        setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
 
         pathsTable.setAutoCreateRowSorter(true);
         filesTable.setAutoCreateRowSorter(true);
@@ -73,12 +79,128 @@ public class MachineViewer extends javax.swing.JFrame
         });
         filesTree.setScrollsOnExpand(true);
         filesTree.setLargeModel(true);
-        setMachine(machine);
+        setMachine(rMachine);
         viewNoDirectory();
+        
+        Services.notifications.add(listener = new Notifications.NotificationListener()
+		{
+			@Override
+			public void remoteChanged(Machine remote)
+			{
+				if (remote.getIdentifier().equals(machine.getIdentifier()))
+				{
+					setMachine(remote);
+				}
+			}
+
+			@Override
+			public void remoteDirectoryChanged(RemoteDirectory remote)
+			{
+				if (directory == null || !directory.getMachine().getIdentifier().equals(machine.getIdentifier())
+									  || !directory.getName().equals(remote.getName()))
+				{
+					return;
+				}
+				
+				// Check if it was deleted...
+
+				view(remote);
+			}
+
+			@Override
+			public void permissionFailure(PermissionFailureEvent event)
+			{
+				String rootName = event.getRootName();
+				if (rootName == null)
+				{
+					return;
+				}
+				if (rootName.equals(directory.getName()))
+				{
+					visibleCheckBox.setSelected(event.getCurrentSharingState().canList());
+					downloadableCheckBox.setSelected(event.getCurrentSharingState().canDownload());
+				}
+			}
+		});
+
+		addWindowListener(new WindowAdapter()
+		{
+			@Override
+			public void windowClosing(WindowEvent evt)
+			{
+				Services.notifications.remove(listener);
+			}
+		});
+		
+		addPermissionListeners();
     }
     
 
-    public Machine getMachine() {
+    private void addPermissionListeners()
+	{
+		visibleCheckBox.addChangeListener(new ChangeListener()
+		{
+			@Override
+			public void stateChanged(ChangeEvent arg0)
+			{
+				if (machine.isLocal())
+				{
+					return;
+				}
+				try
+				{
+					if (isSharing.isSelected() && !machine.isSharing().canDownload())
+					{
+						machine.setSharing(SharingState.DOWNLOADABLE);
+						machine.save();
+						Services.notifications.remoteChanged(machine);
+					}
+					else if (!isSharing.isSelected() && machine.isSharing().canList())
+					{
+						machine.setSharing(SharingState.DO_NOT_SHARE);
+						machine.save();
+						Services.notifications.remoteChanged(machine);
+					}
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		});
+		isMessaging.addChangeListener(new ChangeListener()
+		{
+			@Override
+			public void stateChanged(ChangeEvent arg0)
+			{
+				if (machine.isLocal())
+				{
+					return;
+				}
+				try
+				{
+					if (isMessaging.isSelected() && !machine.getAllowsMessages())
+					{
+						machine.setSharing(SharingState.DOWNLOADABLE);
+						machine.save();
+						Services.notifications.remoteChanged(machine);
+					}
+					else if (!isMessaging.isSelected() && machine.getAllowsMessages())
+					{
+						machine.setSharing(SharingState.DO_NOT_SHARE);
+						machine.save();
+						Services.notifications.remoteChanged(machine);
+					}
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+    
+	public Machine getMachine() {
         return machine;
     }
 
@@ -230,7 +352,7 @@ public class MachineViewer extends javax.swing.JFrame
     public void setMachine(final Machine machine) {
         isSharing.setEnabled(machine.isLocal());
         this.machine = machine;
-        this.isSharing.setSelected(machine.isSharing());
+        this.isSharing.setSelected(machine.isSharing().canDownload());
         machineLabel.setText((machine.isLocal() ? "Local machine: " : "") + machine.getName());
         final StringBuilder builder = new StringBuilder();
         PublicKey[] keys = DbKeys.getKeys(machine);
@@ -246,12 +368,14 @@ public class MachineViewer extends javax.swing.JFrame
         keysLabel.setText(keysString);
 
         final DefaultTableModel model = (DefaultTableModel) pathsTable.getModel();
-        while (model.getRowCount() > 0) {
+        while (model.getRowCount() > 0)
+        {
             model.removeRow(0);
         }
 
         final DbIterator<? extends RootDirectory> listRemoteDirectories = DbRoots.list(machine);
-        while (listRemoteDirectories.hasNext()) {
+        while (listRemoteDirectories.hasNext())
+        {
             model.addRow(new String[]{listRemoteDirectories.next().getName()});
         }
         
@@ -265,8 +389,8 @@ public class MachineViewer extends javax.swing.JFrame
         else
         {
             jButton1.setEnabled(true); // cannot ask to share with local
-            isSharing.setSelected(false); isSharing.setEnabled(true);
-            isMessaging.setSelected(false); isMessaging.setEnabled(true);
+            isSharing.setSelected(machine.isSharing().canDownload()); isSharing.setEnabled(true);
+            isMessaging.setSelected(machine.getAllowsMessages()); isMessaging.setEnabled(true);
             jButton3.setEnabled(true);
         }
     }
@@ -287,7 +411,7 @@ public class MachineViewer extends javax.swing.JFrame
         while (filesTable.getModel().getRowCount() > 0) {
             ((DefaultTableModel) filesTable.getModel()).removeRow(0);
         }
-        view((LocalDirectory) null);
+        updatePermissionBoxesLocal();
     }
     private void view(final RootDirectory directory) {
     	if (directory == null) {
@@ -309,15 +433,15 @@ public class MachineViewer extends javax.swing.JFrame
         }
         if (directory.isLocal())
         {
-            view ((LocalDirectory) directory);
+        	updatePermissionBoxesLocal();
         }
         else
         {
-            view((RemoteDirectory) directory);
+        	updatePermissionBoxesRemote();
         }
     }
 
-    private void view(final LocalDirectory directory) {
+    private void updatePermissionBoxesLocal() {
         changePathButton.setEnabled(false);
         visibleCheckBox.setEnabled(false); visibleCheckBox.setSelected(true);
         downloadableCheckBox.setEnabled(false); downloadableCheckBox.setSelected(false);
@@ -325,7 +449,7 @@ public class MachineViewer extends javax.swing.JFrame
         requestShareButton.setEnabled(false);
     }
     
-    private void view(final RemoteDirectory directory) {
+    private void updatePermissionBoxesRemote() {
         changePathButton.setEnabled(true);
         visibleCheckBox.setEnabled(false); visibleCheckBox.setSelected(false);
         downloadableCheckBox.setEnabled(false); downloadableCheckBox.setSelected(false);
@@ -422,7 +546,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton1.setText("Request");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
@@ -437,7 +562,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton3.setText("Synchronize Roots");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -459,11 +585,13 @@ public class MachineViewer extends javax.swing.JFrame
                 false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+			public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -476,7 +604,8 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel5.setText("Filter:");
 
         jTextField1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextField1ActionPerformed(evt);
             }
         });
@@ -496,11 +625,13 @@ public class MachineViewer extends javax.swing.JFrame
                 false, false, false, false, false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+			public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -534,7 +665,8 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel6.setText("Filter:");
 
         jTextField2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextField2ActionPerformed(evt);
             }
         });
@@ -599,7 +731,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         requestShareButton.setText("Request");
         requestShareButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 requestShareButtonActionPerformed(evt);
             }
         });
@@ -609,7 +742,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         requestDownloadButton.setText("Request");
         requestDownloadButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 requestDownloadButtonActionPerformed(evt);
             }
         });
@@ -619,14 +753,16 @@ public class MachineViewer extends javax.swing.JFrame
 
         changePathButton.setText("Change");
         changePathButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 changePathButtonActionPerformed(evt);
             }
         });
 
         jButton7.setText("Synchronize");
         jButton7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton7ActionPerformed(evt);
             }
         });
@@ -730,7 +866,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton2.setText("Send Message");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -827,7 +964,9 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_changePathButtonActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        new CreateMessage(machine).setVisible(true);
+        CreateMessage createMessage = new CreateMessage(machine);
+        Services.notifications.registerWindow(createMessage);
+		createMessage.setVisible(true);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void requestDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestDownloadButtonActionPerformed

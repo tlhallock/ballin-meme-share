@@ -28,7 +28,6 @@ public class CreateMessage extends javax.swing.JFrame {
     CreateMessage(Machine machine)
     {
         initComponents();
-        setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
         this.machine = machine;
         machineLabel.setText(machine.getName());
     }

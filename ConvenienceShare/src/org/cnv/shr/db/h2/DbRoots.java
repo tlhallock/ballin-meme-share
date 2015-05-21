@@ -184,29 +184,58 @@ public class DbRoots
 		{
 			Services.logger.print(e);
 		}
+		DbPaths.removeUnusedPaths();
 	}
         
-        private static final String[] DUMMY = new String[0];
-        public static String[] getIgnores(LocalDirectory local)
-        {
-            LinkedList<String> returnValue = new LinkedList<>();
+	
+	public static class IgnorePatterns
+	{
+		private final String[] patterns;
+		
+		IgnorePatterns(String[] patterns)
+		{
+			this.patterns = patterns;
+		}
+		
+		public String[] getPatterns()
+		{
+			return this.patterns;
+		}
+		
+		public boolean blocks(String path)
+		{
+			for (String pattern : patterns)
+			{
+				if (path.contains(pattern))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+	
+	private static final String[] DUMMY = new String[0];
+	public static IgnorePatterns getIgnores(LocalDirectory local)
+	{
+		LinkedList<String> returnValue = new LinkedList<>();
 		Connection c = Services.h2DbCache.getConnection();
 		try (PreparedStatement s1 = c.prepareStatement("select PATTERN from IGNORE_PATTERN where RID=?;");)
 		{
 			s1.setInt(1, local.getId());
-                        ResultSet results = s1.executeQuery();
-                        while (results.next())
-                        {
-                            returnValue.add(results.getString(1));
-                        }
+			ResultSet results = s1.executeQuery();
+			while (results.next())
+			{
+				returnValue.add(results.getString(1));
+			}
 		}
 		catch (SQLException e)
 		{
 			Services.logger.print(e);
 		}
-                return returnValue.toArray(DUMMY);
-        }
-        
+		return new IgnorePatterns(returnValue.toArray(DUMMY));
+	}
+
         public static void setIgnores(LocalDirectory local, String[] ignores)
         {
             Connection c = Services.h2DbCache.getConnection();

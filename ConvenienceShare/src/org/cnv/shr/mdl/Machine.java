@@ -9,6 +9,7 @@ import java.sql.Statement;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.dmn.Services;
 
 public class Machine extends DbObject<Integer>
@@ -20,7 +21,7 @@ public class Machine extends DbObject<Integer>
 	private String identifier;
 	
 	private long lastActive;
-	private Boolean sharing;
+	private SharingState sharing;
 	
 	private int nports;
 	private boolean allowsMessages;
@@ -32,7 +33,7 @@ public class Machine extends DbObject<Integer>
 	{
 		super(null);
 		this.identifier = identifier;
-		sharing = false;
+		sharing = SharingState.NOT_SET;
 	}
 	
 	protected Machine() { super(null); }
@@ -51,7 +52,7 @@ public class Machine extends DbObject<Integer>
 			port		   = row.getInt    ("PORT");
 			nports         = row.getInt    ("NPORTS");
 		    lastActive     = row.getLong   ("LAST_ACTIVE");
-		    sharing        = row.getBoolean("SHARING");
+		    sharing        = SharingState.get(row.getInt("SHARING"));
 		    identifier     = row.getString ("IDENT");
 		    allowsMessages = row.getBoolean("MESSAGES");
 		    acceptPeers    = row.getBoolean("ACCEPT_PEERS");
@@ -89,7 +90,7 @@ public class Machine extends DbObject<Integer>
 		stmt.setInt(    ndx++, getPort());
 		stmt.setInt(    ndx++, getNumberOfPorts());
 		stmt.setLong(   ndx++, System.currentTimeMillis());
-		stmt.setBoolean(ndx++, isSharing());
+		stmt.setInt(    ndx++, isSharing().getDbValue());
 		stmt.setString( ndx++, getIdentifier());
 		stmt.setBoolean(ndx++, isLocal());
 		stmt.setBoolean(ndx++, getAllowsMessages());
@@ -99,6 +100,11 @@ public class Machine extends DbObject<Integer>
 	public int getNumberOfPorts()
 	{
 		return nports;
+	}
+
+	public void setAllowsMessages(boolean b)
+	{
+		this.allowsMessages = b;
 	}
 	
 	public boolean getAllowsMessages()
@@ -141,24 +147,27 @@ public class Machine extends DbObject<Integer>
 		return port;
 	}
 
+	@Override
 	public String toString()
 	{
 		return getIp() + ":" + getPort() + "[id=" + getIdentifier() + "]";
 	}
 
+	@Override
 	public int hashCode()
 	{
 		return toString().hashCode();
 	}
 
+	@Override
 	public boolean equals(Object other)
 	{
 		return other instanceof Machine && toString().equals(other.toString());
 	}
 
-	public void setSharing(boolean b)
+	public void setSharing(SharingState state)
 	{
-		sharing = b;
+		sharing = state;
 	}
 
 	public void setName(String string)
@@ -176,7 +185,7 @@ public class Machine extends DbObject<Integer>
 		return lastActive;
 	}
 
-	public boolean isSharing()
+	public SharingState isSharing()
 	{
 		return sharing;
 	}
@@ -208,61 +217,73 @@ public class Machine extends DbObject<Integer>
 			Services.keyManager.getKeys();
 		}
 		
+		@Override
 		public void setLastActive(long long1)
 		{
 			throw new UnsupportedOperationException("This is the local machine.");
 		}
 		
-		public void setSharing(boolean b)
+		@Override
+		public void setSharing(SharingState state)
 		{
 			throw new UnsupportedOperationException("This is the local machine.");
 		}
 
+		@Override
 		public void setName(String string)
 		{
 			throw new UnsupportedOperationException("This is the local machine.");
 		}
 
+		@Override
 		public long getLastActive()
 		{
 			return System.currentTimeMillis();
 		}
 		
-		public boolean isSharing()
+		@Override
+		public SharingState isSharing()
 		{
-			return true;
+			return SharingState.DOWNLOADABLE;
 		}
 
+		@Override
 		public boolean isLocal()
 		{
 			return true;
 		}
 
+		@Override
 		public String getName()
 		{
 			return Services.settings.machineName.get();
 		}
 		
+		@Override
 		public String getIp()
 		{
 			return Services.settings.getLocalIp();
 		}
 		
+		@Override
 		public int getPort()
 		{
 			return Services.settings.servePortBeginE.get();
 		}
 		
+		@Override
 		public String getIdentifier()
 		{
 			return Services.settings.machineIdentifier.get();
 		}
 		
+		@Override
 		public int getNumberOfPorts()
 		{
 			return Services.settings.maxServes.get();
 		}
 		
+		@Override
 		public boolean getAllowsMessages()
 		{
 			return true;

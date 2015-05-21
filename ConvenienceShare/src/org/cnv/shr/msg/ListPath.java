@@ -55,12 +55,7 @@ public class ListPath extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
-		if (!checkPermissionsVisible(connection.getMachine(), localByName))
-		{
-//			fail("Not visible");
-			connection.finish();
-			return;
-		}
+		checkPermissionsVisible(connection, connection.getMachine(), localByName, "List a path");
 		PathElement pathElement = DbPaths.getPathElement(path);
 		PathList msg = new PathList(localByName, pathElement);
 

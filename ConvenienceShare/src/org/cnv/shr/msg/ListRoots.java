@@ -17,14 +17,9 @@ public class ListRoots extends Message
 	}
 	
 	@Override
-	public void perform(Communication connection) throws IOException
+	public void perform(Communication connection) throws IOException, PermissionException
 	{
-		if (!checkPermissionsSharing(connection.getMachine()))
-		{
-//			fail("Not sharing");
-			connection.finish();
-			return;
-		}
+		checkPermissionsViewable(connection, connection.getMachine(), "List roots");
 		connection.send(new RootList());
 	}
 

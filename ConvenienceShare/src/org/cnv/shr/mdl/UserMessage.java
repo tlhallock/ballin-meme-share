@@ -103,7 +103,7 @@ public class UserMessage extends DbObject<Integer>
 			shareRoot(SharingState.DOWNLOADABLE);
 			break;
 		case SEE_ROOT:
-			shareRoot(SharingState.VISIBLE);
+			shareRoot(SharingState.SHARE_PATHS);
 			break;
 		case TEXT:
 			showMessage();
@@ -120,16 +120,18 @@ public class UserMessage extends DbObject<Integer>
 			Services.logger.println("No machine.");
 			return;
 		}
+		
 		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
 			    Services.application,
-			    "Shoule you like to share with machine " + machine.getName(),
+			    "Would you like to share with machine " + machine.getName(),
 			    "Share message sent on " + new Date(sent),
 			    JOptionPane.YES_NO_OPTION))
 		{
-			machine.setSharing(true);
+			machine.setSharing(SharingState.DOWNLOADABLE);
 			try
 			{
 				machine.save();
+				Services.notifications.remoteChanged(machine);
 			}
 			catch (SQLException e)
 			{
@@ -159,7 +161,64 @@ public class UserMessage extends DbObject<Integer>
 			    JOptionPane.YES_NO_OPTION))
 		{
 			DbPermissions.share(machine, localByName, state);
+			Services.notifications.remoteChanged(machine);
 		}
+	}
+	
+	public boolean checkInsane()
+	{
+		if (type == null)
+		{
+			Services.logger.println("No type.");
+			return true;
+		}
+		if (machine == null)
+		{
+			Services.logger.println("No machine.");
+			return true;
+		}
+		
+		LocalDirectory localByName;
+		switch (type)
+		{
+		case SHARE:
+			if (machine.isSharing().canDownload())
+			{
+				Services.logger.println("Already sharing.");
+				return true;
+			}
+			break;
+		case SHARE_ROOT:
+			localByName = DbRoots.getLocalByName(message);
+			if (localByName == null)
+			{
+				Services.logger.println("No local");
+				return true;
+			}
+			if (DbPermissions.isSharing(machine, localByName).canDownload())
+			{
+				Services.logger.println("Already sharing");
+				return true;
+			}
+			break;
+		case SEE_ROOT:
+			localByName = DbRoots.getLocalByName(message);
+			if (localByName == null)
+			{
+				Services.logger.println("No local");
+				return true;
+			}
+			if (DbPermissions.isSharing(machine, localByName).canList())
+			{
+				Services.logger.println("Already visible");
+				return true;
+			}
+		case TEXT: return false;
+		default: 
+			Services.logger.println("Unkown request type.");
+			return true;
+		}
+		return false;
 	}
 
 	private void showMessage()

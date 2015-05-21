@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.sync.ConsecutiveDirectorySyncIterator;
 import org.cnv.shr.sync.FileFileSource;
@@ -104,7 +105,7 @@ public class LocalDirectory extends RootDirectory
 			f.delete();
 			throw new RuntimeException("Symbolic link: " + f + ". Skipping");
 		}
-		FileSource source = new FileFileSource(f);
+		FileSource source = new FileFileSource(f, DbRoots.getIgnores(this));
 		SyncrhonizationTaskIterator iterator = new ConsecutiveDirectorySyncIterator(this, source);
 		return new LocalSynchronizer(this, iterator);
 	}

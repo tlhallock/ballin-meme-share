@@ -32,27 +32,28 @@ public class DbConnectionCache
 		long id = Thread.currentThread().getId();
 		id = 0;
 		Connection returnValue = connections.get(id);
-		if (returnValue == null)
+		try
 		{
-			try
+			if (returnValue == null /* || returnValue.isClosed() */ )
 			{
 				Misc.ensureDirectory(Services.settings.dbFile.get(), true);
 				String file = Services.settings.dbFile.get().getAbsolutePath();
 				Services.logger.println("DbFile: " + file);
 				returnValue = DriverManager.getConnection("jdbc:h2:" + file, "sa", "");
-				
+
 				Services.logger.println("Connect with:");
 				Services.logger.println("java -cp ConvenienceShare/libs/h2-1.4.187.jar org.h2.tools.Shell ".trim());
-				Services.logger.println("jdbc:h2:" + file                                                         );
+				Services.logger.println("jdbc:h2:" + file);
 				Services.logger.println("org.h2.Driver                                                    ".trim());
 				Services.logger.println("sa                                                               ".trim());
 				Services.logger.println("                                                                 ".trim());
 				Services.logger.println("                                                                 ".trim());
-			} catch (SQLException e)
-			{
-				Services.logger.print(e);
+				connections.put(id, returnValue);
 			}
-			connections.put(id, returnValue);
+		}
+		catch (SQLException e)
+		{
+			Services.logger.print(e);
 		}
 		return returnValue;
 	}

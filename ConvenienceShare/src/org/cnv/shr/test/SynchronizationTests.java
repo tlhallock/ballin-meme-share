@@ -128,7 +128,8 @@ public class SynchronizationTests extends RemotesTest
 			RootSynchronizer synchronizer;
 			if (rootDirectory.isLocal())
 			{
-				rootSource = new FileFileSource(new File(rootDirectory.getPathElement().getFullPath()));
+				rootSource = new FileFileSource(new File(rootDirectory.getPathElement().getFullPath()),
+										DbRoots.getIgnores((LocalDirectory) rootDirectory));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
 			}
 			else

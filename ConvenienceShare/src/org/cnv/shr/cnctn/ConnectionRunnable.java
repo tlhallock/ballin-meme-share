@@ -45,6 +45,8 @@ public class ConnectionRunnable implements Runnable
 				{
 					Services.logger.println("Error performing message task:");
 					Services.logger.print(e);
+					Services.logger.println("Closing connection.");
+					break;
 				}
 			}
 			Services.notifications.connectionClosed(connection);

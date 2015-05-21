@@ -44,12 +44,7 @@ public class ChecksumRequest extends DownloadMessage
 	public void perform(Communication connection) throws Exception
 	{
 		LocalFile local = getDescriptor().getLocal();
-		if (!checkPermissionsDownloadable(connection.getMachine(), local.getRootDirectory()))
-		{
-			// fail();
-			connection.finish();
-			return;
-		}
+		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Creating checksum");
 		local.ensureChecksummed();
 		connection.send(new ChecksumResponse(local));
 	}

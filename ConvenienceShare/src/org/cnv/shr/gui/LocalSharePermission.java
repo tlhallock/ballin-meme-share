@@ -34,11 +34,11 @@ public class LocalSharePermission extends javax.swing.JPanel {
     public void save()
     {
         if (!listBox.isSelected()) {
-            DbPermissions.share(machine, local, SharingState.INVISIBLE);
+            DbPermissions.share(machine, local, SharingState.DO_NOT_SHARE);
             return;
         }
         if (!downloadableBox.isSelected()) {
-            DbPermissions.share(machine, local, SharingState.VISIBLE);
+            DbPermissions.share(machine, local, SharingState.SHARE_PATHS);
             return;
         }
         DbPermissions.share(machine, local, SharingState.DOWNLOADABLE);
@@ -54,12 +54,12 @@ public class LocalSharePermission extends javax.swing.JPanel {
     {
         switch (state)
         {
-        case INVISIBLE: // Fall through
+        case DO_NOT_SHARE: // Fall through
         case NOT_SET:
             listBox.setSelected(false);
             downloadableBox.setSelected(false);
             break;
-        case VISIBLE:
+        case SHARE_PATHS:
             listBox.setSelected(true);
             downloadableBox.setSelected(false);
             break;

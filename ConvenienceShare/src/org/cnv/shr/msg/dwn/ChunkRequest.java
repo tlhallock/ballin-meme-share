@@ -46,12 +46,7 @@ public class ChunkRequest extends DownloadMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (!checkPermissionsDownloadable(connection.getMachine(), getDescriptor().getLocal().getRootDirectory()))
-		{
-			// fail();
-			connection.finish();
-			return;
-		}
+		checkPermissionsDownloadable(connection, connection.getMachine(), getDescriptor().getLocal().getRootDirectory(), "Sending chunk.");
 		Services.server.getServeInstance(connection).serve(chunk);
 	}
 

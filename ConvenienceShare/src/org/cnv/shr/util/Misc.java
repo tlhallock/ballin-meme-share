@@ -1,17 +1,32 @@
 package org.cnv.shr.util;
 
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
+import java.util.Scanner;
 
+import javax.imageio.ImageIO;
+
+import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.AddMachine.AddMachineParams;
+import org.cnv.shr.gui.UserActions;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.stng.Settings;
 
 public class Misc
 {
@@ -26,6 +41,10 @@ public class Misc
 		if (file)
 		{
 			f = f.getParentFile();
+			if (f == null)
+			{
+				f = new File(".");
+			}
 		}
 		f.mkdirs();
 	}
@@ -186,12 +205,59 @@ public class Misc
 	{
 		return "/usr/bin/java";
 	}
-	public static String getJarName()
-	{
-		return "org.cnv.shr.dmn.mn.MainTest";
-	}
 	public static String getClassPath()
 	{
 		return "../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:.";
+	}
+	
+	public static final int ICON_SIZE = 22;
+	public static Image getIcon() throws IOException
+	{
+		BufferedImage read = ImageIO.read(ClassLoader.getSystemResourceAsStream(Settings.IMG_DIR + "icon.png"));
+		Image scaledInstance = read.getScaledInstance(ICON_SIZE, ICON_SIZE, BufferedImage.SCALE_SMOOTH);
+		return scaledInstance;
+	}
+	
+	
+	
+	public static void listRemotes(PrintStream ps)
+	{
+		try (DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();)
+		{
+			while (listRemoteMachines.hasNext())
+			{
+				Machine next = listRemoteMachines.next();
+				String ip = next.getIp();
+				int port = next.getPort();
+				for (int i = 0; i < next.getNumberOfPorts(); i++)
+				{
+					ps.print(ip + ":" + (port + i) + " ");
+				}
+				ps.println();
+			}
+		}
+	}
+	
+	public static void readRemotes(URL url) throws IOException
+	{
+		readRemotes(new BufferedReader(new InputStreamReader(url.openConnection().getInputStream())));
+	}
+	
+	public static void readRemotes(BufferedReader reader) throws IOException
+	{
+		String line;
+		AddMachineParams params = new AddMachineParams(true);
+		while ((line = reader.readLine()) != null)
+		{
+			try (Scanner scanner = new Scanner(line);)
+			{
+				while (scanner.hasNext())
+				{
+					String url = scanner.next();
+					UserActions.addMachine(url, params);
+					break;
+				}
+			}
+		}
 	}
 }

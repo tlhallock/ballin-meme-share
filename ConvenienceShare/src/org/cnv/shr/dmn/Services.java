@@ -1,14 +1,12 @@
 package org.cnv.shr.dmn;
 
 import java.awt.AWTException;
-import java.awt.Image;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
@@ -17,7 +15,6 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import org.cnv.shr.cnctn.ConnectionManager;
@@ -167,6 +164,7 @@ public class Services
 				try
 				{
 					application = new Application();
+					Services.notifications.registerWindow(application);
 					application.setVisible(true);
 					application.refreshAll();
 				}
@@ -211,12 +209,9 @@ public class Services
 			}});
 		menu.add(item);
 		
-		BufferedImage read = ImageIO.read(ClassLoader.getSystemResourceAsStream(Settings.IMG_DIR + "icon.png"));
-		Image scaledInstance = read.getScaledInstance(22, 22, BufferedImage.SCALE_SMOOTH);
-		
 		if (SystemTray.isSupported())
 		{
-			TrayIcon icon = new TrayIcon(scaledInstance, "Convenience Share");
+			TrayIcon icon = new TrayIcon(Misc.getIcon(), "Convenience Share");
 			icon.setPopupMenu(menu);
 			SystemTray.getSystemTray().add(icon);
 		}
@@ -225,7 +220,7 @@ public class Services
 			Services.logger.println("Your system does not support the System tray.");
 			Services.logger.println("This makes it hard to keep the application running.");
 			Services.logger.println("We will create a JFrame that looks like a SystemTray.");
-			new TaskMenu(new ImageIcon(scaledInstance), menu).setVisible(true);
+			new TaskMenu(new ImageIcon(Misc.getIcon()), menu).setVisible(true);
 		}
 	}
 

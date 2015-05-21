@@ -76,6 +76,7 @@ public class Authenticator
 		{
 			return;
 		}
+		
 		Services.logger.println("Found new machine!");
 		updateMachineInfo(id, ip, keys);
 	}

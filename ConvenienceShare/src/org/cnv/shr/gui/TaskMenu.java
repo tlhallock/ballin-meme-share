@@ -6,6 +6,7 @@
 
 package org.cnv.shr.gui;
 
+import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.PopupMenu;
@@ -15,10 +16,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import javax.swing.Icon;
-
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.Misc;
 
 /**
  *
@@ -29,6 +29,8 @@ public class TaskMenu extends javax.swing.JFrame {
 	private int initialClickX;
 	private int initialClickY;
 	
+        
+        
     /**
      * Creates new form TaskMenu
      */
@@ -109,7 +111,10 @@ public class TaskMenu extends javax.swing.JFrame {
 		});
     }
     
-    
+    private Dimension getIconSize()
+    {
+        return new Dimension(Misc.ICON_SIZE, Misc.ICON_SIZE);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -123,12 +128,12 @@ public class TaskMenu extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximumSize(new java.awt.Dimension(22, 22));
-        setMinimumSize(new java.awt.Dimension(22, 22));
+        setMaximumSize(getIconSize());
+        setMinimumSize(getIconSize());
         setUndecorated(true);
+        setPreferredSize(getIconSize());
         setResizable(false);
 
-        jLabel1.setMaximumSize(new java.awt.Dimension(22, 22));
         jLabel1.setMinimumSize(new java.awt.Dimension(22, 22));
         jLabel1.setName(""); // NOI18N
         jLabel1.setPreferredSize(new java.awt.Dimension(22, 22));

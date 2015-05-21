@@ -10,6 +10,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
@@ -58,7 +59,8 @@ public class PathTreeModel implements TreeModel
 			iterator = new ExplorerSyncIterator(rootDirectory);
 			if (rootDirectory.isLocal())
 			{
-				rootSource = new FileFileSource(new File(rootDirectory.getPathElement().getFullPath()));
+				rootSource = new FileFileSource(new File(rootDirectory.getPathElement().getFullPath()),
+						DbRoots.getIgnores((LocalDirectory) newRoot));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
 			}
 			else

@@ -93,16 +93,14 @@ public class TableListener extends MouseAdapter
 		}
 	}
 	
+	// synchronization issue...
 	public String getTableValue(String colName, int row)
 	{
-		synchronized (table)
+		for (int i = 0; i < table.getColumnCount(); i++)
 		{
-			for (int i = 0; i < table.getColumnCount(); i++)
+			if (table.getColumnName(i).equals(colName))
 			{
-				if (table.getColumnName(i).equals(colName))
-				{
-					return (String) table.getValueAt(row, i);
-				}
+				return (String) table.getValueAt(row, i);
 			}
 		}
 		return null;

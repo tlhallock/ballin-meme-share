@@ -5,7 +5,6 @@
  */
 package org.cnv.shr.gui;
 
-import org.cnv.shr.dmn.Services;
 
 /**
  *
@@ -39,7 +38,19 @@ public class AddMachine extends javax.swing.JFrame {
      */
     public AddMachine() {
         initComponents();
-	setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
+    }
+    
+    private void updateBoxes()
+    {
+    	if (visible.isSelected())
+    	{
+    		share.setEnabled(true);
+    	}
+    	else
+    	{
+    		share.setEnabled(false);
+    		share.setSelected(false);
+    	}
     }
 
     /**
@@ -65,14 +76,16 @@ public class AddMachine extends javax.swing.JFrame {
 
         jButton1.setText("Add");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
         jButton2.setText("Cancel");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -81,15 +94,39 @@ public class AddMachine extends javax.swing.JFrame {
 
         share.setSelected(true);
         share.setText("Share");
+        share.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shareActionPerformed(evt);
+            }
+        });
 
         addKeys.setSelected(true);
         addKeys.setText("Add keys");
+        addKeys.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addKeysActionPerformed(evt);
+            }
+        });
 
         message.setSelected(true);
         message.setText("Accept messages");
+        message.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                messageActionPerformed(evt);
+            }
+        });
 
         visible.setSelected(true);
         visible.setText("Show directories");
+        visible.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+                visibleActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -99,7 +136,6 @@ public class AddMachine extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jButton2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton1))
@@ -110,9 +146,9 @@ public class AddMachine extends javax.swing.JFrame {
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(addKeys)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(share)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(visible)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(share)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(message)))
                         .addGap(0, 0, Short.MAX_VALUE)))
@@ -127,10 +163,10 @@ public class AddMachine extends javax.swing.JFrame {
                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(share)
                     .addComponent(addKeys)
                     .addComponent(message)
-                    .addComponent(visible))
+                    .addComponent(visible)
+                    .addComponent(share))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
@@ -156,6 +192,22 @@ public class AddMachine extends javax.swing.JFrame {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void addKeysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addKeysActionPerformed
+       updateBoxes();
+    }//GEN-LAST:event_addKeysActionPerformed
+
+    private void shareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shareActionPerformed
+        updateBoxes();
+    }//GEN-LAST:event_shareActionPerformed
+
+    private void visibleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_visibleActionPerformed
+        updateBoxes();
+    }//GEN-LAST:event_visibleActionPerformed
+
+    private void messageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_messageActionPerformed
+        updateBoxes();
+    }//GEN-LAST:event_messageActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -44,6 +44,7 @@ public class MachineInfo
 		processSettings.downloadsDirectory.set(  new File(root + File.separator + "downloads"));
 		processSettings.servingDirectory.set(    new File(root + File.separator + "serve"));
 		processSettings.stagingDirectory.set(    new File(root + File.separator + "stage"));
+		processSettings.shareWithEveryone.set(true);
 		processSettings.servePortBeginI.set(port);
 		processSettings.servePortBeginE.set(port);
 		processSettings.machineIdentifier.set(id);
@@ -78,7 +79,7 @@ public class MachineInfo
 				Misc.getJavaPath(),
 				"-cp",
 				Misc.getClassPath(),
-				Misc.getJarName(),
+				"org.cnv.shr.dmn.mn.MainTest",
 				deleteDb ? "-d" : "pass",
 				"-k",  String.valueOf(10000L),
 				"-f",
@@ -172,6 +173,7 @@ public class MachineInfo
 			this.reader = reader;
 		}
 		
+		@Override
 		public void run()
 		{
 			try

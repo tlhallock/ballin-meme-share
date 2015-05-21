@@ -27,12 +27,12 @@ public class AcceptKey extends javax.swing.JFrame {
      */
     public AcceptKey() {
         initComponents();
-	setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
     }
     
     public static boolean showAcceptDialog(String url, String machineName, String machineIdentifier, String key)
     {
         AcceptKey acceptKey = new AcceptKey();
+		Services.notifications.registerWindow(acceptKey);
         acceptKey.jLabel6.setText(url);
         acceptKey.jLabel7.setText(machineName);
         acceptKey.jLabel8.setText(machineIdentifier);
