@@ -107,7 +107,10 @@ public class DownloadTest extends RemotesTest
 			final String rootName = Misc.getRandomString(15);
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 4, 2, 1024 * 1024, 5);
-			UserActions.addLocal(createTempDirectory.toFile(), true, rootName);
+			UserActions.addLocal(createTempDirectory.toFile(), rootName);
+			Thread.sleep(5000);
+			DbRoots.getLocalByName(rootName).synchronize(null);
+			
 			Thread.sleep(5000);
 			
 			getMachineInfo(0).send(new TestActions.SYNC_ROOTS(Services.localMachine.getIdentifier()));

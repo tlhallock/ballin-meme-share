@@ -1,10 +1,11 @@
 package org.cnv.shr.mdl;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
@@ -12,6 +13,10 @@ import org.cnv.shr.dmn.Services;
 
 public class Download extends DbObject<Integer>
 {
+	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into DOWNLOAD key(FID) values ((select Q_ID from DOWNLOAD where FID=?), ?, ?, ?, ?)");
+	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from DOWNLOAD where FID=?");
+	private static final QueryWrapper UPDATE1 = new QueryWrapper("update DOWNLOAD set DSTATE=? where Q_ID=?");
+	
 	private RemoteFile file;
 	private DownloadState currentState;
 	private long added;
@@ -36,7 +41,7 @@ public class Download extends DbObject<Integer>
 	}
 
 	@Override
-	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+	public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 	{
 		int ndx = 1;
 		this.id = row.getInt(ndx++);
@@ -49,9 +54,8 @@ public class Download extends DbObject<Integer>
 	public void setState(DownloadState state)
 	{
 		this.currentState = state;
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				"update DOWNLOAD set DSTATE=? where Q_ID=?");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(UPDATE1);)
 		{
 			stmt.setInt(1, DownloadState.ALL_DONE.dbValue);
 			stmt.setInt(2, id);
@@ -75,9 +79,8 @@ public class Download extends DbObject<Integer>
 	
 	public void delete()
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				"delete from DOWNLOAD where FID=?");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE1);)
 		{
 			stmt.setInt(1, file.getId());
 			stmt.execute();
@@ -89,10 +92,9 @@ public class Download extends DbObject<Integer>
 	}
 
 	@Override
-	public boolean save(Connection c) throws SQLException
+	public boolean save(ConnectionWrapper c) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement(
-				"merge into DOWNLOAD key(FID) values ((select Q_ID from DOWNLOAD where FID=?), ?, ?, ?, ?)");)
+		try (StatementWrapper stmt = c.prepareStatement(MERGE1);)
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, file.getId());

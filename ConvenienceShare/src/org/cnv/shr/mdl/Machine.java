@@ -1,11 +1,12 @@
 package org.cnv.shr.mdl;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
@@ -14,6 +15,8 @@ import org.cnv.shr.dmn.Services;
 
 public class Machine extends DbObject<Integer>
 {
+	private static final QueryWrapper MEREGE1 = new QueryWrapper("merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+	private static final QueryWrapper MERGE2  = new QueryWrapper("merge into MACHINE key(IS_LOCAL) values ((select M_ID from MACHINE where IS_LOCAL=true), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	private String ip;
 	private int port;
 	
@@ -21,19 +24,21 @@ public class Machine extends DbObject<Integer>
 	private String identifier;
 	
 	private long lastActive;
-	private SharingState sharing;
 	
 	private int nports;
 	private boolean allowsMessages;
 	
 	protected boolean acceptPeers;
 	
+	private SharingState weShareToThem;
+	private SharingState sharesWithUs;
+	
 	
 	public Machine(String identifier)
 	{
 		super(null);
 		this.identifier = identifier;
-		sharing = SharingState.NOT_SET;
+		weShareToThem = SharingState.NOT_SET;
 	}
 	
 	protected Machine() { super(null); }
@@ -44,7 +49,7 @@ public class Machine extends DbObject<Integer>
 	}
 
 	@Override
-	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+	public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 	{
 			id             = row.getInt    ("M_ID");        
 			name           = row.getString ("MNAME");        
@@ -52,19 +57,17 @@ public class Machine extends DbObject<Integer>
 			port		   = row.getInt    ("PORT");
 			nports         = row.getInt    ("NPORTS");
 		    lastActive     = row.getLong   ("LAST_ACTIVE");
-		    sharing        = SharingState.get(row.getInt("SHARING"));
+		    weShareToThem        = SharingState.get(row.getInt("SHARING"));
+		    sharesWithUs   = SharingState.get(row.getInt("SHARES_WITH_US"));
 		    identifier     = row.getString ("IDENT");
 		    allowsMessages = row.getBoolean("MESSAGES");
 		    acceptPeers    = row.getBoolean("ACCEPT_PEERS");
 	}
 
 	@Override
-	public boolean save(Connection c) throws SQLException
+	public boolean save(ConnectionWrapper c) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement(
-				 "merge into MACHINE key(IDENT) values "
-				 + "((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
-				, Statement.RETURN_GENERATED_KEYS);)
+		try (StatementWrapper stmt = c.prepareStatement(MEREGE1, Statement.RETURN_GENERATED_KEYS);)
 		{
 			int ndx = 1;
 			stmt.setString( ndx++, getIdentifier());
@@ -83,20 +86,21 @@ public class Machine extends DbObject<Integer>
 		return true;
 	}
 
-	protected void writeMachine(PreparedStatement stmt, int ndx) throws SQLException
+	protected void writeMachine(StatementWrapper stmt, int ndx) throws SQLException
 	{
 		stmt.setString( ndx++, getName());
 		stmt.setString( ndx++, getIp());
 		stmt.setInt(    ndx++, getPort());
 		stmt.setInt(    ndx++, getNumberOfPorts());
 		stmt.setLong(   ndx++, System.currentTimeMillis());
-		stmt.setInt(    ndx++, isSharing().getDbValue());
+		stmt.setInt(    ndx++, sharingWithOther().getDbValue());
+		stmt.setInt(    ndx++, getSharesWithUs().getDbValue());
 		stmt.setString( ndx++, getIdentifier());
 		stmt.setBoolean(ndx++, isLocal());
 		stmt.setBoolean(ndx++, getAllowsMessages());
 		stmt.setBoolean(ndx++, getAcceptPeers());
 	}
-	
+
 	public int getNumberOfPorts()
 	{
 		return nports;
@@ -167,7 +171,7 @@ public class Machine extends DbObject<Integer>
 
 	public void setSharing(SharingState state)
 	{
-		sharing = state;
+		weShareToThem = state;
 	}
 
 	public void setName(String string)
@@ -185,9 +189,14 @@ public class Machine extends DbObject<Integer>
 		return lastActive;
 	}
 
-	public SharingState isSharing()
+	public SharingState sharingWithOther()
 	{
-		return sharing;
+		return weShareToThem;
+	}
+	
+	public SharingState getSharesWithUs()
+	{
+		return sharesWithUs;
 	}
 	
 	public boolean getAcceptPeers()
@@ -242,7 +251,13 @@ public class Machine extends DbObject<Integer>
 		}
 		
 		@Override
-		public SharingState isSharing()
+		public SharingState sharingWithOther()
+		{
+			return SharingState.DOWNLOADABLE;
+		}
+
+		@Override
+		public SharingState getSharesWithUs()
 		{
 			return SharingState.DOWNLOADABLE;
 		}
@@ -294,22 +309,9 @@ public class Machine extends DbObject<Integer>
 			id = DbMachines.getMachineId(getIdentifier());
 		}
 		@Override
-		public boolean save(Connection c) throws SQLException
+		public boolean save(ConnectionWrapper c) throws SQLException
 		{
-			try (PreparedStatement stmt = c.prepareStatement(
-					 "merge into MACHINE key(IS_LOCAL) values "
-					 + "((select M_ID from MACHINE where IS_LOCAL=true), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
-					, Statement.RETURN_GENERATED_KEYS);)
-			{
-				int ndx = 1;
-				writeMachine(stmt, ndx);
-				stmt.executeUpdate();
-				ResultSet generatedKeys = stmt.getGeneratedKeys();
-				if (generatedKeys.next())
-				{
-					id = generatedKeys.getInt(1);
-				}
-			}
+			super.save(c);
 			if (id == null)
 			{
 				id = DbMachines.getMachineId(getIdentifier());

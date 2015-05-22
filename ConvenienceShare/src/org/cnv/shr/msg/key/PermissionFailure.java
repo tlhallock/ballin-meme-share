@@ -96,7 +96,7 @@ public class PermissionFailure extends Message
 		
 		public void show()
 		{
-			JOptionPane.showMessageDialog(Services.application, 
+			JOptionPane.showMessageDialog(null, 
 					"Permission was denied while trying action: " + action + ".\n" +
 					"Current permissions are " + currentPermissions + ".\n" +
 				    "Remote machine: " + machine.getName() + ".\n" +

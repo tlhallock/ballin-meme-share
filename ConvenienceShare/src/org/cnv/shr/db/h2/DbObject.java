@@ -1,6 +1,5 @@
 package org.cnv.shr.db.h2;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -15,7 +14,7 @@ public abstract class DbObject<T>
 		this.id = id;
 	}
 	
-	public abstract void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException;
+	public abstract void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException;
 	
 	public void setId(int i)
 	{
@@ -27,8 +26,13 @@ public abstract class DbObject<T>
 		return id;
 	}
 
-	public final boolean save()    throws SQLException { return save(Services.h2DbCache.getConnection()); }
-	public final void    pull()    throws SQLException {      /*  pull(Services.h2DbCache.getConnection()); */}
-	
-	public abstract boolean save(Connection c) throws SQLException;
+	public final boolean save() throws SQLException
+	{
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();)
+		{
+			return save(c);
+		}
+	}
+
+	public abstract boolean save(ConnectionWrapper c) throws SQLException;
 }

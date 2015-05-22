@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
@@ -23,6 +24,9 @@ import org.cnv.shr.util.Misc;
 
 public class LocalDirectory extends RootDirectory
 {
+	private static final QueryWrapper UPDATE1 = new QueryWrapper("update ROOT set "
+			+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=? "
+			+ "where ROOT.R_ID = ?;");
 	private PathElement path;
 	
 	public LocalDirectory(PathElement path, String name) throws IOException
@@ -111,16 +115,14 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	public boolean save(final Connection c) throws SQLException
+	public boolean save(final ConnectionWrapper c) throws SQLException
 	{
 		if (id == null)
 		{
 			return super.save(c);
 		}
 		
-		try (PreparedStatement stmt = c.prepareStatement("update ROOT set "
-				+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=? "
-				+ "where ROOT.R_ID = ?;");)
+		try (StatementWrapper stmt = c.prepareStatement(UPDATE1);)
 		{
 			int ndx = 1;
 			

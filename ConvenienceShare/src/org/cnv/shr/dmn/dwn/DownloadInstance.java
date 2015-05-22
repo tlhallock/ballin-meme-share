@@ -185,7 +185,7 @@ public class DownloadInstance
 		
 		// ensure that we are sharing this mirror...
 		// This should use a better name...
-		UserActions.addLocal(file, false, null);
+		UserActions.addLocal(file, null);
 		
 		String str = remoteFile.getPath().getFullPath();
 		tmpFile = PathSecurity.secureMakeDirs(file, str);

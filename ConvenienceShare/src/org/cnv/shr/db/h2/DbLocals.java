@@ -1,6 +1,5 @@
 package org.cnv.shr.db.h2;
 
-import java.sql.Connection;
 import java.util.HashMap;
 
 import org.cnv.shr.db.h2.DbTables.DbObjects;
@@ -20,7 +19,7 @@ public class DbLocals
 		return this;
 	}
 	
-	public DbObject getObject(Connection c, DbObjects type, int id)
+	public DbObject getObject(ConnectionWrapper c, DbObjects type, int id)
 	{
 		String key = getLocalsCache(type, String.valueOf(id));
 		Object object = cache.get(key);

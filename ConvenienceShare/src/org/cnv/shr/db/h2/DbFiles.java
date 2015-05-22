@@ -1,10 +1,10 @@
 package org.cnv.shr.db.h2;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -17,11 +17,15 @@ import org.cnv.shr.mdl.SharedFile;
 
 public class DbFiles
 {
+	private static final QueryWrapper SELECT2   = new QueryWrapper("select * from SFILE where F_ID=?;");
+	private static final QueryWrapper DELETE1   = new QueryWrapper("delete from SFILE where F_ID=?;");
+	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from SFILE where PELEM=? and ROOT=?;");
+	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM=NULL limit 1;");
+
 	public static SharedFile getFile(RootDirectory root, PathElement element)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				"select * from SFILE where PELEM=? and ROOT=?;");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT1);)
 		{
 			stmt.setLong(1, element.getId());
 			stmt.setInt(2, root.getId());
@@ -42,12 +46,33 @@ public class DbFiles
 			return null;
 		}
 	}
+
+	public static LocalFile getUnChecksummedFile()
+	{
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(UNCHECKED);)
+		{
+			ResultSet executeQuery = stmt.executeQuery();
+			if (!executeQuery.next())
+			{
+				return null;
+			}
+			DbObject allocate = DbTables.DbObjects.LFILE.allocate(executeQuery);
+			allocate.fill(c, executeQuery, new DbLocals());
+			return (LocalFile) allocate;
+		}
+		catch (SQLException e)
+		{
+			Services.logger.print(e);
+			return null;
+		}
+	}
 	
 	public static void delete(SharedFile f)
 	{
-		Connection c = Services.h2DbCache.getConnection();
 		// Delete from pending too...
-		try (PreparedStatement stmt = c.prepareStatement("delete from SFILE where F_ID=?;");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE1);)
 		{
 			stmt.setInt(1, f.getId());
 			stmt.execute();
@@ -74,9 +99,9 @@ public class DbFiles
 
 	public static SharedFile getFile(int int1)
 	{
-		Connection c = Services.h2DbCache.getConnection();
 		// Delete from pending too...
-		try (PreparedStatement stmt = c.prepareStatement("select * from SFILE where F_ID=?;");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT2);)
 		{
 			stmt.setInt(1, int1);
 			ResultSet executeQuery = stmt.executeQuery();

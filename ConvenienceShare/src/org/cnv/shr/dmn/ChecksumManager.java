@@ -5,90 +5,123 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map.Entry;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.cnv.shr.db.h2.DbFiles;
+import org.cnv.shr.dmn.Notifications.NotificationListener;
+import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.stng.Settings;
 
 public class ChecksumManager extends Thread
 {
-	private HashMap<String, SharedFile> queue = new HashMap<>();
+	// Should get this directory from the database...
 	
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
 	
 	private boolean stop;
+	
+	// Need to add a notifications listener...
+	
+	NotificationListener listener;
+	
+	public ChecksumManager()
+	{
+		Services.notifications.add(listener = new Notifications.NotificationListener()
+		{
+			@Override
+			public void localsChanged()
+			{
+				kick();
+			}
+
+			@Override
+			public void localDirectoryChanged(LocalDirectory local)
+			{
+				kick();
+			}
+
+			@Override
+			public void fileAdded(SharedFile file)
+			{
+				kick();
+			}
+
+			@Override
+			public void fileChanged(SharedFile file)
+			{
+				kick();
+			}
+		});
+	}
+
+	private void kick()
+	{
+		lock.lock();
+		condition.signalAll();
+		lock.unlock();
+	}
 
 	@Override
 	public void run()
 	{
-		Entry<String, SharedFile> f;
+		LocalFile f;
 		while ((f = getNextFile()) != null)
 		{
-			updateChecksum(f.getKey(), f.getValue());
+			updateChecksum(f);
 			beNice();
 		}
 	}
 	
-	private Entry<String, SharedFile> getNextFile()
+	private LocalFile getNextFile()
 	{
-		lock.lock();
-		try
+		while (true)
 		{
-			while (queue.isEmpty())
+			if (stop) return null;
+			
+			lock.lock();
+			try
 			{
-				try
-				{
-					condition.await();
-				}
-				catch (InterruptedException e)
-				{
-					Services.logger.println("Interrupted while waiting for condition.");
-					Services.logger.print(e);
-				}
-				if (stop)
-				{
-					return null;
-				}
+				condition.await();
 			}
+			catch (InterruptedException e)
+			{
+				Services.logger.println("Interrupted while waiting for condition.");
+				Services.logger.print(e);
+			}
+			finally
+			{
+				lock.unlock();
+			}
+			if (stop) return null;
 
-			return queue.entrySet().iterator().next();
-		}
-		finally
-		{
-			lock.unlock();
+			LocalFile unChecksummedFile = DbFiles.getUnChecksummedFile();
+			if (unChecksummedFile != null)
+			{
+				return unChecksummedFile;
+			}
 		}
 	}
 
-	private void updateChecksum(String file, SharedFile sf)
+	private void updateChecksum(LocalFile sf)
 	{
 		String checksum = null;
 		try
 		{
-			checksum = checksumBlocking(new File(file));
+			checksum = checksumBlocking(sf.getFsFile());
 		}
 		catch (Exception e)
 		{
-			Services.logger.println("Unable to calculate checksum of " + file);
+			Services.logger.println("Unable to calculate checksum of " + sf);
 			Services.logger.print(e);
 		}
 		if (checksum != null)
 		{
 			sf.setChecksum(checksum);
-		}
-
-		lock.lock();
-		try
-		{
-			queue.remove(file);
-		}
-		finally
-		{
-			lock.unlock();
 		}
 	}
 	
@@ -145,30 +178,9 @@ public class ChecksumManager extends Thread
 	{
 		lock.lock();
 		stop = true;
+		Services.notifications.remove(listener);
 		condition.signalAll();
 		lock.unlock();
-	}
-
-	public void checksum(SharedFile sf, File f)
-	{
-		lock.lock();
-		try
-		{
-			try
-			{
-				queue.put(f.getCanonicalPath(), sf);
-			}
-			catch (IOException e)
-			{
-				queue.put(f.getAbsolutePath(), sf);
-				Services.logger.print(e);
-			}
-			condition.signalAll();
-		}
-		finally
-		{
-			lock.unlock();
-		}
 	}
 
 	public static String digestToString(MessageDigest digest)

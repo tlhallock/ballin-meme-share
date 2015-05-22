@@ -245,6 +245,7 @@ public abstract class RootSynchronizer implements Runnable
 				{
 					listener.fileAdded(lFile);
 				}
+				Services.notifications.fileAdded(lFile);
 			}
 		}
 		catch (final FileOutsideOfRootException ex)

@@ -2,16 +2,18 @@ package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.TimerTask;
 
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
@@ -21,15 +23,17 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.dwn.ChecksumRequest;
 
-public class DownloadManager
+public class DownloadManager extends TimerTask
 {
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from Download order by ADDED group by PRIORITY where DSTATE=?");
+	
 	private HashMap<SharedFileId, DownloadInstance> downloads = new HashMap<>();
 
 	public DownloadInstance download(SharedFile remoteFile) throws UnknownHostException, IOException
 	{
 		if (remoteFile.isLocal())
 		{
-			JOptionPane.showMessageDialog(Services.application,
+			JOptionPane.showMessageDialog(null,
 					"Unable to download local file: " + remoteFile.getRootDirectory().getPathElement().getFullPath() + ":" + remoteFile.getPath().getFullPath(),
 					"Unable to download local file.",
 					JOptionPane.INFORMATION_MESSAGE);
@@ -54,9 +58,9 @@ public class DownloadManager
 			return prev;
 		}
 
-		try
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();)
 		{
-			d.save(Services.h2DbCache.getConnection());
+			d.save(c);
 		}
 		catch (SQLException e)
 		{
@@ -134,12 +138,14 @@ public class DownloadManager
 		{
 			return;
 		}
-			Connection connection = Services.h2DbCache.getConnection();
-			PreparedStatement prepareStatement;
+		// Fix this ugly mess
+		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();)
+		{
+			StatementWrapper prepareStatement;
 			ResultSet results;
 			try
 			{
-				prepareStatement = connection.prepareStatement("select * from Download order by ADDED group by PRIORITY where DSTATE=?");
+				prepareStatement = connection.prepareStatement(SELECT1);
 				prepareStatement.setInt(1, DownloadState.QUEUED.toInt());
 				results = prepareStatement.executeQuery();
 			}
@@ -154,7 +160,6 @@ public class DownloadManager
 				{
 					if (downloads.size() >= Services.settings.maxDownloads.get())
 					{
-						dbIterator.close();
 						return;
 					}
 					final Download next = dbIterator.next();
@@ -179,10 +184,11 @@ public class DownloadManager
 					});
 				}
 			}
-			catch (SQLException e1)
-			{
-				e1.printStackTrace();
-			}
+		}
+		catch (SQLException e1)
+		{
+			e1.printStackTrace();
+		}
 	}
 
 	public void quitAllDownloads()
@@ -207,5 +213,11 @@ public class DownloadManager
 		{
 			Services.logger.print(e);
 		}
+	}
+
+	@Override
+	public void run()
+	{
+		initiatePendingDownloads();
 	}
 }

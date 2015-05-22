@@ -16,7 +16,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import javax.swing.Icon;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 
@@ -50,10 +52,7 @@ public class TaskMenu extends javax.swing.JFrame {
                 doPopup(me);
                 if (me.getClickCount() >= 2)
                 {
-                	if (Services.application != null)
-                	{
-                		Services.application.setVisible(true);
-                	}
+                	UserActions.showGui();
                 }
             }
 

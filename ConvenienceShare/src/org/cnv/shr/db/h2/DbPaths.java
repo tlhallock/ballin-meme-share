@@ -1,12 +1,12 @@
 package org.cnv.shr.db.h2;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -15,6 +15,23 @@ import org.cnv.shr.mdl.RootDirectory;
 
 public class DbPaths
 {
+	private static final QueryWrapper DELETE = new QueryWrapper("delete from PELEM as del"
+											+ " where not exists (select R_ID from ROOT where ROOT.PELEM = del.P_ID) "
+											+ " and not exists (select F_ID from SFILE where SFILE.PELEM = del.P_ID)"
+											+ " and not exists (select RID from ROOT_CONTAINS where ROOTS_CONTAINS.PELEM = del.P_ID)"
+											+ " and not exists (select P_ID from PELEM as child where child.PARENT=del.P_ID);");
+	private static final QueryWrapper DELETE2 = new QueryWrapper("delete ROOT_CONTAINS where RID=? and PELEM=?;");
+	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into ROOT_CONTAINS values (?, ?);");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select count(RID) from ROOT_CONTAINS where RID=? and PELEM=?;");
+	private static final QueryWrapper SELECT3 = new QueryWrapper("select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
+										 "join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID " + 
+										 "where PELEM.PARENT = ?;                                                        ");
+	private static final QueryWrapper INSERT2 = new QueryWrapper("insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);");
+	private static final QueryWrapper INSERT3 = new QueryWrapper("select P_ID from PELEM where PARENT=? and PELEM=?;");
+	private static final QueryWrapper SELECT2 = new QueryWrapper("select PARENT, PELEM from PATH where P_ID = ?;");
+	
+	
+	
 	public static PathElement ROOT = new PathElement(null, 0, "")
 	{
 		@Override
@@ -23,7 +40,7 @@ public class DbPaths
 			return ROOT;
 		}
 		@Override
-		public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException {}
+		public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException {}
 	};
 
 	public static PathElement getPathElement(int pid)
@@ -33,8 +50,8 @@ public class DbPaths
 		ArrayList<Integer> ids   = new ArrayList<>();
 		ArrayList<String> values = new ArrayList<>();
 
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select PARENT, PELEM from PATH where P_ID = ?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT2))
 		{
 			do
 			{
@@ -61,13 +78,13 @@ public class DbPaths
 	
 	public static void setPathElementIds(PathElement root, PathElement[] pathElems)
 	{
-		Connection c = Services.h2DbCache.getConnection();
 		long pid = root.getId();
 		boolean exists = true;
 		int elemsIdx = 0;
 
-		try (PreparedStatement existsStmt = c.prepareStatement("select P_ID from PELEM where PARENT=? and PELEM=?;");
-			 PreparedStatement createStmt = c.prepareStatement("insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);", Statement.RETURN_GENERATED_KEYS))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+			 StatementWrapper existsStmt = c.prepareStatement(INSERT3);
+			 StatementWrapper createStmt = c.prepareStatement(INSERT2, Statement.RETURN_GENERATED_KEYS))
 		{
 			while (elemsIdx < pathElems.length)
 			{
@@ -119,17 +136,14 @@ public class DbPaths
 	{
 		try
 		{
-			Connection c = Services.h2DbCache.getConnection();
-			PreparedStatement stmt = c.prepareStatement(
-				"select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
-				"join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID " + 
-				"where PELEM.PARENT = ?;                                                        ");
+			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+			StatementWrapper stmt = c.prepareStatement(
+				SELECT3);
 			stmt.setInt(1, root.getId());
 			stmt.setLong(2, parent.getId());
 			return new DbIterator<PathElement>(c, stmt.executeQuery(), DbObjects.PELEM, new DbLocals()
 				.setObject(root)
-				.setObject(parent)
-			);
+				.setObject(parent));
 		}
 		catch (SQLException ex)
 		{
@@ -140,9 +154,9 @@ public class DbPaths
 
 	public static void pathLiesIn(PathElement element, RootDirectory local)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement select = c.prepareStatement("select count(RID) from ROOT_CONTAINS where RID=? and PELEM=?;");
-		     PreparedStatement update = c.prepareStatement("insert into ROOT_CONTAINS values (?, ?);");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper select = c.prepareStatement(SELECT1);
+				StatementWrapper update = c.prepareStatement(INSERT1);)
 		{
 			while (element.getParent() != element)
 			{
@@ -170,8 +184,8 @@ public class DbPaths
 		{
 			return;
 		}
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("delete ROOT_CONTAINS where RID=? and PELEM=?;");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE2);)
 		{
 			while (element.getParent() != element)
 			{
@@ -212,12 +226,8 @@ public class DbPaths
 	
 	public static void removeUnusedPaths()
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("delete from PELEM as del"
-				+ " where not exists (select R_ID from ROOT where ROOT.PELEM = del.P_ID) "
-				+ " and not exists (select F_ID from SFILE where SFILE.PELEM = del.P_ID)"
-				+ " and not exists (select RID from ROOT_CONTAINS where ROOTS_CONTAINS.PELEM = del.P_ID)"
-				+ " and not exists (select P_ID from PELEM as child where child.PARENT=del.P_ID);");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE);)
 		{
 			stmt.execute();
 		}

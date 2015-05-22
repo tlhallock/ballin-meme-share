@@ -14,11 +14,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.cnv.shr.dmn.KeysService;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.FlushableEncryptionStreams.FlushableEncryptionInputStream;
 import org.cnv.shr.util.FlushableEncryptionStreams.FlushableEncryptionOutputStream;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

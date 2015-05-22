@@ -54,10 +54,10 @@ public class SynchronizationTests extends RemotesTest
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 50);
 			
-			UserActions.addLocal(createTempDirectory.toFile(), false, rootName);
+			UserActions.addLocal(createTempDirectory.toFile(), rootName);
 			Thread.sleep(1000);
 			Assert.assertNotNull(DbRoots.getLocal(path));
-			UserActions.sync(DbRoots.getLocal(path));
+			UserActions.userSync(DbRoots.getLocal(path), null);
 			
 			final long diskSpace = TestUtils.sum(makeSampleDirectories);
 			final LocalDirectory local = DbRoots.getLocal(path);
@@ -248,7 +248,7 @@ public class SynchronizationTests extends RemotesTest
 			final String rootName = Misc.getRandomString(15);
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 114);
-			UserActions.addLocal(createTempDirectory.toFile(), true, rootName);
+			UserActions.addLocal(createTempDirectory.toFile(), rootName);
 			Thread.sleep(5000);
 			
 			getMachineInfo(0).send(new TestActions.SYNC_ROOTS(Services.localMachine.getIdentifier()));

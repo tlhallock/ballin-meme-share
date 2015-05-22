@@ -108,9 +108,12 @@ public class Logger implements SettingListener
 			char c = (char) arg0;
 			buffer.append(Character.toString(c));
 			
-			if (c == '\n' && Services.application != null)
+			if (c == '\n')
 			{
-				Services.application.log(buffer.toString());
+				if (Services.notifications != null)
+				{
+					Services.notifications.lineLogged(buffer.toString());
+				}
 				buffer.setLength(0);
 			}
 		}

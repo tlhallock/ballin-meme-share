@@ -1,7 +1,5 @@
 package org.cnv.shr.mdl;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -9,6 +7,9 @@ import java.util.Date;
 
 import javax.swing.JOptionPane;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPermissions;
@@ -19,6 +20,8 @@ import org.cnv.shr.dmn.Services;
 
 public class UserMessage extends DbObject<Integer>
 {
+	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into MESSAGE values (DEFAULT, ?, ?, ?, ?)");
+
 	public static final int MAX_MESSAGE_LENGTH = 1024;
 	
 	private Machine machine;
@@ -51,7 +54,7 @@ public class UserMessage extends DbObject<Integer>
 	}
 
 	@Override
-	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+	public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 	{
 		int ndx = 1;
 		this.id = row.getInt(ndx++);
@@ -62,14 +65,12 @@ public class UserMessage extends DbObject<Integer>
 	}
 
 	@Override
-	public boolean save(Connection c) throws SQLException
+	public boolean save(ConnectionWrapper c) throws SQLException
 	{
 		if (machine == null)
 			return false;
-		
-		try (PreparedStatement stmt = c.prepareStatement(
-				"insert into MESSAGE values (DEFAULT, ?, ?, ?, ?)",
-				Statement.RETURN_GENERATED_KEYS);)
+
+		try (StatementWrapper stmt = c.prepareStatement(INSERT1, Statement.RETURN_GENERATED_KEYS);)
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, machine.getId());
@@ -122,7 +123,7 @@ public class UserMessage extends DbObject<Integer>
 		}
 		
 		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
-			    Services.application,
+				null,
 			    "Would you like to share with machine " + machine.getName(),
 			    "Share message sent on " + new Date(sent),
 			    JOptionPane.YES_NO_OPTION))
@@ -155,7 +156,7 @@ public class UserMessage extends DbObject<Integer>
 		}
 		
 		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
-			    Services.application,
+				null,
 			    "Shoule you like to share root \"" + localByName.getName() + "\" with machine \"" + machine.getName() + "\"",
 			    "Share root message sent on " + new Date(sent),
 			    JOptionPane.YES_NO_OPTION))
@@ -182,7 +183,7 @@ public class UserMessage extends DbObject<Integer>
 		switch (type)
 		{
 		case SHARE:
-			if (machine.isSharing().canDownload())
+			if (machine.sharingWithOther().canDownload())
 			{
 				Services.logger.println("Already sharing.");
 				return true;
@@ -228,7 +229,7 @@ public class UserMessage extends DbObject<Integer>
 			Services.logger.println("No machine.");
 			return;
 		}
-		JOptionPane.showMessageDialog(Services.application, 
+		JOptionPane.showMessageDialog(null, 
 				"Machine " + machine.getName() + " says \"" + message + "\"",
 				"Message sent on " + new Date(sent),
 				JOptionPane.INFORMATION_MESSAGE);

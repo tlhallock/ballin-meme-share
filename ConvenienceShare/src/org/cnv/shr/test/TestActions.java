@@ -100,7 +100,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.sync(DbRoots.getLocal(local));
+			UserActions.userSync(DbRoots.getLocal(local), null);
 		}
 	};
 	public static class ADD_LOCAL extends TestAction
@@ -117,7 +117,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.addLocal(new File(local), true, name);
+			UserActions.addLocal(new File(local), name);
 		}
 	};
 	public static class SYNC_REMOTE extends TestAction

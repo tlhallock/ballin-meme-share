@@ -1,11 +1,11 @@
 package org.cnv.shr.db.h2;
 
 import java.security.PublicKey;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
@@ -13,13 +13,18 @@ import org.cnv.shr.mdl.RootDirectory;
 
 public class DbMachines
 {
+	private static final QueryWrapper DELETE1 = new QueryWrapper("delete MACHINE where M_ID=?;");
+	private static final QueryWrapper SELECT3 = new QueryWrapper("select M_ID from MACHINE where IDENT = ?");
+	private static final QueryWrapper SELECT2 = new QueryWrapper("select * from MACHINE where IDENT = ?");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from MACHINE where MACHINE.IS_LOCAL = false");
+
 	public static DbIterator<Machine> listRemoteMachines()
 	{
-		Connection c = Services.h2DbCache.getConnection();
+		ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 		try
 		{
 			return new DbIterator<>(c,
-					c.prepareStatement("select * from MACHINE where MACHINE.IS_LOCAL = false").executeQuery(),
+					c.prepareStatement(SELECT1).executeQuery(),
 					DbTables.DbObjects.RMACHINE);
 		}
 		catch (SQLException e)
@@ -35,9 +40,9 @@ public class DbMachines
 		{
 			return Services.localMachine;
 		}
-
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select * from MACHINE where IDENT = ?"))
+		
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT2))
 		{
 			stmt.setString(1, identifier);
 			ResultSet executeQuery = stmt.executeQuery();
@@ -61,8 +66,8 @@ public class DbMachines
 
 	public static Integer getMachineId(String identifier)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select M_ID from MACHINE where IDENT = ?"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT3))
 		{
 			stmt.setString(1, identifier);
 			ResultSet executeQuery = stmt.executeQuery();
@@ -84,8 +89,8 @@ public class DbMachines
 
 	public static void delete(Machine remote)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("delete MACHINE where M_ID=?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE1))
 		{
 			stmt.setInt(1, remote.getId());
 			stmt.execute();

@@ -3,10 +3,11 @@ package org.cnv.shr.gui;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
@@ -23,6 +24,7 @@ import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.msg.MachineFound;
+import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
 
 public class UserActions
 {
@@ -158,7 +160,6 @@ public class UserActions
 			@Override
 			public void run()
 			{
-				
 				LinkedList<LocalDirectory> locals = new LinkedList<>();
 				final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
 				while (listLocals.hasNext())
@@ -167,10 +168,10 @@ public class UserActions
 				}
 				for (LocalDirectory local : locals)
 				{
-					sync(local);
+					userSync(local, null);
 				}
-//				Services.db.removeUnusedPaths();
-                                Services.notifications.localsChanged();
+				// Services.db.removeUnusedPaths();
+				Services.notifications.localsChanged();
 			}
 		});
 	}
@@ -187,7 +188,7 @@ public class UserActions
 		});
 	}
 
-	public static void addLocal(final File localDirectory, final boolean sync, final String name)
+	public static void addLocal(final File localDirectory, final String name)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -203,11 +204,6 @@ public class UserActions
 					local.save();
 					DbPaths.pathLiesIn(pathElement, local);
 					Services.notifications.localChanged(local);
-					
-					if (sync)
-					{
-						sync(local);
-					}
 				}
 				catch (SQLException | IOException e1)
 				{
@@ -218,10 +214,16 @@ public class UserActions
 		});
 	}
 
-	public static void sync(LocalDirectory d)
+	public static void userSync(final LocalDirectory d, final List<? extends SynchronizationListener> listeners)
 	{
-		Application a = Services.application;
-		d.synchronize(a == null ? null : Collections.singletonList(a.createLocalListener(d)));
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				d.synchronize(listeners);
+			}
+		});
 	}
 
 	public static void remove(final RootDirectory l)
@@ -299,7 +301,14 @@ public class UserActions
 			@Override
 			public void run()
 			{
-				DbTables.deleteDb(Services.h2DbCache.getConnection());
+				try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();)
+				{
+					DbTables.deleteDb(c);
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
 			}
 		});
 	}
@@ -311,5 +320,29 @@ public class UserActions
 	public static void changeKeys()
 	{
 		
+	}
+
+	public static void showGui()
+	{
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				try
+				{
+					Application application = new Application();
+					Services.notifications.registerWindow(application);
+					application.setVisible(true);
+					application.refreshAll();
+				}
+				catch (Exception ex)
+				{
+					Services.logger.println("Unable to start GUI.\nQuiting.");
+					Services.logger.print(ex);
+					Services.quiter.quit();
+				}
+			}
+		});
 	}
 }

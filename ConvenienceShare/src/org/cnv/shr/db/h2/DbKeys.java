@@ -4,13 +4,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
@@ -19,6 +19,11 @@ import org.cnv.shr.util.Misc;
 
 public class DbKeys
 {
+	private static final QueryWrapper SELECT3 = new QueryWrapper("select K_ID from PUBLIC_KEY where MID=? and KEYSTR=?;");
+	private static final QueryWrapper SELECT2 = new QueryWrapper("select KEYSTR from PUBLIC_KEY where MID=? order by ADDED desc limit 1;");
+	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from PUBLIC_KEY where MID=? and KEYSTR=?;");
+	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?);");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select KEYSTR, ADDED from PUBLIC_KEY where MID=?;");
 	private static final PublicKey[] dummy = new PublicKey[0];
 //	private static final String NULLKEY = getNullKey();
 	
@@ -70,8 +75,8 @@ public class DbKeys
 	public static PublicKey[] getKeys(Machine machine)
 	{
 		LinkedList<PublicKey> returnValue = new LinkedList<>();
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select KEYSTR, ADDED from PUBLIC_KEY where MID=?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT1))
 		{
 
 			int ndx = 1;
@@ -97,10 +102,8 @@ public class DbKeys
 	
 	public static void addKey(Machine machine, PublicKey key)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				"merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?);",
-				Statement.RETURN_GENERATED_KEYS))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(MERGE1, Statement.RETURN_GENERATED_KEYS))
 		{
 			String keyStr = getKeyString(key);
 			Services.logger.println("Adding key to " + machine.getName() + ": " + keyStr);
@@ -128,8 +131,8 @@ public class DbKeys
 	{
 		String keyStr = getKeyString(revoke);
 
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("delete from PUBLIC_KEY where MID=? and KEYSTR=?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE1))
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, machine.getId());
@@ -144,9 +147,8 @@ public class DbKeys
 
 	public static PublicKey getKey(Machine m)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				"select KEYSTR from PUBLIC_KEY where MID=? order by ADDED desc limit 1;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT2))
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, m.getId());
@@ -165,9 +167,8 @@ public class DbKeys
 
 	public static boolean machineHasKey(Machine machine, PublicKey oldKey)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				"select K_ID from PUBLIC_KEY where MID=? and KEYSTR=?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT3))
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, machine.getId());

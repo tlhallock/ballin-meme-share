@@ -1,14 +1,15 @@
 package org.cnv.shr.mdl;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbRoots;
@@ -21,6 +22,10 @@ import org.cnv.shr.util.Misc;
 
 public abstract class RootDirectory extends DbObject<Integer>
 {
+	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into ROOT key(R_ID) VALUES ("
+			+ "(select R_ID from ROOT where MID=? and RNAME=?)"
+			+ ", ?, ?, ?, ?, ?, ?, ?, ?);");
+	
 	protected Machine machine;
 	protected String name;
 	protected long totalFileSize = -1;
@@ -43,7 +48,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	}
 
 	@Override
-	public void fill(final Connection c, final ResultSet row, final DbLocals locals) throws SQLException
+	public void fill(final ConnectionWrapper c, final ResultSet row, final DbLocals locals) throws SQLException
 	{
 		id                               = row.getInt   ("R_ID"           );
 		tags                             = row.getString("TAGS"           );
@@ -59,11 +64,9 @@ public abstract class RootDirectory extends DbObject<Integer>
 	protected abstract void setPath(PathElement object);
 
 	@Override
-	public boolean save(final Connection c) throws SQLException
+	public boolean save(final ConnectionWrapper c) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement("merge into ROOT key(R_ID) VALUES ("
-				+ "(select R_ID from ROOT where MID=? and RNAME=?)"
-				+ ", ?, ?, ?, ?, ?, ?, ?, ?);");)
+		try (StatementWrapper stmt = c.prepareStatement(MERGE1);)
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, getMachine().getId());

@@ -93,12 +93,12 @@ public abstract class Message
 		{
 			return;
 		}
-		if (machine.isSharing().canList())
+		if (machine.sharingWithOther().canList())
 		{
 			return;
 		}
 		
-		PermissionFailure permissionFailure = new PermissionFailure(null, machine.isSharing(), action);
+		PermissionFailure permissionFailure = new PermissionFailure(null, machine.sharingWithOther(), action);
 		c.send(permissionFailure);
 		throw new PermissionException(action);
 	}

@@ -1,7 +1,6 @@
 package org.cnv.shr.db.h2;
 
 import java.io.Closeable;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -12,20 +11,20 @@ public class DbIterator<T extends DbObject> implements Iterator<T>, Closeable
 {
 	private ResultSet results;
 	private DbTables.DbObjects tableInfo;
-	private Connection c;
+	private ConnectionWrapper c;
 	private DbLocals locals;
 	private T next;
 	
 
-	public DbIterator(Connection c, DbTables.DbObjects allocator) throws SQLException
+	public DbIterator(ConnectionWrapper c, DbTables.DbObjects allocator) throws SQLException
 	{
-		this (c, c.prepareStatement("select * from " + allocator.getTableName() + ";").executeQuery(), allocator);
+		this (c, c.prepareNewStatement("select * from " + allocator.getTableName() + ";").executeQuery(), allocator);
 	}
-	public DbIterator(Connection c, ResultSet results, DbTables.DbObjects allocator) throws SQLException
+	public DbIterator(ConnectionWrapper c2, ResultSet results, DbTables.DbObjects allocator) throws SQLException
 	{
-		this(c, results, allocator, new DbLocals());
+		this(c2, results, allocator, new DbLocals());
 	}
-	protected DbIterator(Connection c, ResultSet results, DbTables.DbObjects allocator, DbLocals locals) throws SQLException
+	protected DbIterator(ConnectionWrapper c, ResultSet results, DbTables.DbObjects allocator, DbLocals locals) throws SQLException
 	{
 		this.c = c;
 		this.results = results;
@@ -113,7 +112,7 @@ public class DbIterator<T extends DbObject> implements Iterator<T>, Closeable
 		closed = true;
 		try
 		{
-			results.getStatement().close();
+			c.close();
 		}
 		catch (SQLException e)
 		{

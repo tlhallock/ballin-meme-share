@@ -49,6 +49,7 @@ public class Main
 		Arguments a = new Arguments();
 		parseArgs(args, a);
 		
+		a.deleteDb = true;
 		if (false)
 		{
 			a.settings = new Settings(new File("bin/i2/settings.props"));

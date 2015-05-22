@@ -1,12 +1,12 @@
 package org.cnv.shr.db.h2;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -16,11 +16,25 @@ import org.cnv.shr.mdl.RootDirectory;
 
 public class DbRoots
 {
-
+	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into IGNORE_PATTERN values (DEFAULT, ?, ?);");
+	private static final QueryWrapper SELECT7 = new QueryWrapper("select PATTERN from IGNORE_PATTERN where RID=?;");
+	private static final QueryWrapper SELECT6 = new QueryWrapper("select * from ROOT where RNAME=? and MID=?;");
+	private static final QueryWrapper SELECT5 = new QueryWrapper("select * from ROOT where PELEM=?;");
+	private static final QueryWrapper SELECT4 = new QueryWrapper("select * from ROOT where ROOT.IS_LOCAL = true;");
+	private static final QueryWrapper SELECT3 = new QueryWrapper("select * from ROOT where ROOT.MID = ?;");
+	private static final QueryWrapper SELECT2 = new QueryWrapper("select count(F_ID) as number from SFILE where ROOT = ?;");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select sum(FSIZE) as totalsize from SFILE where ROOT = ?;");
+	private static final QueryWrapper DELETE4 = new QueryWrapper("delete from IGNORE_PATTERN where RID=?;");
+	private static final QueryWrapper DELETE3 = new QueryWrapper("delete from ROOT where R_ID=?;");
+	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from SFILE where ROOT=?;");
+	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from ROOT_CONTAINS where ROOT_CONTAINS.RID=?;");
+	
+	
+	
 	public static long getTotalFileSize(RootDirectory d)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select sum(FSIZE) as totalsize from SFILE where ROOT = ?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT1))
 		{
 			stmt.setInt(1, d.getId());
 			ResultSet executeQuery = stmt.executeQuery();
@@ -43,8 +57,8 @@ public class DbRoots
 
 	public static long getNumberOfFiles(RootDirectory d)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select count(F_ID) as number from SFILE where ROOT = ?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT2))
 		{
 			stmt.setInt(1, d.getId());
 			ResultSet executeQuery = stmt.executeQuery();
@@ -69,8 +83,8 @@ public class DbRoots
 	{
 		try
 		{
-			Connection c = Services.h2DbCache.getConnection();
-			PreparedStatement prepareStatement = c.prepareStatement("select * from ROOT where ROOT.MID = ?;");
+			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+			StatementWrapper prepareStatement = c.prepareStatement(SELECT3);
 			prepareStatement.setInt(1,  machine.getId());
 			return new DbIterator<RootDirectory>(c, 
 					prepareStatement.executeQuery(),
@@ -86,12 +100,11 @@ public class DbRoots
 	
 	public static DbIterator<LocalDirectory> listLocals()
 	{
-		// return list(Services.localMachine));
 		try
 		{
-			Connection c = Services.h2DbCache.getConnection();
+			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 			return new DbIterator<LocalDirectory>(c, 
-					c.prepareStatement("select * from ROOT where ROOT.IS_LOCAL = true;").executeQuery(),
+					c.prepareStatement(SELECT4).executeQuery(),
 					DbTables.DbObjects.LROOT, 
 					new DbLocals().setObject(Services.localMachine));
 		}
@@ -104,9 +117,9 @@ public class DbRoots
 
 	public static LocalDirectory getLocal(String path)
 	{
-		Connection c = Services.h2DbCache.getConnection();
 		PathElement pathElement = DbPaths.getPathElement(path);
-		try (PreparedStatement prepareStatement = c.prepareStatement("select * from ROOT where PELEM=?;");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper prepareStatement = c.prepareStatement(SELECT5);)
 		{
 			prepareStatement.setLong(1, pathElement.getId());
 			ResultSet executeQuery = prepareStatement.executeQuery();
@@ -116,11 +129,6 @@ public class DbRoots
 				local.fill(c, executeQuery, new DbLocals().setObject(Services.localMachine).setObject(pathElement));
 				return local;
 			}
-//			LocalDirectory local = new LocalDirectory(pathElement);
-//			local.save();
-//			DbPaths.pathLiesIn(pathElement, local);
-//			Services.notifications.localChanged(local);
-//			return local;
 			return null;
 		}
 		catch (SQLException e)
@@ -137,8 +145,8 @@ public class DbRoots
 
 	public static RootDirectory getRoot(Machine machine, String name)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement prepareStatement = c.prepareStatement("select * from ROOT where RNAME=? and MID=?;");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper prepareStatement = c.prepareStatement(SELECT6);)
 		{
 			prepareStatement.setString(1, name);
 			prepareStatement.setInt(2, machine.getId());
@@ -163,20 +171,17 @@ public class DbRoots
 	
 	public static void deleteRoot(RootDirectory root)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement s1 = c.prepareStatement("delete from ROOT_CONTAINS where ROOT_CONTAINS.RID=?;");
-			 PreparedStatement s2 = c.prepareStatement("delete from SFILE where ROOT=?;");
-			 PreparedStatement s3 = c.prepareStatement("delete from ROOT where R_ID=?;");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper s1 = c.prepareStatement(DELETE1);
+				StatementWrapper s2 = c.prepareStatement(DELETE2);
+				StatementWrapper s3 = c.prepareStatement(DELETE3);)
 		{
-			c.setAutoCommit(false);
 			s1.setInt(1, root.getId());
 			s2.setInt(1, root.getId());
 			s3.setInt(1, root.getId());
 			s1.execute();
 			s2.execute();
 			s3.execute();
-			c.commit();
-			c.setAutoCommit(true);
 			
 			Services.notifications.localsChanged();
 		}
@@ -219,8 +224,8 @@ public class DbRoots
 	public static IgnorePatterns getIgnores(LocalDirectory local)
 	{
 		LinkedList<String> returnValue = new LinkedList<>();
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement s1 = c.prepareStatement("select PATTERN from IGNORE_PATTERN where RID=?;");)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper s1 = c.prepareStatement(SELECT7);)
 		{
 			s1.setInt(1, local.getId());
 			ResultSet results = s1.executeQuery();
@@ -238,15 +243,16 @@ public class DbRoots
 
         public static void setIgnores(LocalDirectory local, String[] ignores)
         {
-            Connection c = Services.h2DbCache.getConnection();
-            try (PreparedStatement s1 = c.prepareStatement("delete from IGNORE_PATTERN where RID=?;");) {
+            try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+            		StatementWrapper s1 = c.prepareStatement(DELETE4);) {
                 s1.setInt(1, local.getId());
                 s1.execute();
             } catch (SQLException ex) {
                 Services.logger.println(ex);
             }
             HashSet<String> ignoresAdded = new HashSet<>();
-            try (PreparedStatement s1 = c.prepareStatement("insert into IGNORE_PATTERN values (DEFAULT, ?, ?);");) {
+            try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+            		StatementWrapper s1 = c.prepareStatement(INSERT1);) {
                 for (String ignore : ignores)
                 {
                     ignore = ignore.trim();

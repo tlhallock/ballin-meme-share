@@ -1,20 +1,25 @@
 package org.cnv.shr.db.h2;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 
 public class DbPermissions
 {
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select IS_SHARING from SHARE_ROOT where RID=? and MID=?;");
+	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into SHARE_ROOT key(RID, MID) values (?, ?, ?);");
+
+	// Needs to work for remote roots too: ie add a listener...
+
 	public static void share(Machine machine, RootDirectory root, SharingState share)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("merge into SHARE_ROOT key(RID, MID) values (?, ?, ?);"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(MERGE1))
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, root.getId());
@@ -30,8 +35,8 @@ public class DbPermissions
 
 	public static SharingState isSharing(Machine machine, RootDirectory root)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement("select IS_SHARING from SHARE_ROOT where RID=? and MID=?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT1))
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, root.getId());

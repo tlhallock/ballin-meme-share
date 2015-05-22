@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.TimerTask;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -45,7 +46,7 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 import de.flexiprovider.core.rsa.RSAPrivateCrtKey;
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
-public class KeysService
+public class KeysService extends TimerTask
 {
 	private HashMap<String, KeyPairObject> keys = new HashMap<>();
 	private KeyPairObject primaryKey;
@@ -452,6 +453,19 @@ public class KeysService
 		catch (IOException e)
 		{
 			Services.logger.print(e);
+		}
+	}
+
+	@Override
+	public void run()
+	{
+		try
+		{
+			attemptAuthentications();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
 		}
 	}
 }

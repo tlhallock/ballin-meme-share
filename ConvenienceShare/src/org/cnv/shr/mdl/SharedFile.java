@@ -1,17 +1,21 @@
 package org.cnv.shr.mdl;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbTables;
 
 public abstract class SharedFile extends DbObject<Integer>
 {
+	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into SFILE key(PELEM, ROOT) values ((select F_ID from SFILE where PELEM=? and ROOT=?), ?, ?, ?, ?, ?, ?, ?, ?);");
+	
+	
 	protected RootDirectory rootDirectory;
 	protected PathElement path;
 	protected long fileSize;
@@ -81,7 +85,7 @@ public abstract class SharedFile extends DbObject<Integer>
 	}
 
 	@Override
-	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+	public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 	{
 		id = row.getInt("F_ID");
 
@@ -96,11 +100,9 @@ public abstract class SharedFile extends DbObject<Integer>
 
 
 	@Override
-	public boolean save(Connection c) throws SQLException
+	public boolean save(ConnectionWrapper c) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement(
-				 "merge into SFILE key(PELEM, ROOT) values ((select F_ID from SFILE where PELEM=? and ROOT=?), ?, ?, ?, ?, ?, ?, ?, ?);"
-				, Statement.RETURN_GENERATED_KEYS);)
+		try (StatementWrapper stmt = c.prepareStatement(MERGE1, Statement.RETURN_GENERATED_KEYS);)
 		{
 			int ndx=1;
 			stmt.setLong(ndx++, path.getId());
@@ -121,31 +123,10 @@ public abstract class SharedFile extends DbObject<Integer>
 				id = generatedKeys.getInt(1);
 				return true;
 			}
-			return false;
+			// maybe no key was generated...
+			return true;
 		}
 	}
-	
-
-//	@Override
-//	public void read(InputStream bytes) throws IOException
-//	{
-////		path =         (ByteReader.readString(bytes));
-////		fileSize =     (ByteReader.readLong  (bytes));
-////		tags =         (ByteReader.readString(bytes));
-////		checksum =     (ByteReader.readString(bytes));
-////		lastModified = (ByteReader.readLong  (bytes));
-//	}
-//
-//	@Override
-//	public void write(ByteListBuffer buffer)
-//	{
-////		buffer.append(getName());
-////		buffer.append(getRelativePath());
-////		buffer.append(getFileSize());
-////		buffer.append(getTags());
-////		buffer.append(getChecksum());
-////		buffer.append(getLastUpdated());
-//	}
 
 	public String getTags()
 	{

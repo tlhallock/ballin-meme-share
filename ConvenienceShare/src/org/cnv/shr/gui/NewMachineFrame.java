@@ -36,7 +36,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
     
     private static void error(String message)
     {
-		JOptionPane.showMessageDialog(Services.application, 
+		JOptionPane.showMessageDialog(null, 
 				message,
 				"Unable to install.",
 				JOptionPane.INFORMATION_MESSAGE);
@@ -368,7 +368,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-        	UserActions.addLocal(fc.getSelectedFile(), true, null);
+        	UserActions.addLocal(fc.getSelectedFile(), null);
         }
     }//GEN-LAST:event_applicationActionPerformed
 

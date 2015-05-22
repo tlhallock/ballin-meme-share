@@ -16,6 +16,13 @@ public class ChunkData
 {
 	public static void read(Chunk chunk, File f, InputStream input) throws IOException, NoSuchAlgorithmException
 	{
+//		final InputStream oInput = input;
+//		input = new GZIPInputStream(new InputStream() {
+//			@Override
+//			public int read() throws IOException
+//			{
+//				return oInput.read();
+//			}} );
 		MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 		
 		try (RandomAccessFile toWrite = new RandomAccessFile(f, "rw"))
@@ -48,6 +55,15 @@ public class ChunkData
 
 	public static void write(Chunk chunk, File f, OutputStream output) throws IOException
 	{
+//		final OutputStream oOutput = output;
+//		output = new GZIPOutputStream(new OutputStream() {
+//			@Override
+//			public void close() {}
+//			@Override
+//			public void write(int arg0) throws IOException
+//			{
+//				output.write(arg0);
+//			}});
 		try (RandomAccessFile toRead = new RandomAccessFile(f, "r"))
 		{
 			toRead.seek(chunk.getBegin());

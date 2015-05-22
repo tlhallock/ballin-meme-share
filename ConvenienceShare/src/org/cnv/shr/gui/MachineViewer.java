@@ -139,6 +139,7 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void addPermissionListeners()
 	{
+    	// need to go to DB
 		visibleCheckBox.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -150,13 +151,13 @@ public class MachineViewer extends javax.swing.JFrame
 				}
 				try
 				{
-					if (isSharing.isSelected() && !machine.isSharing().canDownload())
+					if (isSharing.isSelected() && !machine.sharingWithOther().canDownload())
 					{
 						machine.setSharing(SharingState.DOWNLOADABLE);
 						machine.save();
 						Services.notifications.remoteChanged(machine);
 					}
-					else if (!isSharing.isSelected() && machine.isSharing().canList())
+					else if (!isSharing.isSelected() && machine.sharingWithOther().canList())
 					{
 						machine.setSharing(SharingState.DO_NOT_SHARE);
 						machine.save();
@@ -353,7 +354,7 @@ public class MachineViewer extends javax.swing.JFrame
     public void setMachine(final Machine machine) {
         isSharing.setEnabled(machine.isLocal());
         this.machine = machine;
-        this.isSharing.setSelected(machine.isSharing().canDownload());
+        this.isSharing.setSelected(machine.sharingWithOther().canDownload());
         machineLabel.setText((machine.isLocal() ? "Local machine: " : "") + machine.getName());
         final StringBuilder builder = new StringBuilder();
         PublicKey[] keys = DbKeys.getKeys(machine);
@@ -390,7 +391,7 @@ public class MachineViewer extends javax.swing.JFrame
         else
         {
             jButton1.setEnabled(true); // cannot ask to share with local
-            isSharing.setSelected(machine.isSharing().canDownload()); isSharing.setEnabled(true);
+            isSharing.setSelected(machine.sharingWithOther().canDownload()); isSharing.setEnabled(true);
             isMessaging.setSelected(machine.getAllowsMessages()); isMessaging.setEnabled(true);
             jButton3.setEnabled(true);
         }

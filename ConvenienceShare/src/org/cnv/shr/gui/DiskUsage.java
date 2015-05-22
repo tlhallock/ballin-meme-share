@@ -11,6 +11,8 @@ class DiskUsage implements Comparable<DiskUsage>
 		this.size = fSize;
 	}
 	
+	public long get() { return size; }
+	
         @Override
 	public String toString()
 	{
@@ -32,6 +34,8 @@ class NumberOfFiles implements Comparable<NumberOfFiles>
 	{
 		this.numFiles = fSize;
 	}
+	
+	public long get() { return numFiles; }
 	
         @Override
 	public String toString()

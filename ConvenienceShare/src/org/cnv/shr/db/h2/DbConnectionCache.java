@@ -4,42 +4,51 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.TimerTask;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 
-public class DbConnectionCache
+public class DbConnectionCache extends TimerTask
 {
-	private Hashtable<Long, Connection> connections = new Hashtable<>();
+	private HashMap<Long, ConnectionWrapper> connections = new HashMap<>();
 
 	public DbConnectionCache(boolean fresh) throws SQLException, IOException, ClassNotFoundException
 	{
 		Class.forName("org.h2.Driver");
 		
-		Connection c = getConnection();
-		if (fresh)
+		try (ConnectionWrapper c = getThreadConnection();)
 		{
-			Services.logger.println("Deleting database.");
-			DbTables.deleteDb(c);
+			if (fresh)
+			{
+				Services.logger.println("Deleting database.");
+				DbTables.deleteDb(c);
+			}
+			Services.logger.println("Creating database.");
+			DbTables.createDb(c);
 		}
-		Services.logger.println("Creating database.");
-		DbTables.createDb(c);
 	}
 
-	public Connection getConnection()
+	Connection c;
+	public synchronized ConnectionWrapper getThreadConnection()
 	{
 		long id = Thread.currentThread().getId();
-		id = 0;
-		Connection returnValue = connections.get(id);
+		ConnectionWrapper returnValue = connections.get(id);
 		try
 		{
-			if (returnValue == null /* || returnValue.isClosed() */ )
+			if (returnValue == null)
 			{
 				Misc.ensureDirectory(Services.settings.dbFile.get(), true);
 				String file = Services.settings.dbFile.get().getAbsolutePath();
 				Services.logger.println("DbFile: " + file);
-				returnValue = DriverManager.getConnection("jdbc:h2:" + file, "sa", "");
+				
+				if (c == null || c.isClosed())
+				{
+					c = DriverManager.getConnection("jdbc:h2:" + file, "sa", "");
+				}
+				
+				returnValue = new ConnectionWrapper(c);
 
 				Services.logger.println("Connect with:");
 				Services.logger.println("java -cp ConvenienceShare/libs/h2-1.4.187.jar org.h2.tools.Shell ".trim());
@@ -48,6 +57,7 @@ public class DbConnectionCache
 				Services.logger.println("sa                                                               ".trim());
 				Services.logger.println("                                                                 ".trim());
 				Services.logger.println("                                                                 ".trim());
+
 				connections.put(id, returnValue);
 			}
 		}
@@ -55,18 +65,38 @@ public class DbConnectionCache
 		{
 			Services.logger.print(e);
 		}
+		// slight sync issue here...
+		returnValue.setInUse();
 		return returnValue;
 	}
 	
-	public void close()
+	public synchronized void flush()
 	{
-		try
+		for (final ConnectionWrapper wrapper : connections.values())
 		{
-			getConnection().close();
+			Services.timer.scheduleAtFixedRate(wrapper, 1000, 1000);
+//			Services.timer.schedule(new TimerTask() {
+//				@Override
+//				public void run()
+//				{
+//					wrapper.shutdown();
+//				}}, 10 * 60 * 1000);
 		}
-		catch (SQLException e)
+		connections = new HashMap<>();
+	}
+	
+	public synchronized void close()
+	{
+		for (ConnectionWrapper wrapper : connections.values())
 		{
-			Services.logger.print(e);
+			wrapper.shutdown();
 		}
+		connections.clear();
+	}
+
+	@Override
+	public void run()
+	{
+		flush();
 	}
 }

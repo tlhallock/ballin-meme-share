@@ -5,20 +5,29 @@
  */
 package org.cnv.shr.gui;
 
+import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.sql.Connection;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Date;
+import java.util.EventObject;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.event.CellEditorListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
@@ -40,6 +49,7 @@ import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.stng.Setting;
+import org.cnv.shr.stng.Setting.SettingsEditor;
 import org.cnv.shr.sync.DebugListener;
 import org.cnv.shr.util.IpTester;
 
@@ -74,36 +84,103 @@ public class Application extends javax.swing.JFrame
 			@Override
 			public void componentMoved(ComponentEvent arg0)
 			{
+				if (!isVisible())
+				{
+					return;
+				}
 				Point locationOnScreen = getLocationOnScreen();
 				Services.settings.appLocX.set(locationOnScreen.x);
 				Services.settings.appLocY.set(locationOnScreen.y);
 			}
 		});
 		listener = createNotificationListener();
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e)
+			{
+				Services.notifications.remove(listener);
+			}
+		});
 		Services.notifications.add(listener);
 	}
 
 	private void initializeSettings()
 	{
-		GridLayout layout = new GridLayout(0, 4);
-		settingsPanel.setLayout(layout);
-
-		settingsPanel.add(new JLabel("Name"));
-		settingsPanel.add(new JLabel("Description"));
-		settingsPanel.add(new JLabel("Requirest restart"));
-		settingsPanel.add(new JLabel("Modify"));
-
 		Setting[] settings = Services.settings.getUserSettings();
+		DefaultTableModel model = (DefaultTableModel) settingsTable.getModel();
+		settingsTable.getColumn("Modify").setCellRenderer(new TableCellRenderer()
+		{
+			@Override
+			public Component getTableCellRendererComponent(JTable arg0, Object arg1, boolean arg2, boolean arg3, int arg4, int arg5)
+			{
+				return ((SettingsEditor) arg1).get();
+			}
+		});
+		settingsTable.getColumn("Modify").setCellEditor(createSettingColumnEditor());
+		
+		int maxHeight = Integer.MIN_VALUE;
 		for (Setting setting : settings)
 		{
-			settingsPanel.add(new JLabel(setting.getName()));
-			settingsPanel.add(new JLabel(setting.getDescription()));
-			settingsPanel.add(new JLabel(String.valueOf(setting.requiresReboot())));
-			settingsPanel.add(setting.createInput());
+			SettingsEditor createInput = setting.getEditor();
+			maxHeight = Math.max(maxHeight, createInput.get().getPreferredSize().height);
+			model.addRow(new Object[] {
+					setting.getName(),
+					setting.getDescription(),
+					new Boolean(setting.requiresReboot()),
+					createInput,
+			});
 		}
+		settingsTable.setRowHeight(maxHeight);
 	}
 
-	public void log(String line)
+	private TableCellEditor createSettingColumnEditor()
+	{
+		return new TableCellEditor()
+		{
+			SettingsEditor c;
+			
+			@Override
+			public boolean stopCellEditing()
+			{
+				return true;
+			}
+			
+			@Override
+			public boolean shouldSelectCell(EventObject arg0)
+			{
+				return true;
+			}
+			
+			@Override
+			public void removeCellEditorListener(CellEditorListener arg0) {}
+			
+			@Override
+			public boolean isCellEditable(EventObject arg0)
+			{
+				return true; // c.isEditable();
+			}
+			
+			@Override
+			public Object getCellEditorValue()
+			{
+				return c;
+			}
+			
+			@Override
+			public void cancelCellEditing() {}
+			
+			@Override
+			public void addCellEditorListener(CellEditorListener arg0) {}
+			
+			@Override
+			public Component getTableCellEditorComponent(JTable arg0, Object arg1, boolean arg2, int arg3, int arg4)
+			{
+				return (c = (SettingsEditor) arg1).get();
+			}
+		};
+	}
+
+	private void log(String line)
 	{
 		logMessages.add(line);
 		while (logMessages.size() > (Integer) logLines.getValue())
@@ -124,9 +201,9 @@ public class Application extends javax.swing.JFrame
 		refreshSettings();
 		refreshLocals();
 		refreshRemotes();
-                refreshMessages();
-                refreshConnections();
-                refreshServes();
+		refreshMessages();
+		refreshConnections();
+		refreshServes();
 	}
     
 	// should sync the locals table...
@@ -176,7 +253,7 @@ public class Application extends javax.swing.JFrame
         		machine.getName(),
         		machine.getIp() + ":" + machine.getPort(),
         		machine.getIdentifier(),
-                String.valueOf(machine.isSharing()),
+                String.valueOf(machine.sharingWithOther()),
                 new NumberOfFiles(DbMachines.getTotalNumFiles(machine)),
                 new DiskUsage(DbMachines.getTotalDiskspace(machine)),
                 machine.getIp(),
@@ -203,7 +280,7 @@ public class Application extends javax.swing.JFrame
         	"Local machine: " + Services.localMachine.getName(),
             Services.localMachine.getIp() + ":" + Services.localMachine.getPort(),
             Services.localMachine.getIdentifier(),
-            String.valueOf(Services.localMachine.isSharing()),
+            String.valueOf(Services.localMachine.sharingWithOther()),
             new NumberOfFiles(DbMachines.getTotalNumFiles(Services.localMachine)),
             new DiskUsage(DbMachines.getTotalDiskspace(Services.localMachine)),
             Services.settings.getLocalIp(),
@@ -274,8 +351,8 @@ public class Application extends javax.swing.JFrame
 			model.removeRow(0);
 		}
 		this.maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
-		Connection connection = Services.h2DbCache.getConnection();
-		try (DbIterator<Download> downloads = new DbIterator<>(connection, DbObjects.PENDING_DOWNLOAD))
+		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
+				DbIterator<Download> downloads = new DbIterator<>(connection, DbObjects.PENDING_DOWNLOAD))
 		{
 			while (downloads.hasNext())
 			{
@@ -371,10 +448,10 @@ public class Application extends javax.swing.JFrame
         Debug = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         jButton8 = new javax.swing.JButton();
-        jScrollPane6 = new javax.swing.JScrollPane();
-        settingsPanel = new javax.swing.JPanel();
         jButton3 = new javax.swing.JButton();
         jButton6 = new javax.swing.JButton();
+        jScrollPane9 = new javax.swing.JScrollPane();
+        settingsTable = new javax.swing.JTable();
         jPanel8 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         logTextArea = new javax.swing.JTextArea();
@@ -391,6 +468,7 @@ public class Application extends javax.swing.JFrame
         refreshConnections = new javax.swing.JButton();
         jPanel12 = new javax.swing.JPanel();
 
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Convenience Share");
 
         jButton2.setText("Add...");
@@ -473,7 +551,7 @@ public class Application extends javax.swing.JFrame
                     .addComponent(jButton2)
                     .addComponent(jButton10))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 341, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -549,7 +627,7 @@ public class Application extends javax.swing.JFrame
                     .addComponent(jButton1)
                     .addComponent(jButton4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -625,7 +703,7 @@ public class Application extends javax.swing.JFrame
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
         );
 
         jSplitPane1.setRightComponent(jPanel6);
@@ -687,7 +765,7 @@ public class Application extends javax.swing.JFrame
                     .addComponent(jButton11)
                     .addComponent(jButton12))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane1))
+                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 378, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Downloads", jPanel3);
@@ -715,30 +793,17 @@ public class Application extends javax.swing.JFrame
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap(540, Short.MAX_VALUE)
                 .addComponent(jButton8)
                 .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(18, Short.MAX_VALUE)
+                .addContainerGap(15, Short.MAX_VALUE)
                 .addComponent(jButton8)
                 .addContainerGap())
         );
-
-        javax.swing.GroupLayout settingsPanelLayout = new javax.swing.GroupLayout(settingsPanel);
-        settingsPanel.setLayout(settingsPanelLayout);
-        settingsPanelLayout.setHorizontalGroup(
-            settingsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 859, Short.MAX_VALUE)
-        );
-        settingsPanelLayout.setVerticalGroup(
-            settingsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 333, Short.MAX_VALUE)
-        );
-
-        jScrollPane6.setViewportView(settingsPanel);
 
         jButton3.setText("Delete Database!");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
@@ -750,21 +815,48 @@ public class Application extends javax.swing.JFrame
 
         jButton6.setText("Change Keys");
 
+        settingsTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Name", "Description", "Requires Restart", "Modify"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.Boolean.class, java.lang.Object.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, true
+            };
+
+            @Override
+			public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            @Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane9.setViewportView(settingsTable);
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane9)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(Debug, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 821, Short.MAX_VALUE))
+                            .addComponent(jButton6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
@@ -780,7 +872,7 @@ public class Application extends javax.swing.JFrame
                         .addComponent(jButton6))
                     .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 289, Short.MAX_VALUE)
+                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -818,7 +910,7 @@ public class Application extends javax.swing.JFrame
                     .addComponent(logLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 357, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 365, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -890,7 +982,7 @@ public class Application extends javax.swing.JFrame
                     .addComponent(jButton5)
                     .addComponent(jButton9))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 358, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -904,7 +996,7 @@ public class Application extends javax.swing.JFrame
         );
         connectionsPanelLayout.setVerticalGroup(
             connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 367, Short.MAX_VALUE)
+            .addGap(0, 511, Short.MAX_VALUE)
         );
 
         jScrollPane8.setViewportView(connectionsPanel);
@@ -933,7 +1025,7 @@ public class Application extends javax.swing.JFrame
                 .addContainerGap()
                 .addComponent(refreshConnections)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane8))
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 378, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Open connections", jPanel10);
@@ -946,7 +1038,7 @@ public class Application extends javax.swing.JFrame
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 413, Short.MAX_VALUE)
+            .addGap(0, 421, Short.MAX_VALUE)
         );
 
         jTabbedPane2.addTab("Keys", jPanel12);
@@ -973,7 +1065,7 @@ public class Application extends javax.swing.JFrame
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-        	UserActions.addLocal(fc.getSelectedFile(), true, null);
+        	UserActions.addLocal(fc.getSelectedFile(), null);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -988,7 +1080,14 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_DebugActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-    	UserActions.syncAllLocals();
+		final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
+		while (listLocals.hasNext())
+		{
+			LocalDirectory next = listLocals.next();
+			final List<DebugListener> singletonList = Collections.singletonList(createLocalListener(next));
+			UserActions.userSync(next, singletonList);
+		}
+		Services.notifications.localsChanged();
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -1064,9 +1163,9 @@ public class Application extends javax.swing.JFrame
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
-    private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
+    private javax.swing.JScrollPane jScrollPane9;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTable1;
@@ -1078,7 +1177,7 @@ public class Application extends javax.swing.JFrame
     private javax.swing.JLabel maxPending;
     private javax.swing.JTable messageTable;
     private javax.swing.JButton refreshConnections;
-    private javax.swing.JPanel settingsPanel;
+    private javax.swing.JTable settingsTable;
     // End of variables declaration//GEN-END:variables
 
 
@@ -1165,7 +1264,7 @@ public class Application extends javax.swing.JFrame
 					@Override
 					public void run()
 					{
-						UserActions.sync(root);
+						UserActions.userSync(root, Collections.singletonList(createLocalListener(root)));
 					}
 				});
 			}
@@ -1466,6 +1565,12 @@ public class Application extends javax.swing.JFrame
 					}
 				}
 				refreshConnections();
+			}
+
+			@Override
+			public void lineLogged(String line)
+			{
+				log(line);
 			}
 
 			@Override

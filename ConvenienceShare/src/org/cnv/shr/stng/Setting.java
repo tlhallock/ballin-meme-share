@@ -14,6 +14,8 @@ public abstract class Setting<T>
 	protected boolean userEditable; // need to return null if this is false.
 	protected LinkedList<SettingListener> listeners;
 	
+	private SettingsEditor editor;
+	
 	protected Setting(String n, T dv, boolean r, boolean u, String d) 
 	{
 		listeners = new LinkedList<>();
@@ -24,6 +26,7 @@ public abstract class Setting<T>
 		userEditable = u;
 	}
 	
+	@Override
 	public String toString()
 	{
 		return String.valueOf(get());
@@ -104,7 +107,16 @@ public abstract class Setting<T>
 	}
 
 	abstract T parse(String vString);
-	public abstract Component createInput();
+	protected abstract Component createInput();
+
+	public SettingsEditor getEditor()
+	{
+		if (editor == null)
+		{
+			editor = new SettingsEditor(createInput());
+		}
+		return editor;
+	}
 
     public String getName()
     {
@@ -119,5 +131,25 @@ public abstract class Setting<T>
     public boolean requiresReboot()
     {
         return requiresRestart;
+    }
+    
+    public class SettingsEditor
+    {
+    	Component c;
+    	
+    	SettingsEditor(Component c)
+    	{
+    		this.c = c;
+    	}
+    	
+    	public boolean isEditable()
+    	{
+    		return userEditable;
+    	}
+    	
+    	public Component get()
+    	{
+    		return c;
+    	}
     }
 }

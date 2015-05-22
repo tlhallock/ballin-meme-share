@@ -25,8 +25,8 @@ import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.dmn.mn.Arguments;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.mn.Quiter;
-import org.cnv.shr.gui.Application;
 import org.cnv.shr.gui.TaskMenu;
+import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.Machine.LocalMachine;
 import org.cnv.shr.msg.MessageReader;
@@ -50,8 +50,7 @@ public class Services
 	public static ConnectionManager networkManager;
 	public static MessageReader msgReader;
 	public static KeysService keyManager;
-	public static Timer monitorTimer;
-	public static Application application;
+	public static Timer timer;
 	public static LocalMachine localMachine;
 	public static DbConnectionCache h2DbCache;
 	public static ServeManager server;
@@ -131,6 +130,7 @@ public class Services
 
 	private static void startServices()
 	{
+		notifications.start();
 		// Now start other threads...
 		checksums.start();
 		for (int i = 0; i < handlers.length; i++)
@@ -139,7 +139,7 @@ public class Services
 			handlers[i].start();
 		}
 		
-		monitorTimer = new Timer();
+		timer = new Timer();
 		downloads.initiatePendingDownloads();
 //		monitorTimer.schedule(new TimerTask() {
 //			@Override
@@ -156,26 +156,7 @@ public class Services
 		
 //		Also need to attempt remote authentications...
 		
-		userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					application = new Application();
-					Services.notifications.registerWindow(application);
-					application.setVisible(true);
-					application.refreshAll();
-				}
-				catch (Exception ex)
-				{
-					Services.logger.println("Unable to start GUI.\nQuiting.");
-					Services.logger.print(ex);
-					Services.quiter.quit();
-				}
-			}
-		});
+		UserActions.showGui();
 	}
 	
 	private static void startSystemTray() throws IOException, AWTException
@@ -186,10 +167,7 @@ public class Services
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if (application != null)
-				{
-					application.setVisible(true);
-				}
+				UserActions.showGui();
 			}});
 		menu.add(item);
 		item = new MenuItem("Quit");
@@ -226,6 +204,8 @@ public class Services
 
 	public static void deInitialize()
 	{
+		if (notifications != null)
+			notifications.stop();
 		if (handlers != null)
 		for (int i = 0; i < handlers.length; i++)
 		{
@@ -234,10 +214,8 @@ public class Services
 		}
 		if (downloads != null)
 			downloads.quitAllDownloads();
-		if (application != null)
-			application.dispose();
-		if (monitorTimer != null)
-			monitorTimer.cancel();
+		if (timer != null)
+			timer.cancel();
 		if (checksums != null)
 			checksums.quit();
 		if (syncs != null)

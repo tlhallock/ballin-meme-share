@@ -3,11 +3,11 @@ package org.cnv.shr.db.h2;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
@@ -51,16 +51,16 @@ public class DbTables
 			this.pKey = pKey;
 		}
 		
-		public void delete(Connection c) throws SQLException
+		public void delete(ConnectionWrapper c) throws SQLException
 		{
 			Services.logger.println("Deleting " + getTableName());
-			try (PreparedStatement stmt = c.prepareStatement("drop table if exists " + getTableName() + ";"))
+			try (StatementWrapper stmt = c.prepareNewStatement("drop table if exists " + getTableName() + ";"))
 			{
 				stmt.execute();
 			}
 		}
 		
-		public void debug(Connection c)
+		public void debug(ConnectionWrapper c)
 		{
 			try
 			{
@@ -70,26 +70,31 @@ public class DbTables
 				Services.logger.println(builder.toString()); builder.setLength(0);
 				builder.append("----------------------------------------------").append('\n');
 				Services.logger.println(builder.toString()); builder.setLength(0);
-				ResultSet executeQuery2 = c.prepareStatement("select * from " + tableName + ";").executeQuery();
-				int ncols = executeQuery2.getMetaData().getColumnCount();
-				for (int i = 1; i <= ncols; i++)
+				try (ResultSet executeQuery2 = c.prepareNewStatement("select * from " + tableName + ";").executeQuery();)
 				{
-					builder.append(executeQuery2.getMetaData().getColumnName(i)).append(",");
-				}
-				builder.append('\n');
-				Services.logger.println(builder.toString()); builder.setLength(0);
-				
-				while (executeQuery2.next())
-				{
+					int ncols = executeQuery2.getMetaData().getColumnCount();
 					for (int i = 1; i <= ncols; i++)
 					{
-						builder.append(executeQuery2.getObject(i)).append(",");
+						builder.append(executeQuery2.getMetaData().getColumnName(i)).append(",");
 					}
 					builder.append('\n');
-					Services.logger.println(builder.toString()); builder.setLength(0);
+					Services.logger.println(builder.toString());
+					builder.setLength(0);
+
+					while (executeQuery2.next())
+					{
+						for (int i = 1; i <= ncols; i++)
+						{
+							builder.append(executeQuery2.getObject(i)).append(",");
+						}
+						builder.append('\n');
+						Services.logger.println(builder.toString());
+						builder.setLength(0);
+					}
+					builder.append("----------------------------------------------").append('\n');
+					Services.logger.println(builder.toString());
+					builder.setLength(0);
 				}
-				builder.append("----------------------------------------------").append('\n');
-				Services.logger.println(builder.toString()); builder.setLength(0);
 			}
 			catch (SQLException ex)
 			{
@@ -140,7 +145,7 @@ public class DbTables
 			return tableName;
 		}
 		
-		public DbObject find(Connection c, int id, DbLocals locals)
+		public DbObject find(ConnectionWrapper c, int id, DbLocals locals)
 		{
 			switch (this)
 			{
@@ -159,7 +164,7 @@ public class DbTables
 				break;
 			default:
 			}
-			try (PreparedStatement stmt = c.prepareStatement("select * from " + getTableName() + " where " + pKey + " = ?;"))
+			try (StatementWrapper stmt = c.prepareNewStatement("select * from " + getTableName() + " where " + pKey + " = ?;"))
 			{
 				stmt.setInt(1,  id);
 				ResultSet executeQuery = stmt.executeQuery();
@@ -198,13 +203,20 @@ public class DbTables
 
 	public static void debugDb()
 	{
-		for (DbObjects table : ALL_TABLES)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();)
 		{
-			table.debug(Services.h2DbCache.getConnection());
+			for (DbObjects table : ALL_TABLES)
+			{
+				table.debug(c);
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
 		}
 	}
 
-	public static void deleteDb(Connection c)
+	public static void deleteDb(ConnectionWrapper c)
 	{
 		for (DbObjects table : ALL_TABLES)
 		{
@@ -224,12 +236,12 @@ public class DbTables
 	}
 	
 
-	static void createDb(Connection c) throws SQLException, IOException
+	static void createDb(ConnectionWrapper c) throws SQLException, IOException
 	{
 		executeStatments(c, "/create_h2.sql");
 	}
 	
-	private static PreparedStatement[] executeStatments(Connection c, String file) throws SQLException, IOException
+	private static PreparedStatement[] executeStatments(ConnectionWrapper c, String file) throws SQLException, IOException
 	{
 		StringBuilder builder = new StringBuilder();
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -247,7 +259,7 @@ public class DbTables
 
 		for (int i = 0; i < statements.length; i++)
 		{
-			try (PreparedStatement stmt = c.prepareStatement(statements[i] + ";");)
+			try (StatementWrapper stmt = c.prepareNewStatement(statements[i] + ";");)
 			{
 				System.out.println("Executing " + statements[i]);
 				stmt.execute();

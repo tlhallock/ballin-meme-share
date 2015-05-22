@@ -37,7 +37,7 @@ public class LocalFile extends SharedFile
 
 		try
 		{
-			if (fileSize < Services.settings.maxImmediateChecksum.get())
+			if (shouldChecksum())
 			{
 				checksum = Services.checksums.checksumBlocking(f);
 			}
@@ -48,6 +48,12 @@ public class LocalFile extends SharedFile
 		}
 	}
 
+	private boolean shouldChecksum()
+	{
+		return fileSize < Services.settings.maxImmediateChecksum.get() || false;
+	}
+
+	@Override
 	public LocalDirectory getRootDirectory()
 	{
 		return (LocalDirectory) rootDirectory;
@@ -67,6 +73,7 @@ public class LocalFile extends SharedFile
 		if (!exists())
 		{
 			DbFiles.delete(this);
+			Services.notifications.fileDeleted(this);
 			return true;
 		}
 
@@ -74,43 +81,38 @@ public class LocalFile extends SharedFile
 		long fsLastModified = fsCopy.lastModified();
 		if (fsLastModified <= lastModified)
 		{
-			if (checksum == null)
-			{
-				updateChecksum(fsCopy);
-			}
-			
 			return false;
 		}
 		
 		lastModified = fsLastModified;
+		checksum = null;
 		updateChecksum(fsCopy);
 		
 		fileSize = fsCopy.getTotalSpace();
 		save();
+		Services.notifications.fileChanged(this);
 		return true;
 	}
 
 	private void updateChecksum(File fsCopy)
 	{
-		if (fileSize > Services.settings.maxImmediateChecksum.get())
+		if (!shouldChecksum())
 		{
-			Services.checksums.checksum(this, fsCopy);
 			return;
 		}
 		try
 		{
 			checksum = Services.checksums.checksumBlocking(fsCopy);
-			return;
 		}
 		catch (IOException e)
 		{
 			Services.logger.println("Unable to checksum " + fsCopy);
 			Services.logger.print(e);
 		}
-		Services.checksums.checksum(this, fsCopy);
 	}
 
-	public void setChecksum(long timeStamp, String checksum)
+	@Override
+	public void setChecksum(String checksum)
 	{
 		if (checksum != null && checksum.equals(checksum))
 		{
@@ -119,7 +121,7 @@ public class LocalFile extends SharedFile
 		this.checksum = checksum;
 		try
 		{
-			//
+			// save is because refresh doesn't check checksum
 			if (!refreshAndWriteToDb())
 			{
 				save();

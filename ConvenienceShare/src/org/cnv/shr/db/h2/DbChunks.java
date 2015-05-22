@@ -1,12 +1,12 @@
 package org.cnv.shr.db.h2;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
@@ -14,6 +14,13 @@ import org.cnv.shr.mdl.Download;
 
 public class DbChunks
 {
+	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK where DID=?;");
+	private static final QueryWrapper SELECT4 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, END_OFFSET-BEGIN_OFFSET from CHUNK where DID=? and IS_DOWNLOADED=true;");
+	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
+	private static final QueryWrapper SELECT3 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=? and IS_DOWNLOADED=false;");
+	private static final QueryWrapper SELECT2 = new QueryWrapper("select count(C_ID) from CHUNK where DID=?;");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=?;");
+
 	public static final class DbChunk extends DbObject<Integer>
 	{
 		public DbChunk(Integer id)
@@ -24,7 +31,7 @@ public class DbChunks
 		public boolean done;
 		
 		@Override
-		public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+		public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 		{
 			int ndx = 1;
 			long begin = row.getLong(ndx++);
@@ -34,7 +41,7 @@ public class DbChunks
 			done = row.getBoolean(ndx++);
 		}
 		@Override
-		public boolean save(Connection c) throws SQLException
+		public boolean save(ConnectionWrapper c) throws SQLException
 		{
 			throw new RuntimeException("This should be moved to its own class...");
 		}
@@ -42,9 +49,8 @@ public class DbChunks
 	
 	public static DbIterator<DbChunk> getAllChunks(Download d) throws SQLException
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		PreparedStatement stmt = c.prepareStatement(
-				 "select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=?;");
+		ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+		StatementWrapper stmt = c.prepareStatement(SELECT1);
 		stmt.setInt(1, d.getId());
 		return new DbIterator<DbChunks.DbChunk>(c, stmt.executeQuery(), DbObjects.CHUNK);
 	}
@@ -90,10 +96,9 @@ public class DbChunks
 		{
 			count++;
 		}
-		
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				 "select count(C_ID) from CHUNK where DID=?;"))
+
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT2))
 		{
 			stmt.setInt(1, d.getId());
 			ResultSet results = stmt.executeQuery();
@@ -109,12 +114,12 @@ public class DbChunks
 		}
 		return false;
 	}
+
 	public static List<Chunk> getNextChunks(Download d, int max)
 	{
 		List<Chunk> returnValue = new LinkedList<>();
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				 "select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=? and IS_DOWNLOADED=false;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT3))
 		{
 			stmt.setInt(1, d.getId()); // ths file
 			ResultSet results = stmt.executeQuery();
@@ -135,9 +140,8 @@ public class DbChunks
 	
 	public static void chunkDone(Download d, Chunk chunk, boolean done)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				 "update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(UPDATE1))
 		{
 			int ndx = 1;
 			stmt.setBoolean(ndx++, done);
@@ -155,10 +159,10 @@ public class DbChunks
 
 	public static void allChunksDone(Download d)
 	{
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				 "delete from CHUNK where DID=?;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE1);)
 		{
+			
 			stmt.setInt(1, d.getId());
 			stmt.execute();
 		}
@@ -171,9 +175,8 @@ public class DbChunks
 	public static double getDownloadPercentage(Download d)
 	{
 		long done = 0;
-		Connection c = Services.h2DbCache.getConnection();
-		try (PreparedStatement stmt = c.prepareStatement(
-				 "select END_OFFSET, BEGIN_OFFSET, END_OFFSET-BEGIN_OFFSET from CHUNK where DID=? and IS_DOWNLOADED=true;"))
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT4);)
 		{
 			int ndx = 1;
 			// the query

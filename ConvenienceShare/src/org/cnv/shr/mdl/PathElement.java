@@ -1,12 +1,13 @@
 package org.cnv.shr.mdl;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
+import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
@@ -18,6 +19,8 @@ import org.cnv.shr.sync.FileSource;
 
 public class PathElement extends DbObject<Long>
 {
+	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into PELEM key(PARENT, PELEM) values (DEFAULT, ?, ?, ?);");
+	
 	protected PathElement parentId;
 	protected String value;
 	protected boolean broken;
@@ -63,6 +66,7 @@ public class PathElement extends DbObject<Long>
 		this.broken = b;
 	}
 	
+	@Override
 	public String toString()
 	{
 		return getFullPath();
@@ -80,7 +84,7 @@ public class PathElement extends DbObject<Long>
 
 
 	@Override
-	public void fill(Connection c, ResultSet row, DbLocals locals) throws SQLException
+	public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 	{
 		id       = row.getLong("P_ID");
 		parentId = (PathElement) locals.getObject(c, DbTables.DbObjects.PELEM, row.getInt("PARENT"));
@@ -89,12 +93,9 @@ public class PathElement extends DbObject<Long>
 	}
 
 	@Override
-	public boolean save(Connection c) throws SQLException
+	public boolean save(ConnectionWrapper c) throws SQLException
 	{
-		try (PreparedStatement stmt = c.prepareStatement(
-				 "merge into PELEM key(PARENT, PELEM) "
-				 + "values (DEFAULT, ?, ?, ?);"
-				, Statement.RETURN_GENERATED_KEYS);)
+		try (StatementWrapper stmt = c.prepareStatement(MERGE1, Statement.RETURN_GENERATED_KEYS);)
 		{
 			int ndx = 1;
 
