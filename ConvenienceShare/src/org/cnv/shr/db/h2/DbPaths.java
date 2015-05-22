@@ -137,8 +137,7 @@ public class DbPaths
 		try
 		{
 			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-			StatementWrapper stmt = c.prepareStatement(
-				SELECT3);
+			StatementWrapper stmt = c.prepareStatement(SELECT3);
 			stmt.setInt(1, root.getId());
 			stmt.setLong(2, parent.getId());
 			return new DbIterator<PathElement>(c, stmt.executeQuery(), DbObjects.PELEM, new DbLocals()
