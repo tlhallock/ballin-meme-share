@@ -8,10 +8,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.LinkedList;
 import java.util.Random;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.util.Misc;
 import org.junit.Assert;
 
@@ -97,5 +100,29 @@ public class TestUtils
 			sum += f.length();
 		}
 		return sum;
+	}
+	
+
+	public static String getJarPath()
+	{
+		String path = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		try
+		{
+			return URLDecoder.decode(path, "UTF-8");
+		}
+		catch (UnsupportedEncodingException e)
+		{
+//			Services.logger.print(e);
+			e.printStackTrace();
+			return path;
+		}
+	}
+	public static String getJavaPath()
+	{
+		return "/usr/bin/java";
+	}
+	public static String getClassPath()
+	{
+		return "../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:.";
 	}
 }

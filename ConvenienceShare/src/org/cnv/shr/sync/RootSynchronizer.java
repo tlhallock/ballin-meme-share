@@ -87,6 +87,14 @@ public abstract class RootSynchronizer implements Runnable
 	
 	private void synchronize(final SynchronizationTask task)
 	{
+		
+		
+		
+		Make sure that ROOT belongs to this root directory....
+		
+		
+		
+		
 		final HashMap<String, FileSource> files = key(task.files);
 		final HashSet<String> accountedFor = new HashSet<>();
 		

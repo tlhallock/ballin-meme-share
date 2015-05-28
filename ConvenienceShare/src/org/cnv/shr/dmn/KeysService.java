@@ -195,7 +195,7 @@ public class KeysService extends TimerTask
 			Services.logger.println("Unable to create naunce: remote key is null.");
 			return new byte[0];
 		}
-		final byte[] original = Misc.createNaunce();
+		final byte[] original = Misc.createNaunce(Services.settings.minNaunce.get());
 		final byte[] sentNaunce = encrypt(remoteKey, original);
 		authentication.addPendingNaunce(original);
 		return sentNaunce;

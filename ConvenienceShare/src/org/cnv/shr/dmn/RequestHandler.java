@@ -50,6 +50,7 @@ public class RequestHandler extends Thread
 			catch (IOException e)
 			{
 				Services.logger.println("Unable to connect on " + port + ": " + e.getMessage());
+				Services.logger.print(e);
 				continue;
 			}
 			try

@@ -67,6 +67,8 @@ public class Services
 		testStartUp();
 		startServices();
 	}
+	
+	
 	private static void createServices(Settings stgs, boolean deleteDb) throws Exception
 	{
 		settings = stgs;

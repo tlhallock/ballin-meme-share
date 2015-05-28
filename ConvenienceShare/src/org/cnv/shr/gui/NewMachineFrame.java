@@ -8,12 +8,11 @@ package org.cnv.shr.gui;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.mn.Restart;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.Misc;
 
@@ -85,20 +84,47 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		}
 		catch (Exception e)
 		{
-			Services.logger.print(e);
+			e.printStackTrace();
 			error("Unable to write settings file.");
 		}
 
 		File file = new File("application_data.zip");
 		if (!file.exists())
 		{
-//			error("Application location is unknown: expected to be at " + file.getPath());
+			// error("Application location is unknown: expected to be at " +
+			// file.getPath());
 		}
 
 		// unzip the application data.
 
-		Services.settings = stgs;
-		new Restart(new File(root)).doFinal();
+		LinkedList<String> args = new LinkedList<>();
+		args.add("java");
+		args.add("-cp");
+		args.add("../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:.");
+		args.add("org.cnv.shr.dmn.mn.Main");
+		args.add("-f");
+		args.add(stgs.getSettingsFile().getAbsolutePath());
+
+		System.out.println("Restarting from:");
+		System.out.println(new File(".").getAbsolutePath());
+		System.out.println("with:");
+		for (String str : args)
+		{
+			System.out.println(str);
+		}
+
+		ProcessBuilder builder = new ProcessBuilder();
+		builder.command(args);
+		builder.directory(new File(root).getAbsoluteFile());
+		try
+		{
+			builder.start();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			error("Unable to start new process.");
+		}
 	}
 
     /**
@@ -368,7 +394,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-        	UserActions.addLocal(fc.getSelectedFile(), null);
+        	fc.getSelectedFile(); // What goes here?
         }
     }//GEN-LAST:event_applicationActionPerformed
 

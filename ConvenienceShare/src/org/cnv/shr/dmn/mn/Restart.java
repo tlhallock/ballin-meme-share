@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.util.Misc;
+import org.cnv.shr.test.TestUtils;
 
 public class Restart extends Quiter
 {
@@ -31,7 +31,7 @@ public class Restart extends Quiter
 			LinkedList<String> args = new LinkedList<>();
 			args.add("java");
 			args.add("-cp");
-			args.add(Misc.getClassPath());
+			args.add(TestUtils.getClassPath());
 			args.add("org.cnv.shr.dmn.mn.Main");
 			args.add("-f");
 			args.add(Services.settings.getSettingsFile().getAbsolutePath());

@@ -1,5 +1,6 @@
 package org.cnv.shr.db.h2;
 
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -151,8 +152,11 @@ public class DbPaths
 		}
 	}
 
+	// Should be a single merge...
 	public static void pathLiesIn(PathElement element, RootDirectory local)
 	{
+		For some reason this is not actually adding broken paths...
+		
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper select = c.prepareStatement(SELECT1);
 				StatementWrapper update = c.prepareStatement(INSERT1);)

@@ -138,7 +138,7 @@ CREATE UNIQUE      INDEX IF NOT EXISTS IU ON IGNORE_PATTERN(RID, PATTERN);
 
 CREATE TABLE IF NOT EXISTS SFILE (
    F_ID           INTEGER       PRIMARY KEY     AUTO_INCREMENT,
-   FSIZE          INT           NOT NULL,
+   FSIZE          LONG          NOT NULL,
    TAGS           varchar(64),
    CHKSUM         char(40),
    PELEM          LONG          NOT NULL,

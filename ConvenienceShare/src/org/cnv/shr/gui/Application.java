@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.event.CellEditorListener;
 import javax.swing.table.DefaultTableModel;
@@ -371,6 +372,7 @@ public class Application extends javax.swing.JFrame
 						download.getState().humanReadable(),
 						String.valueOf(download.getPriority()),
 						downloadInstance == null ? download.getTargetFile() : downloadInstance.getDestinationFile().getAbsolutePath(),
+						"1",
 						downloadInstance == null ? "N/A" : downloadInstance.getSpeed(),
 						download.getState().equals(DownloadState.ALL_DONE) ?  "100%" : 
 							(downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage())),
@@ -1339,6 +1341,15 @@ public class Application extends javax.swing.JFrame
 				{
 					return;
 				}
+				
+				if (mId.equals(Services.localMachine.getIdentifier()))
+				{
+					JOptionPane.showMessageDialog(getThis(), 
+							"Unable to delete the local machine.",
+							"Unable to Delete.",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				UserActions.removeMachine(DbMachines.getMachine(mId));
 			}
 
@@ -1349,6 +1360,7 @@ public class Application extends javax.swing.JFrame
 			}
 		});
 	}
+	private Application getThis() { return this; }
 	private void initializeMessages()
 	{
 		messageTable.setAutoCreateRowSorter(true);
@@ -1401,8 +1413,8 @@ public class Application extends javax.swing.JFrame
 	}
 	private void initializeDownloads()
 	{
-		messageTable.setAutoCreateRowSorter(true);
-		final TableListener tableListener = new TableListener(messageTable);
+		jTable2.setAutoCreateRowSorter(true);
+		final TableListener tableListener = new TableListener(jTable2);
 		tableListener.addListener(new TableRowListener()
 		{
 			@Override
@@ -1415,7 +1427,8 @@ public class Application extends javax.swing.JFrame
 					return;
 				}
 				Download download = DbDownloads.getDownload(Integer.parseInt(mId));
-				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(new SharedFileId(download.getFile()));
+				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(
+						new SharedFileId(download.getFile()));
 				if (dInstance != null)
 				{
 					dInstance.fail("User quit.");

@@ -10,7 +10,6 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 
 import org.cnv.shr.dmn.Services;
@@ -30,11 +29,14 @@ public class MachineInfo
 	
 	private String url;
 	
-	public MachineInfo(String root, int port, String id) throws UnknownHostException
+	public MachineInfo(String root, int port, String id) throws IOException
 	{
 		name = id;
 		File rootDirectory = new File(root);
 		rootDirectory.mkdirs();
+		
+		Misc.ensureDirectory(root, false);
+		root = new File(root).getCanonicalPath();
 		
 		processSettings = new Settings(          new File(root + File.separator + "settings.props"));
 		processSettings.applicationDirectory.set(new File(root + File.separator + "app"));
@@ -70,15 +72,16 @@ public class MachineInfo
 	
 	public Closeable launch(boolean deleteDb) throws IOException
 	{
+		System.out.println("WRITING SETTINGS TO " + processSettings.getSettingsFile().getCanonicalPath());
 		processSettings.write();
 		
 		server = new ServerSocket(0);
 		
 		String[] args = new String[]
 		{
-				Misc.getJavaPath(),
+				TestUtils.getJavaPath(),
 				"-cp",
-				Misc.getClassPath(),
+				TestUtils.getClassPath(),
 				"org.cnv.shr.dmn.mn.MainTest",
 				deleteDb ? "-d" : "pass",
 				"-k",  String.valueOf(10000L),
@@ -87,7 +90,7 @@ public class MachineInfo
 				"-t",
 				InetAddress.getLoopbackAddress().getHostAddress(), String.valueOf(server.getLocalPort()),
 		};
-		process = Runtime.getRuntime().exec(args, null, new File(Misc.getJarPath()));
+		process = Runtime.getRuntime().exec(args, null, new File(TestUtils.getJarPath()));
 
 		try
 		{
@@ -99,7 +102,7 @@ public class MachineInfo
 		}
 
 		System.out.println(Arrays.toString(args));
-		System.out.println("From: " + Misc.getJarPath());
+		System.out.println("From: " + TestUtils.getJarPath());
 		
 		new OutputThread(name, System.err, new BufferedReader(new InputStreamReader(process.getErrorStream()))).start();
 		new OutputThread(name, System.out, new BufferedReader(new InputStreamReader(process.getInputStream()))).start();

@@ -13,10 +13,10 @@ import org.cnv.shr.mdl.SharedFile;
 
 public class DbDownloads
 {
-	private static final QueryWrapper SELECT2 = new QueryWrapper("select * from PENDING_DOWNLOAD where Q_ID=?;");
-	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from PENDING_DOWNLOAD where DSTATE=?;");
-	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK join PENDING_DOWNLOAD on DID = Q_ID where DSTATE=?;");
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select Q_ID from PENDING_DOWNLOAD where FID=?;");
+	private static final QueryWrapper SELECT2 = new QueryWrapper("select * from DOWNLOAD where Q_ID=?;");
+	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from DOWNLOAD where DSTATE=?;");
+	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK join DOWNLOAD on DID = Q_ID where DSTATE=?;");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select Q_ID from DOWNLOAD where FID=?;");
 
 	public static boolean hasPendingDownload(SharedFile remoteFile)
 	{

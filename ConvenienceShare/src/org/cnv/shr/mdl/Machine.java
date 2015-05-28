@@ -196,6 +196,10 @@ public class Machine extends DbObject<Integer>
 	
 	public SharingState getSharesWithUs()
 	{
+		if (sharesWithUs == null)
+		{
+			return SharingState.NOT_SET;
+		}
 		return sharesWithUs;
 	}
 	

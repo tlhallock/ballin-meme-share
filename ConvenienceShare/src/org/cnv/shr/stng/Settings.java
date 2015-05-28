@@ -10,7 +10,6 @@ import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.Properties;
 
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.Misc;
 
 public class Settings implements SettingListener
@@ -69,7 +68,8 @@ public class Settings implements SettingListener
 		catch (UnknownHostException e)
 		{
 			localAddress = "127.0.0.1";
-			Services.logger.print(e);
+			e.printStackTrace();
+//			Services.logger.print(e);
 		}
 		System.out.println("Local host is " + localAddress);
 	}
@@ -106,14 +106,14 @@ public class Settings implements SettingListener
 		}
 		catch (IOException ex)
 		{
-			if (Services.logger == null)
+//			if (Services.logger == null)
 			{
 				System.out.println("No settings file found.");
 			}
-			else
-			{
-				Services.logger.println("No settings file found.");
-			}
+//			else
+//			{
+//				Services.logger.println("No settings file found.");
+//			}
 		}
 		read(properties);
 		if (machineIdentifier.get().length() != MACHINE_ID_LENGTH)
@@ -173,8 +173,8 @@ public class Settings implements SettingListener
 		}
 		catch (IOException e)
 		{
-			Services.logger.println("Unable to save settings.");
-			Services.logger.print(e);
+//			Services.logger.println("Unable to save settings.");
+//			Services.logger.print(e);
 		}
 	}
 

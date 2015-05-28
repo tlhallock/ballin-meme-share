@@ -6,14 +6,11 @@ import java.io.IOException;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
-import org.cnv.shr.util.Misc;
 
 public class Main
 {
 	public static void main(String[] args) throws Exception
 	{
-        System.out.println("Starting from " + Misc.getJarPath());
-        
         // Need to break up chunkList
         // Need to break up PathList
 
@@ -35,7 +32,6 @@ public class Main
         // figure out why sort on file size doesn't work
         
         // compress data
-        // make aes flush
         // add setting for sync repeat
         
         // black list
@@ -49,14 +45,13 @@ public class Main
 		Arguments a = new Arguments();
 		parseArgs(args, a);
 		
-		a.deleteDb = true;
-		if (false)
+		if (true)
 		{
-			a.settings = new Settings(new File("bin/i2/settings.props"));
+			a.settings = new Settings(new File("/work/ballin-meme-share/instances/i1/settings.props"));
 		}
 		else
 		{
-			a.settings = new Settings(new File("bin/i1/settings.props"));
+			a.settings = new Settings(new File("/work/ballin-meme-share/instances/i2/settings.props"));
 		}
 
 //		if (!a.settings.getSettingsFile().exists())

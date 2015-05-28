@@ -19,7 +19,7 @@ public class LocalMachineTest
 	
 	public Closeable launchLocalMachine(boolean deleteDb) throws Exception
 	{
-		String root = "bin" + File.separator + "localInstance";
+		String root = ".." + File.separator + "instances" + File.separator + "localInstance";
 		Settings stgs = new Settings( new File(root + File.separator + "settings.props"));
 		stgs.applicationDirectory.set(new File(root + File.separator + "app"));
 		stgs.logFile.set(             new File(root + File.separator + "app" + File.separator + "log.txt"));
