@@ -3,6 +3,7 @@ package org.cnv.shr.util;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.PublicKey;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.SharedFileId;
@@ -67,8 +68,7 @@ public abstract class AbstractByteWriter
 		}
 		catch (UnsupportedEncodingException e)
 		{
-			Services.logger.println("Encoding is not supported");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.SEVERE, "Encoding is not supported", e);
 			Services.quiter.quit();
 			return this;
 		}

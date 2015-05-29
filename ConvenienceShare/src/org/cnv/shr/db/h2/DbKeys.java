@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -15,6 +16,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class DbKeys
@@ -50,7 +52,7 @@ public class DbKeys
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to append key to byte list buffer.", e);
 		}
 		return Misc.format(byteListBuffer.getBytes()); 
 	}
@@ -67,7 +69,7 @@ public class DbKeys
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to read public key from string", e);
 			return null;
 		}
 	}
@@ -94,7 +96,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get machine keys " + machine, e);
 		}
 		
 		return returnValue.toArray(dummy);
@@ -106,7 +108,7 @@ public class DbKeys
 				StatementWrapper stmt = c.prepareStatement(MERGE1, Statement.RETURN_GENERATED_KEYS))
 		{
 			String keyStr = getKeyString(key);
-			Services.logger.println("Adding key to " + machine.getName() + ": " + keyStr);
+			LogWrapper.getLogger().info("Adding key to " + machine.getName() + ": " + keyStr);
 			
 			int ndx = 1;
 			stmt.setString(ndx++, keyStr);
@@ -123,7 +125,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to add key to " + machine, e);
 		}
 	}
 
@@ -141,7 +143,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to remove key from " + machine, e);
 		}
 	}
 
@@ -160,7 +162,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get primary key from " + m, e);
 		}
 		return null;
 	}
@@ -177,7 +179,7 @@ public class DbKeys
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to see if machine has key " + machine, e);
 			return false;
 		}
 	}

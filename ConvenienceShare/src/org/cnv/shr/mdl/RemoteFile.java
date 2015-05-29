@@ -5,8 +5,6 @@ import java.io.File;
 
 public class RemoteFile extends SharedFile
 {
-	private String localCopy;
-
 	public RemoteFile(int int1)
 	{
 		super(int1);
@@ -32,7 +30,13 @@ public class RemoteFile extends SharedFile
 	
 	public File getTargetFile()
 	{
-		return new File(((RemoteDirectory) getRootDirectory()).getLocalRoot().getAbsolutePath()
+		return new File(getRootDirectory().getLocalRoot().getAbsolutePath()
 				+ File.separator + getPath().getFullPath());
+	}
+
+	@Override
+	public RemoteDirectory getRootDirectory()
+	{
+		return (RemoteDirectory) super.getRootDirectory();
 	}
 }

@@ -4,8 +4,9 @@ import java.io.Closeable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.logging.Level;
 
-import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbIterator<T extends DbObject> implements Iterator<T>, Closeable
 {
@@ -74,8 +75,7 @@ public class DbIterator<T extends DbObject> implements Iterator<T>, Closeable
 		}
 		catch (SQLException e)
 		{
-			Services.logger.println("Unable to create a shared file from a record");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to create a shared file from a record", e);
 			return null;
 		}
 	}
@@ -116,8 +116,7 @@ public class DbIterator<T extends DbObject> implements Iterator<T>, Closeable
 		}
 		catch (SQLException e)
 		{
-			Services.logger.println("Unable to close query.");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close query.", e);
 		}
 	}
 }

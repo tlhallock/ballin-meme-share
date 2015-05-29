@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
@@ -15,6 +16,7 @@ import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.FileOutsideOfRootException;
+import org.cnv.shr.util.LogWrapper;
 
 /**
  * I realize this would have been simpler with a method that recursively descended into subdirectories.
@@ -49,7 +51,7 @@ public abstract class RootSynchronizer implements Runnable
 		}
 		catch (final IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close iterator", e);
 		}
 	}
 	
@@ -81,19 +83,13 @@ public abstract class RootSynchronizer implements Runnable
 		}
 		catch (final IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close iterator", e);
 		}
 	}
 	
 	private void synchronize(final SynchronizationTask task)
 	{
-		
-		
-		
-		Make sure that ROOT belongs to this root directory....
-		
-		
-		
+		DbPaths.pathLiesIn(DbPaths.ROOT, local);
 		
 		final HashMap<String, FileSource> files = key(task.files);
 		final HashSet<String> accountedFor = new HashSet<>();
@@ -104,11 +100,11 @@ public abstract class RootSynchronizer implements Runnable
 			listener.beganDirectory(currentFile);
 		}
 
-		if (false)
+		if (LogWrapper.getLogger().isLoggable(Level.FINE))
 		{
-			Services.logger.println("Synchronizing " + task.current.getFullPath());
-			Services.logger.println("FS: " + task.files);
-			Services.logger.println("DB: " + task.dbPaths);
+			LogWrapper.getLogger().fine("Synchronizing " + task.current.getFullPath());
+			LogWrapper.getLogger().fine("FS: " + task.files);
+			LogWrapper.getLogger().fine("DB: " + task.dbPaths);
 		}
 		
 		final LinkedList<Pair> subDirectories = new LinkedList<>();
@@ -121,7 +117,7 @@ public abstract class RootSynchronizer implements Runnable
 			}
 			catch (final Exception e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to test on fs: " + element, e);
 			}
 		}
 		
@@ -133,7 +129,7 @@ public abstract class RootSynchronizer implements Runnable
 			}
 			catch (final IOException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to test in db: " + f, e);
 			}
 		}
 		
@@ -258,16 +254,15 @@ public abstract class RootSynchronizer implements Runnable
 		}
 		catch (final FileOutsideOfRootException ex)
 		{
-			Services.logger.println("Skipping symbolic link: "  + fsCopy);
+			LogWrapper.getLogger().log(Level.INFO, "File was outside of root "  + fsCopy, ex);
 		}
 		catch (final IOException ex)
 		{
-			Services.logger.println("Unable to get path of file: " + fsCopy);
-			Services.logger.print(ex);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get path of file: " + fsCopy, ex);
 		}
 		catch (final SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to add file " + fsCopy, e);
 		}
 	}
 

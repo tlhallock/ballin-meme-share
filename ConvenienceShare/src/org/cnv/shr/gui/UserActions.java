@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.ConnectionWrapper;
@@ -25,6 +26,7 @@ import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
+import org.cnv.shr.util.LogWrapper;
 
 public class UserActions
 {
@@ -88,12 +90,11 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					Services.logger.println("Unable to discover " + url);
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to discover " + url, e);
 				}
 				catch (SQLException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to save " + url, e);
 				}
 			}
 		});
@@ -120,8 +121,7 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					Services.logger.println("Unable to discover " + url);
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to discover " + url, e);
 				}
 			}
 		});
@@ -146,8 +146,7 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					Services.logger.println("Unable to discover refresh " + m.getUrl());
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to discover refresh " + m.getUrl(), e);
 				}
 			}
 		});
@@ -188,30 +187,34 @@ public class UserActions
 		});
 	}
 
-	public static void addLocal(final File localDirectory, final String name)
+	public static void queueLocal(final File localDirectory, final String name)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
 			@Override
 			public void run()
 			{
-				try
-				{
-					Services.logger.println("Sharing " + localDirectory);
-					PathElement pathElement = DbPaths.getPathElement(localDirectory.getCanonicalPath());
-					
-					LocalDirectory local = new LocalDirectory(pathElement, name);
-					local.save();
-					DbPaths.pathLiesIn(pathElement, local);
-					Services.notifications.localChanged(local);
-				}
-				catch (SQLException | IOException e1)
-				{
-					Services.logger.println("Unable to get file path to share: " + localDirectory);
-					Services.logger.print(e1);
-				}
+				addLocalImmediately(localDirectory, name);
 			}
 		});
+	}
+
+	public static void addLocalImmediately(final File localDirectory, final String name)
+	{
+		try
+		{
+			LogWrapper.getLogger().info("Sharing " + localDirectory);
+			PathElement pathElement = DbPaths.getPathElement(localDirectory.getCanonicalPath());
+
+			LocalDirectory local = new LocalDirectory(pathElement, name);
+			local.save();
+			DbPaths.pathLiesIn(pathElement, local);
+			Services.notifications.localChanged(local);
+		}
+		catch (SQLException | IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get file path to share: " + localDirectory, e1);
+		}
 	}
 
 	public static void userSync(final LocalDirectory d, final List<? extends SynchronizationListener> listeners)
@@ -276,7 +279,7 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to download " + remote, e);
 				}
 			}
 		});
@@ -338,8 +341,7 @@ public class UserActions
 				}
 				catch (Exception ex)
 				{
-					Services.logger.println("Unable to start GUI.\nQuiting.");
-					Services.logger.print(ex);
+					LogWrapper.getLogger().log(Level.SEVERE, "Unable to start GUI.\nQuiting.", ex);
 					Services.quiter.quit();
 				}
 			}

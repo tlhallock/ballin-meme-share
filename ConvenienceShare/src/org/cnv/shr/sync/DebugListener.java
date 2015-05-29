@@ -2,10 +2,10 @@ package org.cnv.shr.sync;
 
 import java.util.TimerTask;
 
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
+import org.cnv.shr.util.LogWrapper;
 
 public class DebugListener extends TimerTask implements SynchronizationListener
 {
@@ -60,15 +60,15 @@ public class DebugListener extends TimerTask implements SynchronizationListener
 		long now = System.currentTimeMillis();
 		double seconds = (now - lastDebug) / 1000;
 
-		synchronized (Services.logger)
+		synchronized (LogWrapper.getLogger())
 		{
-			Services.logger.println("-------------------------------------------------------");
-			Services.logger.println("Synchronizing: " + local.getPathElement().getFullPath());
-			Services.logger.println("Current file: " + currentFile);
-			Services.logger.println("File refresh rate: " + filesRefresh / seconds + "/s");
-			Services.logger.println("File add rate: " + filesAdded / seconds + "/s");
-			Services.logger.println("File remove rate: " + filesRemoved / seconds + "/s");
-			Services.logger.println("-------------------------------------------------------");
+			LogWrapper.getLogger().info("-------------------------------------------------------");
+			LogWrapper.getLogger().info("Synchronizing: " + local.getPathElement().getFullPath());
+			LogWrapper.getLogger().info("Current file: " + currentFile);
+			LogWrapper.getLogger().info("File refresh rate: " + filesRefresh / seconds + "/s");
+			LogWrapper.getLogger().info("File add rate: " + filesAdded / seconds + "/s");
+			LogWrapper.getLogger().info("File remove rate: " + filesRemoved / seconds + "/s");
+			LogWrapper.getLogger().info("-------------------------------------------------------");
 		}
 		lastDebug = now;
 		filesRefresh = 0;

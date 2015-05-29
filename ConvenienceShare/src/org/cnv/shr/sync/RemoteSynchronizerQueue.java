@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
@@ -15,6 +16,7 @@ import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.msg.ListPath;
 import org.cnv.shr.msg.PathList;
+import org.cnv.shr.util.LogWrapper;
 
 public class RemoteSynchronizerQueue implements Closeable
 {
@@ -59,7 +61,7 @@ public class RemoteSynchronizerQueue implements Closeable
 			catch (final InterruptedException e)
 			{
 				// TODO: Make sure this is handled well...
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Interrupted.", e);
 				communication.close();
 				return null;
 			}
@@ -88,7 +90,7 @@ public class RemoteSynchronizerQueue implements Closeable
 			}
 			catch (IOException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to queue directory list", e);
 				return null;
 			}
 			return waitForDirectory(path);

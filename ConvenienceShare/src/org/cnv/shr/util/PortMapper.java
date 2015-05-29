@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,7 +50,7 @@ public class PortMapper {
 				}
 			}
 		} catch (IOException e) {
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list ports", e);
 		}
 
 		p.waitFor();
@@ -94,7 +95,7 @@ public class PortMapper {
 				System.out.println(line);
 			}
 		} catch (IOException e) {
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to map ports", e);
 		}
 
 		return listPorts().containsKey(new Integer(gateway));
@@ -127,7 +128,7 @@ public class PortMapper {
 				System.out.println(line);
 			}
 		} catch (IOException e) {
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to remove port mapping", e);
 		}
 		return !listPorts().containsKey(new Integer(externalPort));
 	}
@@ -194,12 +195,12 @@ public class PortMapper {
 			{
 				if (!map(mappings, "idk what ip to use"))
 				{
-					Services.logger.println("That sux.");
+					LogWrapper.getLogger().info("That sux.");
 				}
 			}
 			catch (IOException | InterruptedException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to change port mapping", e);
 			}
 		}
 	}

@@ -12,8 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
-
-import org.cnv.shr.dmn.Services;
+import java.util.logging.Level;
 
 public class KeyedFile
 {
@@ -52,7 +51,7 @@ public class KeyedFile
 		}
 		catch (FileNotFoundException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get file " + f, e);
 			return null;
 		}
 	}
@@ -106,7 +105,7 @@ public class KeyedFile
 					}
 					catch (IOException e)
 					{
-						Services.logger.print(e);
+						LogWrapper.getLogger().log(Level.INFO, "Unable to create entry from " + f, e);
 					}
 				}
 				return null;
@@ -118,6 +117,7 @@ public class KeyedFile
 				throw new UnsupportedOperationException("Delete not supported!!");
 			}
 			
+			@Override
 			public void finalize()
 			{
 				try
@@ -126,7 +126,7 @@ public class KeyedFile
 				}
 				catch (IOException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to close directory stream in finalize", e);
 				}
 			}
 		};

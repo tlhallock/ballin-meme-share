@@ -10,20 +10,20 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.logging.Level;
 
 import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.KeysService;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.dwn.NewAesKey;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.FlushableEncryptionStreams;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.OutputByteWriter;
-import org.cnv.shr.util.OutputStreamFlusher;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
@@ -96,7 +96,7 @@ public class Communication implements Closeable
 	{
 		authentication.assertCanSend(m);
 		
-		Services.logger.println("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
+		LogWrapper.getLogger().info("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
 
 		synchronized (output)
 		{
@@ -158,8 +158,7 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			Services.logger.println("Unable to close socket.");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close socket.", e);
 		}
 	}
 
@@ -194,7 +193,7 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close output.", e);
 		}
 	}
 	
@@ -207,7 +206,7 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close input.", e);
 		}
 	}
 
@@ -231,7 +230,7 @@ public class Communication implements Closeable
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close in finalize", e);
 		}
 	}
 	

@@ -9,6 +9,7 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class UserMessageMessage extends Message
 {
@@ -56,18 +57,18 @@ public class UserMessageMessage extends Message
 	{
 		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
 		{
-			Services.logger.println("Bad message: too long.");
+			LogWrapper.getLogger().info("Bad message: too long.");
 			return;
 		}
 		Machine machine = connection.getMachine();
 		if (machine == null)
 		{
-			Services.logger.println("Bad message: no machine.");
+			LogWrapper.getLogger().info("Bad message: no machine.");
 			return;
 		}
 		if (!machine.getAllowsMessages())
 		{
-			Services.logger.println("Not accepting messages from " + machine.getName());
+			LogWrapper.getLogger().info("Not accepting messages from " + machine.getName());
 			return;
 		}
 		UserMessage message = new UserMessage(machine, type, messageStr);

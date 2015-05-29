@@ -53,6 +53,11 @@ public class RemoteDirectory extends RootDirectory
 	{
 		return new File(path.getFullPath());
 	}
+	
+	public String getLocalMirrorName()
+	{
+		return "mirror." + getMachine().getIdentifier() + ":" + getName();
+	}
 
 	@Override
 	protected RootSynchronizer createSynchronizer() throws IOException

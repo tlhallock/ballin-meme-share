@@ -6,11 +6,10 @@ import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbKeys;
-import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class NewKey extends KeyMessage
 {
@@ -57,7 +56,7 @@ public class NewKey extends KeyMessage
 //			DbMessages.addMessage(new UserMessage.AuthenticationRequest(connection.getMachine(), newKey));
                         
                         
-			Services.logger.println("We have no naunce to authenticate!");
+			LogWrapper.getLogger().info("We have no naunce to authenticate!");
 			fail("New key not accepted.", connection);
 			return;
 		}

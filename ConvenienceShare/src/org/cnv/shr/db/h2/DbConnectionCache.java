@@ -6,8 +6,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.TimerTask;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class DbConnectionCache extends TimerTask
@@ -22,10 +24,10 @@ public class DbConnectionCache extends TimerTask
 		{
 			if (fresh)
 			{
-				Services.logger.println("Deleting database.");
+				LogWrapper.getLogger().info("Deleting database.");
 				DbTables.deleteDb(c);
 			}
-			Services.logger.println("Creating database.");
+			LogWrapper.getLogger().info("Creating database.");
 			DbTables.createDb(c);
 		}
 	}
@@ -41,7 +43,7 @@ public class DbConnectionCache extends TimerTask
 			{
 				Misc.ensureDirectory(Services.settings.dbFile.get(), true);
 				String file = Services.settings.dbFile.get().getAbsolutePath();
-				Services.logger.println("DbFile: " + file);
+				LogWrapper.getLogger().info("DbFile: " + file);
 				
 				if (c == null || c.isClosed())
 				{
@@ -50,20 +52,20 @@ public class DbConnectionCache extends TimerTask
 				
 				returnValue = new ConnectionWrapper(c);
 
-				Services.logger.println("Connect with:");
-				Services.logger.println("java -cp ConvenienceShare/libs/h2-1.4.187.jar org.h2.tools.Shell ".trim());
-				Services.logger.println("jdbc:h2:" + file);
-				Services.logger.println("org.h2.Driver                                                    ".trim());
-				Services.logger.println("sa                                                               ".trim());
-				Services.logger.println("                                                                 ".trim());
-				Services.logger.println("                                                                 ".trim());
+				LogWrapper.getLogger().info("Connect with:");
+				LogWrapper.getLogger().info("java -cp ConvenienceShare/libs/h2-1.4.187.jar org.h2.tools.Shell ".trim());
+				LogWrapper.getLogger().info("jdbc:h2:" + file);
+				LogWrapper.getLogger().info("org.h2.Driver                                                    ".trim());
+				LogWrapper.getLogger().info("sa                                                               ".trim());
+				LogWrapper.getLogger().info("                                                                 ".trim());
+				LogWrapper.getLogger().info("                                                                 ".trim());
 
 				connections.put(id, returnValue);
 			}
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to create db connection", e);
 		}
 		// slight sync issue here...
 		returnValue.setInUse();

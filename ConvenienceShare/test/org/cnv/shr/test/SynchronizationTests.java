@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
@@ -28,6 +29,7 @@ import org.cnv.shr.sync.RemoteSynchronizer;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.sync.RootSynchronizer;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,8 +56,7 @@ public class SynchronizationTests extends RemotesTest
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 50);
 			
-			UserActions.addLocal(createTempDirectory.toFile(), rootName);
-			Thread.sleep(1000);
+			UserActions.addLocalImmediately(createTempDirectory.toFile(), rootName);
 			Assert.assertNotNull(DbRoots.getLocal(path));
 			UserActions.userSync(DbRoots.getLocal(path), null);
 			
@@ -209,7 +210,7 @@ public class SynchronizationTests extends RemotesTest
 						catch (final IOException e)
 						{
 							fail = true;
-							Services.logger.print(e);
+							LogWrapper.getLogger().log(Level.INFO, "Unable to queue next pair " + pair, e);
 						}
 					}
 				}
@@ -248,8 +249,7 @@ public class SynchronizationTests extends RemotesTest
 			final String rootName = Misc.getRandomString(15);
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 114);
-			UserActions.addLocal(createTempDirectory.toFile(), rootName);
-			Thread.sleep(5000);
+			UserActions.addLocalImmediately(createTempDirectory.toFile(), rootName);
 			
 			getMachineInfo(0).send(new TestActions.SYNC_ROOTS(Services.localMachine.getIdentifier()));
 			Thread.sleep(2000);

@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
@@ -18,6 +19,7 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.key.ConnectionOpenAwk;
 import org.cnv.shr.msg.key.KeyChange;
 import org.cnv.shr.msg.key.NewKey;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class Authenticator
@@ -77,7 +79,7 @@ public class Authenticator
 			return;
 		}
 		
-		Services.logger.println("Found new machine!");
+		LogWrapper.getLogger().info("Found new machine!");
 		updateMachineInfo(id, ip, keys);
 	}
 	
@@ -94,7 +96,7 @@ public class Authenticator
 			condition.signalAll();
 			if (authenticated)
 			{
-				Services.logger.println("Remote is authenticated.");
+				LogWrapper.getLogger().info("Remote is authenticated.");
 
 				updateMachineInfo(id, ip, new PublicKey[] { remotePublicKey });
 				this.authenticated = true;
@@ -102,7 +104,7 @@ public class Authenticator
 			else
 			{
 				this.authenticated = false;
-				Services.logger.println("Remote failed authentication.");
+				LogWrapper.getLogger().info("Remote failed authentication.");
 			}
 		}
 		finally
@@ -130,7 +132,7 @@ public class Authenticator
 		}
 		catch (InterruptedException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
 		}
 		finally
 		{
@@ -186,18 +188,18 @@ public class Authenticator
 		// authenticate remote...
 		if (DbKeys.machineHasKey(machine, remote))
 		{
-			Services.logger.println("We have a the key for the remote.");
+			LogWrapper.getLogger().info("We have a the key for the remote.");
 			return true;
 		}
 
 		if (acceptKey(connection, remote, machine))
 		{
-			Services.logger.println("We have accepted the key for the remote.");
+			LogWrapper.getLogger().info("We have accepted the key for the remote.");
 			DbKeys.addKey(machine, remote);
 			return true;
 		}
 
-		Services.logger.println("Unable to accept remote key.");
+		LogWrapper.getLogger().info("Unable to accept remote key.");
 		// add message
 		return false;
 	}
@@ -207,7 +209,7 @@ public class Authenticator
 		PublicKey publicKey = Services.keyManager.getPublicKey();
 		if (!Services.keyManager.containsKey(localPublicKey))
 		{
-			Services.logger.println("The remote's key for us will not do.");
+			LogWrapper.getLogger().info("The remote's key for us will not do.");
 			// not able to verify self to remote, add key
 			localPublicKey = publicKey;
 			final byte[] sentNaunce = Services.keyManager.createTestNaunce(this, remotePublicKey);
@@ -219,14 +221,14 @@ public class Authenticator
 		byte[] naunceRequest = Services.keyManager.createTestNaunce(this, remotePublicKey);
 		if (!Arrays.equals(publicKey.getEncoded(), localPublicKey.getEncoded()))
 		{
-			Services.logger.println("We have the required key from the remote, but it is old.");
+			LogWrapper.getLogger().info("We have the required key from the remote, but it is old.");
 			// able to verify self to remote, but change key
 			connection.send(new KeyChange(localPublicKey, publicKey, decrypted, naunceRequest));
 			localPublicKey = publicKey;
 			return;
 		}
 
-		Services.logger.println("The remote has the correct key.");
+		LogWrapper.getLogger().info("The remote has the correct key.");
 		connection.send(new ConnectionOpenAwk(decrypted, naunceRequest));
 	}
 

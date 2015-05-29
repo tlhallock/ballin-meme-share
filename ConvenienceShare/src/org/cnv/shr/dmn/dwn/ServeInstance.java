@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.ChecksumManager;
@@ -20,6 +21,7 @@ import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.FileOutsideOfRootException;
+import org.cnv.shr.util.LogWrapper;
 
 public class ServeInstance
 {
@@ -62,7 +64,7 @@ public class ServeInstance
 		}
 		
 
-		Services.logger.println("Staging.");
+		LogWrapper.getLogger().info("Staging.");
 		tmpFile = PathSecurity.secureMakeDirs(Services.settings.servingDirectory.get(),
 					local.getRootDirectory().getName()
 					+ File.separator + local.getPath().getFullPath());
@@ -131,7 +133,7 @@ public class ServeInstance
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to send failure reason.", e);
 		}
 		connection.finish();
 	}
@@ -141,12 +143,13 @@ public class ServeInstance
 		try
 		{
 			String checksum = stage(chunks);
-			Services.logger.println("Sending chunks.");
+			LogWrapper.getLogger().info("Sending chunks.");
 			connection.send(new ChunkList(chunks, checksum, new SharedFileId(local)));
 		}
 		catch (NoSuchAlgorithmException | IOException e)
 		{
-			Services.logger.print(e);
+			// send failure
+			LogWrapper.getLogger().log(Level.INFO, "Unable to send chunks", e);
 		}
 	}
 	
@@ -156,14 +159,14 @@ public class ServeInstance
 		{
 			try
 			{
-				Services.logger.println("Sending chunk " + chunk);
+				LogWrapper.getLogger().info("Sending chunk " + chunk);
 				connection.send(new ChunkResponse(new SharedFileId(local), chunk));
 				// Right here I could check that the checksum matches...
 				ChunkData.write(chunk, tmpFile, connection.getOut());
 			}
 			catch (IOException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to write chunk.", e);
 				fail("Unable to write chunk.");
 			}
 		}

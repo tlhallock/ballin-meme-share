@@ -12,12 +12,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.KeysService;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.FlushableEncryptionStreams.FlushableEncryptionInputStream;
 import org.cnv.shr.util.FlushableEncryptionStreams.FlushableEncryptionOutputStream;
+import org.cnv.shr.util.LogWrapper;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -182,7 +183,7 @@ public class EncryptionTests
 			}
 			catch (IOException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to copy streams", e);
 			}
 		}
 	}
@@ -214,7 +215,7 @@ public class EncryptionTests
 						}
 						catch (InterruptedException e)
 						{
-							Services.logger.print(e);
+							LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
 						}
 					}
 					return bytes.removeLast();

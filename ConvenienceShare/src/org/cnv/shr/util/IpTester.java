@@ -8,10 +8,9 @@ import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.cnv.shr.dmn.Services;
 
 public class IpTester
 {
@@ -40,12 +39,12 @@ public class IpTester
 		}
 		catch (MalformedURLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.FINE, "Bad canyouseeme url", e);
 			return null;
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.FINE, "Unable to connect to canyouseeme", e);
 			return null;
 		}
 	}
@@ -59,22 +58,22 @@ public class IpTester
 		}
 		catch (NoRouteToHostException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.FINE, "No route to host.", e);
 			return "No route to host.";
 		}
 		catch (UnknownHostException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.FINE, "Unkown host.", e);
 			return "Unkown host.";
 		}
 		catch (java.net.ConnectException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.FINE, "Port not open. (Is it forwarded?)", e);
 			return "Port not open. (Is it forwarded?)";
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.FINE, "Unable to read.", e);
 			return "Unable to read.";
 		}
 	}

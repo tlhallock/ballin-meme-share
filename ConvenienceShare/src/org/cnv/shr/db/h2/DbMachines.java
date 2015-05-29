@@ -3,6 +3,7 @@ package org.cnv.shr.db.h2;
 import java.security.PublicKey;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -10,6 +11,7 @@ import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbMachines
 {
@@ -29,7 +31,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list remotes", e);
 			return new DbIterator.NullIterator<>();
 		}
 	}
@@ -59,7 +61,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get machine by identifier", e);
 			return null;
 		}
 	}
@@ -82,7 +84,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get machine id for " + identifier, e);
 			return null;
 		}
 	}
@@ -97,7 +99,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete machine " + remote, e);
 		}
 	}
 	
@@ -132,7 +134,7 @@ public class DbMachines
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to update machine info for " + ident, e);
 			return;
 		}
 		for (PublicKey key : publicKeys)

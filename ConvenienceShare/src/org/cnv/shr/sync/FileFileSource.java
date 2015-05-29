@@ -7,15 +7,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbRoots.IgnorePatterns;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.FileOutsideOfRootException;
+import org.cnv.shr.util.LogWrapper;
 
 public class FileFileSource implements FileSource
 {
@@ -122,7 +123,7 @@ public class FileFileSource implements FileSource
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get canonical path:" + f, e);
 			return f.toFile().getAbsolutePath();
 		}
 	}

@@ -2,6 +2,7 @@ package org.cnv.shr.mdl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
@@ -10,6 +11,7 @@ import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.LogWrapper;
 
 public class Download extends DbObject<Integer>
 {
@@ -63,7 +65,7 @@ public class Download extends DbObject<Integer>
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save download state", e);
 		}
 	}
 
@@ -87,7 +89,7 @@ public class Download extends DbObject<Integer>
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete", e);
 		}
 	}
 
@@ -158,7 +160,7 @@ public class Download extends DbObject<Integer>
 					return s;
 				}
 			}
-			Services.logger.println("Unknown file state: " + dbValue);
+			LogWrapper.getLogger().info("Unknown file state: " + dbValue);
 			return null;
 		}
 
@@ -200,7 +202,7 @@ public class Download extends DbObject<Integer>
 					return s;
 				}
 			}
-			Services.logger.println("Unknown file state: " + dbValue);
+			LogWrapper.getLogger().info("Unknown file state: " + dbValue);
 			return null;
 		}
 	}

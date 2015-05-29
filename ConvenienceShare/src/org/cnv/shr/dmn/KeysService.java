@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.TimerTask;
+import java.util.logging.Level;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -37,6 +38,7 @@ import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.ByteListBuffer;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.OutputByteWriter;
 
@@ -101,7 +103,7 @@ public class KeysService extends TimerTask
 		}
 		catch (Exception ex)
 		{
-			Services.logger.println("Unable to read previous keys.");
+			LogWrapper.getLogger().info("Unable to read previous keys.");
 			writeKeys();
 		}
 		generateNecessaryKeys();
@@ -155,7 +157,7 @@ public class KeysService extends TimerTask
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to write keys.", e);
 		}
 	}
 	
@@ -180,7 +182,7 @@ public class KeysService extends TimerTask
 				}
 				catch (Exception e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Failed authentications again", e);
 					continue;
 				}
 			}
@@ -192,7 +194,7 @@ public class KeysService extends TimerTask
 	{
 		if (remoteKey == null)
 		{
-			Services.logger.println("Unable to create naunce: remote key is null.");
+			LogWrapper.getLogger().info("Unable to create naunce: remote key is null.");
 			return new byte[0];
 		}
 		final byte[] original = Misc.createNaunce(Services.settings.minNaunce.get());
@@ -228,7 +230,7 @@ public class KeysService extends TimerTask
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to encrypt.", e);
 			return new byte[0];
 		}
 	}
@@ -251,7 +253,7 @@ public class KeysService extends TimerTask
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to decrypt", e);
 		}
 		return buffer.getBytes();
 	}
@@ -269,26 +271,28 @@ public class KeysService extends TimerTask
 			}
 			byte[] byteArray = output.toByteArray();
 			
-//			System.out.println("Encrypted");
-//			System.out.println(Misc.format(original));
-//			System.out.println("to");
-//			System.out.println(Misc.format(byteArray));
-//			System.out.println("with");
-//			System.out.println(Misc.format(pKey.getEncoded()));
+
+			if (LogWrapper.getLogger().isLoggable(Level.FINE))
+			{
+				LogWrapper.getLogger().fine("Encrypted");
+				LogWrapper.getLogger().fine(Misc.format(original));
+				LogWrapper.getLogger().fine("to");
+				LogWrapper.getLogger().fine(Misc.format(byteArray));
+				LogWrapper.getLogger().fine("with");
+				LogWrapper.getLogger().fine(Misc.format(pKey.getEncoded()));
+			}
 
 			return byteArray;
 		}
 		catch (IOException e)
 		{
-			Services.logger.println("WTH?");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "WTH?", e);
 			Services.quiter.quit();
 			return new byte[0];
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
 		{
-			Services.logger.println("Quiting:");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Quiting:", e);
 			Services.quiter.quit();
 			return new byte[0];
 		}
@@ -308,23 +312,25 @@ public class KeysService extends TimerTask
 			}
 			catch (IOException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to copy stream", e);
 			}
 			byte[] bytes = output.toByteArray();
 
-//			 System.out.println("Decrypted");
-//			 System.out.println(Misc.format(encrypted));
-//			 System.out.println("to");
-//			 System.out.println(Misc.format(bytes));
-//			 System.out.println("with");
-//			 System.out.println(Misc.format(pKey.getEncoded()));
-
+			if (LogWrapper.getLogger().isLoggable(Level.FINE))
+			{
+				LogWrapper.getLogger().fine("Decrypted");
+				LogWrapper.getLogger().fine(Misc.format(encrypted));
+				LogWrapper.getLogger().fine("to");
+				LogWrapper.getLogger().fine(Misc.format(bytes));
+				LogWrapper.getLogger().fine("with");
+				LogWrapper.getLogger().fine(Misc.format(privateKey.getEncoded()));
+			}
+ 
 			return bytes;
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
 		{
-			Services.logger.println("Quiting:");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.SEVERE, "Quiting:", e);
 			Services.quiter.quit();
 			return new byte[0];
 		}
@@ -411,7 +417,7 @@ public class KeysService extends TimerTask
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.SEVERE, "No provider", e);
 			Services.quiter.quit();
 			return null;
 		}
@@ -430,7 +436,7 @@ public class KeysService extends TimerTask
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get code update key.", e);
 		}
 
 		return codeUpdateKey;
@@ -452,7 +458,7 @@ public class KeysService extends TimerTask
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get code update key if necessary.", e);
 		}
 	}
 

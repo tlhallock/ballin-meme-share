@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
@@ -14,10 +15,10 @@ import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.sync.DebugListener;
 import org.cnv.shr.sync.RootSynchronizer;
 import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public abstract class RootDirectory extends DbObject<Integer>
@@ -101,7 +102,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	
 	public final void synchronize(final List<? extends SynchronizationListener> listeners)
 	{
-		Services.logger.println("Synchronizing " + getPathElement().getFullPath());
+		LogWrapper.getLogger().info("Synchronizing " + getPathElement().getFullPath());
 
 		try
 		{
@@ -128,11 +129,11 @@ public abstract class RootDirectory extends DbObject<Integer>
 			setStats();
 			sendNotifications();
 
-			Services.logger.println("Done synchronizing " + getPathElement().getFullPath());
+			LogWrapper.getLogger().info("Done synchronizing " + getPathElement().getFullPath());
 		}
 		catch (final Exception ex)
 		{
-			Services.logger.print(ex);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to synchronize " + this, ex);
 		}
 		finally
 		{
@@ -150,7 +151,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 		}
 		catch (final SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to set stats.", e);
 		}
 	}
 	

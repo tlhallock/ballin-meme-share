@@ -6,13 +6,12 @@ import java.io.OutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.logging.Level;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
-
-import org.cnv.shr.dmn.Services;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
@@ -174,7 +173,7 @@ public class FlushableEncryptionStreams
 				}
 				catch (InvalidKeyException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Found a bad key.", e);
 				}
 				cipherStream = new CipherInputStream(buffer, cipher);
 			}
@@ -239,7 +238,7 @@ public class FlushableEncryptionStreams
 			}
 			catch (InvalidKeyException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Found bad key", e);
 			}
 			cipherStream = new CipherOutputStream(buffer, cipher);
 		}

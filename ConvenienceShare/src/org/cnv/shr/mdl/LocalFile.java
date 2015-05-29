@@ -3,10 +3,12 @@ package org.cnv.shr.mdl;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.FileOutsideOfRootException;
+import org.cnv.shr.util.LogWrapper;
 
 public class LocalFile extends SharedFile
 {
@@ -44,7 +46,7 @@ public class LocalFile extends SharedFile
 		}
 		catch (IOException ex)
 		{
-			Services.logger.print(ex);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to checksum " + this, ex);
 		}
 	}
 
@@ -106,8 +108,7 @@ public class LocalFile extends SharedFile
 		}
 		catch (IOException e)
 		{
-			Services.logger.println("Unable to checksum " + fsCopy);
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to checksum " + fsCopy, e);
 		}
 	}
 
@@ -129,7 +130,7 @@ public class LocalFile extends SharedFile
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to write to db", e);
 		}
 	}
 	
@@ -154,7 +155,7 @@ public class LocalFile extends SharedFile
 			}
 			catch (SQLException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to ensure checksummed", e);
 			}
 		}
 	}

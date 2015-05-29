@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class KeyFailure extends KeyMessage
 {
@@ -34,6 +34,7 @@ public class KeyFailure extends KeyMessage
 		return TYPE;
 	}
 	
+	@Override
 	public String toString()
 	{
 		return "Unable to authenticate: " + reason;
@@ -42,7 +43,7 @@ public class KeyFailure extends KeyMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		Services.logger.println("Key failure");
+		LogWrapper.getLogger().info("Key failure");
 		connection.setAuthenticated(false);
 	}
 }

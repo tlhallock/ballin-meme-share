@@ -2,6 +2,7 @@ package org.cnv.shr.db.h2;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -10,6 +11,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbDownloads
 {
@@ -30,8 +32,7 @@ public class DbDownloads
 		}
 		catch (SQLException e)
 		{
-			Services.logger.println("Unable to see if we want to download " + remoteFile);
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to see if we want to download " + remoteFile, e);
 			return false;
 		}
 	}
@@ -47,7 +48,7 @@ public class DbDownloads
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to clear completed download chunks", e);
 		}
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(DELETE2))
@@ -57,7 +58,7 @@ public class DbDownloads
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to clear completed downloads", e);
 		}
     }
 
@@ -77,8 +78,7 @@ public class DbDownloads
 		}
 		catch (SQLException e)
 		{
-			Services.logger.println("Unable to get download " + parseInt);
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get download " + parseInt, e);
 		}
 		return null;
 	}

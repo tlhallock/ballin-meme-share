@@ -3,6 +3,9 @@ package org.cnv.shr.dmn;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
+
+import org.cnv.shr.util.LogWrapper;
 
 public class RequestHandler extends Thread
 {	
@@ -13,7 +16,7 @@ public class RequestHandler extends Thread
 	public RequestHandler(int port) throws IOException
 	{
 		this.port = port;
-		Services.logger.println("Starting on port " + port);
+		LogWrapper.getLogger().info("Starting on port " + port);
 		this.socket = new ServerSocket(port);
 	}
 	
@@ -26,7 +29,7 @@ public class RequestHandler extends Thread
 		}
 		catch (IOException ex)
 		{
-			Services.logger.print(ex);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close socket.", ex);
 		}
 	}
 	
@@ -35,7 +38,6 @@ public class RequestHandler extends Thread
 	{
 		while (!quit)
 		{
-
 			Socket accept;
 			try
 			{
@@ -49,8 +51,7 @@ public class RequestHandler extends Thread
 			}
 			catch (IOException e)
 			{
-				Services.logger.println("Unable to connect on " + port + ": " + e.getMessage());
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to connect on " + port + ": " + e.getMessage(), e);
 				continue;
 			}
 			try
@@ -59,9 +60,9 @@ public class RequestHandler extends Thread
 			}
 			catch (Exception t)
 			{
-				Services.logger.println(t);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to handle connection on " + port, t);
 			}
 		}
-		Services.logger.println("Quitting on port " + port);
+		LogWrapper.getLogger().info("Quitting on port " + port);
 	}
 }

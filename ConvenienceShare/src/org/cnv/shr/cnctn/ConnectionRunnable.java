@@ -2,9 +2,11 @@ package org.cnv.shr.cnctn;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
+import org.cnv.shr.util.LogWrapper;
 
 public class ConnectionRunnable implements Runnable
 {
@@ -38,9 +40,8 @@ public class ConnectionRunnable implements Runnable
 				}
 				catch (final Exception e)
 				{
-					Services.logger.println("Error performing message task:");
-					Services.logger.print(e);
-					Services.logger.println("Closing connection.");
+					LogWrapper.getLogger().log(Level.INFO, "Error performing message task:" + request.getClass().getName(), e);
+					LogWrapper.getLogger().info("Closing connection.");
 					break;
 				}
 			}
@@ -48,14 +49,12 @@ public class ConnectionRunnable implements Runnable
 		}
 		catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 		{
-			Services.logger.println("Error creating message:");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.SEVERE, "Error creating message:", e);
 			Services.quiter.quit();
 		}
 		catch (final Exception ex)
 		{
-			Services.logger.println("Error with connection:");
-			Services.logger.print(ex);
+			LogWrapper.getLogger().log(Level.INFO, "Error with connection:", ex);
 		}
 		finally
 		{
@@ -100,19 +99,19 @@ public class ConnectionRunnable implements Runnable
 		}
 		catch (final InterruptedException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
 			try
 			{
 				connection.getSocket().close();
 			}
 			catch (final IOException e1)
 			{
-				Services.logger.print(e1);
+				LogWrapper.getLogger().log(Level.INFO, "Can't close at all", e1);
 			}
 		}
 		catch (final IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Can't close" , e);
 		}
 	}
 	
@@ -124,7 +123,7 @@ public class ConnectionRunnable implements Runnable
 		}
 		catch (final IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Can't die", e);
 		}
 	}
 }

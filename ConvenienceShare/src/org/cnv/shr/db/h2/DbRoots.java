@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -13,6 +14,7 @@ import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbRoots
 {
@@ -49,8 +51,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.println("Unable to get file size of " + d);
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get file size of " + d, e);
 			return -1;
 		}
 	}
@@ -73,8 +74,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.println("Unable to count files in " + d);
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to count files in " + d, e);
 			return -1;
 		}
 	}
@@ -93,7 +93,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list " + machine, e);
 			return new DbIterator.NullIterator<>();
 		}
 	}
@@ -110,7 +110,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list locals", e);
 			return new DbIterator.NullIterator<>();
 		}
 	}
@@ -133,7 +133,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get local by path", e);
 			return null;
 		}
 	}
@@ -164,7 +164,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get root by name", e);
 			return null;
 		}
 	}
@@ -187,7 +187,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete root", e);
 		}
 		DbPaths.removeUnusedPaths();
 	}
@@ -236,7 +236,7 @@ public class DbRoots
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get ignores.", e);
 		}
 		return new IgnorePatterns(returnValue.toArray(DUMMY));
 	}
@@ -248,7 +248,7 @@ public class DbRoots
                 s1.setInt(1, local.getId());
                 s1.execute();
             } catch (SQLException ex) {
-                Services.logger.println(ex);
+            	LogWrapper.getLogger().log(Level.INFO, "Unable to delete old ignores.", ex);
             }
             HashSet<String> ignoresAdded = new HashSet<>();
             try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
@@ -258,7 +258,7 @@ public class DbRoots
                     ignore = ignore.trim();
                     if (ignore.length() > 1024)
                     {
-                        Services.logger.println("Unable to add ignore because it is bigger than the maximum ignore pattern: " + ignore);
+                        LogWrapper.getLogger().info("Unable to add ignore because it is bigger than the maximum ignore pattern: " + ignore);
                         continue;
                     }
                     if (!ignoresAdded.add(ignore))
@@ -270,7 +270,7 @@ public class DbRoots
                     s1.execute();
                 }
             } catch (SQLException ex) {
-                Services.logger.println(ex);
+            	LogWrapper.getLogger().log(Level.INFO, "Unable to set new ignores.", ex);
             }
         }
 }

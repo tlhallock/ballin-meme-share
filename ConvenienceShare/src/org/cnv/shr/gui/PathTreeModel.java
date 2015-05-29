@@ -3,6 +3,7 @@ package org.cnv.shr.gui;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
@@ -24,6 +25,7 @@ import org.cnv.shr.sync.RemoteFileSource;
 import org.cnv.shr.sync.RemoteSynchronizer;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.sync.RootSynchronizer;
+import org.cnv.shr.util.LogWrapper;
 
 
 public class PathTreeModel implements TreeModel
@@ -78,7 +80,7 @@ public class PathTreeModel implements TreeModel
 		}
 		catch (final IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to create remote synchronizer", e);
 		}
 		if (oldroot == null)
 		{

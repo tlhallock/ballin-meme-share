@@ -2,6 +2,7 @@ package org.cnv.shr.db.h2;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -14,6 +15,7 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbFiles
 {
@@ -42,7 +44,7 @@ public class DbFiles
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get file " + element, e);
 			return null;
 		}
 	}
@@ -63,7 +65,7 @@ public class DbFiles
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list files without a checksum", e);
 			return null;
 		}
 	}
@@ -79,7 +81,7 @@ public class DbFiles
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete file " + f, e);
 		}
 	}
 	
@@ -115,7 +117,7 @@ public class DbFiles
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get file by id " + int1, e);
 			return null;
 		}
 	}

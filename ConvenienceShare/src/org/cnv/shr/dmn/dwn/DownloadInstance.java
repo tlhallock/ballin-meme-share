@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbChunks;
@@ -25,13 +26,13 @@ import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.util.FileOutsideOfRootException;
+import org.cnv.shr.util.LogWrapper;
 
 public class DownloadInstance
 {
@@ -117,7 +118,7 @@ public class DownloadInstance
 					catch (IOException e)
 					{
 						// TODO Auto-generated catch block
-						Services.logger.print(e);
+						LogWrapper.getLogger().log(Level.INFO, "Unable to request seeder.", e);
 					}
 				}});
 		}
@@ -166,11 +167,12 @@ public class DownloadInstance
 		}
 		catch (NoSuchAlgorithmException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.SEVERE, "No algorithm", e);
+			Services.quiter.quit();
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to recover chunks.", e);
 		}
 		catch (SQLException e1)
 		{
@@ -185,7 +187,7 @@ public class DownloadInstance
 		
 		// ensure that we are sharing this mirror...
 		// This should use a better name...
-		UserActions.addLocal(file, null);
+		UserActions.addLocalImmediately(file, remoteFile.getRootDirectory().getLocalMirrorName());
 		
 		String str = remoteFile.getPath().getFullPath();
 		tmpFile = PathSecurity.secureMakeDirs(file, str);
@@ -193,7 +195,7 @@ public class DownloadInstance
 		{
 			throw new FileOutsideOfRootException(file.getAbsolutePath(), str);
 		}
-		Services.logger.println("Downloading \"" + 
+		LogWrapper.getLogger().info("Downloading \"" + 
 				remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" +
 				tmpFile.getAbsolutePath() + "\"");
 
@@ -201,6 +203,8 @@ public class DownloadInstance
 		{
 			return;
 		}
+		
+		// Should checkout random access file.setLength()
 		try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(tmpFile));)
 		{
 			for (long i = 0; i < remoteFile.getFileSize(); i++)
@@ -237,7 +241,7 @@ public class DownloadInstance
 				}
 				catch (IOException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to request chunk", e);
 				}
 			}
 		}
@@ -285,12 +289,12 @@ public class DownloadInstance
 		{
 			if (!checkChecksum())
 			{
-				Services.logger.println("Checksums did not match!!!");
+				LogWrapper.getLogger().info("Checksums did not match!!!");
 			}
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate checksum", e);
 		}
 		
 		try
@@ -299,7 +303,7 @@ public class DownloadInstance
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to move downloaded file.", e);
 		}
 		
 		Services.downloads.remove(this);
@@ -312,7 +316,7 @@ public class DownloadInstance
 	{
 		if (destinationFile == null)
 		{
-			File localRoot = ((RemoteDirectory) remoteFile.getRootDirectory()).getLocalRoot();
+			File localRoot = remoteFile.getRootDirectory().getLocalRoot();
 			String str = remoteFile.getPath().getFullPath();
 			do
 			{
@@ -371,7 +375,7 @@ public class DownloadInstance
 			}
 			catch (IOException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to send completion status to " + seeder.connection.getUrl(), e);
 			}
 		}
 	}

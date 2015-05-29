@@ -9,12 +9,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.key.OpenConnection;
 import org.cnv.shr.msg.key.WhoIAm;
+import org.cnv.shr.util.LogWrapper;
 
 public class ConnectionManager
 {
@@ -75,8 +77,7 @@ public class ConnectionManager
 			}
 			catch (ConnectException ex)
 			{
-				Services.logger.println("Unable to connect, trying others if available.");
-				Services.logger.print(ex);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to connect, trying others if available.", ex);
 			}
 		}
 		return null;

@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
@@ -18,6 +19,7 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class RootList extends Message
 {
@@ -60,7 +62,7 @@ public class RootList extends Message
 			}
 			catch (SQLException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to list root", e);
 			}
 		}
 		

@@ -1,10 +1,10 @@
 package org.cnv.shr.db.h2;
 
-import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -13,6 +13,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbPaths
 {
@@ -22,14 +23,18 @@ public class DbPaths
 											+ " and not exists (select RID from ROOT_CONTAINS where ROOTS_CONTAINS.PELEM = del.P_ID)"
 											+ " and not exists (select P_ID from PELEM as child where child.PARENT=del.P_ID);");
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete ROOT_CONTAINS where RID=? and PELEM=?;");
-	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into ROOT_CONTAINS values (?, ?);");
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select count(RID) from ROOT_CONTAINS where RID=? and PELEM=?;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
 										 "join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID " + 
 										 "where PELEM.PARENT = ?;                                                        ");
 	private static final QueryWrapper INSERT2 = new QueryWrapper("insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);");
 	private static final QueryWrapper INSERT3 = new QueryWrapper("select P_ID from PELEM where PARENT=? and PELEM=?;");
 	private static final QueryWrapper SELECT2 = new QueryWrapper("select PARENT, PELEM from PATH where P_ID = ?;");
+	
+
+//	private static final QueryWrapper SELECT1 = new QueryWrapper("select count(RID) from ROOT_CONTAINS where RID=? and PELEM=?;");
+//	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into ROOT_CONTAINS values (?, ?);");
+	
+	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?);");
 	
 	
 	
@@ -65,7 +70,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get path element by id " + pid, e);
 		}
 		
 		PathElement current = ROOT;
@@ -129,7 +134,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to set path element ids", e);
 		}
 	}
 	
@@ -147,38 +152,31 @@ public class DbPaths
 		}
 		catch (SQLException ex)
 		{
-			Services.logger.print(ex);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list path elements of " + parent, ex);
 			return new DbIterator.NullIterator<PathElement>();
 		}
 	}
 
-	// Should be a single merge...
 	public static void pathLiesIn(PathElement element, RootDirectory local)
 	{
-		For some reason this is not actually adding broken paths...
-		
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper select = c.prepareStatement(SELECT1);
-				StatementWrapper update = c.prepareStatement(INSERT1);)
+				StatementWrapper merge = c.prepareStatement(MERGE1);)
 		{
 			while (element.getParent() != element)
 			{
-				select.setInt(1, local.getId());
-				select.setLong(2, element.getId());
-				ResultSet results = select.executeQuery();
-				if (results.next() && results.getInt(1) > 0)
+				merge.setInt(1, local.getId());
+				merge.setLong(2, element.getId());
+				merge.execute();
+				if (merge.getUpdateCount() == 0)
 				{
 					return;
 				}
-				update.setInt(1, local.getId());
-				update.setLong(2, element.getId());
-				update.execute();
-//				element = element.getParent();
+				element = element.getParent();
 			}
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save to root contains path.", e);
 		}
 	}
 	public static void pathDoesNotLieIn(PathElement element, RootDirectory local)
@@ -201,7 +199,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to remove path from root: " + element, e);
 		}
 	}
 
@@ -236,7 +234,7 @@ public class DbPaths
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to remove unused paths.", e);
 		}
 	}
 }

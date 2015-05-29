@@ -3,9 +3,11 @@ package org.cnv.shr.dmn.mn;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.util.LogWrapper;
 
 public class Main
 {
@@ -66,14 +68,7 @@ public class Main
 		}
 		catch (Exception ex)
 		{
-			if (Services.logger != null)
-			{
-				Services.logger.print(ex);
-			}
-			else
-			{
-				ex.printStackTrace();
-			}
+			LogWrapper.getLogger().log(Level.INFO, "Unable to initialize", ex);
 			if (Services.quiter != null)
 			{
 				Services.quiter.quit();

@@ -5,12 +5,14 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.logging.Level;
 
 import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
+import org.cnv.shr.util.LogWrapper;
 
 public abstract class KeyMessage extends Message
 {
@@ -43,7 +45,7 @@ public abstract class KeyMessage extends Message
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.SEVERE, "No provider", e);
 			Services.quiter.quit();
 		}
 		connection.finish();

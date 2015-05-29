@@ -5,8 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.TimerTask;
+import java.util.logging.Level;
 
-import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.LogWrapper;
 
 public class ConnectionWrapper extends TimerTask implements AutoCloseable
 {
@@ -142,7 +143,7 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 			}
 			catch (SQLException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to close statement", e);
 			}
 		}
 		
@@ -193,6 +194,11 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		public ResultSet getGeneratedKeys() throws SQLException
 		{
 			return checkResults(statement.getGeneratedKeys());
+		}
+		
+		public int getUpdateCount() throws SQLException
+		{
+			return statement.getUpdateCount();
 		}
 	}
 }

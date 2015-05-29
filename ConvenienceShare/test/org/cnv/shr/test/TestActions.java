@@ -117,7 +117,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.addLocal(new File(local), name);
+			UserActions.addLocalImmediately(new File(local), name);
 		}
 	};
 	public static class SYNC_REMOTE extends TestAction

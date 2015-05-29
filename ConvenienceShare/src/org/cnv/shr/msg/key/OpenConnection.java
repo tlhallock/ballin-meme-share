@@ -9,6 +9,7 @@ import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class OpenConnection extends KeyMessage
 {
@@ -63,7 +64,7 @@ public class OpenConnection extends KeyMessage
 		PublicKey[] knownKeys = DbKeys.getKeys(connection.getMachine());
 		if (knownKeys != null && knownKeys.length > 0)
 		{
-			Services.logger.println("We have a different key for the remote.");
+			LogWrapper.getLogger().info("We have a different key for the remote.");
 			connection.send(new KeyNotFound(connection, knownKeys));
 			return;
 		}

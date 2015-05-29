@@ -11,11 +11,14 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.logging.Level;
 
-import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.MainTest;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.test.TestActions.TestAction;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.ProcessInfo;
 
 public class MachineInfo
 {
@@ -79,9 +82,10 @@ public class MachineInfo
 		
 		String[] args = new String[]
 		{
-				TestUtils.getJavaPath(),
+				ProcessInfo.getJavaPath(),
 				"-cp",
-				TestUtils.getClassPath(),
+				ProcessInfo.getClassPath(),
+				// Should be in TestUtils
 				"org.cnv.shr.dmn.mn.MainTest",
 				deleteDb ? "-d" : "pass",
 				"-k",  String.valueOf(10000L),
@@ -90,7 +94,7 @@ public class MachineInfo
 				"-t",
 				InetAddress.getLoopbackAddress().getHostAddress(), String.valueOf(server.getLocalPort()),
 		};
-		process = Runtime.getRuntime().exec(args, null, new File(TestUtils.getJarPath()));
+		process = Runtime.getRuntime().exec(args, null, new File(ProcessInfo.getJarPath(MainTest.class)));
 
 		try
 		{
@@ -98,11 +102,11 @@ public class MachineInfo
 		}
 		catch (InterruptedException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
 		}
 
 		System.out.println(Arrays.toString(args));
-		System.out.println("From: " + TestUtils.getJarPath());
+		System.out.println("From: " + ProcessInfo.getJarPath(MainTest.class));
 		
 		new OutputThread(name, System.err, new BufferedReader(new InputStreamReader(process.getErrorStream()))).start();
 		new OutputThread(name, System.out, new BufferedReader(new InputStreamReader(process.getInputStream()))).start();
@@ -121,7 +125,7 @@ public class MachineInfo
 				}
 				catch (InterruptedException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
 				}
 				kill();
 			}};
@@ -135,7 +139,7 @@ public class MachineInfo
 		}
 		catch (Exception e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close command stream", e);
 		}
 		try
 		{
@@ -143,7 +147,7 @@ public class MachineInfo
 		}
 		catch (Exception e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close command socket", e);
 		}
 		try
 		{
@@ -151,7 +155,7 @@ public class MachineInfo
 		}
 		catch (Exception e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close server socket", e);
 		}
 		try
 		{
@@ -159,7 +163,7 @@ public class MachineInfo
 		}
 		catch (Exception e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to destroy process", e);
 		}
 	}
 
@@ -190,7 +194,7 @@ public class MachineInfo
 			}
 			catch (IOException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to read process stream", e);
 			}
 		}
 	}

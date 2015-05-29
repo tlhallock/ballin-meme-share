@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.dmn.Notifications.NotificationListener;
@@ -15,6 +16,7 @@ import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.util.LogWrapper;
 
 public class ChecksumManager extends Thread
 {
@@ -90,8 +92,7 @@ public class ChecksumManager extends Thread
 			}
 			catch (InterruptedException e)
 			{
-				Services.logger.println("Interrupted while waiting for condition.");
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Interrupted while waiting for condition.", e);
 			}
 			finally
 			{
@@ -116,8 +117,7 @@ public class ChecksumManager extends Thread
 		}
 		catch (Exception e)
 		{
-			Services.logger.println("Unable to calculate checksum of " + sf);
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate checksum of " + sf, e);
 		}
 		if (checksum != null)
 		{
@@ -137,14 +137,14 @@ public class ChecksumManager extends Thread
 		}
 		catch (InterruptedException e)
 		{
-			Services.logger.println("Interrupted while waiting.");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Interrupted while waiting.", e);
 		}
 	}
 
 	public String checksumBlocking(File f) throws IOException
 	{
-//		Services.logger.println("Checksumming " + f);
+		LogWrapper.getLogger().fine("Checksumming " + f);
+		
 		MessageDigest digest = null;
 		try
 		{
@@ -152,8 +152,7 @@ public class ChecksumManager extends Thread
 		}
 		catch (NoSuchAlgorithmException e)
 		{
-			Services.logger.println("No SHA1 algorithm.\nQuitting");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.SEVERE, "No SHA1 algorithm.\nQuitting", e);
 			Services.quiter.quit();
 			return null;
 		}
@@ -168,9 +167,10 @@ public class ChecksumManager extends Thread
 			{
 				digest.update(dataBytes, 0, nread);
 			}
-			
-//			Services.logger.println("Done checksumming " + f + ": " + sb.toString());
-			return digestToString(digest);
+
+			String digestToString = digestToString(digest);
+			LogWrapper.getLogger().fine("Done checksumming " + f + ": " + digestToString);
+			return digestToString;
 		}
 	}
 	

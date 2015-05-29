@@ -69,7 +69,7 @@ public class Settings implements SettingListener
 		{
 			localAddress = "127.0.0.1";
 			e.printStackTrace();
-//			Services.logger.print(e);
+//			LogWrapper.getLogger().log(Level.INFO, , e);
 		}
 		System.out.println("Local host is " + localAddress);
 	}
@@ -112,7 +112,7 @@ public class Settings implements SettingListener
 			}
 //			else
 //			{
-//				Services.logger.println("No settings file found.");
+//				LogWrapper.getLogger().info("No settings file found.");
 //			}
 		}
 		read(properties);
@@ -173,8 +173,8 @@ public class Settings implements SettingListener
 		}
 		catch (IOException e)
 		{
-//			Services.logger.println("Unable to save settings.");
-//			Services.logger.print(e);
+//			LogWrapper.getLogger().info("Unable to save settings.");
+//			LogWrapper.getLogger().log(Level.INFO, , e);
 		}
 	}
 

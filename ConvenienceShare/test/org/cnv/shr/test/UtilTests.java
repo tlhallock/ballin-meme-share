@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.cnv.shr.db.h2.PathBreaker;
-import org.cnv.shr.dmn.Logger;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.ByteListBuffer;
@@ -29,7 +28,6 @@ public class UtilTests
 	{
 		Services.settings = new Settings(settingsFile);
 		Services.settings.logToFile.set(false);
-		Services.logger = new Logger();
 	}
 
 	@AfterClass

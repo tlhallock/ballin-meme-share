@@ -2,12 +2,14 @@ package org.cnv.shr.db.h2;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbPermissions
 {
@@ -29,7 +31,7 @@ public class DbPermissions
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "unable to set share permissions with " + machine, e);
 		}
 	}
 
@@ -57,7 +59,7 @@ public class DbPermissions
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to check sharing with " + machine, e);
 		}
 		return SharingState.DO_NOT_SHARE;
 	}
@@ -77,6 +79,11 @@ public class DbPermissions
 		SharingState(int i)
 		{
 			this.state = i;
+		}
+		
+		public String humanReadable()
+		{
+			return name();
 		}
 		
 		public boolean is(int i)

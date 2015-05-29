@@ -9,14 +9,15 @@ package org.cnv.shr.gui;
 import java.awt.GridLayout;
 import java.sql.SQLException;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.util.LogWrapper;
 
 /**
  *
@@ -83,14 +84,14 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save local " + local, e);
 		}
-                
-                for (LocalSharePermission permission : permissions)
-                {
-                    permission.save();
-                }
-                DbRoots.setIgnores(local, ignoreTextArea.getText().split("\n"));
+
+		for (LocalSharePermission permission : permissions)
+		{
+			permission.save();
+		}
+		DbRoots.setIgnores(local, ignoreTextArea.getText().split("\n"));
 	}
 
     /**

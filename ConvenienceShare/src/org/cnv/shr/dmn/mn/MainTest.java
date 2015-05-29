@@ -7,10 +7,12 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.test.TestActions;
+import org.cnv.shr.util.LogWrapper;
 
 public class MainTest
 {
@@ -28,14 +30,7 @@ public class MainTest
 		}
 		catch (Exception ex)
 		{
-			if (Services.logger != null)
-			{
-				Services.logger.print(ex);
-			}
-			else
-			{
-				ex.printStackTrace();
-			}
+			LogWrapper.getLogger().log(Level.SEVERE, "Unable to initialize", ex);
 			Services.quiter.quit();
 		}
 	}

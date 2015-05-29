@@ -8,6 +8,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class UpdateCode extends Message
 {
@@ -46,7 +47,7 @@ public class UpdateCode extends Message
 				connection.getAuthentication().getRemoteKey().getEncoded(),
 				Services.keyManager.getCodeUpdateKey().getEncoded()))
 		{
-			Services.logger.println("Not able to update code: key failure.");
+			LogWrapper.getLogger().info("Not able to update code: key failure.");
 			return;
 		}
 		// download

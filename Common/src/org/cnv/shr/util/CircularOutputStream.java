@@ -99,9 +99,16 @@ public class CircularOutputStream extends OutputStream
 	
 	private byte[] getOffsetBytes() throws IOException
 	{
-		ByteListBuffer byteListBuffer = new ByteListBuffer();
-		byteListBuffer.append(writtenOffset);
-		return byteListBuffer.getBytes();
+		byte[] bytes = new byte[OFFSET_LENGTH];
+		bytes[0] = (byte) ((writtenOffset << 56L) & 0xff);
+		bytes[1] = (byte) ((writtenOffset << 48L) & 0xff);
+		bytes[2] = (byte) ((writtenOffset << 40L) & 0xff);
+		bytes[3] = (byte) ((writtenOffset << 32L) & 0xff);
+		bytes[4] = (byte) ((writtenOffset << 24L) & 0xff);
+		bytes[5] = (byte) ((writtenOffset << 16L) & 0xff);
+		bytes[6] = (byte) ((writtenOffset <<  8L) & 0xff);
+		bytes[7] = (byte) ((writtenOffset <<  0L) & 0xff);
+		return bytes;
 	}
 	
 	private long readOffset() throws IOException
@@ -118,6 +125,7 @@ public class CircularOutputStream extends OutputStream
 		return Math.max(OFFSET_LENGTH, Math.min(length, offset));
 	}
 	
+	@Override
 	public void close() throws IOException
 	{
 		writtenOffset = offset;

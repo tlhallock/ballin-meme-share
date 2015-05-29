@@ -8,12 +8,14 @@ package org.cnv.shr.gui;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.UserMessageMessage;
+import org.cnv.shr.util.LogWrapper;
 
 /**
  *
@@ -148,7 +150,7 @@ public class CreateMessage extends javax.swing.JFrame {
             }
             catch (SQLException ex)
             {
-                Services.logger.println(ex);
+                LogWrapper.getLogger().log(Level.INFO, "Unable to save message:", ex);
             }
             Services.notifications.messageReceived(userMessage);
             dispose();
@@ -164,8 +166,7 @@ public class CreateMessage extends javax.swing.JFrame {
                 connection.finish();
             }
         } catch (IOException ex) {
-            Services.logger.println("Unable to sent message:");
-            Services.logger.print(ex);
+            LogWrapper.getLogger().log(Level.INFO, "Unable to send message:", ex);
         }
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed

@@ -5,12 +5,13 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.sync.FileSource.FileSourceIterator;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
+import org.cnv.shr.util.LogWrapper;
 
 public class ExplorerSyncIterator extends SyncrhonizationTaskIterator
 {
@@ -49,7 +50,7 @@ public class ExplorerSyncIterator extends SyncrhonizationTaskIterator
 				}
 				catch (final InterruptedException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
 					return null;
 				}
 			}

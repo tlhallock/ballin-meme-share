@@ -17,6 +17,7 @@ import java.security.PublicKey;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -41,6 +42,7 @@ import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.UserMessageMessage;
 import org.cnv.shr.msg.key.PermissionFailure.PermissionFailureEvent;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 /**
@@ -166,7 +168,7 @@ public class MachineViewer extends javax.swing.JFrame
 				}
 				catch (SQLException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to save visible permissions", e);
 				}
 			}
 		});
@@ -196,7 +198,7 @@ public class MachineViewer extends javax.swing.JFrame
 				}
 				catch (SQLException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to save messaging permissions", e);
 				}
 			}
 		});
@@ -234,13 +236,12 @@ public class MachineViewer extends javax.swing.JFrame
                     final String fullPath = dirname + basename;
                     final SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
                     if (remoteFile == null) {
-                        Services.logger.println("Unable to get remote file " + fullPath);
+                        LogWrapper.getLogger().info("Unable to get remote file " + fullPath);
                         return;
                     }
                     UserActions.download(remoteFile);
                 } catch (final Exception ex) {
-                    Services.logger.println("Unable to show machine at index " + row);
-                    Services.logger.print(ex);
+                    LogWrapper.getLogger().log(Level.INFO, "Unable to show machine at index " + row, ex);
                 }
             }
 
@@ -259,7 +260,7 @@ public class MachineViewer extends javax.swing.JFrame
                 try {
                     final String mId = tableListener.getTableValue("Name", row);
                     if (mId == null) {
-                        Services.logger.println("Unable to find machine " + mId);
+                        LogWrapper.getLogger().info("Unable to find machine " + mId);
                         return;
                     }
                     Services.userThreads.execute(new Runnable() {
@@ -268,20 +269,18 @@ public class MachineViewer extends javax.swing.JFrame
                             try {
                                 final RootDirectory root = DbRoots.getRoot(machine, mId);
                                 if (root == null) {
-                                    Services.logger.println("Unable to find root mid=" + machine + " name=" + mId);
+                                    LogWrapper.getLogger().info("Unable to find root mid=" + machine + " name=" + mId);
                                     viewNoDirectory();
                                 } else {
                                     view(root);
                                 }
                             } catch (final Exception ex) {
-                                Services.logger.println("Unable to show directory " + mId);
-                                Services.logger.print(ex);
+                                LogWrapper.getLogger().log(Level.INFO, "Unable to show directory " + mId, ex);
                             }
                         }
                     });
                 } catch (final Exception ex) {
-                    Services.logger.println("Unable to show machine at index " + row);
-                    Services.logger.print(ex);
+                    LogWrapper.getLogger().log(Level.INFO, "Unable to show machine at index " + row, ex);
                 }
             }
 
@@ -301,7 +300,7 @@ public class MachineViewer extends javax.swing.JFrame
             public void actionPerformed(ActionEvent ae) {
                 final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                Services.logger.println("Would download...");
+                LogWrapper.getLogger().info("Would download...");
             }
         });
         menu.add(item);
@@ -312,7 +311,7 @@ public class MachineViewer extends javax.swing.JFrame
                 final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
                 n.ensureExpanded();
-                Services.logger.println("Showing " + n);
+                LogWrapper.getLogger().info("Showing " + n);
                 listFiles(n.getFileList());
             }
         });
@@ -420,7 +419,7 @@ public class MachineViewer extends javax.swing.JFrame
     		viewNoDirectory();
     		return;
     	}
-        Services.logger.println("Showing directory " + directory.getPathElement());
+        LogWrapper.getLogger().info("Showing directory " + directory.getPathElement());
         this.directory = directory;
         this.rootNameLabel.setText(directory.getName());
         this.rootNameLabel.setText(directory.getPathElement().getFullPath());
@@ -940,8 +939,7 @@ public class MachineViewer extends javax.swing.JFrame
                 connection.finish();
             }
         } catch (IOException ex) {
-            Services.logger.println("Unable to sent message:");
-            Services.logger.print(ex);
+            LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -979,8 +977,7 @@ public class MachineViewer extends javax.swing.JFrame
                 connection.finish();
             }
         } catch (IOException ex) {
-            Services.logger.println("Unable to sent message:");
-            Services.logger.print(ex);
+            LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
         }
     }//GEN-LAST:event_requestDownloadButtonActionPerformed
 
@@ -992,8 +989,7 @@ public class MachineViewer extends javax.swing.JFrame
                 connection.finish();
             }
         } catch (IOException ex) {
-            Services.logger.println("Unable to sent message:");
-            Services.logger.print(ex);
+            LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
         }
     }//GEN-LAST:event_requestShareButtonActionPerformed
 

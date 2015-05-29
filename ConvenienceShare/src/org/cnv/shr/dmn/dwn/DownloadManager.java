@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.TimerTask;
+import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 
@@ -22,6 +23,7 @@ import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.dwn.ChecksumRequest;
+import org.cnv.shr.util.LogWrapper;
 
 public class DownloadManager extends TimerTask
 {
@@ -37,7 +39,7 @@ public class DownloadManager extends TimerTask
 					"Unable to download local file: " + remoteFile.getRootDirectory().getPathElement().getFullPath() + ":" + remoteFile.getPath().getFullPath(),
 					"Unable to download local file.",
 					JOptionPane.INFORMATION_MESSAGE);
-			Services.logger.println("Trying to download local file " + remoteFile);
+			LogWrapper.getLogger().info("Trying to download local file " + remoteFile);
 			return null;
 		}
 		return download((RemoteFile) remoteFile);
@@ -64,8 +66,7 @@ public class DownloadManager extends TimerTask
 		}
 		catch (SQLException e)
 		{
-			Services.logger.println("Unable to write new download to database.");
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to write new download to database.", e);
 		}
 
 		String checksum = d.getFile().getChecksum();
@@ -178,7 +179,7 @@ public class DownloadManager extends TimerTask
 							}
 							catch (IOException e)
 							{
-								Services.logger.print(e);
+								LogWrapper.getLogger().log(Level.INFO, "Unable to begin download.", e);
 							}
 						}
 					});
@@ -211,7 +212,7 @@ public class DownloadManager extends TimerTask
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to send checksum request.", e);
 		}
 	}
 

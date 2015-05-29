@@ -5,16 +5,17 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 
 import org.cnv.shr.db.h2.DbFiles;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.Pair;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
+import org.cnv.shr.util.LogWrapper;
 
 public class PathTreeModelNode implements TaskListener
 {
@@ -174,7 +175,7 @@ public class PathTreeModelNode implements TaskListener
 			}
 			catch (final IOException e)
 			{
-				Services.logger.println(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to create sync task.", e);
 			}
 		}
 		// add sub files...

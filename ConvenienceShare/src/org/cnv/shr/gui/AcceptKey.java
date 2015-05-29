@@ -9,8 +9,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.LogWrapper;
 
 /**
  *
@@ -52,7 +54,7 @@ public class AcceptKey extends javax.swing.JFrame {
         catch (InterruptedException ex)
         {
         	acceptKey.dispose();
-        	Services.logger.print(ex);
+        	LogWrapper.getLogger().log(Level.INFO, "Interrupted", ex);
         	return false;
         }
         finally

@@ -6,10 +6,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class PathSecurity
@@ -65,7 +67,7 @@ public class PathSecurity
 			}
 			catch (IOException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to create file: " + next, e);
 				return null;
 			}
 		}
@@ -94,7 +96,7 @@ public class PathSecurity
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "unable to get canonical path", e);
 			return false;
 		}
 		if (!canonicalPath.startsWith(root))

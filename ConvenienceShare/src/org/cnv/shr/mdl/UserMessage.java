@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 
@@ -17,6 +18,7 @@ import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.LogWrapper;
 
 public class UserMessage extends DbObject<Integer>
 {
@@ -92,7 +94,7 @@ public class UserMessage extends DbObject<Integer>
 	{
 		if (type == null)
 		{
-			Services.logger.println("Bad message type: null");
+			LogWrapper.getLogger().info("Bad message type: null");
 			return;
 		}
 		switch (type)
@@ -110,7 +112,7 @@ public class UserMessage extends DbObject<Integer>
 			showMessage();
 			break;
 		default:
-			Services.logger.println("Unknown message type: " + type.dbValue);
+			LogWrapper.getLogger().info("Unknown message type: " + type.dbValue);
 		}
 	}
 	
@@ -118,7 +120,7 @@ public class UserMessage extends DbObject<Integer>
 	{
 		if (machine == null)
 		{
-			Services.logger.println("No machine.");
+			LogWrapper.getLogger().info("No machine.");
 			return;
 		}
 		
@@ -136,7 +138,7 @@ public class UserMessage extends DbObject<Integer>
 			}
 			catch (SQLException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to save permissions", e);
 			}
 		}
 	}
@@ -145,13 +147,13 @@ public class UserMessage extends DbObject<Integer>
 	{
 		if (machine == null)
 		{
-			Services.logger.println("No machine.");
+			LogWrapper.getLogger().info("No machine.");
 			return;
 		}
 		LocalDirectory localByName = DbRoots.getLocalByName(message);
 		if (localByName == null)
 		{
-			Services.logger.println("Bad message: unknown root.");
+			LogWrapper.getLogger().info("Bad message: unknown root.");
 			return;
 		}
 		
@@ -170,12 +172,12 @@ public class UserMessage extends DbObject<Integer>
 	{
 		if (type == null)
 		{
-			Services.logger.println("No type.");
+			LogWrapper.getLogger().info("No type.");
 			return true;
 		}
 		if (machine == null)
 		{
-			Services.logger.println("No machine.");
+			LogWrapper.getLogger().info("No machine.");
 			return true;
 		}
 		
@@ -185,7 +187,7 @@ public class UserMessage extends DbObject<Integer>
 		case SHARE:
 			if (machine.sharingWithOther().canDownload())
 			{
-				Services.logger.println("Already sharing.");
+				LogWrapper.getLogger().info("Already sharing.");
 				return true;
 			}
 			break;
@@ -193,12 +195,12 @@ public class UserMessage extends DbObject<Integer>
 			localByName = DbRoots.getLocalByName(message);
 			if (localByName == null)
 			{
-				Services.logger.println("No local");
+				LogWrapper.getLogger().info("No local");
 				return true;
 			}
 			if (DbPermissions.isSharing(machine, localByName).canDownload())
 			{
-				Services.logger.println("Already sharing");
+				LogWrapper.getLogger().info("Already sharing");
 				return true;
 			}
 			break;
@@ -206,17 +208,17 @@ public class UserMessage extends DbObject<Integer>
 			localByName = DbRoots.getLocalByName(message);
 			if (localByName == null)
 			{
-				Services.logger.println("No local");
+				LogWrapper.getLogger().info("No local");
 				return true;
 			}
 			if (DbPermissions.isSharing(machine, localByName).canList())
 			{
-				Services.logger.println("Already visible");
+				LogWrapper.getLogger().info("Already visible");
 				return true;
 			}
 		case TEXT: return false;
 		default: 
-			Services.logger.println("Unkown request type.");
+			LogWrapper.getLogger().info("Unkown request type.");
 			return true;
 		}
 		return false;
@@ -226,7 +228,7 @@ public class UserMessage extends DbObject<Integer>
 	{
 		if (machine == null)
 		{
-			Services.logger.println("No machine.");
+			LogWrapper.getLogger().info("No machine.");
 			return;
 		}
 		JOptionPane.showMessageDialog(null, 

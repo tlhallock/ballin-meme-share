@@ -3,9 +3,11 @@ package org.cnv.shr.dmn.mn;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.test.TestUtils;
+import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.ProcessInfo;
 
 public class Restart extends Quiter
 {
@@ -31,7 +33,7 @@ public class Restart extends Quiter
 			LinkedList<String> args = new LinkedList<>();
 			args.add("java");
 			args.add("-cp");
-			args.add(TestUtils.getClassPath());
+			args.add(ProcessInfo.getClassPath());
 			args.add("org.cnv.shr.dmn.mn.Main");
 			args.add("-f");
 			args.add(Services.settings.getSettingsFile().getAbsolutePath());
@@ -52,7 +54,7 @@ public class Restart extends Quiter
 		}
 		catch (IOException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to start new process.", e);
 		}
 		finally
 		{

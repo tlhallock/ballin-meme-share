@@ -2,12 +2,13 @@ package org.cnv.shr.sync;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.sync.FileSource.FileSourceIterator;
+import org.cnv.shr.util.LogWrapper;
 
 public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterator
 {
@@ -75,7 +76,7 @@ public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterato
 				}
 				catch (final IOException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to create synchronization node.", e);
 					index++;
 					continue;
 				}

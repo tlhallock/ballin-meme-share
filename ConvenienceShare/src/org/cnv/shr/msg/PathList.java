@@ -18,6 +18,7 @@ import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class PathList extends Message
 {
@@ -112,7 +113,7 @@ public class PathList extends Message
 		final RemoteSynchronizerQueue sync = Services.syncs.getSynchronizer(connection, getRoot());
 		if (sync == null)
 		{
-			Services.logger.println("Lost synchronizer?");
+			LogWrapper.getLogger().info("Lost synchronizer?");
 			return;
 		}
 		sync.receiveList(this);

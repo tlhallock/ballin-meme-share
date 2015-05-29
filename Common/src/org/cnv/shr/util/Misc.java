@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 
 import org.cnv.shr.stng.Settings;
 
+
 public class Misc
 {
 	private static final Random random = new Random();

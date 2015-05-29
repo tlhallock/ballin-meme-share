@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbChunks.DbChunk;
@@ -22,6 +23,7 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SecurityKey;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbTables
 {
@@ -53,7 +55,7 @@ public class DbTables
 		
 		public void delete(ConnectionWrapper c) throws SQLException
 		{
-			Services.logger.println("Deleting " + getTableName());
+			LogWrapper.getLogger().info("Deleting " + getTableName());
 			try (StatementWrapper stmt = c.prepareNewStatement("drop table if exists " + getTableName() + ";"))
 			{
 				stmt.execute();
@@ -67,9 +69,9 @@ public class DbTables
 				StringBuilder builder = new StringBuilder();
 				
 				builder.append("Printing " + tableName).append('\n');
-				Services.logger.println(builder.toString()); builder.setLength(0);
+				LogWrapper.getLogger().info(builder.toString()); builder.setLength(0);
 				builder.append("----------------------------------------------").append('\n');
-				Services.logger.println(builder.toString()); builder.setLength(0);
+				LogWrapper.getLogger().info(builder.toString()); builder.setLength(0);
 				try (ResultSet executeQuery2 = c.prepareNewStatement("select * from " + tableName + ";").executeQuery();)
 				{
 					int ncols = executeQuery2.getMetaData().getColumnCount();
@@ -78,7 +80,7 @@ public class DbTables
 						builder.append(executeQuery2.getMetaData().getColumnName(i)).append(",");
 					}
 					builder.append('\n');
-					Services.logger.println(builder.toString());
+					LogWrapper.getLogger().info(builder.toString());
 					builder.setLength(0);
 
 					while (executeQuery2.next())
@@ -88,17 +90,17 @@ public class DbTables
 							builder.append(executeQuery2.getObject(i)).append(",");
 						}
 						builder.append('\n');
-						Services.logger.println(builder.toString());
+						LogWrapper.getLogger().info(builder.toString());
 						builder.setLength(0);
 					}
 					builder.append("----------------------------------------------").append('\n');
-					Services.logger.println(builder.toString());
+					LogWrapper.getLogger().info(builder.toString());
 					builder.setLength(0);
 				}
 			}
 			catch (SQLException ex)
 			{
-				Services.logger.print(ex);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to debug", ex);
 			}
 		}
 
@@ -178,8 +180,7 @@ public class DbTables
 			}
 			catch (SQLException ex)
 			{
-				Services.logger.println("Unable to create from id " + id + ":" + this);
-				Services.logger.print(ex);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to create from id " + id + ":" + this, ex);
 				return null;
 			}
 		}
@@ -226,8 +227,7 @@ public class DbTables
 			}
 			catch (SQLException e)
 			{
-				Services.logger.println("Unable to delete table " + table + ".");
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to delete table " + table + ".", e);
 			}
 		}
 

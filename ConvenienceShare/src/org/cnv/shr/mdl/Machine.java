@@ -229,6 +229,12 @@ public class Machine extends DbObject<Integer>
 		{
 			Services.keyManager.getKeys();
 		}
+
+		@Override
+		public String toString()
+		{
+			return "Local machine: " + super.toString();
+		}
 		
 		@Override
 		public void setLastActive(long long1)

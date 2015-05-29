@@ -3,6 +3,7 @@ package org.cnv.shr.dmn;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.logging.Level;
 
 import javax.swing.JFrame;
 
@@ -16,6 +17,7 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.key.PermissionFailure.PermissionFailureEvent;
+import org.cnv.shr.util.LogWrapper;
 
 public class Notifications
 {
@@ -34,7 +36,7 @@ public class Notifications
 				}
 				catch (final Exception ex)
 				{
-					Services.logger.print(ex);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to notify.", ex);
 				}
 			}
 		}});
@@ -72,21 +74,6 @@ public class Notifications
 				for (final NotificationListener listener : listeners)
 				{
 					listener.permissionFailure(event);
-				}
-			}
-		});
-	}
-
-	public void lineLogged(final String line)
-	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				for (final NotificationListener listener : listeners)
-				{
-					listener.lineLogged(line);
 				}
 			}
 		});
@@ -277,7 +264,7 @@ public class Notifications
 				}
 				catch (final IOException e)
 				{
-					Services.logger.print(e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to close socket.", e);
 				}
 			}
 		});
@@ -367,7 +354,7 @@ public class Notifications
 //		}
 //		catch (IOException e)
 //		{
-//			Services.logger.print(e);
+//			LogWrapper.getLogger().log(Level.INFO, , e);
 //		}
 	}
 	
@@ -391,6 +378,5 @@ public class Notifications
 		public void fileAdded(final SharedFile file)                       {}
 		public void fileChanged(final SharedFile file)                     {}
 		public void fileDeleted(final SharedFile file)                     {}
-		public void lineLogged(final String line)                          {}
 	}
 }

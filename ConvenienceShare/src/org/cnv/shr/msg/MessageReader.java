@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.dwn.ChecksumRequest;
@@ -29,6 +30,7 @@ import org.cnv.shr.msg.key.PermissionFailure;
 import org.cnv.shr.msg.key.RevokeKey;
 import org.cnv.shr.msg.key.WhoIAm;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 
 
@@ -51,10 +53,10 @@ public class MessageReader
 		add(new MessageIdentifier(MachineFound.class               ));
 		add(new MessageIdentifier(UpdateCode.class                 ));
 		add(new MessageIdentifier(DoneMessage.class                ));
-		add(new MessageIdentifier(PathList.class              ));
+		add(new MessageIdentifier(PathList.class                   ));
 		add(new MessageIdentifier(RootList.class                   ));
 		add(new MessageIdentifier(FindMachines.class               ));
-		add(new MessageIdentifier(UserMessageMessage.class              ));
+		add(new MessageIdentifier(UserMessageMessage.class         ));
 		add(new MessageIdentifier(Failure.class                    ));
 		add(new MessageIdentifier(Wait.class                       ));
 		add(new MessageIdentifier(HeartBeat.class                  ));
@@ -75,7 +77,7 @@ public class MessageReader
 		add(new MessageIdentifier(NewAesKey.class                  ));
 		add(new MessageIdentifier(PermissionFailure.class          ));
 
-		Services.logger.println("Message map:\n" + this);
+		LogWrapper.getLogger().info("Message map:\n" + this);
 	}
 	
 	private void add(MessageIdentifier identifier)
@@ -83,17 +85,17 @@ public class MessageReader
 		int type = identifier.getType();
 		if (type > Byte.MAX_VALUE || type < Byte.MIN_VALUE)
 		{
-			Services.logger.println("Message type " + type + " for " + identifier.name + " is not in range.");
-			Services.logger.println(this);
+			LogWrapper.getLogger().severe("Message type " + type + " for " + identifier.name + " is not in range.");
+			LogWrapper.getLogger().severe(this.toString());
 			Services.quiter.quit();
 			return;
 		}
 		MessageIdentifier messageIdentifier = identifiers.get(type);
 		if (messageIdentifier != null)
 		{
-			Services.logger.println("Type " + type + " is already used by " + messageIdentifier.name 
+			LogWrapper.getLogger().severe("Type " + type + " is already used by " + messageIdentifier.name 
 					+ " so " + identifier.name + " cannot also use it.");
-			Services.logger.println(this);
+			LogWrapper.getLogger().severe(this.toString());
 			Services.quiter.quit();
 			return;
 		}
@@ -112,7 +114,7 @@ public class MessageReader
 		MessageIdentifier messageIdentifier = identifiers.get(msgType);
 		if (messageIdentifier == null)
 		{
-			Services.logger.println("Ignoring unknown message type: " + msgType + " from ");
+			LogWrapper.getLogger().info("Ignoring unknown message type: " + msgType + " from ");
 			return null;
 		}
 		
@@ -151,8 +153,7 @@ public class MessageReader
 			}
 			catch (Exception e)
 			{
-				Services.logger.println("Unable to read fields for class " + name);
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to read fields for class " + name, e);
 				Services.quiter.quit();
 			}
 		}
@@ -164,14 +165,14 @@ public class MessageReader
 		
 		Message create(ByteReader stream) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException
 		{
-				Services.logger.println("Received message of type " + name);
+				LogWrapper.getLogger().info("Received message of type " + name);
 				Message newInstance = constructor.newInstance(DUMMY_STREAM);
 				newInstance.parse(stream);
 				return newInstance;
 //			catch (Exception e)
 //			{
-//				Services.logger.println("Unable to create message type "  + name);
-//				Services.logger.print(e);
+//				LogWrapper.getLogger().info("Unable to create message type "  + name);
+//				LogWrapper.getLogger().log(Level.INFO, , e);
 //				
 ////				Throwable t = e;
 ////				while (t != null)

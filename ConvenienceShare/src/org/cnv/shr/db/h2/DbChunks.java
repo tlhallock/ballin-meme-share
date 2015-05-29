@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -11,6 +12,7 @@ import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.mdl.Download;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbChunks
 {
@@ -110,7 +112,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to see if we have all chunks for " + d, e);
 		}
 		return false;
 	}
@@ -133,7 +135,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get the next chunks.", e);
 		}
 		return returnValue;
 	}
@@ -153,7 +155,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to set chunk status to done.", e);
 		}
 	}
 
@@ -168,7 +170,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to remove chunks", e);
 		}
 	}
 	
@@ -190,7 +192,7 @@ public class DbChunks
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get download percentage", e);
 		}
 		return done / (double) d.getFile().getFileSize();
 	}

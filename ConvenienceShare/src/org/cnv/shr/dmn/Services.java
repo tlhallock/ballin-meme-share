@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import javax.swing.ImageIcon;
 
@@ -30,8 +31,10 @@ import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.Machine.LocalMachine;
 import org.cnv.shr.msg.MessageReader;
+import org.cnv.shr.stng.SettingListener;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.sync.RemoteSynchronizers;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class Services
@@ -43,7 +46,6 @@ public class Services
 	/** To handle incoming network traffic **/
 	public static RequestHandler[] handlers;
 	public static Settings settings;
-	public static Logger logger;
 	/** delete this **/
 	public static Notifications notifications;
 	public static ChecksumManager checksums;
@@ -72,11 +74,9 @@ public class Services
 	private static void createServices(Settings stgs, boolean deleteDb) throws Exception
 	{
 		settings = stgs;
-		logger = new Logger();
 		settings.write();
 		settings.listenToSettings();
-
-		logger.setLogLocation();
+		initializeLogging();
 		
 		h2DbCache = new DbConnectionCache(deleteDb);
         
@@ -113,8 +113,7 @@ public class Services
 			}
 			catch (IOException ex)
 			{
-				Services.logger.println("Unable to start on port " + port);
-				Services.logger.print(ex);
+				LogWrapper.getLogger().log(Level.WARNING, "Unable to start on port " + port, ex);
 			}
 		}
 		if (successCount <= 0)
@@ -128,6 +127,30 @@ public class Services
 		checksums = new ChecksumManager();
 		
 		startSystemTray();
+	}
+	
+	private static void initializeLogging()
+	{
+//		LogWrapper.initialize();
+		SettingListener listener = new SettingListener() {
+			@Override
+			public void settingChanged()
+			{
+				LogWrapper.logToFile(
+						Services.settings.logToFile.get() ? Services.settings.logFile.get() : null,
+						Services.settings.logLength.get());
+			}};
+		LogWrapper.getLogger().setLevel(Level.INFO);
+
+		settings.logFile.addListener(listener);
+		settings.logToFile.addListener(listener);
+		settings.logLength.addListener(listener);
+		
+
+//		if (ex instanceof SQLException && Services.notifications != null)
+//		{
+//			Services.notifications.dbException(ex);
+//		}
 	}
 
 	private static void startServices()
@@ -197,9 +220,9 @@ public class Services
 		}
 		else
 		{
-			Services.logger.println("Your system does not support the System tray.");
-			Services.logger.println("This makes it hard to keep the application running.");
-			Services.logger.println("We will create a JFrame that looks like a SystemTray.");
+			LogWrapper.getLogger().warning("Your system does not support the System tray.");
+			LogWrapper.getLogger().warning("This makes it hard to keep the application running.");
+			LogWrapper.getLogger().warning("We will create a JFrame that looks like a SystemTray.");
 			new TaskMenu(new ImageIcon(Misc.getIcon()), menu).setVisible(true);
 		}
 	}
@@ -230,8 +253,6 @@ public class Services
 			h2DbCache.close();
 		if (networkManager != null)
 			networkManager.closeAll();
-		if (logger != null)
-			logger.close();
 	}
 	
 	public static void testStartUp() throws Exception

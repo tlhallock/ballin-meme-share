@@ -2,12 +2,14 @@ package org.cnv.shr.db.h2;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.UserMessage;
+import org.cnv.shr.util.LogWrapper;
 
 public class DbMessages
 {
@@ -30,7 +32,7 @@ public class DbMessages
 		}
 		catch (SQLException ex)
 		{
-			Services.logger.print(ex);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to remove all messages", ex);
 		}
     }
 
@@ -50,7 +52,7 @@ public class DbMessages
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get message by id " + id, e);
 		}
 		
 		return null;
@@ -66,7 +68,7 @@ public class DbMessages
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete message " + id, e);
 		}
 	}
 }

@@ -18,11 +18,14 @@ import java.util.Date;
 import java.util.EventObject;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
@@ -53,6 +56,7 @@ import org.cnv.shr.stng.Setting;
 import org.cnv.shr.stng.Setting.SettingsEditor;
 import org.cnv.shr.sync.DebugListener;
 import org.cnv.shr.util.IpTester;
+import org.cnv.shr.util.LogWrapper;
 
 /**
  * 
@@ -60,9 +64,9 @@ import org.cnv.shr.util.IpTester;
  */
 public class Application extends javax.swing.JFrame
 {
-    LinkedList<String> logMessages = new LinkedList<>();
     LinkedList<ConnectionStatus> connections = new LinkedList<>();
     NotificationListener listener;
+    TextAreaHandler logHandler;
     
 	/**
 	 * Creates new form Application
@@ -94,12 +98,23 @@ public class Application extends javax.swing.JFrame
 				Services.settings.appLocY.set(locationOnScreen.y);
 			}
 		});
+		
+		logHandler = new TextAreaHandler(logTextArea);
+		logLines.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0)
+			{
+				logHandler.setLogLines((Integer) logLines.getValue());
+			}});
+		LogWrapper.getLogger().addHandler(logHandler);
+		
 		listener = createNotificationListener();
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e)
 			{
 				Services.notifications.remove(listener);
+				LogWrapper.getLogger().removeHandler(logHandler);
 			}
 		});
 		Services.notifications.add(listener);
@@ -179,21 +194,6 @@ public class Application extends javax.swing.JFrame
 				return (c = (SettingsEditor) arg1).get();
 			}
 		};
-	}
-
-	private void log(String line)
-	{
-		logMessages.add(line);
-		while (logMessages.size() > (Integer) logLines.getValue())
-		{
-			logMessages.removeFirst();
-		}
-		StringBuilder builder = new StringBuilder();
-		for (String s : logMessages)
-		{
-			builder.append(s);
-		}
-		logTextArea.setText(builder.toString());
 	}
 
 	public void refreshAll()
@@ -303,7 +303,7 @@ public class Application extends javax.swing.JFrame
 		viewer.setBounds(getBounds());
 		viewer.setTitle("Machine " + machine.getName());
 		viewer.setVisible(true);
-		Services.logger.println("Showing remote " + machine.getName());
+		LogWrapper.getLogger().info("Showing remote " + machine.getName());
 	}
         
 	private void refreshMessages()
@@ -331,7 +331,7 @@ public class Application extends javax.swing.JFrame
 			}
 			catch (SQLException e)
 			{
-				Services.logger.print(e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to list messages", e);
 			}
 		}
 	}
@@ -382,7 +382,7 @@ public class Application extends javax.swing.JFrame
 		}
 		catch (SQLException e)
 		{
-			Services.logger.print(e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list downloads.", e);
 		}
 	}
 	
@@ -1067,7 +1067,7 @@ public class Application extends javax.swing.JFrame
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-        	UserActions.addLocal(fc.getSelectedFile(), null);
+        	UserActions.queueLocal(fc.getSelectedFile(), null);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -1101,7 +1101,7 @@ public class Application extends javax.swing.JFrame
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-        Services.logger.println("IP test results = " + new IpTester().getIpFromCanYouSeeMeDotOrg());
+        LogWrapper.getLogger().info("IP test results = " + new IpTester().getIpFromCanYouSeeMeDotOrg());
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
@@ -1199,7 +1199,7 @@ public class Application extends javax.swing.JFrame
 				final LocalDirectory root = DbRoots.getLocal(mId);
 				if (root == null)
 				{
-					Services.logger.println("Unable to find local directory " + mId);
+					LogWrapper.getLogger().info("Unable to find local directory " + mId);
 					return;
 				}
 				Services.userThreads.execute(new Runnable()
@@ -1211,7 +1211,7 @@ public class Application extends javax.swing.JFrame
 						Services.notifications.registerWindow(localDirectoryView);
 						localDirectoryView.view(root);
 						localDirectoryView.setVisible(true);
-						Services.logger.println("Displaying " + mId);
+						LogWrapper.getLogger().info("Displaying " + mId);
 					}
 				});
 			}
@@ -1234,7 +1234,7 @@ public class Application extends javax.swing.JFrame
 				final RootDirectory root = DbRoots.getLocal(mId);
 				if (root == null)
 				{
-					Services.logger.println("Unable to find local directory " + mId);
+					LogWrapper.getLogger().info("Unable to find local directory " + mId);
 					return;
 				}
 				UserActions.remove(root);
@@ -1258,7 +1258,7 @@ public class Application extends javax.swing.JFrame
 				final LocalDirectory root = DbRoots.getLocal(mId);
 				if (root == null)
 				{
-					Services.logger.println("Unable to find local directory " + mId);
+					LogWrapper.getLogger().info("Unable to find local directory " + mId);
 					return;
 				}
 				Services.userThreads.execute(new Runnable()
@@ -1299,7 +1299,7 @@ public class Application extends javax.swing.JFrame
 						Machine machine = DbMachines.getMachine(mId);
 						if (machine == null)
 						{
-							Services.logger.println("Unable to find machine: " + mId);
+							LogWrapper.getLogger().info("Unable to find machine: " + mId);
 							return;
 						}
 						showRemote(machine);
@@ -1578,12 +1578,6 @@ public class Application extends javax.swing.JFrame
 					}
 				}
 				refreshConnections();
-			}
-
-			@Override
-			public void lineLogged(String line)
-			{
-				log(line);
 			}
 
 			@Override
