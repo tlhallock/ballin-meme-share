@@ -18,7 +18,7 @@ public class DbPermissions
 
 	// Needs to work for remote roots too: ie add a listener...
 
-	public static void share(Machine machine, RootDirectory root, SharingState share)
+	public static void setSharingState(Machine machine, RootDirectory root, SharingState share)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(MERGE1))
@@ -46,7 +46,7 @@ public class DbPermissions
 			ResultSet executeQuery = stmt.executeQuery();
 			if (!executeQuery.next())
 			{
-				return SharingState.NOT_SET;
+				return SharingState.UNKOWN;
 			}
 			int dbValue = executeQuery.getInt(1);
 			for (SharingState state : SharingState.values())
@@ -70,7 +70,8 @@ public class DbPermissions
 		DO_NOT_SHARE(0),
 		SHARE_PATHS (1),
 		DOWNLOADABLE(2),
-		NOT_SET     (3),
+		DEFAULT     (3),
+		UNKOWN      (4),
 		
 		;
 		
@@ -91,16 +92,6 @@ public class DbPermissions
 			return state == i;
 		}
 		
-		public boolean canList()
-		{
-			return this.equals(DOWNLOADABLE) || this.equals(SHARE_PATHS);
-		}
-		
-		public boolean canDownload()
-		{
-			return this.equals(DOWNLOADABLE);
-		}
-		
 		public static SharingState get(int dbValue)
 		{
 			for (SharingState s : values())
@@ -110,7 +101,7 @@ public class DbPermissions
 					return s;
 				}
 			}
-			return SharingState.NOT_SET;
+			return SharingState.UNKOWN;
 		}
 
 		public int getDbValue()

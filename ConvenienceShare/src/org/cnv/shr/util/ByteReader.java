@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.ConnectionStatistics;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.stng.Settings;
@@ -157,5 +158,10 @@ public class ByteReader
 	public boolean readBoolean() throws IOException
 	{
 		return readByte() == 1 ? true : false;
+	}
+
+	public SharingState readPermission() throws IOException
+	{
+		return SharingState.get(readInt());
 	}
 }

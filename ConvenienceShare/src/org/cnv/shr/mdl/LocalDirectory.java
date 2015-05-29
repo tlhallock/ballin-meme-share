@@ -12,6 +12,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.sync.ConsecutiveDirectorySyncIterator;
@@ -27,14 +28,18 @@ public class LocalDirectory extends RootDirectory
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update ROOT set "
 			+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=? "
 			+ "where ROOT.R_ID = ?;");
+	
+	
 	private PathElement path;
+	private SharingState defaultShare;
 	
 	public LocalDirectory(PathElement path, String name) throws IOException
 	{
 		super(null);
 		machine = Services.localMachine;
-		if (name == null)
+		if (name == null || name.length() == 0)
 		{
+			// Should check if this local directory already exists...
 			this.name = path.getUnbrokenName();
 		}
 		else
@@ -132,6 +137,8 @@ public class LocalDirectory extends RootDirectory
 			stmt.setLong(ndx++, totalFileSize);
 			stmt.setLong(ndx++, totalNumFiles);
 			stmt.setString(ndx++, getName());
+			stmt.setInt(ndx++, getDefaultSharingState().getDbValue());
+			
 			
 			stmt.setInt(ndx++, id);
 			
@@ -150,5 +157,22 @@ public class LocalDirectory extends RootDirectory
 	protected void sendNotifications()
 	{
 		Services.notifications.localChanged(this);
+	}
+
+	@Override
+	protected void setSharing(SharingState sharingState)
+	{
+		this.defaultShare = sharingState;
+	}
+	
+	public SharingState getDefaultSharingState()
+	{
+		return defaultShare;
+	}
+
+	@Override
+	protected SharingState getDbSharing()
+	{
+		return defaultShare;
 	}
 }

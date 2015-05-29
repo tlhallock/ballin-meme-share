@@ -34,14 +34,14 @@ public class LocalSharePermission extends javax.swing.JPanel {
     public void save()
     {
         if (!listBox.isSelected()) {
-            DbPermissions.share(machine, local, SharingState.DO_NOT_SHARE);
+            DbPermissions.setSharingState(machine, local, SharingState.DO_NOT_SHARE);
             return;
         }
         if (!downloadableBox.isSelected()) {
-            DbPermissions.share(machine, local, SharingState.SHARE_PATHS);
+            DbPermissions.setSharingState(machine, local, SharingState.SHARE_PATHS);
             return;
         }
-        DbPermissions.share(machine, local, SharingState.DOWNLOADABLE);
+        DbPermissions.setSharingState(machine, local, SharingState.DOWNLOADABLE);
     }
     
     public final void refresh()

@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.PublicKey;
 import java.util.logging.Level;
 
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.stng.Settings;
@@ -112,6 +113,11 @@ public abstract class AbstractByteWriter
 		append(key.getPath());
 		append(key.getChecksum());
 		return this;
+	}
+	
+	public AbstractByteWriter append(SharingState permission) throws IOException
+	{
+		return append(permission.getDbValue());
 	}
 
 	public AbstractByteWriter append(double percentComplete) throws IOException

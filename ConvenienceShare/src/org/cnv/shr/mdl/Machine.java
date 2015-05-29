@@ -38,7 +38,7 @@ public class Machine extends DbObject<Integer>
 	{
 		super(null);
 		this.identifier = identifier;
-		weShareToThem = SharingState.NOT_SET;
+		weShareToThem = SharingState.UNKOWN;
 	}
 	
 	protected Machine() { super(null); }
@@ -168,8 +168,13 @@ public class Machine extends DbObject<Integer>
 	{
 		return other instanceof Machine && toString().equals(other.toString());
 	}
+	
+	public void setTheyShare(SharingState state)
+	{
+		this.sharesWithUs = state;
+	}
 
-	public void setSharing(SharingState state)
+	public void setWeShare(SharingState state)
 	{
 		weShareToThem = state;
 	}
@@ -198,7 +203,7 @@ public class Machine extends DbObject<Integer>
 	{
 		if (sharesWithUs == null)
 		{
-			return SharingState.NOT_SET;
+			return SharingState.UNKOWN;
 		}
 		return sharesWithUs;
 	}

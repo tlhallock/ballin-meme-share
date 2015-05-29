@@ -163,7 +163,7 @@ public class UserMessage extends DbObject<Integer>
 			    "Share root message sent on " + new Date(sent),
 			    JOptionPane.YES_NO_OPTION))
 		{
-			DbPermissions.share(machine, localByName, state);
+			DbPermissions.setSharingState(machine, localByName, state);
 			Services.notifications.remoteChanged(machine);
 		}
 	}

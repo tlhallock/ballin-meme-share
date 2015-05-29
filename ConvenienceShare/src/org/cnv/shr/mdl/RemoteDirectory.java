@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.PathSecurity;
 import org.cnv.shr.sync.ConsecutiveDirectorySyncIterator;
@@ -16,6 +17,7 @@ import org.cnv.shr.sync.RootSynchronizer;
 public class RemoteDirectory extends RootDirectory
 {
 	PathElement path;
+	private SharingState sharesWithUs;
 	
 	public RemoteDirectory(final Machine machine, final String name, final String tags, final String description)
 	{
@@ -79,5 +81,21 @@ public class RemoteDirectory extends RootDirectory
 	protected void sendNotifications()
 	{
 		Services.notifications.remoteDirectoryChanged(this);
+	}
+
+	@Override
+	protected void setSharing(SharingState sharingState)
+	{
+		this.sharesWithUs = sharingState;
+	}
+	
+	public SharingState getSharesWithUs()
+	{
+		return sharesWithUs;
+	}
+	@Override
+	protected SharingState getDbSharing()
+	{
+		return sharesWithUs;
 	}
 }

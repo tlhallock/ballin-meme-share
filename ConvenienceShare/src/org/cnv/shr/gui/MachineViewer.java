@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -937,6 +938,11 @@ public class MachineViewer extends javax.swing.JFrame
             if (connection != null) {
                 connection.send(new UserMessageMessage(UserMessage.createShareRequest()));
                 connection.finish();
+
+        		JOptionPane.showMessageDialog(null, 
+        				"A request to share with " + machine.getName() + " was sent.",
+        				"Request sent",
+        				JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
@@ -975,6 +981,11 @@ public class MachineViewer extends javax.swing.JFrame
             if (connection != null) {
                 connection.send(new UserMessageMessage(UserMessage.createShareRootRequest(directory)));
                 connection.finish();
+                
+        		JOptionPane.showMessageDialog(null, 
+        				"A request for permissions to download from " + directory.getName() + " was sent.",
+        				"Request sent",
+        				JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
@@ -987,6 +998,11 @@ public class MachineViewer extends javax.swing.JFrame
             if (connection != null) {
                 connection.send(new UserMessageMessage(UserMessage.createListRequest(directory)));
                 connection.finish();
+
+        		JOptionPane.showMessageDialog(null, 
+        				"A request for permissions to view " + directory.getName() + " was sent.",
+        				"Request sent",
+        				JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);

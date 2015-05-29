@@ -75,6 +75,8 @@ public class LocalDirectoryView extends javax.swing.JFrame
 			return;
 		}
 		
+		// Set the name...
+		
 		local.setDescription(descriptionString.getText());
 		local.setTags(tagsString.getText());
 		

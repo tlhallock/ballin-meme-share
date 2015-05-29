@@ -13,6 +13,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.sync.DebugListener;
@@ -33,7 +34,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	protected long totalNumFiles = -1;
 	protected String description;
 	protected String tags;
-	
+
 	protected RootDirectory(final Integer id)
 	{
 		super(id);
@@ -57,11 +58,13 @@ public abstract class RootDirectory extends DbObject<Integer>
 		totalFileSize                    = row.getLong  ("TSPACE"         );
 		totalNumFiles                    = row.getLong  ("NFILES"         );
 		name                             = row.getString("RNAME");
+		setSharing(       SharingState.get(row.getInt("SHARING")));
 		
 		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.RMACHINE, row.getInt("MID"));
 		setPath((PathElement) locals.getObject(c, DbTables.DbObjects.PELEM,    row.getInt("PELEM")));
 	}
 
+	protected abstract void setSharing(SharingState sharingState);
 	protected abstract void setPath(PathElement object);
 
 	@Override
@@ -81,6 +84,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 			stmt.setLong(ndx++, totalFileSize);
 			stmt.setLong(ndx++, totalNumFiles);
 			stmt.setString(ndx++, getName());
+			stmt.setInt(ndx++, getDbSharing().getDbValue());
 			
 			stmt.executeUpdate();
 			final ResultSet generatedKeys = stmt.getGeneratedKeys();
@@ -93,6 +97,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 		}
 	}
 	
+	protected abstract SharingState getDbSharing();
+
 	public abstract PathElement getPathElement();
 
 	public Machine getMachine()

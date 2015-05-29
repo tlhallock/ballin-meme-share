@@ -13,6 +13,8 @@ public class Main
 {
 	public static void main(String[] args) throws Exception
 	{
+		// What happens with two locals by the same name...
+		
         // Need to break up chunkList
         // Need to break up PathList
 
