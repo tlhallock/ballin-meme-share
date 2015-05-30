@@ -157,7 +157,7 @@ public class CreateMessage extends javax.swing.JFrame {
             return;
         }
         
-        
+        Services.userThreads.execute(new Runnable() { public void run() {
         try {
             Communication connection = Services.networkManager.openConnection(machine, false);
             if (connection != null)
@@ -167,7 +167,7 @@ public class CreateMessage extends javax.swing.JFrame {
             }
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to send message:", ex);
-        }
+        }}});
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 

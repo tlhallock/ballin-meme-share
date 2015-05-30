@@ -1,29 +1,25 @@
 package org.cnv.shr.updt;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.cert.CertificateEncodingException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Properties;
 import java.util.logging.Level;
-
-import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 
 public class UpdateInfoImpl implements UpdateInfo
 {
-	private File propsFile;
-	private File keysFile;
+	private Path propsFile;
+	private Path keysFile;
 	
 	private long timeStamp;
 	private Properties props;
@@ -33,10 +29,10 @@ public class UpdateInfoImpl implements UpdateInfo
 	
 	public UpdateInfoImpl(String updateManagerRoot) throws Exception
 	{
-		this.propsFile = new File(updateManagerRoot + File.separator + propsFile);
-		this.keysFile  = new File(updateManagerRoot + File.separator + keysFile );
+		this.propsFile = Paths.get(updateManagerRoot + File.separator + propsFile);
+		this.keysFile  = Paths.get(updateManagerRoot + File.separator + keysFile );
 		
-		if (!propsFile.exists() || !keysFile.exists())
+		if (!Files.exists(propsFile) || !Files.exists(keysFile))
 		{
 			throw new Exception("Updater not running!");
 		}
@@ -73,7 +69,7 @@ public class UpdateInfoImpl implements UpdateInfo
 	
 	private synchronized void checkTime()
 	{
-		long fsTime = Math.max(propsFile.lastModified(), keysFile.lastModified());
+		long fsTime = Math.max(propsFile.toFile().lastModified(), keysFile.toFile().lastModified());
 		if (fsTime < timeStamp)
 		{
 			return;
@@ -83,7 +79,7 @@ public class UpdateInfoImpl implements UpdateInfo
 
 	private void read(long ts)
 	{
-		try (InputStream input = new FileInputStream(propsFile))
+		try (InputStream input = Files.newInputStream(propsFile))
 		{
 			Properties newProps = new Properties();
 			newProps.load(input);
@@ -104,15 +100,15 @@ public class UpdateInfoImpl implements UpdateInfo
 		}
 	}
 	
-	public static void write(File propsFile, String ip, int port) throws FileNotFoundException, IOException
+	public static void write(Path propsFile, String ip, int port) throws FileNotFoundException, IOException
 	{
 		Properties props = new Properties();
 		props.setProperty("ip", ip);
 		props.setProperty("port", String.valueOf(port));
 		
-		try (FileOutputStream fileOutputStream = new FileOutputStream(propsFile);)
+		try (OutputStream fileOutputStream = Files.newOutputStream(propsFile);)
 		{
-			props.store(fileOutputStream, null);
+			props.store(fileOutputStream, "No comment.");
 		}
 	}
 }

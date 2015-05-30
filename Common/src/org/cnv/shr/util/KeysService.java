@@ -2,12 +2,11 @@ package org.cnv.shr.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -15,8 +14,6 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
-import java.security.cert.CertificateEncodingException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -45,9 +42,9 @@ public class KeysService
 		Security.addProvider(new FlexiCoreProvider());
 	}
 	
-	public void writeKeys(File f) throws IOException
+	public void writeKeys(Path f) throws IOException
 	{
-		try (PrintStream ps = new PrintStream(new FileOutputStream(f)))
+		try (PrintStream ps = new PrintStream(Files.newOutputStream(f)))
 		{
 			ps.println(keys.size());
 			for (KeyPairObject pair : keys.values())
@@ -63,9 +60,9 @@ public class KeysService
 		}
 	}
 	
-	public void readKeys(File f, int keyLength) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, IOException, CertificateEncodingException, InvalidKeySpecException, ClassNotFoundException
+	public void readKeys(Path f, int keyLength) throws IOException
 	{
-		try (Scanner scanner = new Scanner(new FileReader(f)))
+		try (Scanner scanner = new Scanner(f))
 		{
 			int length = scanner.nextInt();
 			for (int i = 0; i < length; i++)
@@ -91,17 +88,25 @@ public class KeysService
 		generateNecessaryKeys(f, keyLength);
 	}
 	
-	public void generateNecessaryKeys(File f, int length) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, IOException
+	public void generateNecessaryKeys(Path f, int length) throws IOException
 	{
 		if (!keys.isEmpty() || length < 0)
 		{
 			return;
 		}
 		
-		createAnotherKey(f, length);
+		try
+		{
+			createAnotherKey(f, length);
+		}
+		catch (NoSuchAlgorithmException | NoSuchProviderException e)
+		{
+			LogWrapper.getLogger().info("Unable to generate keys.");
+			e.printStackTrace();
+		}
 	}
 
-	public void createAnotherKey(File f, int length) throws NoSuchAlgorithmException, NoSuchProviderException, IOException
+	public void createAnotherKey(Path f, int length) throws NoSuchAlgorithmException, NoSuchProviderException, IOException
 	{
 		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "FlexiCore");
 		kpg.initialize(length);
@@ -136,7 +141,7 @@ public class KeysService
 		return keys.get(KeyPairObject.hashObject(destinationPublicKey)) != null;
 	}
 	
-	public void addPendingAuthentication(File f, String url)
+	public void addPendingAuthentication(Path f, String url)
 	{
 		pendingAuthenticationRequests.add(url);
 		try

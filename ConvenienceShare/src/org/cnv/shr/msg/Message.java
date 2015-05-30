@@ -64,6 +64,7 @@ public abstract class Message
 		}
 		
 		c.send(new PermissionFailure(root.getName(), currentPermissions, action));
+		c.finish();
 		throw new PermissionException(action);
 	}
 	
@@ -80,6 +81,7 @@ public abstract class Message
 		}
 		
 		c.send(new PermissionFailure(root.getName(), currentPermissions, action));
+		c.finish();
 		throw new PermissionException(action);
 	}
 	
@@ -96,6 +98,7 @@ public abstract class Message
 		}
 		
 		c.send(new PermissionFailure(null, currentPermissions, action));
+		c.finish();
 		throw new PermissionException(action);
 	}
 }

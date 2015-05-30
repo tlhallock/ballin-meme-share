@@ -17,4 +17,9 @@ public class DirectorySetting extends FileSetting
 	public Component createInput() {
 		return new ChangeFile(this, JFileChooser.DIRECTORIES_ONLY);
 	}
+
+	protected boolean isFile()
+	{
+		return false;
+	}
 }

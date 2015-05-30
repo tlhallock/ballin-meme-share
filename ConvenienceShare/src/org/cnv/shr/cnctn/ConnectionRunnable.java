@@ -6,6 +6,7 @@ import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
+import org.cnv.shr.msg.PermissionException;
 import org.cnv.shr.util.LogWrapper;
 
 public class ConnectionRunnable implements Runnable
@@ -37,6 +38,10 @@ public class ConnectionRunnable implements Runnable
 				try
 				{
 					request.perform(connection);
+				}
+				catch (final PermissionException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Permission error performing message task:" + request.getClass().getName(), e);
 				}
 				catch (final Exception e)
 				{

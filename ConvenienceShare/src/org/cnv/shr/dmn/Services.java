@@ -74,6 +74,11 @@ public class Services
 		testStartUp();
 		checkIfUpdateManagerIsRunning(args);
 		startServices();
+		
+		
+		System.out.println(Misc.INITIALIZED_STRING);
+		System.out.println("-------------------------------------------------------------------------");
+		System.out.flush();
 	}
 	
 	
@@ -88,7 +93,7 @@ public class Services
         
 		notifications = new Notifications();
 		keyManager = new KeysService();
-		keyManager.readKeys(Services.settings.keysFile.get(), Services.settings.keySize.get());
+		keyManager.readKeys(Services.settings.keysFile.getPath(), Services.settings.keySize.get());
 		localMachine = new Machine.LocalMachine();
 		if (!localMachine.save())
 		{

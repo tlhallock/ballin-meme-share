@@ -1,8 +1,8 @@
 package org.cnv.shr.test;
 
-import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbFiles;
@@ -117,7 +117,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.addLocalImmediately(new File(local), name);
+			UserActions.addLocalImmediately(Paths.get(local), name);
 		}
 	};
 	public static class SYNC_REMOTE extends TestAction

@@ -2,6 +2,7 @@
 package org.cnv.shr.sync;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -145,7 +146,7 @@ public abstract class RootSynchronizer implements Runnable
 		final String name = PathElement.sanitizeFilename(f);
 		if (name == null 
 				|| accountedFor.contains(name)
-				|| !local.pathIsSecure(f.getCanonicalPath()))
+				|| !local.pathIsSecure(Paths.get(f.getCanonicalPath())))
 		{
 			return;
 		}
@@ -165,7 +166,10 @@ public abstract class RootSynchronizer implements Runnable
 		}
 	}
 
-	private void testOnFs(final HashMap<String, FileSource> files, final HashSet<String> accountedFor, final LinkedList<Pair> subDirectories, final PathElement element) throws IOException, SQLException
+	private void testOnFs(final HashMap<String, FileSource> files, 
+			final HashSet<String> accountedFor, 
+			final LinkedList<Pair> subDirectories, 
+			final PathElement element) throws IOException, SQLException
 	{
 		accountedFor.add(element.getUnbrokenName());
 
@@ -184,7 +188,7 @@ public abstract class RootSynchronizer implements Runnable
 			return;
 		}
 		
-		if (!local.pathIsSecure(fsCopy.getCanonicalPath()))
+		if (!local.pathIsSecure(Paths.get(fsCopy.getCanonicalPath())))
 		{
 			return;
 		}
@@ -221,9 +225,9 @@ public abstract class RootSynchronizer implements Runnable
 		}
 	}
 
-	protected abstract boolean updateFile(SharedFile file) throws SQLException;
+	protected abstract boolean updateFile(SharedFile file) throws SQLException, IOException;
 	
-	private void update(final SharedFile dbVersion) throws SQLException
+	private void update(final SharedFile dbVersion) throws SQLException, IOException
 	{
 		// update file
 		if (!updateFile(dbVersion))

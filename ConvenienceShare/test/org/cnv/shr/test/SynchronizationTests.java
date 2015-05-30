@@ -56,7 +56,7 @@ public class SynchronizationTests extends RemotesTest
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 50);
 			
-			UserActions.addLocalImmediately(createTempDirectory.toFile(), rootName);
+			UserActions.addLocalImmediately(createTempDirectory, rootName);
 			Assert.assertNotNull(DbRoots.getLocal(path));
 			UserActions.userSync(DbRoots.getLocal(path), null);
 			
@@ -250,7 +250,7 @@ public class SynchronizationTests extends RemotesTest
 			final String rootName = Misc.getRandomString(15);
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 114);
-			UserActions.addLocalImmediately(createTempDirectory.toFile(), rootName);
+			UserActions.addLocalImmediately(createTempDirectory, rootName);
 			
 			getMachineInfo(0).send(new TestActions.SYNC_ROOTS(Services.localMachine.getIdentifier()));
 			Thread.sleep(2000);

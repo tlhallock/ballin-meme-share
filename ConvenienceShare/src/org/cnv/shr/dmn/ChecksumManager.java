@@ -1,8 +1,9 @@
 package org.cnv.shr.dmn;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.locks.Condition;
@@ -114,14 +115,14 @@ public class ChecksumManager extends Thread
 		try
 		{
 			checksum = checksumBlocking(sf.getFsFile());
+			if (checksum != null)
+			{
+				sf.setChecksum(checksum);
+			}
 		}
 		catch (Exception e)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate checksum of " + sf, e);
-		}
-		if (checksum != null)
-		{
-			sf.setChecksum(checksum);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate or set checksum of " + sf, e);
 		}
 	}
 	
@@ -141,7 +142,7 @@ public class ChecksumManager extends Thread
 		}
 	}
 
-	public String checksumBlocking(File f) throws IOException
+	public String checksumBlocking(Path f) throws IOException
 	{
 		LogWrapper.getLogger().fine("Checksumming " + f);
 		
@@ -157,7 +158,7 @@ public class ChecksumManager extends Thread
 			return null;
 		}
 
-		try (FileInputStream fis = new FileInputStream(f))
+		try (InputStream fis = Files.newInputStream(f))
 		{
 			byte[] dataBytes = new byte[1024];
 

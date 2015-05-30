@@ -1,6 +1,7 @@
 package org.cnv.shr.mdl;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -228,7 +229,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 		return name;
 	}
 
-	public abstract boolean pathIsSecure(String canonicalPath);
+	public abstract boolean pathIsSecure(Path canonicalPath);
 	protected abstract RootSynchronizer createSynchronizer() throws IOException;
 	protected abstract void sendNotifications();
 	

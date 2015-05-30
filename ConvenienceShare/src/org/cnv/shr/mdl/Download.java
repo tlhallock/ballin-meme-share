@@ -1,5 +1,7 @@
 package org.cnv.shr.mdl;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -15,7 +17,7 @@ import org.cnv.shr.util.LogWrapper;
 
 public class Download extends DbObject<Integer>
 {
-	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into DOWNLOAD key(FID) values ((select Q_ID from DOWNLOAD where FID=?), ?, ?, ?, ?)");
+	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into DOWNLOAD key(FID) values ((select Q_ID from DOWNLOAD where FID=?), ?, ?, ?, ?, ?)");
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from DOWNLOAD where FID=?");
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update DOWNLOAD set DSTATE=? where Q_ID=?");
 	
@@ -23,6 +25,7 @@ public class Download extends DbObject<Integer>
 	private DownloadState currentState;
 	private long added;
 	private int priority;
+	private Path destinationFile;
 	
 	public Download(RemoteFile remote)
 	{
@@ -51,6 +54,7 @@ public class Download extends DbObject<Integer>
 		this.added = row.getLong(ndx++);
 		this.currentState = DownloadState.getState(row.getInt(ndx++));
 		this.priority = row.getInt(ndx++);
+		this.destinationFile = Paths.get(row.getString(ndx++));
 	}
 	
 	public void setState(DownloadState state)
@@ -104,6 +108,7 @@ public class Download extends DbObject<Integer>
 			stmt.setLong(ndx++, added);
 			stmt.setInt(ndx++, currentState.dbValue);
 			stmt.setInt(ndx++, priority);
+			stmt.setString(ndx++, getTargetFile().toString());
 			stmt.executeUpdate();
 			ResultSet generatedKeys = stmt.getGeneratedKeys();
 			if (generatedKeys.next())
@@ -120,9 +125,17 @@ public class Download extends DbObject<Integer>
 		return currentState;
 	}
 
-	public String getTargetFile()
+	public Path getTargetFile()
 	{
-		return file.getTargetFile().getAbsolutePath(); 
+		// Should check if currently downloading?
+		if (destinationFile != null)
+		{
+			return destinationFile.normalize();
+		}
+		else
+		{
+			return file.getTargetFile().normalize();
+		}
 	}
 	
 	public enum DownloadState
@@ -204,6 +217,19 @@ public class Download extends DbObject<Integer>
 			}
 			LogWrapper.getLogger().info("Unknown file state: " + dbValue);
 			return null;
+		}
+	}
+
+	public void setDestination(Path destinationFile2)
+	{
+		destinationFile = destinationFile2;
+		try
+		{
+			save();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save destination file", e);
 		}
 	}
 }

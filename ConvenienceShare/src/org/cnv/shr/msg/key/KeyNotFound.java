@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.IdkWhereToPutThis;
@@ -26,10 +27,7 @@ public class KeyNotFound extends KeyMessage
 	{
 		for (PublicKey publicKey : knownKeys)
 		{
-			if (publicKey == null)
-			{
-				throw new NullPointerException("Known keys should not be null.");
-			}
+			Objects.requireNonNull(publicKey, "Known keys should not be null.");
 			tests.put(publicKey, IdkWhereToPutThis.createTestNaunce(c.getAuthentication(), publicKey));
 		}
 	}

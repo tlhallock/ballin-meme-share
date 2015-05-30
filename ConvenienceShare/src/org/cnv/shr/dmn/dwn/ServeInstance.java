@@ -1,10 +1,12 @@
 package org.cnv.shr.dmn.dwn;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -22,12 +24,11 @@ import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.Misc;
 
 public class ServeInstance
 {
 	private LocalFile local;
-	File tmpFile;
+	Path tmpFile;
 	int chunkSize;
 	Communication connection;
 	
@@ -66,15 +67,14 @@ public class ServeInstance
 		
 
 		LogWrapper.getLogger().info("Staging.");
-		tmpFile = PathSecurity.secureMakeDirs(Services.settings.servingDirectory.get(),
-				Misc.deSanitize(
-					PathSecurity.getFsName(local.getRootDirectory().getName())
-					+ File.separator + local.getPath().getFsPath()));
-		File toShare = local.getFsFile();
-		if (!local.getRootDirectory().contains(toShare.getCanonicalPath()))
+		tmpFile = PathSecurity.secureMakeDirs(Services.settings.servingDirectory.getPath(),
+					Paths.get(PathSecurity.getFsName(local.getRootDirectory().getName())
+					, local.getPath().getFsPath()));
+		Path toShare = local.getFsFile();
+		if (!local.getRootDirectory().contains(toShare))
 		{
 			// just to double check...
-			throw new FileOutsideOfRootException(local.getRootDirectory().getPathElement().getFullPath(), toShare.getCanonicalPath());
+			throw new FileOutsideOfRootException(local.getRootDirectory().getPathElement().getFullPath(), toShare);
 		}
 
 		MessageDigest totalDigest = MessageDigest.getInstance(Settings.checksumAlgorithm);
@@ -82,8 +82,8 @@ public class ServeInstance
 		byte[] buffer = new byte[1024];
 		long offsetInFile = 0;
 		
-		try (   FileInputStream inputStream = new FileInputStream(toShare);
-				FileOutputStream outputStream = new FileOutputStream(tmpFile);)
+		try (   InputStream inputStream = Files.newInputStream(toShare);
+				OutputStream outputStream = Files.newOutputStream(tmpFile);)
 		{
 			boolean atEndOfFile = false;
 			while (!atEndOfFile)
@@ -176,7 +176,14 @@ public class ServeInstance
 	
 	public void quit()
 	{
-		tmpFile.delete();
+		try
+		{
+			Files.delete(tmpFile);
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete staged file.", e);
+		}
 		connection.finish();
 	}
 

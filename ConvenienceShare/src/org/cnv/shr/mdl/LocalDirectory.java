@@ -3,6 +3,7 @@ package org.cnv.shr.mdl;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -66,7 +67,7 @@ public class LocalDirectory extends RootDirectory
 	}
 	
 	@Override
-	public boolean pathIsSecure(String canonicalPath)
+	public boolean pathIsSecure(Path canonicalPath)
 	{
 		return contains(canonicalPath);
 	}
@@ -77,9 +78,9 @@ public class LocalDirectory extends RootDirectory
 		path = pathElement;
 	}
 
-	public boolean contains(String canonicalPath)
+	public boolean contains(Path toShare)
 	{
-		return canonicalPath.startsWith(path.getFsPath());
+		return toShare.startsWith(Paths.get(path.getFsPath()));
 	}
 	
 	public LocalFile getFile(String fsPath)

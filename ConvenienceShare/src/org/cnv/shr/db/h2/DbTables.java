@@ -237,7 +237,7 @@ public class DbTables
 
 	static void createDb(ConnectionWrapper c) throws SQLException, IOException
 	{
-		executeStatments(c, "/create_h2.sql");
+		executeStatments(c, "create_h2.sql");
 	}
 	
 	private static PreparedStatement[] executeStatments(ConnectionWrapper c, String file) throws SQLException, IOException

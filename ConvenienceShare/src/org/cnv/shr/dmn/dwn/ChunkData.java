@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -53,7 +57,7 @@ public class ChunkData
 		}
 	}
 
-	public static void write(Chunk chunk, File f, OutputStream output) throws IOException
+	public static void write(Chunk chunk, Path f, OutputStream output) throws IOException
 	{
 //		final OutputStream oOutput = output;
 //		output = new GZIPOutputStream(new OutputStream() {
@@ -64,7 +68,10 @@ public class ChunkData
 //			{
 //				output.write(arg0);
 //			}});
-		try (RandomAccessFile toRead = new RandomAccessFile(f, "r"))
+		
+		
+		// TODO: Native IO
+		try (RandomAccessFile toRead = new RandomAccessFile(f.toFile(), "r"))
 		{
 			toRead.seek(chunk.getBegin());
 			int numberOfBytes = (int) chunk.getSize();
@@ -85,34 +92,36 @@ public class ChunkData
 		}
 	}
 	
-	public static String getChecksum(Chunk chunk, File f) throws NoSuchAlgorithmException, IOException
+	public static String getChecksum(Chunk chunk, Path f) throws NoSuchAlgorithmException, IOException
 	{
 		MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 		
-		try (RandomAccessFile toRead = new RandomAccessFile(f, "r"))
+		try (SeekableByteChannel toRead = Files.newByteChannel(f);)
 		{
-			toRead.seek(chunk.getBegin());
+			toRead.position(chunk.getBegin());
 			int numberOfBytes = (int) chunk.getSize();
 
-			byte[] buffer = new byte[1024];
+			ByteBuffer buffer = ByteBuffer.allocate(128);
 			int offset = 0;
 
 			while (offset < numberOfBytes)
 			{
-				int nread = toRead.read(buffer, 0, Math.min(numberOfBytes - offset, buffer.length));
+				int nread = toRead.read(buffer);
 				if (nread < 0 && offset < numberOfBytes)
 				{
 					return null;
 				}
+				buffer.flip();
 				offset += nread;
-				digest.update(buffer, 0, nread);
+				digest.update(buffer);
+				buffer.clear();
 			}
 		}
 		
 		return ChecksumManager.digestToString(digest);
 	}
 	
-	public static boolean test(Chunk chunk, File f) throws IOException, NoSuchAlgorithmException
+	public static boolean test(Chunk chunk, Path f) throws IOException, NoSuchAlgorithmException
 	{
 		return getChecksum(chunk, f).equals(chunk.getChecksum());
 	}

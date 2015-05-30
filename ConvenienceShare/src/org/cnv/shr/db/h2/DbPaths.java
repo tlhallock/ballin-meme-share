@@ -1,5 +1,7 @@
 package org.cnv.shr.db.h2;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -49,6 +51,12 @@ public class DbPaths
 		public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException {}
 	};
 
+	public static PathElement getPathElement(Path p) throws IOException
+	{
+		// TODO: native Io
+		return getPathElement(p.toFile().getCanonicalPath());
+	}
+	
 	public static PathElement getPathElement(int pid)
 	{
 		RStringBuilder builder = new RStringBuilder();

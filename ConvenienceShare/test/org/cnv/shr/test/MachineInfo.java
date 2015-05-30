@@ -10,6 +10,7 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.logging.Level;
 
@@ -41,14 +42,10 @@ public class MachineInfo
 		Misc.ensureDirectory(root, false);
 		root = new File(root).getCanonicalPath();
 		
-		processSettings = new Settings(          new File(root + File.separator + "settings.props"));
-		processSettings.applicationDirectory.set(new File(root + File.separator + "app"));
-		processSettings.logFile.set(             new File(root + File.separator + "app" + File.separator + "log.txt"));
-		processSettings.keysFile.set(            new File(root + File.separator + "app" + File.separator + "keys.txt"));
-		processSettings.dbFile.set(              new File(root + File.separator + "app" + File.separator + "files_database"));
-		processSettings.downloadsDirectory.set(  new File(root + File.separator + "downloads"));
-		processSettings.servingDirectory.set(    new File(root + File.separator + "serve"));
-		processSettings.stagingDirectory.set(    new File(root + File.separator + "stage"));
+		processSettings = new Settings(          Paths.get(root, "settings.props"));
+		processSettings.applicationDirectory.set(Paths.get(root, "app"));
+		processSettings.downloadsDirectory.set(  Paths.get(root, "downloads"));
+		processSettings.setDefaultApplicationDirectoryStructure();
 		processSettings.shareWithEveryone.set(true);
 		processSettings.servePortBeginI.set(port);
 		processSettings.servePortBeginE.set(port);
@@ -75,7 +72,7 @@ public class MachineInfo
 	
 	public Closeable launch(boolean deleteDb) throws IOException
 	{
-		System.out.println("WRITING SETTINGS TO " + processSettings.getSettingsFile().getCanonicalPath());
+		System.out.println("WRITING SETTINGS TO " + processSettings.getSettingsFile());
 		processSettings.write();
 		
 		server = new ServerSocket(0);
@@ -90,7 +87,7 @@ public class MachineInfo
 				deleteDb ? "-d" : "pass",
 				"-k",  String.valueOf(10000L),
 				"-f",
-				processSettings.getSettingsFile().getAbsolutePath(),
+				processSettings.getSettingsFile(),
 				"-t",
 				InetAddress.getLoopbackAddress().getHostAddress(), String.valueOf(server.getLocalPort()),
 		};

@@ -1,20 +1,17 @@
 package org.cnv.shr.test;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.logging.Level;
 
-import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.junit.Assert;
@@ -27,8 +24,8 @@ public class TestUtils
 	
 	public static void assertFilesAreEqual(File f1, File f2)
 	{
-		try (InputStream in1 = new BufferedInputStream(new FileInputStream(f1));
-			 InputStream in2 = new BufferedInputStream(new FileInputStream(f2));)
+		try (InputStream in1 = Files.newInputStream(Paths.get(f1.getAbsolutePath()));
+			 InputStream in2 = Files.newInputStream(Paths.get(f2.getAbsolutePath()));)
 		{
 			int readByte;
 			do

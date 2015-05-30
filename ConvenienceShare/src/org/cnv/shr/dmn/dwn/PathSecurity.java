@@ -1,8 +1,8 @@
 package org.cnv.shr.dmn.dwn;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -16,12 +16,12 @@ import org.cnv.shr.util.Misc;
 
 public class PathSecurity
 {
-	static File secureMakeDirs(File rootFile, String path)
+	static Path secureMakeDirs(Path rootFile, Path path)
 	{
-		String root;
+		Path root;
 		try
 		{
-			root = rootFile.getCanonicalPath();
+			root = rootFile.normalize().toRealPath();
 		}
 		catch (IOException e1)
 		{
@@ -29,41 +29,49 @@ public class PathSecurity
 			return null;
 		}
 		
-		LinkedList<String> pathElems = new LinkedList<>();
-		for (String str : path.split("/"))
+		LinkedList<Path> pathElems = new LinkedList<>();
+		for (Path str : path)
 		{
-			if (str.equals(".."))
+			if (str.getFileName().equals(".."))
 			{
 				return null;
 			}
 			pathElems.add(str);
 		}
 		
-		String filename = pathElems.removeLast();
+		Path filename = pathElems.removeLast();
 		
-		File next = new File(root);
-		Iterator<String> iterator = pathElems.iterator();
+		Path next = root;
+		Iterator<Path> iterator = pathElems.iterator();
 		do
 		{
-			if (!next.exists())
+			if (!Files.exists(next))
 			{
-				next.mkdirs();
+				try
+				{
+					Files.createDirectories(next);
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to create parent directory: " + next, e);
+					return null;
+				}
 			}
-			if (!next.isDirectory() || !isSecure(root, next))
+			if (!Files.isDirectory(next) || !isSecure(root, next))
 			{
 				return null;
 			}
-		} while (iterator.hasNext() && (next = new File(next.getPath() + File.separator + iterator.next())) != null);
+		} while (iterator.hasNext() && (next = next.resolve(iterator.next())) != null);
 
 		// Somebody could create a file that looks like a symbolic link to this OS as the second to last path element.
 		// We should create the file to check if it doesn't exist.
-		next = new File(next.getPath() + File.separator + filename);
-		boolean alreadyExisted = next.exists();
+		next = next.resolve(filename);
+		boolean alreadyExisted = Files.exists(next);
 		if (!alreadyExisted)
 		{
 			try
 			{
-				next.createNewFile();
+				Files.createFile(next);
 			}
 			catch (IOException e)
 			{
@@ -71,35 +79,33 @@ public class PathSecurity
 				return null;
 			}
 		}
-		if (!next.isFile() || !isSecure(root, next))
+		if (!Files.isRegularFile(next) || !isSecure(root, next))
 		{
 			return null;
 		}
 		if (!alreadyExisted)
 		{
-			next.delete();
+			try
+			{
+				Files.delete(next);
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to delete test file: " + next, e);
+			}
 		}
 		
 		return next;
 	}
 	
-	static boolean isSecure(String root, File file)
+	static boolean isSecure(Path root, Path file)
 	{
-		if (Files.isSymbolicLink(Paths.get(file.getAbsolutePath())))
+		if (Files.isSymbolicLink(file))
 		{
 			return false;
 		}
-		String canonicalPath;
-		try
-		{
-			canonicalPath = file.getCanonicalPath();
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "unable to get canonical path", e);
-			return false;
-		}
-		if (!canonicalPath.startsWith(root))
+		file = file.normalize();
+		if (!file.startsWith(root))
 		{
 			return false;
 		}
@@ -131,14 +137,12 @@ public class PathSecurity
 		return builder.toString();
 	}
 	
-	public static File getMirrorDirectory(RemoteFile remoteFile)
+	public static Path getMirrorDirectory(RemoteFile remoteFile)
 	{
 		RootDirectory rootDirectory = remoteFile.getRootDirectory();
-		return new File(
-				Misc.deSanitize(
-				Services.settings.stagingDirectory.get() + File.separator
-				  + getFsName(rootDirectory.getMachine().getName()) + "_"
-				  + getFsName(rootDirectory.getMachine().getIdentifier()) + File.separator
-				  + getFsName(rootDirectory.getName()) + File.separator));
+		return Paths.get(
+				  Services.settings.stagingDirectory.get().getAbsolutePath(),
+				  getFsName(rootDirectory.getMachine().getName()) + "_" + getFsName(rootDirectory.getMachine().getIdentifier()),
+				  getFsName(rootDirectory.getName()));
 	}
 }

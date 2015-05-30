@@ -8,12 +8,22 @@ package org.cnv.shr.gui;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import org.cnv.shr.inst.MonitorThread;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 /**
@@ -53,18 +63,31 @@ public class NewMachineFrame extends javax.swing.JFrame {
     	return f;
     }
     
+    public void installSneaky(String append, int port)
+	{
+		application.setText(application.getText() + append);
+		application.setText(downloads.getText() + append);
+		beginSpinner.setValue(new Integer(port));
+		endSpinner.setValue(new Integer(port + 10));
+		name.setText(Misc.getRandomName());
+		install(false);
+    }
+    
     private void install()
     {
-		String root = application.getText();
-		Settings stgs = new Settings( getFile(root + File.separator + "app" + "settings.props"                 ));
-		stgs.applicationDirectory.set(getFile(root + File.separator + "app"                                    ));
-		stgs.logFile.set(             getFile(root + File.separator + "app" + File.separator + "log.txt"       ));
-		stgs.keysFile.set(            getFile(root + File.separator + "app" + File.separator + "keys.txt"      ));
-		stgs.dbFile.set(              getFile(root + File.separator + "app" + File.separator + "files_database"));
-		stgs.downloadsDirectory.set(  getFile(downloads.getText()                                              ));
-		stgs.servingDirectory.set(    getFile(root + File.separator + "serve"                                  ));
-		stgs.stagingDirectory.set(    getFile(root + File.separator + "stage"                                  ));
-
+    	install(true);
+    }
+    
+    private void install(boolean die)
+    {
+    	disableInput();
+    	
+		Path root = Paths.get(application.getText());
+		Settings stgs = new Settings(root.resolve(Settings.DEFAULT_SETTINGS_FILE));
+		stgs.applicationDirectory.set(root.resolve("app"));
+		stgs.downloadsDirectory.set(Paths.get(downloads.getText()));
+		stgs.setDefaultApplicationDirectoryStructure();
+		
 		int beginPort = ((Number) this.beginSpinner.getValue()).intValue();
 		int endPort =   ((Number) this.endSpinner.  getValue()).intValue();
 
@@ -72,9 +95,10 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		{
 			error("End port must be larger than begin port!");
 		}
+		stgs.machineName.set(name.getText());
 
 		stgs.servePortBeginI.set(beginPort);
-		stgs.servePortBeginE.set(endPort);
+		stgs.servePortBeginE.set(beginPort);
 		stgs.maxServes.set(endPort - beginPort);
 		stgs.machineIdentifier.set(Misc.getRandomString(50));
 		stgs.shareWithEveryone.set(share.isSelected());
@@ -84,29 +108,39 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to write settings", e);
 			error("Unable to write settings file.");
 		}
 
-		File file = new File("application_data.zip");
-		if (!file.exists())
+		try (ZipInputStream zipInputStream = new ZipInputStream(ClassLoader.getSystemResourceAsStream("dist/install_data.zip"));)
 		{
-			// error("Application location is unknown: expected to be at " +
-			// file.getPath());
+			extract(zipInputStream, root);
 		}
-
-		// unzip the application data.
-
+		catch (IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to extract install data", e1);
+			error("Unable to extract install data to " + root);
+		}
+		
+		try (InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream("dist/updateKey");)
+		{
+			Files.copy(systemResourceAsStream, root.resolve("app" + File.separator + "updateKey"), StandardCopyOption.REPLACE_EXISTING);
+		}
+		catch (IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to extract update public key", e1);
+		}
+		
 		LinkedList<String> args = new LinkedList<>();
 		args.add("java");
-		args.add("-cp");
-		args.add("../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:.");
-		args.add("org.cnv.shr.dmn.mn.Main");
+		args.add("-jar");
+		args.add("ConvenienceShare.jar");
 		args.add("-f");
-		args.add(stgs.getSettingsFile().getAbsolutePath());
+		args.add(stgs.getSettingsFile());
+		args.add("-d");
 
 		System.out.println("Restarting from:");
-		System.out.println(new File(".").getAbsolutePath());
+		System.out.println(root);
 		System.out.println("with:");
 		for (String str : args)
 		{
@@ -115,15 +149,60 @@ public class NewMachineFrame extends javax.swing.JFrame {
 
 		ProcessBuilder builder = new ProcessBuilder();
 		builder.command(args);
-		builder.directory(new File(root).getAbsoluteFile());
+		builder.directory(root.toFile());
 		try
 		{
-			builder.start();
+			Process start = builder.start();
+			if (die)
+			{
+				new MonitorThread(start, getBounds()).start();
+			}
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to start new process", e);
 			error("Unable to start new process.");
+		}
+	}
+
+	private void disableInput()
+	{
+		application.setEnabled(false);
+    	downloads.setEnabled(false);
+    	beginSpinner.setEnabled(false);
+    	endSpinner.setEnabled(false);
+    	jButton1.setEnabled(false);
+    	jButton2.setEnabled(false);
+    	jButton3.setEnabled(false);
+    	jButton4.setEnabled(false);
+    	share.setEnabled(false);
+    	jTextArea1.setEditable(false);
+    	jTextArea1.setEnabled(false);
+    	jTextArea2.setEditable(false);
+    	jTextArea2.setEnabled(false);
+    	name.setEnabled(false);
+    	name.setEditable(false);
+	}
+	
+	private static void extract(ZipInputStream zipInputStream, Path destPath) throws IOException
+	{
+		ZipEntry entry;
+		while ((entry = zipInputStream.getNextEntry()) != null)
+		{
+			if (entry.isDirectory())
+			{
+				continue;
+			}
+			Path entryDest = destPath.resolve(entry.getName());
+			Misc.ensureDirectory(entryDest, true);
+			try
+			{
+				Files.copy(zipInputStream, entryDest, StandardCopyOption.REPLACE_EXISTING);
+			}
+			catch (IOException ex)
+			{
+				LogWrapper.getLogger().log(Level.WARNING, "Unable to extract " + entry.getName() + " to " + destPath, ex);
+			}
 		}
 	}
 
@@ -392,6 +471,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
     private void applicationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applicationActionPerformed
         final JFileChooser fc = new JFileChooser();
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fc.setSelectedFile(new File(application.getText()));
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
         	fc.getSelectedFile(); // What goes here?
@@ -409,6 +489,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         final JFileChooser fc = new JFileChooser();
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fc.setSelectedFile(new File(downloads.getText()));
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
         	downloads.setText(fc.getSelectedFile().getAbsolutePath());
@@ -418,6 +499,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         final JFileChooser fc = new JFileChooser();
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fc.setSelectedFile(new File(application.getText()));
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
         	application.setText(fc.getSelectedFile().getAbsolutePath());

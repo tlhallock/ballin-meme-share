@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -22,8 +23,13 @@ import org.cnv.shr.stng.Settings;
 
 public class Misc
 {
+	public static final String INITIALIZED_STRING = "Succesfully Initialized.";
 	private static final Random random = new Random();
-	
+
+	public static void ensureDirectory(Path path, boolean file)
+	{
+		ensureDirectory(path.toFile(), file);
+	}
 	public static void ensureDirectory(String path, boolean file)
 	{
 		ensureDirectory(new File(path), file);
@@ -153,7 +159,8 @@ public class Misc
 		}
 		return sb.toString();
 	}
-	
+
+	// This should be in IOUtils, and I think I have written it once already...
 	public static void copy(InputStream input, OutputStream output) throws IOException
 	{
 		int readByte;
@@ -192,7 +199,9 @@ public class Misc
 	
 	public static String readFile(String resourceName)
 	{
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream(resourceName))))
+		InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream(resourceName);
+		Objects.requireNonNull(systemResourceAsStream, "Jar is missing file " + resourceName);
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(systemResourceAsStream)))
 		{
 			return readAll(reader);
 		}
@@ -214,21 +223,25 @@ public class Misc
 	}
 	public static void writeBytes(byte[] bytes, OutputStream output) throws IOException
 	{
-		output.write((byte) ((bytes.length >> 24L) & 0xff));
-		output.write((byte) ((bytes.length >> 16L) & 0xff));
-		output.write((byte) ((bytes.length >>  8L) & 0xff));
-		output.write((byte) ((bytes.length >>  0L) & 0xff));
+		output.write((byte) ((bytes.length >> 24) & 0xff));
+		output.write((byte) ((bytes.length >> 16) & 0xff));
+		output.write((byte) ((bytes.length >>  8) & 0xff));
+		output.write((byte) ((bytes.length >>  0) & 0xff));
 		output.write(bytes);
 	}
 	public static byte[] readBytes(InputStream input) throws IOException
 	{
 		int length = 0;
-		length |= (input.read()) << 24L;
-		length |= (input.read()) << 16L;
-		length |= (input.read()) <<  8L;
-		length |= (input.read()) <<  0L;
+		length |= (input.read() & 0xff) << 24;
+		length |= (input.read() & 0xff) << 16;
+		length |= (input.read() & 0xff) <<  8;
+		length |= (input.read() & 0xff) <<  0;
 		
 		byte[] returnValue = new byte[length];
+		if (length == 0)
+		{
+			return returnValue;
+		}
 		int offset = 0;
 		while ((offset += input.read(returnValue, offset, length - offset)) < length)
 			;
@@ -268,7 +281,7 @@ public class Misc
 	
 	public enum OperatingSystem
 	{
-		Linux  (new String[] {"Fill this in",    }),
+		Linux  (new String[] {"Linux",           }),
 		Windows(new String[] {"Windows"     ,    }),
 		Apple  (new String[] {"Fill this in",    }),
 		
@@ -320,22 +333,22 @@ public class Misc
 		return returnValue;
 	}
 	
-	public static void nativeOpen(File f)
+	public static void nativeOpen(Path f)
 	{
 		LinkedList<String> returnValue = new LinkedList<>();
 		switch (system)
 		{
 		case Windows:
 			returnValue.add("explorer.exe");
-			if (f.isFile())
+			if (Files.isRegularFile(f))
 			{
 				// With this argument the file itself is actually opened...
-				returnValue.add(f.getParentFile().getAbsolutePath());
-				returnValue.add("/select," + f.getAbsolutePath());
+				returnValue.add(f.getParent().toString());
+				returnValue.add("/select," + f.toString());
 			}
 			else
 			{
-				returnValue.add(f.getAbsolutePath());
+				returnValue.add(f.toString());
 			}
 			break;
 		case Linux:
@@ -356,6 +369,7 @@ public class Misc
 			LogWrapper.getLogger().log(Level.INFO, "Unable to start open process", e);
 		}
 	}
+	
 	
 //	public static void listRemotes(PrintStream ps)
 //	{

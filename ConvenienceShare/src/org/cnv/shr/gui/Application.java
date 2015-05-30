@@ -12,7 +12,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Date;
@@ -59,6 +59,7 @@ import org.cnv.shr.sync.DebugListener;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.TextAreaHandler;
 
 /**
  * 
@@ -101,7 +102,7 @@ public class Application extends javax.swing.JFrame
 			}
 		});
 		
-		logHandler = new TextAreaHandler(logTextArea);
+		logHandler = new TextAreaHandler(logTextArea, (Integer) logLines.getValue());
 		logLines.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent arg0)
@@ -373,7 +374,7 @@ public class Application extends javax.swing.JFrame
 						new Date(download.getAdded()),
 						download.getState().humanReadable(),
 						String.valueOf(download.getPriority()),
-						downloadInstance == null ? download.getTargetFile() : downloadInstance.getDestinationFile().getAbsolutePath(),
+						download.getTargetFile().toString(),
 						"1",
 						downloadInstance == null ? "N/A" : downloadInstance.getSpeed(),
 						download.getState().equals(DownloadState.ALL_DONE) ?  "100%" : 
@@ -1069,12 +1070,14 @@ public class Application extends javax.swing.JFrame
         fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-        	UserActions.queueLocal(fc.getSelectedFile(), null);
+        	UserActions.queueLocal(
+        			Paths.get(fc.getSelectedFile().getAbsolutePath()), null);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         AddMachine addMachine = new AddMachine();
+        addMachine.setAlwaysOnTop(true);
         Services.notifications.registerWindow(addMachine);
 		addMachine.setVisible(true);
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -1455,8 +1458,7 @@ public class Application extends javax.swing.JFrame
 					return;
 				}
 				Download download = DbDownloads.getDownload(Integer.parseInt(mId));
-				String targetFile = download.getTargetFile();
-				Misc.nativeOpen(new File(targetFile));
+				Misc.nativeOpen(download.getTargetFile());
 			}
 
 			@Override

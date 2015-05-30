@@ -94,6 +94,12 @@ public class Communication implements Closeable
 	
 	public synchronized void send(Message m) throws IOException
 	{
+		if (socket.isOutputShutdown())
+		{
+			LogWrapper.getLogger().info("Connection closed. cant send " + m);
+			return;
+		}
+		
 		authentication.assertCanSend(m);
 		
 		LogWrapper.getLogger().info("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());

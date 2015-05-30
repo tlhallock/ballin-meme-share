@@ -20,7 +20,7 @@ public class LocalSynchronizer extends RootSynchronizer
 //	}
 
 	@Override
-	protected boolean updateFile(SharedFile file) throws SQLException
+	protected boolean updateFile(SharedFile file) throws SQLException, IOException
 	{
 		return ((LocalFile) file).refreshAndWriteToDb();
 	}

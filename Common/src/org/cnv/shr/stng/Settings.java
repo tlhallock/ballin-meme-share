@@ -1,12 +1,15 @@
 package org.cnv.shr.stng;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.Properties;
 
@@ -14,6 +17,9 @@ import org.cnv.shr.util.Misc;
 
 public class Settings implements SettingListener
 {
+	public static final Path DEFAULT_SETTINGS_FILE = Paths.get("app", "settings.props");
+
+
 	private static final int MACHINE_ID_LENGTH = 50;
 	public static final String encoding = "UTF8";
 	public static final String checksumAlgorithm = "SHA1";
@@ -22,7 +28,7 @@ public class Settings implements SettingListener
 	
 	public static final String RES_DIR  = "res/";
 
-	private File settingsFile;
+	private Path settingsFile;
 	private String localAddress;
 	private LinkedList<Setting> settings = new LinkedList<>();
 	private boolean reading;
@@ -31,6 +37,8 @@ public class Settings implements SettingListener
 	
 	public StringSetting     machineName              = new StringSetting    ("machineName         ".trim(), Misc.getRandomName()                                                         , false,  true, "The name to display for this machine.                                           ".trim()); { settings.add(machineName         );  }
 	public StringSetting     machineIdentifier        = new StringSetting    ("machineIdentifier   ".trim(), Misc.getRandomString(MACHINE_ID_LENGTH)                                      ,  true, false, "A unique identifer for this machine.                                            ".trim()); { settings.add(machineIdentifier   );  }
+	
+	
 	public IntSetting        servePortBeginI          = new IntSetting       ("servePortBeginI     ".trim(), 8990                                       ,    1, Integer.MAX_VALUE         , false,  true, "Smallest port to use for listening for other machines. (Router external port.)  ".trim()); { settings.add(servePortBeginI     );  }
 	public IntSetting        servePortBeginE          = new IntSetting       ("servePortBeginE     ".trim(), 8990                                       ,    1, Integer.MAX_VALUE         , false,  true, "Smallest port to use for listening for other machines. (Router internal port.)  ".trim()); { settings.add(servePortBeginE     );  }
 	public IntSetting        maxDownloads             = new IntSetting       ("maxDownloads        ".trim(), 20                                         ,    1, Integer.MAX_VALUE         , false,  true, "Maximum number of concurrent downloads.                                         ".trim()); { settings.add(maxDownloads        );  }
@@ -52,14 +60,14 @@ public class Settings implements SettingListener
 	public BooleanSetting    shareWithEveryone        = new BooleanSetting   ("shareWithEveryone   ".trim(), false                                                                        , false,  true, "True you would like to let anyone download from this machine.                   ".trim()); { settings.add(shareWithEveryone   );  }
 	public DirectorySetting  downloadsDirectory       = new DirectorySetting ("downloadsDirectory  ".trim(), new File("."                                  + File.separator + "downloads"), false,  true, "Directory to put downloaded files.                                              ".trim()); { settings.add(downloadsDirectory  );  }
 	public DirectorySetting  applicationDirectory     = new DirectorySetting ("applicationDirectory".trim(), new File("."                                  + File.separator + "app"      ), false,  true, "Directory to put application files.                                             ".trim()); { settings.add(applicationDirectory);  }
-	public DirectorySetting  stagingDirectory         = new DirectorySetting ("stagingDirectory    ".trim(), new File("."                                  + File.separator + "tempD"    ), false,  true, "Directory to put files currently being served.                                  ".trim()); { settings.add(stagingDirectory    );  }
-	public DirectorySetting  servingDirectory         = new DirectorySetting ("servingDirectory    ".trim(), new File("."                                  + File.separator + "tempS"    ), false,  true, "Directory to put files currently being downloaded.                              ".trim()); { settings.add(servingDirectory    );  }
+	public DirectorySetting  stagingDirectory         = new DirectorySetting ("stagingDirectory    ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "tmpD"     ), false,  true, "Directory to put files currently being served.                                  ".trim()); { settings.add(stagingDirectory    );  }
+	public DirectorySetting  servingDirectory         = new DirectorySetting ("servingDirectory    ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "stage"    ), false,  true, "Directory to put files currently being downloaded.                              ".trim()); { settings.add(servingDirectory    );  }
 	public FileSetting       keysFile                 = new FileSetting      ("keysFile            ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "keys.json"), false,  true, "File to put public/private key information.                                     ".trim()); { settings.add(keysFile            );  }
 	public FileSetting       logFile                  = new FileSetting      ("logFile             ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "log.txt"  ), false,  true, "File to put log messages if logging to file.                                    ".trim()); { settings.add(logFile             );  }
-	public FileSetting       dbFile                   = new FileSetting      ("dbFile              ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "files.db" ), false,  true, "File to put database.                                                           ".trim()); { settings.add(dbFile              );  }
-	public FileSetting       codeUpdateKey            = new FileSetting      ("codeUpdateKey       ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "updatekey"), false,  true, "File containing key to authenticate code updates.                               ".trim()); { settings.add(codeUpdateKey       );  }
+	public FileSetting       dbFile                   = new FileSetting      ("dbFile              ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "files"    ), false,  true, "File to put database.                                                           ".trim()); { settings.add(dbFile              );  }
+	public FileSetting       codeUpdateKey            = new FileSetting      ("codeUpdateKey       ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "updateKey"), false,  true, "File containing key to authenticate code updates.                               ".trim()); { settings.add(codeUpdateKey       );  }
 	
-	public Settings(File settingsFile)
+	public Settings(Path settingsFile)
 	{
 		this.settingsFile = settingsFile;
 		try
@@ -73,6 +81,16 @@ public class Settings implements SettingListener
 //			LogWrapper.getLogger().log(Level.INFO, , e);
 		}
 		System.out.println("Local host is " + localAddress);
+	}
+	
+	public void setDefaultApplicationDirectoryStructure()
+	{
+		stagingDirectory.set(Paths.get(applicationDirectory.get().getPath(), "tempD"    ));
+		servingDirectory.set(Paths.get(applicationDirectory.get().getPath(), "stage"    ));
+		keysFile        .set(Paths.get(applicationDirectory.get().getPath(), "keys.json"));
+		logFile         .set(Paths.get(applicationDirectory.get().getPath(), "log.txt"  ));
+		dbFile          .set(Paths.get(applicationDirectory.get().getPath(), "files"    ));
+		codeUpdateKey   .set(Paths.get(applicationDirectory.get().getPath(), "updateKey"));
 	}
 	
 	public void listenToSettings()
@@ -92,16 +110,16 @@ public class Settings implements SettingListener
 		}
 
 		Misc.ensureDirectory(settingsFile, true);
-		try (FileOutputStream outputStream = new FileOutputStream(settingsFile))
+		try (OutputStream outputStream = Files.newOutputStream(settingsFile))
 		{
-			properties.store(outputStream, null);
+			properties.store(outputStream, "No comment.");
 		}
 	}
 	
 	public synchronized void read() throws FileNotFoundException, IOException
 	{
 		Properties properties = new Properties();
-		try (FileInputStream inStream = new FileInputStream(settingsFile))
+		try (InputStream inStream = Files.newInputStream(settingsFile))
 		{
 			properties.load(inStream);
 		}
@@ -183,8 +201,8 @@ public class Settings implements SettingListener
         return settings.toArray(new Setting[0]);
     }
 
-	public File getSettingsFile()
+	public String getSettingsFile()
 	{
-		return settingsFile;
+		return settingsFile.toAbsolutePath().toString();
 	}
 }

@@ -1,12 +1,13 @@
 package org.cnv.shr.dmn.dwn;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -43,8 +44,9 @@ public class DownloadInstance
 	
 	private HashMap<String, Seeder> seeders = new HashMap<>();
 	private RemoteFile remoteFile;
-	private File tmpFile;
-	private File destinationFile;
+	
+	// TODO: native IO
+	private Path tmpFile;
 	
 	private HashMap<String, ChunkRequest> pending = new HashMap<>();
 	// These should be stored on file...
@@ -63,6 +65,7 @@ public class DownloadInstance
 		{
 			return;
 		}
+		setDestinationFile();
 		download.setState(DownloadState.GETTING_META_DATA);
 		FileRequest request = new FileRequest(remoteFile, CHUNK_SIZE);
 		Machine machine = remoteFile.getRootDirectory().getMachine();
@@ -183,29 +186,29 @@ public class DownloadInstance
 	private void allocate() throws IOException
 	{
 		download.setState(DownloadState.ALLOCATING);
-		File file = PathSecurity.getMirrorDirectory(remoteFile);
+		Path file = PathSecurity.getMirrorDirectory(remoteFile);
 		
 		// ensure that we are sharing this mirror...
 		// This should use a better name...
 		UserActions.addLocalImmediately(file, remoteFile.getRootDirectory().getLocalMirrorName());
 		
 		String str = remoteFile.getPath().getFsPath();
-		tmpFile = PathSecurity.secureMakeDirs(file, str);
+		tmpFile = PathSecurity.secureMakeDirs(file, Paths.get(str));
 		if (tmpFile == null)
 		{
-			throw new FileOutsideOfRootException(file.getAbsolutePath(), str);
+			throw new FileOutsideOfRootException(file, str);
 		}
 		LogWrapper.getLogger().info("Downloading \"" + 
 				remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" +
-				tmpFile.getAbsolutePath() + "\"");
+				tmpFile + "\"");
 
-		if (tmpFile.length() > 0)
+		if (Files.size(tmpFile) > 0)
 		{
 			return;
 		}
 		
 		// Should checkout random access file.setLength()
-		try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(tmpFile));)
+		try (OutputStream outputStream = Files.newOutputStream(tmpFile);)
 		{
 			for (long i = 0; i < remoteFile.getFileSize(); i++)
 			{
@@ -270,7 +273,8 @@ public class DownloadInstance
 			fail("Unkown chunk.");
 			return;
 		}
-		ChunkData.read(chunkRequest.getChunk(), tmpFile, communication.getIn());
+		// TODO: java nio
+		ChunkData.read(chunkRequest.getChunk(), tmpFile.toFile(), communication.getIn());
 		pending.remove(chunk.getChecksum());
 		DbChunks.chunkDone(download, chunk, true);
 		communication.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
@@ -299,7 +303,7 @@ public class DownloadInstance
 		
 		try
 		{
-			Files.move(Paths.get(tmpFile.getAbsolutePath()), Paths.get(getDestinationFile().getAbsolutePath()));
+			Files.move(tmpFile, download.getTargetFile(), StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch (IOException e)
 		{
@@ -312,23 +316,29 @@ public class DownloadInstance
 		DbChunks.allChunksDone(download);
 	}
 
-	public File getDestinationFile()
+	public void setDestinationFile()
 	{
-		if (destinationFile == null)
+		Path destinationFile;
+		File localRootF = remoteFile.getRootDirectory().getLocalRoot();
+		Path localRoot = Paths.get(localRootF.getAbsolutePath());
+		String str = remoteFile.getPath().getFsPath();
+		Path ext = Paths.get(str);
+		int index = 0;
+		do
 		{
-			File localRoot = remoteFile.getRootDirectory().getLocalRoot();
-			String str = remoteFile.getPath().getFsPath();
-			do
+			destinationFile = PathSecurity.secureMakeDirs(localRoot, ext);
+			if (destinationFile == null)
 			{
-				destinationFile = PathSecurity.secureMakeDirs(localRoot, str);
-				if (destinationFile == null)
-				{
-					fail("Unable to copy to destination...");
-				}
-				str = str + ".new";
-			} while (destinationFile.exists());
-		}
-		return destinationFile;
+				fail("Unable to copy to destination...");
+			}
+			ext = Paths.get(str + "." + index++);
+		} while (Files.exists(destinationFile));
+		download.setDestination(destinationFile);
+	}
+
+	public Path getDestinationFile()
+	{
+		return download.getTargetFile();
 	}
 	
 	public Download getDownload()

@@ -17,7 +17,7 @@ import org.cnv.shr.util.Misc;
 public class Code
 {
 	private long timeStamp;
-	private File jar = new File (Updater.UPDATE_DIRECTORY + "ConvenienceShar.jar");
+	private File jar = new File (Updater.getUpdatesDirectory() + "ConvenienceShare.jar");
 	private String version;
 	
 	public Code() throws ZipException, IOException

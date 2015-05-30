@@ -9,26 +9,30 @@
         
 	<path id="others">
 		<path refid="jars" />
-		<pathelement path="classes.common" />
+		<pathelement path="classes/common" />
 	</path>
-
-
+        
+        <target name="src">
+            <zip destfile="dist/src.zip">
+                <fileset dir="../ConvenienceShare/src/"/>
+                <fileset dir="../Common/src/"/>
+                <fileset dir="../Tracker/src/"/>
+                <fileset dir="../Updater/src/"/>
+                <fileset dir="../Installer/src/"/>
+            </zip>
+        </target>
+        
 	<target name="clean">
-		<delete dir="classes.convenience/" />
-		<delete dir="classes.common/" />
-		<delete dir="classes.track/" />
-		<delete dir="classes.update/" />
-		<delete dir="classes.install/" />
-		<delete file="install_data.zip" />
+		<delete dir="classes/" />
 		<delete dir="dist/" />
 	</target>
 
 	<target name="makedadirs">
-		<mkdir dir="classes.convenience/" />
-		<mkdir dir="classes.common/" />
-		<mkdir dir="classes.track/" />
-		<mkdir dir="classes.update/" />
-		<mkdir dir="classes.install/" />
+		<mkdir dir="classes/convenience/" />
+		<mkdir dir="classes/common/" />
+		<mkdir dir="classes/track/" />
+		<mkdir dir="classes/update/" />
+		<mkdir dir="classes/install/" />
 		<mkdir dir="dist/" />
 	</target>
 
@@ -41,13 +45,13 @@
 
 
 	<target name="common" depends="cpylibs">
-		<javac srcdir="../Common/src" destdir="classes.common/">
+		<javac srcdir="../Common/src" destdir="classes/common/">
 			<classpath refid="jars" />
 		</javac>
 	</target>
 
-	<target name="convenienceshare" depends="common">
-		<javac srcdir="../ConvenienceShare/src/" destdir="classes.convenience/" excludes="**/MainTest.java **/GenerateKey.java">
+	<target name="convenienceshare" depends="common,src">
+		<javac srcdir="../ConvenienceShare/src/" destdir="classes/convenience/" excludes="**/MainTest.java **/GenerateKey.java">
 			<classpath refid="others" />
 		</javac>
 
@@ -60,8 +64,8 @@
                            libs/CoDec-build17-jdk13.jar
                            libs/h2-1.4.187.jar" />
 			</manifest>
-			<fileset dir="classes.convenience/" />
-			<fileset dir="classes.common/" />
+			<fileset dir="classes/convenience/" />
+			<fileset dir="classes/common/" />
 			<zipfileset dir="../ConvenienceShare/src/res/" prefix="res"/>
 			<zipfileset file="version.txt" prefix="res"/>
 		</jar>
@@ -69,7 +73,7 @@
 
 
 	<target name="updater" depends="common">
-		<javac srcdir="../Updater/" destdir="classes.update">
+		<javac srcdir="../Updater/" destdir="classes/update">
 			<classpath refid="others" />
 		</javac>
 
@@ -81,14 +85,14 @@
                            libs/FlexiProvider-1.7p7.signed.jar 
                            libs/CoDec-build17-jdk13.jar" />
 			</manifest>
-			<fileset dir="classes.update/" />
-			<fileset dir="classes.common/" />
+			<fileset dir="classes/update/" />
+			<fileset dir="classes/common/" />
 		</jar>
 	</target>
 
 
 	<target name="tracker" depends="common">
-		<javac srcdir="../Tracker/" destdir="classes.track/">
+		<javac srcdir="../Tracker/" destdir="classes/track/">
 			<classpath refid="others" />
 		</javac>
 
@@ -98,31 +102,33 @@
 				<attribute name="Main-Class" value="org.cnv.shr.track.Track" />
 				<attribute name="Class-Path" value="" />
 			</manifest>
-			<fileset dir="classes.update/" />
-			<fileset dir="classes.common/" />
+			<fileset dir="classes/update/" />
+			<fileset dir="classes/common/" />
 		</jar>
 	</target>
 
 
-	<target name="installer" depends="convenienceshare,updater,tracker">
-		<javac srcdir="../Installer/" destdir="classes.install/">
+	<target name="installer" depends="clean,convenienceshare,updater,tracker">
+		<javac srcdir="../Installer/" destdir="classes/install/">
 			<classpath refid="others" />
 		</javac>
-
-		<jar destfile="dist/Installer.jar">
-			<manifest>
-				<attribute name="Main-Class" value="org.cnv.shr.inst.Install" />
-				<attribute name="Class-Path" value="" />
-			</manifest>
-			<fileset dir="classes.install/" />
-			<fileset dir="classes.common/" />
-		</jar>
                 
-		<!-- We should put this zip in the jar... -->
 		<delete file="dist/install_data.zip" />
 		<zip destfile="dist/install_data.zip">
 			<fileset dir="dist/"  />
 		</zip>
+
+		<jar destfile="dist/Installer.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.cnv.shr.inst.Install2" />
+				<attribute name="Class-Path" value="" />
+			</manifest>
+			<fileset dir="classes/install/" />
+			<fileset dir="classes/common/" />
+			<zipfileset file="dist/install_data.zip" prefix="dist/" />
+			<zipfileset file="../instances/updater/updateKey" prefix="dist/" />
+		</jar>
+		<delete file="dist/install_data.zip" />
 	</target>
 
 	<target name="cleanbuild" depends="clean, convenienceshare" />

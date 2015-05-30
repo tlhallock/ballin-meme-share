@@ -1,10 +1,10 @@
 package org.cnv.shr.dmn.mn;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -59,7 +59,7 @@ public class MainTest
 			}
 			else if (args[i].equals("-f") && i < args.length - 1)
 			{
-				a.settings = new Settings(new File(args[i + 1]));
+				a.settings = new Settings(Paths.get(args[i + 1]));
 			}
 			else if (args[i].equals("-t") && i < args.length - 2)
 			{

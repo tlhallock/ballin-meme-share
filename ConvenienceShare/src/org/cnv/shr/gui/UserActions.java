@@ -1,7 +1,7 @@
 package org.cnv.shr.gui;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,7 +58,7 @@ public class UserActions
 					if (openConnection == null)
 					{
 						Services.keyManager.addPendingAuthentication(
-								Services.settings.keysFile.get(),
+								Services.settings.keysFile.getPath(),
 								url);
 						return;
 					}
@@ -189,7 +189,7 @@ public class UserActions
 		});
 	}
 
-	public static void queueLocal(final File localDirectory, final String name)
+	public static void queueLocal(final Path localDirectory, final String name)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -201,12 +201,12 @@ public class UserActions
 		});
 	}
 
-	public static void addLocalImmediately(final File localDirectory, final String name)
+	public static void addLocalImmediately(final Path localDirectory, final String name)
 	{
 		try
 		{
 			LogWrapper.getLogger().info("Sharing " + localDirectory);
-			PathElement pathElement = DbPaths.getPathElement(localDirectory.getCanonicalPath());
+			PathElement pathElement = DbPaths.getPathElement(localDirectory);
 
 			LocalDirectory local = new LocalDirectory(pathElement, name);
 			local.save();

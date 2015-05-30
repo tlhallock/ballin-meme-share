@@ -88,7 +88,7 @@ public class DownloadTest extends RemotesTest
 			
 			Assert.assertFalse(listener.fail);
 			
-			File destinationFile = download.getDestinationFile();
+			File destinationFile = download.getDestinationFile().toFile();
 			TestUtils.assertFilesAreEqual(makeFile, destinationFile);
 		}
 	}
@@ -107,7 +107,7 @@ public class DownloadTest extends RemotesTest
 			final String rootName = Misc.getRandomString(15);
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 4, 2, 1024 * 1024, 5);
-			UserActions.addLocalImmediately(createTempDirectory.toFile(), rootName);
+			UserActions.addLocalImmediately(createTempDirectory, rootName);
 			DbRoots.getLocalByName(rootName).synchronize(null);
 			
 			Thread.sleep(5000);

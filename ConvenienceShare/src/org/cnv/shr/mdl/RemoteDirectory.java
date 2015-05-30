@@ -2,6 +2,7 @@ package org.cnv.shr.mdl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
@@ -77,9 +78,9 @@ public class RemoteDirectory extends RootDirectory
 	}
 	
 	@Override
-	public boolean pathIsSecure(final String canonicalPath)
+	public boolean pathIsSecure(final Path canonicalPath)
 	{
-		return true;
+		return canonicalPath.startsWith(path.getFsPath());
 	}
 
 	@Override

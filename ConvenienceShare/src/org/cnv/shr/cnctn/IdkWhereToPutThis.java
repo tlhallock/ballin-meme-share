@@ -63,7 +63,7 @@ public class IdkWhereToPutThis
 						openConnection.send(new FindMachines());
 						openConnection.send(new MachineFound());
 						pendingAuthenticationRequests.remove(url);
-						Services.keyManager.writeKeys(Services.settings.keysFile.get());
+						Services.keyManager.writeKeys(Services.settings.keysFile.getPath());
 						continue outer;
 					}
 				}

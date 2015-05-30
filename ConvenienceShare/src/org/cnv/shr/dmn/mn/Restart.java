@@ -36,7 +36,7 @@ public class Restart extends Quiter
 			args.add(ProcessInfo.getClassPath());
 			args.add("org.cnv.shr.dmn.mn.Main");
 			args.add("-f");
-			args.add(Services.settings.getSettingsFile().getAbsolutePath());
+			args.add(Services.settings.getSettingsFile());
 			
 			System.out.println("Restarting from:");
 			System.out.println(new File(".").getAbsolutePath());

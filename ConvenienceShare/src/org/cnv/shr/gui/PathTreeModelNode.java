@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 
 import javax.swing.event.TreeModelEvent;
@@ -31,12 +32,10 @@ public class PathTreeModelNode implements TaskListener
 
 	public PathTreeModelNode(final PathTreeModelNode parent, final PathTreeModel model, final PathElement element)
 	{
+		Objects.requireNonNull(element, "Path must not be null.");
+		
 		this.parent = parent;
 		this.model = model;
-		if (element == null)
-		{
-			throw new NullPointerException("Path must not be null.");
-		}
 		this.element = element;
 		this.children = null;
 	}

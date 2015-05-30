@@ -2,6 +2,9 @@ package org.cnv.shr.mdl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -25,12 +28,12 @@ public class LocalFile extends SharedFile
 		path = element;
 		tags = null;
 		
-		File f = getFsFile();
+		Path f = getFsFile();
 
-		fileSize = f.length();
-		lastModified = f.lastModified();
+		fileSize = Files.size(f);
+		lastModified = Files.getLastModifiedTime(f).toMillis();
 
-		String dir = f.getParentFile().getCanonicalPath();
+		Path dir = f.getParent().toRealPath();
 		String root = Misc.deSanitize(local.getPathElement().getFullPath());
 
 		if (!dir.startsWith(root))
@@ -70,8 +73,9 @@ public class LocalFile extends SharedFile
 	/**
 	 * @return true if something has changed.
 	 * @throws SQLException 
+	 * @throws IOException 
 	 */
-	public boolean refreshAndWriteToDb() throws SQLException
+	public boolean refreshAndWriteToDb() throws SQLException, IOException
 	{
 		if (!exists())
 		{
@@ -80,8 +84,8 @@ public class LocalFile extends SharedFile
 			return true;
 		}
 
-		File fsCopy = new File(getFullPath());
-		long fsLastModified = fsCopy.lastModified();
+		Path fsCopy = Paths.get(getFullPath());
+		long fsLastModified = Files.getLastModifiedTime(fsCopy).toMillis();
 		if (fsLastModified <= lastModified)
 		{
 			return false;
@@ -91,13 +95,13 @@ public class LocalFile extends SharedFile
 		checksum = null;
 		updateChecksum(fsCopy);
 		
-		fileSize = fsCopy.getTotalSpace();
+		fileSize = Files.size(fsCopy);
 		save();
 		Services.notifications.fileChanged(this);
 		return true;
 	}
 
-	private void updateChecksum(File fsCopy)
+	private void updateChecksum(Path fsCopy)
 	{
 		if (!shouldChecksum())
 		{
@@ -114,7 +118,7 @@ public class LocalFile extends SharedFile
 	}
 
 	@Override
-	public void setChecksum(String checksum)
+	public void setChecksum(String checksum) throws IOException
 	{
 		if (checksum != null && checksum.equals(checksum))
 		{
@@ -140,9 +144,9 @@ public class LocalFile extends SharedFile
 		return new File(getFullPath()).exists();
 	}
 
-	public File getFsFile()
+	public Path getFsFile()
 	{
-		return new File(
+		return Paths.get(
 				Misc.deSanitize(
 					getRootDirectory().getPathElement().getFullPath() 
 					+ File.separator

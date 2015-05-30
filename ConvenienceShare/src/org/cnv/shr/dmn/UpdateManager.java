@@ -1,7 +1,6 @@
 package org.cnv.shr.dmn;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -188,7 +187,8 @@ public class UpdateManager extends TimerTask
 
 	public synchronized void read()
 	{
-		try (FileInputStream input = new FileInputStream(Services.settings.codeUpdateKey.get()))
+		System.out.println(Services.settings.codeUpdateKey.getPath());
+		try (InputStream input = Files.newInputStream(Services.settings.codeUpdateKey.getPath()))
 		{
 			ByteReader byteReader = new ByteReader(input);
 			ip = byteReader.readString();
@@ -197,7 +197,7 @@ public class UpdateManager extends TimerTask
 		}
 		catch (IOException e)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to read update info.\nThis is expected on first run.", e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to read update info.", e);
 			
 			ip = "";
 			port = -1;
@@ -211,7 +211,7 @@ public class UpdateManager extends TimerTask
 		writeTo(Services.settings.codeUpdateKey.get());
 	}
 
-	public void writeTo(File file)
+	private void writeTo(File file)
 	{
 		try (FileOutputStream output = new FileOutputStream(file))
 		{

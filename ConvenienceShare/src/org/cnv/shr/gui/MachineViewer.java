@@ -12,7 +12,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.sql.SQLException;
@@ -57,7 +56,7 @@ import org.cnv.shr.util.Misc;
 public class MachineViewer extends javax.swing.JFrame
 {
     private String machineIdent;
-    private RootDirectory directory;
+    private String rootDirectoryName;
     private PathTreeModel model;
     private Notifications.NotificationListener listener;
     /**
@@ -104,6 +103,7 @@ public class MachineViewer extends javax.swing.JFrame
 			@Override
 			public void remoteDirectoryChanged(RemoteDirectory remote)
 			{
+				RootDirectory directory = getRootDirectory();
 		    	Machine machine = getMachine();
 				if (directory == null || !directory.getMachine().getIdentifier().equals(machine.getIdentifier())
 									  || !directory.getName().equals(remote.getName()))
@@ -122,13 +122,17 @@ public class MachineViewer extends javax.swing.JFrame
 				String rootName = event.getRootName();
 				if (rootName == null)
 				{
-					// Need to do something here...
-					return;
+					if (!event.getMachineIdent().equals(machineIdent))
+					{
+						return;
+					}
+			        remoteSharingWithUs.setText(event.getCurrentSharingState().humanReadable());
 				}
-				if (rootName.equals(directory.getName()))
+				else if (rootName.equals(rootDirectoryName))
 				{
-					rootIsVisibleCheckBox.setSelected(event.getCurrentSharingState().listable());
-					rootIsDownloadableCheckBox.setSelected(event.getCurrentSharingState().downloadable());
+					RootDirectory directory = getRootDirectory();
+					if (directory.isLocal()) return;
+					updatePermissionBoxesRemote((RemoteDirectory) directory);
 				}
 				event.show(getThis());
 			}
@@ -204,6 +208,16 @@ public class MachineViewer extends javax.swing.JFrame
 		});
 	}
     
+    public RootDirectory getRootDirectory()
+    {
+    	if (rootDirectoryName == null)
+    	{
+    		return null;
+    	}
+    	
+    	return DbRoots.getRoot(getMachine(), rootDirectoryName);
+    }
+    
 	public Machine getMachine()
 	{
         return DbMachines.getMachine(machineIdent);
@@ -217,11 +231,11 @@ public class MachineViewer extends javax.swing.JFrame
 
         setMachine(machine);
 
-        if (directory == null) {
+        if (rootDirectoryName == null) {
             viewNoDirectory();
             return;
         }
-        if (model.getRootDirectory().getId() != directory.getId()) {
+        if (model.getRootDirectory().getName().equals(rootDirectoryName)) {
             return;
         }
         model.setRoot(remote);
@@ -236,6 +250,7 @@ public class MachineViewer extends javax.swing.JFrame
                     final String dirname = tableListener.getTableValue("Path", row);
                     final String basename = tableListener.getTableValue("Name", row);
                     final String fullPath = dirname + basename;
+    				RootDirectory directory = getRootDirectory();
                     final SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
                     if (remoteFile == null) {
                         LogWrapper.getLogger().info("Unable to get remote file " + fullPath);
@@ -420,7 +435,7 @@ public class MachineViewer extends javax.swing.JFrame
     }
 
     private void viewNoDirectory() {
-        this.directory = null;
+        this.rootDirectoryName = null;
         this.descriptionLabel.setText("Select a directory.");
         this.tagsLabel.setText("Select a directory.");
         this.numFilesLabel.setText("Select a directory.");
@@ -442,7 +457,7 @@ public class MachineViewer extends javax.swing.JFrame
     		return;
     	}
         LogWrapper.getLogger().info("Showing directory " + directory.getPathElement());
-        this.directory = directory;
+        this.rootDirectoryName = directory.getName();
         this.rootNameLabel.setText(directory.getName());
         this.rootNameLabel.setText(directory.getPathElement().getFullPath());
         this.descriptionLabel.setText(directory.getDescription());
@@ -471,6 +486,7 @@ public class MachineViewer extends javax.swing.JFrame
         rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(false);
         requestDownloadButton.setEnabled(false);
         requestShareButton.setEnabled(false);
+        pin.setSelected(true); pin.setEnabled(false);
     }
     
     private void updatePermissionBoxesRemote(RemoteDirectory remote)
@@ -481,6 +497,7 @@ public class MachineViewer extends javax.swing.JFrame
         rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(state.downloadable());
         requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
         requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
+        pin.setEnabled(true);
     }
 
     private synchronized void listFiles(final List<SharedFile> files) {
@@ -980,7 +997,7 @@ public class MachineViewer extends javax.swing.JFrame
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        try {
+    	Services.userThreads.execute(new Runnable() { public void run() { try {
         	Machine machine = getMachine();
             Communication connection = Services.networkManager.openConnection(machine, false);
             if (connection != null) {
@@ -994,7 +1011,7 @@ public class MachineViewer extends javax.swing.JFrame
             }
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }
+        }}});
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jTextField2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField2ActionPerformed
@@ -1006,7 +1023,7 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        UserActions.syncRemote(directory);
+        UserActions.syncRemote(getRootDirectory());
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -1024,37 +1041,39 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void requestDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestDownloadButtonActionPerformed
-        try {
+    	Services.userThreads.execute(new Runnable() { public void run() { try {
             Communication connection = Services.networkManager.openConnection(getMachine(), false);
             if (connection != null) {
+				RootDirectory directory = getRootDirectory();
                 connection.send(new UserMessageMessage(UserMessage.createShareRootRequest(directory)));
                 connection.finish();
                 
         		JOptionPane.showMessageDialog(null, 
-        				"A request for permissions to download from " + directory.getName() + " was sent.",
+        				"A request for permissions to download from " + rootDirectoryName + " was sent.",
         				"Request sent",
         				JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }
+        }}});
     }//GEN-LAST:event_requestDownloadButtonActionPerformed
 
     private void requestShareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestShareButtonActionPerformed
-        try {
+        Services.userThreads.execute(new Runnable() { public void run() { try {
             Communication connection = Services.networkManager.openConnection(getMachine(), false);
             if (connection != null) {
+				RootDirectory directory = getRootDirectory();
                 connection.send(new UserMessageMessage(UserMessage.createListRequest(directory)));
                 connection.finish();
 
         		JOptionPane.showMessageDialog(null, 
-        				"A request for permissions to view " + directory.getName() + " was sent.",
+        				"A request for permissions to view " + rootDirectoryName + " was sent.",
         				"Request sent",
         				JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }
+        }}});
     }//GEN-LAST:event_requestShareButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

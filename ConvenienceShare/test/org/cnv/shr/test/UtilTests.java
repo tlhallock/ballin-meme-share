@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.dmn.Services;
@@ -21,7 +22,7 @@ import org.junit.Test;
 
 public class UtilTests
 {
-	static File settingsFile = new File("test_settings.props");
+	static Path settingsFile = Paths.get("test_settings.props");
 	
 	@BeforeClass
 	public static void setUpClass()
@@ -33,7 +34,7 @@ public class UtilTests
 	@AfterClass
 	public static void tearDown() throws Exception
 	{
-		settingsFile.delete();
+		Files.delete(settingsFile);
 	}
 
 	@Test

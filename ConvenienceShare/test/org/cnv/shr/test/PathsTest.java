@@ -27,7 +27,7 @@ public class PathsTest extends LocalMachineTest
 			final String path = createTempDirectory.toFile().getAbsolutePath();
 			final String rootName = Misc.getRandomString(15);
 			
-			UserActions.addLocalImmediately(createTempDirectory.toFile(), rootName);
+			UserActions.addLocalImmediately(createTempDirectory, rootName);
 			final LocalDirectory local = DbRoots.getLocal(path);
 			Assert.assertNotNull(local);
 

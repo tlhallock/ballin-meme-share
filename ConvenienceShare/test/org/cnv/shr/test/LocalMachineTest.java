@@ -1,10 +1,11 @@
 package org.cnv.shr.test;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.mn.Arguments;
@@ -19,15 +20,12 @@ public class LocalMachineTest
 	
 	public Closeable launchLocalMachine(boolean deleteDb) throws Exception
 	{
-		String root = ".." + File.separator + "instances" + File.separator + "localInstance";
-		Settings stgs = new Settings( new File(root + File.separator + "settings.props"));
-		stgs.applicationDirectory.set(new File(root + File.separator + "app"));
-		stgs.logFile.set(             new File(root + File.separator + "app" + File.separator + "log.txt"));
-		stgs.keysFile.set(            new File(root + File.separator + "app" + File.separator + "keys.txt"));
-		stgs.dbFile.set(              new File(root + File.separator + "app" + File.separator + "files_database"));
-		stgs.downloadsDirectory.set(  new File(root + File.separator + "downloads"));
-		stgs.servingDirectory.set(    new File(root + File.separator + "serve"));
-		stgs.stagingDirectory.set(    new File(root + File.separator + "stage"));
+		Path root = Paths.get("..", "instances", "localInstance");
+		Settings stgs = new Settings( root.resolve("settings.props"));
+		stgs.applicationDirectory.set(root.resolve("app"));
+		stgs.downloadsDirectory.set(  root.resolve("downloads"));
+		stgs.setDefaultApplicationDirectoryStructure();
+		
 		stgs.servePortBeginI.set(LOCAL_PORT);
 		stgs.servePortBeginE.set(LOCAL_PORT);
 		stgs.machineIdentifier.set("6mkDuKhkiTpjpM3vS6LGEKN72dEB4tmsaKslTJc2ZDrXLGplYE");

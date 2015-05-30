@@ -1,5 +1,6 @@
 package org.cnv.shr.mdl;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -69,7 +70,7 @@ public abstract class SharedFile extends DbObject<Integer>
 		return checksum;
 	}
 
-	public void setChecksum(String checksum)
+	public void setChecksum(String checksum) throws IOException
 	{
 		this.checksum = checksum;
 	}

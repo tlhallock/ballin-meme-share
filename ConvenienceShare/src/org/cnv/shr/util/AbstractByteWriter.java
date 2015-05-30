@@ -15,6 +15,9 @@ import org.cnv.shr.stng.Settings;
  */
 public abstract class AbstractByteWriter
 {
+	
+	// Should use byte buffer, still learning java 7 nio...
+	
 	public abstract AbstractByteWriter append(byte b) throws IOException;
 	public abstract long getLength();
 
