@@ -29,6 +29,9 @@ import org.cnv.shr.msg.key.OpenConnection;
 import org.cnv.shr.msg.key.PermissionFailure;
 import org.cnv.shr.msg.key.RevokeKey;
 import org.cnv.shr.msg.key.WhoIAm;
+import org.cnv.shr.msg.swup.UpdateInfoMessage;
+import org.cnv.shr.msg.swup.UpdateInfoRequest;
+import org.cnv.shr.msg.swup.UpdateInfoRequestRequest;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
@@ -40,6 +43,8 @@ public class MessageReader
 	
 	public MessageReader()
 	{
+		Message m;
+		
 		add(new MessageIdentifier(ChunkList.class                  ));
 		add(new MessageIdentifier(DownloadDone.class               ));
 		add(new MessageIdentifier(CompletionStatus.class           ));
@@ -75,6 +80,11 @@ public class MessageReader
 		add(new MessageIdentifier(ChecksumResponse.class           ));
 		add(new MessageIdentifier(NewAesKey.class                  ));
 		add(new MessageIdentifier(PermissionFailure.class          ));
+		add(new MessageIdentifier(GetPermission.class              ));
+		add(new MessageIdentifier(GotPermission.class              ));
+		add(new MessageIdentifier(UpdateInfoMessage.class          ));
+		add(new MessageIdentifier(UpdateInfoRequest.class          ));
+		add(new MessageIdentifier(UpdateInfoRequestRequest.class   ));
 
 		LogWrapper.getLogger().info("Message map:\n" + this);
 	}

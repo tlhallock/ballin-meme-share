@@ -90,7 +90,7 @@ public class PathList extends Message
 	}
 
 	@Override
-	protected void print(final AbstractByteWriter buffer) throws IOException
+	protected void print(Communication connection, final AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(name);
 		buffer.append(currentPath);

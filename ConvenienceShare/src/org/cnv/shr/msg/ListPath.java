@@ -37,7 +37,7 @@ public class ListPath extends Message
 	}
 
 	@Override
-	protected void print(AbstractByteWriter buffer) throws IOException
+	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(rootName);
 		buffer.append(path);

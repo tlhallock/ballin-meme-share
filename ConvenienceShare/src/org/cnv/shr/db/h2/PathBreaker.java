@@ -3,6 +3,7 @@ package org.cnv.shr.db.h2;
 import java.util.LinkedList;
 
 import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.util.Misc;
 
 public class PathBreaker
 {
@@ -12,6 +13,9 @@ public class PathBreaker
 
 	public static PathElement[] breakPath(PathElement parent, String path)
 	{
+		path = Misc.sanitizePath(path);
+		System.out.println(path);
+		
 		LinkedList<PathElement> returnValue = new LinkedList<>();
 		
 		StringBuilder builder = new StringBuilder(PATH_ELEMENT_LENGTH);

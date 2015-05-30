@@ -101,7 +101,7 @@ public class Communication implements Closeable
 		synchronized (output)
 		{
 			// Should re-encrypt every so often...
-			m.write(writer);
+			m.write(this, writer);
 			output.flush();
 		}
 	}

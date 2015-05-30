@@ -9,6 +9,7 @@ import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class LocalFile extends SharedFile
 {
@@ -30,7 +31,7 @@ public class LocalFile extends SharedFile
 		lastModified = f.lastModified();
 
 		String dir = f.getParentFile().getCanonicalPath();
-		String root = local.getPathElement().getFullPath();
+		String root = Misc.deSanitize(local.getPathElement().getFullPath());
 
 		if (!dir.startsWith(root))
 		{
@@ -141,7 +142,11 @@ public class LocalFile extends SharedFile
 
 	public File getFsFile()
 	{
-		return new File(getRootDirectory().getPathElement().getFullPath() + "/" + path.getFullPath());
+		return new File(
+				Misc.deSanitize(
+					getRootDirectory().getPathElement().getFullPath() 
+					+ File.separator
+					+ path.getFsPath()));
 	}
 
 	public void ensureChecksummed() throws IOException

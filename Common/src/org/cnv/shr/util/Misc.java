@@ -11,13 +11,14 @@ import java.io.OutputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
 
 import org.cnv.shr.stng.Settings;
-
 
 public class Misc
 {
@@ -234,7 +235,127 @@ public class Misc
 		return returnValue;
 	}
 	
+	private static OperatingSystem system = OperatingSystem.getOperatingSystem();
+	public static String sanitizePath(String path)
+	{
+		if (!system.equals(OperatingSystem.Windows))
+		{
+			return path;
+		}
+		
+		path = path.replace('\\', '/');
+//		int ndx = path.indexOf(':');
+//		if (ndx >= 0)
+//		{
+//			path = path.substring(ndx+1, path.length());
+//		}
+		
+		return path;
+	}
 	
+	public static String deSanitize(String path)
+	{
+		if (!system.equals(OperatingSystem.Windows))
+		{
+			return path;
+		}
+		
+		path = path.replace('/', '\\');
+		
+		return path;
+	}
+	
+	
+	public enum OperatingSystem
+	{
+		Linux  (new String[] {"Fill this in",    }),
+		Windows(new String[] {"Windows"     ,    }),
+		Apple  (new String[] {"Fill this in",    }),
+		
+		;
+		
+		String[] patterns;
+		
+		OperatingSystem(String[] p)
+		{
+			this.patterns = p;
+		}
+		
+		public boolean is(String osName)
+		{
+			for (String pattern : patterns)
+			{
+				if (osName.contains(pattern))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		public static OperatingSystem getOperatingSystem()
+		{
+			String osName = System.getProperty("os.name");
+			for (OperatingSystem os : values())
+			{
+				if (os.is(osName))
+				{
+					return os;
+				}
+			}
+			
+			LogWrapper.getLogger().severe("Unkown operating system type: " + osName);
+			System.exit(-1);
+			return null;
+		}
+	}
+	
+	private static final List<String> getList(String... args)
+	{
+		LinkedList<String> returnValue = new LinkedList<>();
+		for (String str : args)
+		{
+			returnValue.add(str);
+		}
+		return returnValue;
+	}
+	
+	public static void nativeOpen(File f)
+	{
+		LinkedList<String> returnValue = new LinkedList<>();
+		switch (system)
+		{
+		case Windows:
+			returnValue.add("explorer.exe");
+			if (f.isFile())
+			{
+				// With this argument the file itself is actually opened...
+				returnValue.add(f.getParentFile().getAbsolutePath());
+				returnValue.add("/select," + f.getAbsolutePath());
+			}
+			else
+			{
+				returnValue.add(f.getAbsolutePath());
+			}
+			break;
+		case Linux:
+			throw new RuntimeException("Implement me!");
+		case Apple:
+			throw new RuntimeException("Implement me!");
+		}
+		
+		
+		ProcessBuilder builder = new ProcessBuilder();
+		builder.command(returnValue);
+		try
+		{
+			builder.start();
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to start open process", e);
+		}
+	}
 	
 //	public static void listRemotes(PrintStream ps)
 //	{

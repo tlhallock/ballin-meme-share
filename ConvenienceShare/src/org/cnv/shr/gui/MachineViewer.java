@@ -12,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.sql.SQLException;
@@ -38,6 +39,7 @@ import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Notifications;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
@@ -314,6 +316,25 @@ public class MachineViewer extends javax.swing.JFrame
                 n.ensureExpanded();
                 LogWrapper.getLogger().info("Showing " + n);
                 listFiles(n.getFileList());
+            }
+        });
+        menu.add(item);
+        item = new JMenuItem("Open");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
+                final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+                n.ensureExpanded();
+                LogWrapper.getLogger().info("Opening " + n);
+                SharedFile file = n.getFile();
+                if (!file.isLocal())
+                {
+                	// Should show message...
+                	return;
+                }
+                
+                Misc.nativeOpen(((LocalFile) file).getFsFile());
             }
         });
         menu.add(item);

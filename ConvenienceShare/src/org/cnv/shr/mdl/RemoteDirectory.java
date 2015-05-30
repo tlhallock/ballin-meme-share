@@ -19,13 +19,18 @@ public class RemoteDirectory extends RootDirectory
 	PathElement path;
 	private SharingState sharesWithUs;
 	
-	public RemoteDirectory(final Machine machine, final String name, final String tags, final String description)
+	public RemoteDirectory(final Machine machine,
+			final String name,
+			final String tags, 
+			final String description,
+			final SharingState defaultShare)
 	{
 		super(machine, name, tags, description);
 		path = DbPaths.getPathElement(
 				Services.settings.downloadsDirectory.get().getAbsolutePath() + File.separator
 				+ PathSecurity.getFsName(machine.getName()) + File.separator
 				+ PathSecurity.getFsName(getName()) + File.separator);
+		sharesWithUs = defaultShare;
 	}
 
 	public RemoteDirectory(final int int1)
@@ -53,7 +58,7 @@ public class RemoteDirectory extends RootDirectory
 
 	public File getLocalRoot()
 	{
-		return new File(path.getFullPath());
+		return new File(path.getFsPath());
 	}
 	
 	public String getLocalMirrorName()

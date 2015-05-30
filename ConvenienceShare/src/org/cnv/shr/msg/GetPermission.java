@@ -15,7 +15,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class GetPermission extends Message
 {
-	public static int TYPE = 35;
+	public static int TYPE = 9;
 	
 	private String rootName;
 	
@@ -47,7 +47,7 @@ public class GetPermission extends Message
 	}
 
 	@Override
-	protected void print(AbstractByteWriter buffer) throws IOException
+	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(rootName);
 	}

@@ -28,7 +28,7 @@ public class Wait extends Message
 	}
 	
 	@Override
-	protected void print(AbstractByteWriter buffer)
+	protected void print(Communication connection, AbstractByteWriter buffer)
 	{
 		
 	}

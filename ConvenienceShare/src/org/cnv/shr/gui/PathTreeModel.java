@@ -61,7 +61,8 @@ public class PathTreeModel implements TreeModel
 			iterator = new ExplorerSyncIterator(rootDirectory);
 			if (rootDirectory.isLocal())
 			{
-				rootSource = new FileFileSource(new File(rootDirectory.getPathElement().getFullPath()),
+				rootSource = new FileFileSource(new File(
+						rootDirectory.getPathElement().getFsPath()),
 						DbRoots.getIgnores((LocalDirectory) newRoot));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
 			}

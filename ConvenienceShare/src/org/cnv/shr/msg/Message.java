@@ -34,10 +34,10 @@ public abstract class Message
 		return builder.toString();
 	}
 	
-	public final void write(OutputByteWriter output) throws IOException
+	public final void write(Communication connection, OutputByteWriter output) throws IOException
 	{
 		output.append(getType());
-		print(output);
+		print(connection, output);
 	}
 	
 	public void read(ByteReader reader) throws IOException
@@ -47,7 +47,7 @@ public abstract class Message
 
 	protected abstract int  getType();
 	protected abstract void parse(ByteReader reader) throws IOException;
-	protected abstract void print(AbstractByteWriter buffer) throws IOException;
+	protected abstract void print(Communication connection, AbstractByteWriter buffer) throws IOException;
 	public    abstract void perform(Communication connection) throws Exception;
 	
 	

@@ -26,7 +26,7 @@ import org.cnv.shr.util.Misc;
 public class LocalDirectory extends RootDirectory
 {
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update ROOT set "
-			+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=? "
+			+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=?, SHARING=? "
 			+ "where ROOT.R_ID = ?;");
 	
 	
@@ -52,6 +52,7 @@ public class LocalDirectory extends RootDirectory
 		id = null;
 		description = "";
 		tags = "";
+		defaultShare = SharingState.DO_NOT_SHARE;
 	}
 	
 	public LocalDirectory(Integer id)
@@ -78,7 +79,7 @@ public class LocalDirectory extends RootDirectory
 
 	public boolean contains(String canonicalPath)
 	{
-		return canonicalPath.startsWith(path.getFullPath());
+		return canonicalPath.startsWith(path.getFsPath());
 	}
 	
 	public LocalFile getFile(String fsPath)

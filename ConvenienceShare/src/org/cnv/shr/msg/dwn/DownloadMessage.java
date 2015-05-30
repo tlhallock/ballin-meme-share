@@ -3,6 +3,7 @@ package org.cnv.shr.msg.dwn;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -30,7 +31,7 @@ public abstract class DownloadMessage extends Message
 	}
 
 	@Override
-	protected final void print(AbstractByteWriter buffer) throws IOException
+	protected final void print(Communication connection, AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(descriptor);
 		finishWriting(buffer);

@@ -12,6 +12,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Date;
@@ -57,6 +58,7 @@ import org.cnv.shr.stng.Setting.SettingsEditor;
 import org.cnv.shr.sync.DebugListener;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 /**
  * 
@@ -1440,6 +1442,27 @@ public class Application extends javax.swing.JFrame
 			public String getString()
 			{
 				return "Delete";
+			}
+		}).addListener(new TableRowListener()
+		{
+			@Override
+			public void run(int row)
+			{
+				String mId = null;
+				mId = tableListener.getTableValue("Id", row);
+				if (mId == null)
+				{
+					return;
+				}
+				Download download = DbDownloads.getDownload(Integer.parseInt(mId));
+				String targetFile = download.getTargetFile();
+				Misc.nativeOpen(new File(targetFile));
+			}
+
+			@Override
+			public String getString()
+			{
+				return "Open";
 			}
 		});
 	}

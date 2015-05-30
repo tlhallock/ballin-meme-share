@@ -26,7 +26,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 {
 	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into ROOT key(R_ID) VALUES ("
 			+ "(select R_ID from ROOT where MID=? and RNAME=?)"
-			+ ", ?, ?, ?, ?, ?, ?, ?, ?);");
+			+ ", ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	
 	protected Machine machine;
 	protected String name;
@@ -58,7 +58,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 		totalFileSize                    = row.getLong  ("TSPACE"         );
 		totalNumFiles                    = row.getLong  ("NFILES"         );
 		name                             = row.getString("RNAME");
-		setSharing(       SharingState.get(row.getInt("SHARING")));
+		setSharing(       SharingState.get(row.getInt(   "SHARING")));
 		
 		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.RMACHINE, row.getInt("MID"));
 		setPath((PathElement) locals.getObject(c, DbTables.DbObjects.PELEM,    row.getInt("PELEM")));
@@ -245,7 +245,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 	private static HashMap<String, RootSynchronizer> synchronizing = new HashMap<>();
 	private static synchronized boolean startSynchronizing(final RootDirectory d, final RootSynchronizer sync)
 	{
-		final RootSynchronizer rootSynchronizer = synchronizing.get(d.getPathElement().getFullPath());
+		final RootSynchronizer rootSynchronizer =
+				synchronizing.get(d.getPathElement().getFullPath());
 		if (rootSynchronizer == null)
 		{
 			synchronizing.put(d.getPathElement().getFullPath(), sync);

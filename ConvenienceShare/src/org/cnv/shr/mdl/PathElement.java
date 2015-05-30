@@ -16,6 +16,7 @@ import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.db.h2.RStringBuilder;
 import org.cnv.shr.sync.FileSource;
+import org.cnv.shr.util.Misc;
 
 public class PathElement extends DbObject<Long>
 {
@@ -152,6 +153,11 @@ public class PathElement extends DbObject<Long>
 			c = c.getParent();
 		}
 		return fullPath = builder.toString();
+	}
+	
+	public String getFsPath()
+	{
+		return Misc.deSanitize(getFullPath());
 	}
 	
 	public LinkedList<PathElement> list(RootDirectory local)

@@ -35,6 +35,7 @@ import org.cnv.shr.stng.SettingListener;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.sync.RemoteSynchronizers;
 import org.cnv.shr.updt.UpdateInfo;
+import org.cnv.shr.updt.UpdateInfoImpl;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -71,7 +72,7 @@ public class Services
 		args.settings.read();
 		createServices(args.settings, args.deleteDb);
 		testStartUp();
-		checkIfUpdateManagerIsRunning();
+		checkIfUpdateManagerIsRunning(args);
 		startServices();
 	}
 	
@@ -138,9 +139,13 @@ public class Services
 		startSystemTray();
 	}
 	
-	private static void checkIfUpdateManagerIsRunning()
+	private static void checkIfUpdateManagerIsRunning(Arguments a) throws Exception
 	{
-		
+		if (a.updateManagerDirectory == null)
+		{
+			return;
+		}
+		codeUpdateInfo = new UpdateInfoImpl(a.updateManagerDirectory);
 	}
 	
 	private static void initializeLogging()

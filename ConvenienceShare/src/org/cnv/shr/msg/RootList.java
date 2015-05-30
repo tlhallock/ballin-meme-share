@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbPermissions;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -23,6 +25,8 @@ import org.cnv.shr.util.LogWrapper;
 
 public class RootList extends Message
 {
+	public static int TYPE = 3;
+	
 	private List<RootDirectory> sharedDirectories = new LinkedList<>();
 
 	public RootList()
@@ -103,13 +107,14 @@ public class RootList extends Message
 			String name        = reader.readString();
 			String tags        = reader.readString();
 			String description = reader.readString();
+			SharingState state = SharingState.get(reader.readInt());
 			
-			sharedDirectories.add(new RemoteDirectory(machine, name, tags, description));
+			sharedDirectories.add(new RemoteDirectory(machine, name, tags, description, state));
 		}
 	}
 
 	@Override
-	protected void print(AbstractByteWriter buffer) throws IOException
+	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
 	{
 		buffer.append(Services.localMachine.getIdentifier());
 		buffer.append(sharedDirectories.size());
@@ -118,10 +123,11 @@ public class RootList extends Message
 			buffer.append(dir.getName());
 			buffer.append(dir.getTags());
 			buffer.append(dir.getDescription());
+			buffer.append(DbPermissions.getCurrentPermissions(
+					connection.getMachine(), (LocalDirectory) dir));
 		}
 	}
 	
-	public static int TYPE = 3;
 	@Override
 	protected int getType()
 	{

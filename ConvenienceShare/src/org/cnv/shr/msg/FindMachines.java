@@ -30,7 +30,7 @@ public class FindMachines extends Message
 	protected void parse(ByteReader reader) throws IOException {}
 
 	@Override
-	protected void print(AbstractByteWriter buffer) {}
+	protected void print(Communication connection, AbstractByteWriter buffer) {}
 	
 	@Override
 	public void perform(Communication connection) throws Exception

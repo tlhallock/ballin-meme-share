@@ -2,6 +2,8 @@ package org.cnv.shr.mdl;
 
 import java.io.File;
 
+import org.cnv.shr.util.Misc;
+
 
 public class RemoteFile extends SharedFile
 {
@@ -30,8 +32,10 @@ public class RemoteFile extends SharedFile
 	
 	public File getTargetFile()
 	{
-		return new File(getRootDirectory().getLocalRoot().getAbsolutePath()
-				+ File.separator + getPath().getFullPath());
+		return new File(
+				Misc.deSanitize(
+					getRootDirectory().getLocalRoot().getAbsolutePath()
+					+ File.separator + getPath().getFullPath()));
 	}
 
 	@Override

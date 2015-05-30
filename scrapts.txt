@@ -1,0 +1,53 @@
+
+	
+	static java.util.LinkedList<URLClassLoader> loaders = new java.util.LinkedList<>();
+	
+	private static void addLibs() throws IOException //, ClassNotFoundException
+	{
+		Path path = Paths.get("libs");
+		if (!Files.isDirectory(path))
+		{
+			return;
+		}
+		
+		try (DirectoryStream<Path> newDirectoryStream = Files.newDirectoryStream(path);)
+		{
+			for (Path p : newDirectoryStream)
+			{
+				if (!p.toString().endsWith(".jar"))
+				{
+					continue;
+				}
+				
+				URLClassLoader urlClassLoader = new URLClassLoader(new URL[] {new URL("file://" + p.toFile().getAbsolutePath())});
+				loaders.add(urlClassLoader);
+
+				try (ZipFile zipFile = new ZipFile(p.toFile());)
+				{
+					Enumeration<? extends ZipEntry> entries = zipFile.entries();
+					while (entries.hasMoreElements())
+					{
+						String name = entries.nextElement().getName();
+						if (!name.endsWith(".class"))
+						{
+							continue;
+						}
+						name = name.substring(0, name.length() - ".class".length()).replace('/', '.');
+						
+						try {
+						
+						
+						urlClassLoader.loadClass(name); 
+						Class.forName(name, true, urlClassLoader); 
+						
+						System.out.println("Loaded: " + name);
+						
+						
+						} catch(Throwable ex) {System.out.println("Did not load: " + name);}
+						
+						
+					}
+				}
+			}
+		}
+	}

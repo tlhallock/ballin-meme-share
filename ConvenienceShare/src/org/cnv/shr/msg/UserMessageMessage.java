@@ -43,7 +43,7 @@ public class UserMessageMessage extends Message
 	}
         
 	@Override
-	protected void print(AbstractByteWriter buffer) throws IOException
+	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
 	{
 		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
 		{

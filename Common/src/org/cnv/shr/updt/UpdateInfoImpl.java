@@ -31,10 +31,15 @@ public class UpdateInfoImpl implements UpdateInfo
 	public static final String KEYS_TXT = "keys.txt";
 	public static final String INFO_PROPS = "info.props";
 	
-	public UpdateInfoImpl(File propsFile, File keysFile) throws CertificateEncodingException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeySpecException, ClassNotFoundException, IOException
+	public UpdateInfoImpl(String updateManagerRoot) throws Exception
 	{
-		this.propsFile = propsFile;
-		this.keysFile  = keysFile;
+		this.propsFile = new File(updateManagerRoot + File.separator + propsFile);
+		this.keysFile  = new File(updateManagerRoot + File.separator + keysFile );
+		
+		if (!propsFile.exists() || !keysFile.exists())
+		{
+			throw new Exception("Updater not running!");
+		}
 		
 		props = new Properties();
 		keys = new KeysService();

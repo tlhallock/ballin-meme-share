@@ -197,7 +197,7 @@ public class UpdateManager extends TimerTask
 		}
 		catch (IOException e)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to read update info", e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to read update info.\nThis is expected on first run.", e);
 			
 			ip = "";
 			port = -1;

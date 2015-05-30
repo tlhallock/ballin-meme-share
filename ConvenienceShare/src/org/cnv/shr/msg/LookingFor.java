@@ -37,7 +37,7 @@ public class LookingFor extends Message
 	}
 
 	@Override
-	protected void print(AbstractByteWriter buffer)
+	protected void print(Communication connection, AbstractByteWriter buffer)
 	{
 
 	}

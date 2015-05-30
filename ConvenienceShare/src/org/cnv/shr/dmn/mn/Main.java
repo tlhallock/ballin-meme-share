@@ -3,16 +3,7 @@ package org.cnv.shr.dmn.mn;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Enumeration;
 import java.util.logging.Level;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
@@ -56,19 +47,18 @@ public class Main
         // make standalone key server
 		// Need to check versions when messaging.
 
-		addLibs();
 		
 		Arguments a = new Arguments();
 		parseArgs(args, a);
 		
-		if (true)
-		{
-			a.settings = new Settings(new File("/work/ballin-meme-share/instances/i1/settings.props"));
-		}
-		else
-		{
-			a.settings = new Settings(new File("/work/ballin-meme-share/instances/i2/settings.props"));
-		}
+//		if (true)
+//		{
+//			a.settings = new Settings(new File("/work/ballin-meme-share/instances/i1/settings.props"));
+//		}
+//		else
+//		{
+//			a.settings = new Settings(new File("/work/ballin-meme-share/instances/i2/settings.props"));
+//		}
 
 //		if (!a.settings.getSettingsFile().exists())
 //		{
@@ -115,57 +105,5 @@ public class Main
 	{
 		Services.quiter = new Restart();
 		Services.quiter.quit();
-	}
-	
-	static java.util.LinkedList<URLClassLoader> loaders = new java.util.LinkedList<>();
-	
-	private static void addLibs() throws IOException //, ClassNotFoundException
-	{
-		Path path = Paths.get("libs");
-		if (!Files.isDirectory(path))
-		{
-			return;
-		}
-		
-		try (DirectoryStream<Path> newDirectoryStream = Files.newDirectoryStream(path);)
-		{
-			for (Path p : newDirectoryStream)
-			{
-				if (!p.toString().endsWith(".jar"))
-				{
-					continue;
-				}
-				
-				URLClassLoader urlClassLoader = new URLClassLoader(new URL[] {new URL("file://" + p.toFile().getAbsolutePath())});
-				loaders.add(urlClassLoader);
-
-				try (ZipFile zipFile = new ZipFile(p.toFile());)
-				{
-					Enumeration<? extends ZipEntry> entries = zipFile.entries();
-					while (entries.hasMoreElements())
-					{
-						String name = entries.nextElement().getName();
-						if (!name.endsWith(".class"))
-						{
-							continue;
-						}
-						name = name.substring(0, name.length() - ".class".length()).replace('/', '.');
-						
-						try {
-						
-						
-						urlClassLoader.loadClass(name); 
-						Class.forName(name, true, urlClassLoader); 
-						
-						System.out.println("Loaded: " + name);
-						
-						
-						} catch(Throwable ex) {System.out.println("Did not load: " + name);}
-						
-						
-					}
-				}
-			}
-		}
 	}
 }

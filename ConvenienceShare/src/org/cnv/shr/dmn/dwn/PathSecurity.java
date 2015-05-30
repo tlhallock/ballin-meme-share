@@ -135,9 +135,10 @@ public class PathSecurity
 	{
 		RootDirectory rootDirectory = remoteFile.getRootDirectory();
 		return new File(
+				Misc.deSanitize(
 				Services.settings.stagingDirectory.get() + File.separator
 				  + getFsName(rootDirectory.getMachine().getName()) + "_"
 				  + getFsName(rootDirectory.getMachine().getIdentifier()) + File.separator
-				  + getFsName(rootDirectory.getName()) + File.separator);
+				  + getFsName(rootDirectory.getName()) + File.separator));
 	}
 }

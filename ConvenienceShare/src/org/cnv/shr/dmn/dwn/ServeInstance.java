@@ -22,6 +22,7 @@ import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class ServeInstance
 {
@@ -66,8 +67,9 @@ public class ServeInstance
 
 		LogWrapper.getLogger().info("Staging.");
 		tmpFile = PathSecurity.secureMakeDirs(Services.settings.servingDirectory.get(),
-					local.getRootDirectory().getName()
-					+ File.separator + local.getPath().getFullPath());
+				Misc.deSanitize(
+					PathSecurity.getFsName(local.getRootDirectory().getName())
+					+ File.separator + local.getPath().getFsPath()));
 		File toShare = local.getFsFile();
 		if (!local.getRootDirectory().contains(toShare.getCanonicalPath()))
 		{

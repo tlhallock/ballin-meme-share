@@ -27,7 +27,7 @@ public class ListRoots extends Message
 	protected void parse(ByteReader reader) throws IOException {}
 
 	@Override
-	protected void print(AbstractByteWriter buffer) {}
+	protected void print(Communication connection, AbstractByteWriter buffer) {}
 	
 	public static int TYPE = 6;
 	@Override

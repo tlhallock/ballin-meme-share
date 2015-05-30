@@ -32,7 +32,7 @@ public class ConnectionOpenAwk extends KeyMessage
 	}
 
 	@Override
-	protected void print(AbstractByteWriter buffer) throws IOException
+	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
 	{
 		buffer.appendVarByteArray(decryptedNaunce);
 		buffer.appendVarByteArray(naunceRequest);

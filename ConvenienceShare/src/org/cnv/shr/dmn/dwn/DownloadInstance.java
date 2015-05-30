@@ -189,7 +189,7 @@ public class DownloadInstance
 		// This should use a better name...
 		UserActions.addLocalImmediately(file, remoteFile.getRootDirectory().getLocalMirrorName());
 		
-		String str = remoteFile.getPath().getFullPath();
+		String str = remoteFile.getPath().getFsPath();
 		tmpFile = PathSecurity.secureMakeDirs(file, str);
 		if (tmpFile == null)
 		{
@@ -317,7 +317,7 @@ public class DownloadInstance
 		if (destinationFile == null)
 		{
 			File localRoot = remoteFile.getRootDirectory().getLocalRoot();
-			String str = remoteFile.getPath().getFullPath();
+			String str = remoteFile.getPath().getFsPath();
 			do
 			{
 				destinationFile = PathSecurity.secureMakeDirs(localRoot, str);

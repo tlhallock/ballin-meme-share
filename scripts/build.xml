@@ -36,7 +36,7 @@
 		<copy file="../ConvenienceShare/lib/FlexiProvider-1.7p7.signed.jar" todir="dist/libs" />
 		<copy file="../ConvenienceShare/lib/CoDec-build17-jdk13.jar"        todir="dist/libs" />
 		<copy file="../ConvenienceShare/lib/portmapper-2.0.0-alpha1.jar"    todir="dist/libs" />
-		<copy file="../ConvenienceShare/lib/h2-1.3.175.jar"                 todir="dist/libs" />
+		<copy file="../ConvenienceShare/lib/h2-1.4.187.jar"                 todir="dist/libs" />
 	</target>
 
 
@@ -56,13 +56,14 @@
 			<manifest>
 				<attribute name="Main-Class" value="org.cnv.shr.dmn.mn.Main" />
 				<attribute name="Class-Path" value="
-                           dist/lib/FlexiProvider-1.7p7.signed.jar 
-                           dist/lib/CoDec-build17-jdk13.jar
-                           dist/lib/portmapper-2.0.0-alpha1.jar 
-                           dist/lib/h2-1.3.175.jar" />
+                           libs/FlexiProvider-1.7p7.signed.jar 
+                           libs/CoDec-build17-jdk13.jar
+                           libs/h2-1.4.187.jar" />
 			</manifest>
 			<fileset dir="classes.convenience/" />
 			<fileset dir="classes.common/" />
+			<zipfileset dir="../ConvenienceShare/src/res/" prefix="res"/>
+			<zipfileset file="version.txt" prefix="res"/>
 		</jar>
 	</target>
 
@@ -77,9 +78,8 @@
 			<manifest>
 				<attribute name="Main-Class" value="org.cnv.shr.updt.Updater" />
 				<attribute name="Class-Path" value="
-                           dist/lib/FlexiProvider-1.7p7.signed.jar 
-                           dist/lib/CoDec-build17-jdk13.jar
-                           dist/lib/portmapper-2.0.0-alpha1.jar" />
+                           libs/FlexiProvider-1.7p7.signed.jar 
+                           libs/CoDec-build17-jdk13.jar" />
 			</manifest>
 			<fileset dir="classes.update/" />
 			<fileset dir="classes.common/" />
@@ -96,8 +96,7 @@
 		<jar destfile="dist/Tracker.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.cnv.shr.track.Track" />
-				<attribute name="Class-Path" value="
-                           dist/lib/portmapper-2.0.0-alpha1.jar" />
+				<attribute name="Class-Path" value="" />
 			</manifest>
 			<fileset dir="classes.update/" />
 			<fileset dir="classes.common/" />
@@ -119,6 +118,7 @@
 			<fileset dir="classes.common/" />
 		</jar>
                 
+		<!-- We should put this zip in the jar... -->
 		<delete file="dist/install_data.zip" />
 		<zip destfile="dist/install_data.zip">
 			<fileset dir="dist/"  />
