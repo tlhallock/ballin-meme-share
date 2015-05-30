@@ -88,4 +88,9 @@ public class LogWrapper
 	{
 		return logger;
 	}
+
+	public static void close()
+	{
+		fileHandler.close();
+	}
 }

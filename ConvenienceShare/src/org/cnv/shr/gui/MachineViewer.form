@@ -23,9 +23,18 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
+          <Component id="jSplitPane1" alignment="0" pref="876" max="32767" attributes="0"/>
           <Group type="102" alignment="1" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="103" groupAlignment="1" attributes="0">
+                  <Group type="102" attributes="0">
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <Component id="jButton3" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Component id="isMessaging" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <Component id="pin" min="-2" max="-2" attributes="0"/>
+                  </Group>
                   <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
                           <Component id="jLabel1" max="32767" attributes="0"/>
@@ -36,28 +45,25 @@
                           <Component id="machineLabel" max="32767" attributes="0"/>
                           <Component id="keysLabel" max="32767" attributes="0"/>
                       </Group>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="jLabel3" max="32767" attributes="0"/>
+                          <Component id="jLabel4" max="32767" attributes="0"/>
+                      </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Group type="102" attributes="0">
-                              <Component id="isSharing" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Component id="jButton1" max="32767" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="1" attributes="0">
-                              <Component id="isMessaging" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="7" max="-2" attributes="0"/>
-                              <Component id="jButton2" min="-2" max="-2" attributes="0"/>
-                          </Group>
+                          <Component id="sharingWithRemoteMachine" pref="107" max="32767" attributes="0"/>
+                          <Component id="remoteSharingWithUs" max="32767" attributes="0"/>
                       </Group>
-                  </Group>
-                  <Group type="102" alignment="1" attributes="0">
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                      <Component id="jButton3" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="jButton2" max="32767" attributes="0"/>
+                          <Component id="jButton1" max="32767" attributes="0"/>
+                      </Group>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
-          <Component id="jSplitPane1" alignment="0" pref="876" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -72,20 +78,26 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jButton1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="isSharing" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="remoteSharingWithUs" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="isMessaging" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="keysLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="keysLabel" alignment="3" min="-2" pref="25" max="-2" attributes="0"/>
                           <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButton2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="sharingWithRemoteMachine" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
+              <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="jButton3" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="pin" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="isMessaging" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jButton3" min="-2" max="-2" attributes="0"/>
-              <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Component id="jSplitPane1" pref="378" max="32767" attributes="0"/>
           </Group>
       </Group>
@@ -110,14 +122,9 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton1ActionPerformed"/>
       </Events>
     </Component>
-    <Component class="javax.swing.JCheckBox" name="isSharing">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Is Sharing"/>
-      </Properties>
-    </Component>
     <Component class="javax.swing.JCheckBox" name="isMessaging">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Messages"/>
+        <Property name="text" type="java.lang.String" value="Allow messages"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="machineLabel">
@@ -360,11 +367,11 @@
                                   <EmptySpace min="0" pref="317" max="32767" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
                                       <Group type="102" alignment="1" attributes="0">
-                                          <Component id="visibleCheckBox" min="-2" max="-2" attributes="0"/>
+                                          <Component id="rootIsVisibleCheckBox" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
                                           <Component id="requestShareButton" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                          <Component id="downloadableCheckBox" min="-2" max="-2" attributes="0"/>
+                                          <Component id="rootIsDownloadableCheckBox" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace type="separate" max="-2" attributes="0"/>
                                           <Component id="requestDownloadButton" min="-2" max="-2" attributes="0"/>
                                       </Group>
@@ -440,9 +447,9 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="jLabel13" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="visibleCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="rootIsVisibleCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="requestShareButton" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="downloadableCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="rootIsDownloadableCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="requestDownloadButton" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
@@ -488,7 +495,7 @@
                     <Property name="text" type="java.lang.String" value="Share status:"/>
                   </Properties>
                 </Component>
-                <Component class="javax.swing.JCheckBox" name="visibleCheckBox">
+                <Component class="javax.swing.JCheckBox" name="rootIsVisibleCheckBox">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Visible"/>
                     <Property name="enabled" type="boolean" value="false"/>
@@ -502,7 +509,7 @@
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="requestShareButtonActionPerformed"/>
                   </Events>
                 </Component>
-                <Component class="javax.swing.JCheckBox" name="downloadableCheckBox">
+                <Component class="javax.swing.JCheckBox" name="rootIsDownloadableCheckBox">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Downloadable"/>
                     <Property name="enabled" type="boolean" value="false"/>
@@ -576,6 +583,38 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton2ActionPerformed"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JComboBox" name="sharingWithRemoteMachine">
+      <Properties>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="4">
+            <StringItem index="0" value="Item 1"/>
+            <StringItem index="1" value="Item 2"/>
+            <StringItem index="2" value="Item 3"/>
+            <StringItem index="3" value="Item 4"/>
+          </StringArray>
+        </Property>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="pin">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Pin"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel3">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Permissions to us:"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel4">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Permissions from us:"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="remoteSharingWithUs">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Loading"/>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>

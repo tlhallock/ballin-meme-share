@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="convenienceshare" name="Create Runnable Jar for Project ConvenienceShare with libraries in sub-folder">
+
+	<path id="jars">
+		<fileset dir="../ConvenienceShare/lib/">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+        
+	<path id="others">
+		<path refid="jars" />
+		<pathelement path="classes.common" />
+	</path>
+
+
+	<target name="clean">
+		<delete dir="classes.convenience/" />
+		<delete dir="classes.common/" />
+		<delete dir="classes.track/" />
+		<delete dir="classes.update/" />
+		<delete dir="classes.install/" />
+		<delete file="install_data.zip" />
+		<delete dir="dist/" />
+	</target>
+
+	<target name="makedadirs">
+		<mkdir dir="classes.convenience/" />
+		<mkdir dir="classes.common/" />
+		<mkdir dir="classes.track/" />
+		<mkdir dir="classes.update/" />
+		<mkdir dir="classes.install/" />
+		<mkdir dir="dist/" />
+	</target>
+
+	<target name="cpylibs" depends="makedadirs">
+		<copy file="../ConvenienceShare/lib/FlexiProvider-1.7p7.signed.jar" todir="dist/libs" />
+		<copy file="../ConvenienceShare/lib/CoDec-build17-jdk13.jar"        todir="dist/libs" />
+		<copy file="../ConvenienceShare/lib/portmapper-2.0.0-alpha1.jar"    todir="dist/libs" />
+		<copy file="../ConvenienceShare/lib/h2-1.3.175.jar"                 todir="dist/libs" />
+	</target>
+
+
+	<target name="common" depends="cpylibs">
+		<javac srcdir="../Common/src" destdir="classes.common/">
+			<classpath refid="jars" />
+		</javac>
+	</target>
+
+	<target name="convenienceshare" depends="common">
+		<javac srcdir="../ConvenienceShare/src/" destdir="classes.convenience/" excludes="**/MainTest.java **/GenerateKey.java">
+			<classpath refid="others" />
+		</javac>
+
+
+		<jar destfile="dist/ConvenienceShare.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.cnv.shr.dmn.mn.Main" />
+				<attribute name="Class-Path" value="
+                           dist/lib/FlexiProvider-1.7p7.signed.jar 
+                           dist/lib/CoDec-build17-jdk13.jar
+                           dist/lib/portmapper-2.0.0-alpha1.jar 
+                           dist/lib/h2-1.3.175.jar" />
+			</manifest>
+			<fileset dir="classes.convenience/" />
+			<fileset dir="classes.common/" />
+		</jar>
+	</target>
+
+
+	<target name="updater" depends="common">
+		<javac srcdir="../Updater/" destdir="classes.update">
+			<classpath refid="others" />
+		</javac>
+
+
+		<jar destfile="dist/Updater.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.cnv.shr.updt.Updater" />
+				<attribute name="Class-Path" value="
+                           dist/lib/FlexiProvider-1.7p7.signed.jar 
+                           dist/lib/CoDec-build17-jdk13.jar
+                           dist/lib/portmapper-2.0.0-alpha1.jar" />
+			</manifest>
+			<fileset dir="classes.update/" />
+			<fileset dir="classes.common/" />
+		</jar>
+	</target>
+
+
+	<target name="tracker" depends="common">
+		<javac srcdir="../Tracker/" destdir="classes.track/">
+			<classpath refid="others" />
+		</javac>
+
+
+		<jar destfile="dist/Tracker.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.cnv.shr.track.Track" />
+				<attribute name="Class-Path" value="
+                           dist/lib/portmapper-2.0.0-alpha1.jar" />
+			</manifest>
+			<fileset dir="classes.update/" />
+			<fileset dir="classes.common/" />
+		</jar>
+	</target>
+
+
+	<target name="installer" depends="convenienceshare,updater,tracker">
+		<javac srcdir="../Installer/" destdir="classes.install/">
+			<classpath refid="others" />
+		</javac>
+
+		<jar destfile="dist/Installer.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.cnv.shr.inst.Install" />
+				<attribute name="Class-Path" value="" />
+			</manifest>
+			<fileset dir="classes.install/" />
+			<fileset dir="classes.common/" />
+		</jar>
+                
+		<delete file="dist/install_data.zip" />
+		<zip destfile="dist/install_data.zip">
+			<fileset dir="dist/"  />
+		</zip>
+	</target>
+
+	<target name="cleanbuild" depends="clean, convenienceshare" />
+        
+        <target name="all" depends="installer" />
+        
+	<!-- TODO: (Maybe) -->
+	<target name="test" depends="common" />
+        
+        
+        
+        <!--
+        java -cp libs/portmapper-2.0.0-alpha1.jar:libs/FlexiProvider-1.7p7.signed.jar:libs/h2-1.3.175.jar:libs/CoDec-build17-jdk13.jar:. -jar
+
+        
+        -->
+</project>

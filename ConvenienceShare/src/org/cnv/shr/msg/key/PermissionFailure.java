@@ -3,6 +3,7 @@ package org.cnv.shr.msg.key;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
@@ -27,7 +28,7 @@ public class PermissionFailure extends Message
 		this.currentPermission = current;
 		if (currentPermission == null)
 		{
-			currentPermission = SharingState.NOT_SET;
+			currentPermission = SharingState.DO_NOT_SHARE;
 		}
 		this.action = action;
 	}
@@ -81,7 +82,6 @@ public class PermissionFailure extends Message
 		event.action = action;
 		Services.notifications.permissionFailure(event);
 		connection.finish();
-		event.show();
 	}
 	
 	
@@ -94,9 +94,9 @@ public class PermissionFailure extends Message
 		
 		private PermissionFailureEvent() {}
 		
-		public void show()
+		public void show(JFrame frame)
 		{
-			JOptionPane.showMessageDialog(null, 
+			JOptionPane.showMessageDialog(frame, 
 					"Permission was denied while trying action: " + action + ".\n" +
 					"Current permissions are " + currentPermissions + ".\n" +
 				    "Remote machine: " + machine.getName() + ".\n" +

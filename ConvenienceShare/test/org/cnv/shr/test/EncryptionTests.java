@@ -14,8 +14,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
-import org.cnv.shr.dmn.KeysService;
 import org.cnv.shr.util.FlushableEncryptionStreams;
+import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.FlushableEncryptionStreams.FlushableEncryptionInputStream;
 import org.cnv.shr.util.FlushableEncryptionStreams.FlushableEncryptionOutputStream;
 import org.cnv.shr.util.LogWrapper;

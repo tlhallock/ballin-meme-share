@@ -130,7 +130,7 @@ public class UserMessage extends DbObject<Integer>
 			    "Share message sent on " + new Date(sent),
 			    JOptionPane.YES_NO_OPTION))
 		{
-			machine.setSharing(SharingState.DOWNLOADABLE);
+			machine.setWeShare(SharingState.DOWNLOADABLE);
 			try
 			{
 				machine.save();
@@ -159,7 +159,7 @@ public class UserMessage extends DbObject<Integer>
 		
 		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
 				null,
-			    "Shoule you like to share root \"" + localByName.getName() + "\" with machine \"" + machine.getName() + "\"",
+			    "Would you like to share root \"" + localByName.getName() + "\" with machine \"" + machine.getName() + "\"",
 			    "Share root message sent on " + new Date(sent),
 			    JOptionPane.YES_NO_OPTION))
 		{
@@ -185,7 +185,7 @@ public class UserMessage extends DbObject<Integer>
 		switch (type)
 		{
 		case SHARE:
-			if (machine.sharingWithOther().canDownload())
+			if (DbPermissions.getCurrentPermissions(machine).downloadable())
 			{
 				LogWrapper.getLogger().info("Already sharing.");
 				return true;
@@ -198,7 +198,7 @@ public class UserMessage extends DbObject<Integer>
 				LogWrapper.getLogger().info("No local");
 				return true;
 			}
-			if (DbPermissions.isSharing(machine, localByName).canDownload())
+			if (DbPermissions.getCurrentPermissions(machine, localByName).downloadable())
 			{
 				LogWrapper.getLogger().info("Already sharing");
 				return true;
@@ -211,7 +211,7 @@ public class UserMessage extends DbObject<Integer>
 				LogWrapper.getLogger().info("No local");
 				return true;
 			}
-			if (DbPermissions.isSharing(machine, localByName).canList())
+			if (DbPermissions.getCurrentPermissions(machine, localByName).listable())
 			{
 				LogWrapper.getLogger().info("Already visible");
 				return true;

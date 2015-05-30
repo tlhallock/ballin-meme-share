@@ -53,7 +53,7 @@ public class ConnectionManager
 			return null;
 		}
 		connection.send(new WhoIAm());
-		connection.send(new OpenConnection(remoteKey, Services.keyManager.createTestNaunce(authentication, remoteKey)));
+		connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
 		Services.notifications.connectionOpened(connection);
 		ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
 		synchronized (runnables) { runnables.add(connectionRunnable); }

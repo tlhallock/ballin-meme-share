@@ -38,7 +38,7 @@ public class Machine extends DbObject<Integer>
 	{
 		super(null);
 		this.identifier = identifier;
-		weShareToThem = SharingState.UNKOWN;
+		weShareToThem = SharingState.DO_NOT_SHARE;
 	}
 	
 	protected Machine() { super(null); }
@@ -203,7 +203,7 @@ public class Machine extends DbObject<Integer>
 	{
 		if (sharesWithUs == null)
 		{
-			return SharingState.UNKOWN;
+			return SharingState.DO_NOT_SHARE;
 		}
 		return sharesWithUs;
 	}
@@ -248,7 +248,7 @@ public class Machine extends DbObject<Integer>
 		}
 		
 		@Override
-		public void setSharing(SharingState state)
+		public void setWeShare(SharingState state)
 		{
 			throw new UnsupportedOperationException("This is the local machine.");
 		}

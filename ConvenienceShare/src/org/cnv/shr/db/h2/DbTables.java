@@ -1,8 +1,6 @@
 package org.cnv.shr.db.h2;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,6 +22,7 @@ import org.cnv.shr.mdl.SecurityKey;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class DbTables
 {
@@ -243,18 +242,7 @@ public class DbTables
 	
 	private static PreparedStatement[] executeStatments(ConnectionWrapper c, String file) throws SQLException, IOException
 	{
-		StringBuilder builder = new StringBuilder();
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-				ClassLoader.getSystemResourceAsStream(Settings.SQL_DIR + file))))
-		{
-			String line;
-			while ((line = reader.readLine()) != null)
-			{
-				builder.append(line);
-			}
-		}
-
-		String[] statements = builder.toString().split(";");
+		String[] statements = Misc.readFile(Settings.RES_DIR + file).split(";");
 		PreparedStatement[] returnValue = new PreparedStatement[statements.length];
 
 		for (int i = 0; i < statements.length; i++)

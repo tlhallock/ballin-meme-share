@@ -57,7 +57,9 @@ public class UserActions
 					Communication openConnection = Services.networkManager.openConnection(url, params.acceptKeys);
 					if (openConnection == null)
 					{
-						Services.keyManager.addPendingAuthentication(url);
+						Services.keyManager.addPendingAuthentication(
+								Services.settings.keysFile.get(),
+								url);
 						return;
 					}
 
@@ -73,12 +75,12 @@ public class UserActions
 					{
 						if (params.share)
 						{
-							machine.setSharing(SharingState.DOWNLOADABLE);
+							machine.setWeShare(SharingState.DOWNLOADABLE);
 							machine.save();
 						}
 						else
 						{
-							machine.setSharing(SharingState.SHARE_PATHS);
+							machine.setWeShare(SharingState.SHARE_PATHS);
 							machine.save();
 						}
 					}
@@ -249,7 +251,7 @@ public class UserActions
 			@Override
 			public void run()
 			{
-				m.setSharing(share);
+				m.setWeShare(share);
 				try
 				{
 					m.save();

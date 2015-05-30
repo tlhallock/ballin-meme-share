@@ -15,13 +15,13 @@ import java.util.logging.Level;
 import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.dmn.KeysService;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.dwn.NewAesKey;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.FlushableEncryptionStreams;
+import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.OutputByteWriter;
 

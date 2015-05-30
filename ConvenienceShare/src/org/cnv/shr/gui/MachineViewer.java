@@ -31,7 +31,9 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Notifications;
@@ -52,7 +54,7 @@ import org.cnv.shr.util.Misc;
  */
 public class MachineViewer extends javax.swing.JFrame
 {
-    private Machine machine;
+    private String machineIdent;
     private RootDirectory directory;
     private PathTreeModel model;
     private Notifications.NotificationListener listener;
@@ -60,6 +62,7 @@ public class MachineViewer extends javax.swing.JFrame
      * Creates new form RemoteViewer
      */
     public MachineViewer(Machine rMachine) {
+    	machineIdent = rMachine.getIdentifier();
         initComponents();
 
         pathsTable.setAutoCreateRowSorter(true);
@@ -90,7 +93,7 @@ public class MachineViewer extends javax.swing.JFrame
 			@Override
 			public void remoteChanged(Machine remote)
 			{
-				if (remote.getIdentifier().equals(machine.getIdentifier()))
+				if (remote.getIdentifier().equals(machineIdent))
 				{
 					setMachine(remote);
 				}
@@ -99,6 +102,7 @@ public class MachineViewer extends javax.swing.JFrame
 			@Override
 			public void remoteDirectoryChanged(RemoteDirectory remote)
 			{
+		    	Machine machine = getMachine();
 				if (directory == null || !directory.getMachine().getIdentifier().equals(machine.getIdentifier())
 									  || !directory.getName().equals(remote.getName()))
 				{
@@ -116,13 +120,15 @@ public class MachineViewer extends javax.swing.JFrame
 				String rootName = event.getRootName();
 				if (rootName == null)
 				{
+					// Need to do something here...
 					return;
 				}
 				if (rootName.equals(directory.getName()))
 				{
-					visibleCheckBox.setSelected(event.getCurrentSharingState().canList());
-					downloadableCheckBox.setSelected(event.getCurrentSharingState().canDownload());
+					rootIsVisibleCheckBox.setSelected(event.getCurrentSharingState().listable());
+					rootIsDownloadableCheckBox.setSelected(event.getCurrentSharingState().downloadable());
 				}
+				event.show(getThis());
 			}
 		});
 
@@ -138,46 +144,20 @@ public class MachineViewer extends javax.swing.JFrame
 		
 		addPermissionListeners();
     }
-    
+    private MachineViewer getThis()
+    {
+    	return this;
+    }
 
     private void addPermissionListeners()
 	{
     	// need to go to DB
-		visibleCheckBox.addChangeListener(new ChangeListener()
-		{
-			@Override
-			public void stateChanged(ChangeEvent arg0)
-			{
-				if (machine.isLocal())
-				{
-					return;
-				}
-				try
-				{
-					if (isSharing.isSelected() && !machine.sharingWithOther().canDownload())
-					{
-						machine.setSharing(SharingState.DOWNLOADABLE);
-						machine.save();
-						Services.notifications.remoteChanged(machine);
-					}
-					else if (!isSharing.isSelected() && machine.sharingWithOther().canList())
-					{
-						machine.setSharing(SharingState.DO_NOT_SHARE);
-						machine.save();
-						Services.notifications.remoteChanged(machine);
-					}
-				}
-				catch (SQLException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to save visible permissions", e);
-				}
-			}
-		});
 		isMessaging.addChangeListener(new ChangeListener()
 		{
 			@Override
 			public void stateChanged(ChangeEvent arg0)
 			{
+				Machine machine = getMachine();
 				if (machine.isLocal())
 				{
 					return;
@@ -186,13 +166,13 @@ public class MachineViewer extends javax.swing.JFrame
 				{
 					if (isMessaging.isSelected() && !machine.getAllowsMessages())
 					{
-						machine.setSharing(SharingState.DOWNLOADABLE);
+						machine.setAllowsMessages(true);
 						machine.save();
 						Services.notifications.remoteChanged(machine);
 					}
 					else if (!isMessaging.isSelected() && machine.getAllowsMessages())
 					{
-						machine.setSharing(SharingState.DO_NOT_SHARE);
+						machine.setAllowsMessages(false);
 						machine.save();
 						Services.notifications.remoteChanged(machine);
 					}
@@ -203,13 +183,32 @@ public class MachineViewer extends javax.swing.JFrame
 				}
 			}
 		});
+        sharingWithRemoteMachine.setModel(new PermissionChanger(sharingWithRemoteMachine, getMachine().sharingWithOther())
+		{
+			@Override
+			protected void setPermission(SharingState state)
+			{
+				Machine machine = getMachine();
+				machine.setWeShare(state);
+				try
+				{
+					machine.save();
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		});
 	}
     
-	public Machine getMachine() {
-        return machine;
+	public Machine getMachine()
+	{
+        return DbMachines.getMachine(machineIdent);
     }
 
     public void refreshRoot(final RemoteDirectory remote) {
+    	Machine machine = getMachine();
         if (machine.getId() != remote.getMachine().getId()) {
             return;
         }
@@ -268,6 +267,7 @@ public class MachineViewer extends javax.swing.JFrame
                         @Override
                         public void run() {
                             try {
+                            	Machine machine = getMachine();
                                 final RootDirectory root = DbRoots.getRoot(machine, mId);
                                 if (root == null) {
                                     LogWrapper.getLogger().info("Unable to find root mid=" + machine + " name=" + mId);
@@ -351,10 +351,11 @@ public class MachineViewer extends javax.swing.JFrame
         return model;
     }
 
-    public void setMachine(final Machine machine) {
-        isSharing.setEnabled(machine.isLocal());
-        this.machine = machine;
-        this.isSharing.setSelected(machine.sharingWithOther().canDownload());
+    public void setMachine(final Machine machine)
+    {
+        this.machineIdent = machine.getIdentifier();
+        sharingWithRemoteMachine.setSelectedItem(machine.sharingWithOther().humanReadable());
+        remoteSharingWithUs.setText(machine.getSharesWithUs().humanReadable());
         machineLabel.setText((machine.isLocal() ? "Local machine: " : "") + machine.getName());
         final StringBuilder builder = new StringBuilder();
         PublicKey[] keys = DbKeys.getKeys(machine);
@@ -384,21 +385,17 @@ public class MachineViewer extends javax.swing.JFrame
         if (machine.isLocal())
         {
             jButton1.setEnabled(false); // cannot ask to share with local
-            isSharing.setSelected(true); isSharing.setEnabled(false);
+            sharingWithRemoteMachine.setEnabled(false);
             isMessaging.setSelected(true); isMessaging.setEnabled(false);
             jButton3.setEnabled(false); // cannot sync roots to local
         }
         else
         {
             jButton1.setEnabled(true); // cannot ask to share with local
-            isSharing.setSelected(machine.sharingWithOther().canDownload()); isSharing.setEnabled(true);
+            sharingWithRemoteMachine.setEnabled(true);
             isMessaging.setSelected(machine.getAllowsMessages()); isMessaging.setEnabled(true);
             jButton3.setEnabled(true);
         }
-    }
-
-    public Machine getRemote() {
-        return machine;
     }
 
     private void viewNoDirectory() {
@@ -414,6 +411,9 @@ public class MachineViewer extends javax.swing.JFrame
             ((DefaultTableModel) filesTable.getModel()).removeRow(0);
         }
         updatePermissionBoxesLocal();
+
+		rootIsVisibleCheckBox.setSelected(false);
+		rootIsDownloadableCheckBox.setSelected(false);
     }
     private void view(final RootDirectory directory) {
     	if (directory == null) {
@@ -439,24 +439,27 @@ public class MachineViewer extends javax.swing.JFrame
         }
         else
         {
-        	updatePermissionBoxesRemote();
+        	updatePermissionBoxesRemote((RemoteDirectory) directory);
         }
     }
 
-    private void updatePermissionBoxesLocal() {
+    private void updatePermissionBoxesLocal()
+    {
         changePathButton.setEnabled(false);
-        visibleCheckBox.setEnabled(false); visibleCheckBox.setSelected(true);
-        downloadableCheckBox.setEnabled(false); downloadableCheckBox.setSelected(false);
+        rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(true);
+        rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(false);
         requestDownloadButton.setEnabled(false);
         requestShareButton.setEnabled(false);
     }
     
-    private void updatePermissionBoxesRemote() {
+    private void updatePermissionBoxesRemote(RemoteDirectory remote)
+    {
+    	SharingState state = DbPermissions.getCurrentPermissions(remote);
         changePathButton.setEnabled(true);
-        visibleCheckBox.setEnabled(false); visibleCheckBox.setSelected(false);
-        downloadableCheckBox.setEnabled(false); downloadableCheckBox.setSelected(false);
-        requestDownloadButton.setEnabled(!downloadableCheckBox.isSelected());
-        requestShareButton.setEnabled(!visibleCheckBox.isSelected());
+        rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(state.listable());
+        rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(state.downloadable());
+        requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
+        requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
     }
 
     private synchronized void listFiles(final List<SharedFile> files) {
@@ -497,7 +500,6 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
-        isSharing = new javax.swing.JCheckBox();
         isMessaging = new javax.swing.JCheckBox();
         machineLabel = new javax.swing.JLabel();
         keysLabel = new javax.swing.JLabel();
@@ -526,9 +528,9 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel11 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
-        visibleCheckBox = new javax.swing.JCheckBox();
+        rootIsVisibleCheckBox = new javax.swing.JCheckBox();
         requestShareButton = new javax.swing.JButton();
-        downloadableCheckBox = new javax.swing.JCheckBox();
+        rootIsDownloadableCheckBox = new javax.swing.JCheckBox();
         requestDownloadButton = new javax.swing.JButton();
         pathField = new javax.swing.JTextField();
         changePathButton = new javax.swing.JButton();
@@ -539,6 +541,11 @@ public class MachineViewer extends javax.swing.JFrame
         numFilesLabel = new javax.swing.JLabel();
         diskSpaceLabel = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
+        sharingWithRemoteMachine = new javax.swing.JComboBox();
+        pin = new javax.swing.JCheckBox();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        remoteSharingWithUs = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -554,9 +561,7 @@ public class MachineViewer extends javax.swing.JFrame
             }
         });
 
-        isSharing.setText("Is Sharing");
-
-        isMessaging.setText("Messages");
+        isMessaging.setText("Allow messages");
 
         machineLabel.setText("Loading...");
 
@@ -728,8 +733,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         jLabel13.setText("Share status:");
 
-        visibleCheckBox.setText("Visible");
-        visibleCheckBox.setEnabled(false);
+        rootIsVisibleCheckBox.setText("Visible");
+        rootIsVisibleCheckBox.setEnabled(false);
 
         requestShareButton.setText("Request");
         requestShareButton.addActionListener(new java.awt.event.ActionListener() {
@@ -739,8 +744,8 @@ public class MachineViewer extends javax.swing.JFrame
             }
         });
 
-        downloadableCheckBox.setText("Downloadable");
-        downloadableCheckBox.setEnabled(false);
+        rootIsDownloadableCheckBox.setText("Downloadable");
+        rootIsDownloadableCheckBox.setEnabled(false);
 
         requestDownloadButton.setText("Request");
         requestDownloadButton.addActionListener(new java.awt.event.ActionListener() {
@@ -790,11 +795,11 @@ public class MachineViewer extends javax.swing.JFrame
                         .addGap(0, 317, Short.MAX_VALUE)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                .addComponent(visibleCheckBox)
+                                .addComponent(rootIsVisibleCheckBox)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(requestShareButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(downloadableCheckBox)
+                                .addComponent(rootIsDownloadableCheckBox)
                                 .addGap(18, 18, 18)
                                 .addComponent(requestDownloadButton))
                             .addComponent(jButton7, javax.swing.GroupLayout.Alignment.TRAILING)))
@@ -853,9 +858,9 @@ public class MachineViewer extends javax.swing.JFrame
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel13)
-                    .addComponent(visibleCheckBox)
+                    .addComponent(rootIsVisibleCheckBox)
                     .addComponent(requestShareButton)
-                    .addComponent(downloadableCheckBox)
+                    .addComponent(rootIsDownloadableCheckBox)
                     .addComponent(requestDownloadButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton7)
@@ -874,13 +879,31 @@ public class MachineViewer extends javax.swing.JFrame
             }
         });
 
+        sharingWithRemoteMachine.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        pin.setText("Pin");
+
+        jLabel3.setText("Permissions to us:");
+
+        jLabel4.setText("Permissions from us:");
+
+        remoteSharingWithUs.setText("Loading");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 876, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jButton3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(isMessaging)
+                        .addGap(18, 18, 18)
+                        .addComponent(pin))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -889,21 +912,19 @@ public class MachineViewer extends javax.swing.JFrame
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(keysLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(isSharing)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(isMessaging)
-                                .addGap(7, 7, 7)
-                                .addComponent(jButton2))))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jButton3)))
+                            .addComponent(sharingWithRemoteMachine, 0, 107, Short.MAX_VALUE)
+                            .addComponent(remoteSharingWithUs, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 876, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -916,16 +937,21 @@ public class MachineViewer extends javax.swing.JFrame
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jButton1)
-                            .addComponent(isSharing))
+                            .addComponent(jLabel3)
+                            .addComponent(remoteSharingWithUs))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(isMessaging)
-                            .addComponent(keysLabel)
+                            .addComponent(keysLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel2)
-                            .addComponent(jButton2))))
+                            .addComponent(jButton2)
+                            .addComponent(sharingWithRemoteMachine, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel4))))
+                .addGap(12, 12, 12)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton3)
+                    .addComponent(pin)
+                    .addComponent(isMessaging))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 378, Short.MAX_VALUE))
         );
 
@@ -934,6 +960,7 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         try {
+        	Machine machine = getMachine();
             Communication connection = Services.networkManager.openConnection(machine, false);
             if (connection != null) {
                 connection.send(new UserMessageMessage(UserMessage.createShareRequest()));
@@ -962,7 +989,7 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        UserActions.syncRoots(machine);
+        UserActions.syncRoots(getMachine());
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void changePathButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changePathButtonActionPerformed
@@ -970,14 +997,14 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_changePathButtonActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        CreateMessage createMessage = new CreateMessage(machine);
+    	CreateMessage createMessage = new CreateMessage(getMachine());
         Services.notifications.registerWindow(createMessage);
 		createMessage.setVisible(true);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void requestDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestDownloadButtonActionPerformed
         try {
-            Communication connection = Services.networkManager.openConnection(machine, false);
+            Communication connection = Services.networkManager.openConnection(getMachine(), false);
             if (connection != null) {
                 connection.send(new UserMessageMessage(UserMessage.createShareRootRequest(directory)));
                 connection.finish();
@@ -994,7 +1021,7 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void requestShareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestShareButtonActionPerformed
         try {
-            Communication connection = Services.networkManager.openConnection(machine, false);
+            Communication connection = Services.networkManager.openConnection(getMachine(), false);
             if (connection != null) {
                 connection.send(new UserMessageMessage(UserMessage.createListRequest(directory)));
                 connection.finish();
@@ -1013,11 +1040,9 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JButton changePathButton;
     private javax.swing.JLabel descriptionLabel;
     private javax.swing.JLabel diskSpaceLabel;
-    private javax.swing.JCheckBox downloadableCheckBox;
     private javax.swing.JTable filesTable;
     private javax.swing.JTree filesTree;
     private javax.swing.JCheckBox isMessaging;
-    private javax.swing.JCheckBox isSharing;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
@@ -1028,6 +1053,8 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
@@ -1050,10 +1077,14 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JLabel numFilesLabel;
     private javax.swing.JTextField pathField;
     private javax.swing.JTable pathsTable;
+    private javax.swing.JCheckBox pin;
+    private javax.swing.JLabel remoteSharingWithUs;
     private javax.swing.JButton requestDownloadButton;
     private javax.swing.JButton requestShareButton;
+    private javax.swing.JCheckBox rootIsDownloadableCheckBox;
+    private javax.swing.JCheckBox rootIsVisibleCheckBox;
     private javax.swing.JLabel rootNameLabel;
+    private javax.swing.JComboBox sharingWithRemoteMachine;
     private javax.swing.JLabel tagsLabel;
-    private javax.swing.JCheckBox visibleCheckBox;
     // End of variables declaration//GEN-END:variables
 }

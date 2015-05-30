@@ -212,13 +212,13 @@ public class Authenticator
 			LogWrapper.getLogger().info("The remote's key for us will not do.");
 			// not able to verify self to remote, add key
 			localPublicKey = publicKey;
-			final byte[] sentNaunce = Services.keyManager.createTestNaunce(this, remotePublicKey);
+			final byte[] sentNaunce = IdkWhereToPutThis.createTestNaunce(this, remotePublicKey);
 			connection.send(new NewKey(publicKey, sentNaunce));
 			return;
 		}
 		
 		byte[] decrypted = Services.keyManager.decrypt(localPublicKey, requestedNaunce);
-		byte[] naunceRequest = Services.keyManager.createTestNaunce(this, remotePublicKey);
+		byte[] naunceRequest = IdkWhereToPutThis.createTestNaunce(this, remotePublicKey);
 		if (!Arrays.equals(publicKey.getEncoded(), localPublicKey.getEncoded()))
 		{
 			LogWrapper.getLogger().info("We have the required key from the remote, but it is old.");

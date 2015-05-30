@@ -7,7 +7,9 @@ import java.util.logging.Level;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.LogWrapper;
 
@@ -35,7 +37,7 @@ public class DbPermissions
 		}
 	}
 
-	public static SharingState isSharing(Machine machine, RootDirectory root)
+	private static SharingState isSharing(Machine machine, RootDirectory root)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(SELECT1))
@@ -46,7 +48,7 @@ public class DbPermissions
 			ResultSet executeQuery = stmt.executeQuery();
 			if (!executeQuery.next())
 			{
-				return SharingState.UNKOWN;
+				return null;
 			}
 			int dbValue = executeQuery.getInt(1);
 			for (SharingState state : SharingState.values())
@@ -61,25 +63,72 @@ public class DbPermissions
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to check sharing with " + machine, e);
 		}
-		return SharingState.DO_NOT_SHARE;
+		return null;
 	}
+	
+	public static SharingState getCurrentPermissions(Machine machine)
+	{
+		SharingState current = null;
+		SharingState other = machine.sharingWithOther();
+		if (current == null || (other != null && other.getDbValue() < current.getDbValue()))
+		{
+			current = other;
+		}
+		return current == null ? SharingState.DO_NOT_SHARE : current;
+	}
+
+	public static SharingState getCurrentPermissions(RemoteDirectory root)
+	{
+		SharingState current = isSharing(Services.localMachine, root);
+		return current == null ? SharingState.DO_NOT_SHARE : current;
+	}
+	
+	public static SharingState getCurrentPermissions(Machine machine, LocalDirectory root)
+	{
+		SharingState current = null;
+		SharingState other = machine.sharingWithOther();
+		if (current == null || (other != null && other.getDbValue() < current.getDbValue()))
+		{
+			current = other;
+		}
+		other = root.getDefaultSharingState();
+		if (current == null || (other != null && other.getDbValue() < current.getDbValue()))
+		{
+			current = other;
+		}
+		other = isSharing(machine, root);
+		if (current == null || (other != null && other.getDbValue() < current.getDbValue()))
+		{
+			current = other;
+		}
+		return current == null ? SharingState.DO_NOT_SHARE : current;
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 	public enum SharingState
 	{
-		DO_NOT_SHARE(0),
-		SHARE_PATHS (1),
-		DOWNLOADABLE(2),
-		DEFAULT     (3),
-		UNKOWN      (4),
+		DO_NOT_SHARE(1, false, false),
+		SHARE_PATHS (2,  true, false),
+		DOWNLOADABLE(3,  true,  true),
+//		DEFAULT     (4, false, false),
 		
 		;
 		
+		boolean canList;
+		boolean canDownload;
 		int state;
 		
-		SharingState(int i)
+		SharingState(int i, boolean cl, boolean cd)
 		{
 			this.state = i;
+			this.canList = cl;
+			this.canDownload = cd;
 		}
 		
 		public String humanReadable()
@@ -101,12 +150,22 @@ public class DbPermissions
 					return s;
 				}
 			}
-			return SharingState.UNKOWN;
+			return null;
 		}
 
 		public int getDbValue()
 		{
 			return state;
+		}
+
+		public boolean downloadable()
+		{
+			return canDownload;
+		}
+
+		public boolean listable()
+		{
+			return canList;
 		}
 	}
 }

@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.IdkWhereToPutThis;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -65,7 +66,7 @@ public class NewKey extends KeyMessage
 		connection.getAuthentication().setRemoteKey(newKey);
 
 		byte[] decrypted = Services.keyManager.decrypt(connection.getAuthentication().getLocalKey(), naunceRequest);
-		byte[] newRequest = Services.keyManager.createTestNaunce(connection.getAuthentication(), newKey);
+		byte[] newRequest = IdkWhereToPutThis.createTestNaunce(connection.getAuthentication(), newKey);
 		connection.send(new ConnectionOpenAwk(decrypted, newRequest));
 		return;
 	}

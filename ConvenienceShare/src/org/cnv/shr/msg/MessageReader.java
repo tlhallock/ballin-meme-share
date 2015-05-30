@@ -51,7 +51,6 @@ public class MessageReader
 		add(new MessageIdentifier(ListRoots.class                  ));
 		add(new MessageIdentifier(ListPath.class                   ));
 		add(new MessageIdentifier(MachineFound.class               ));
-		add(new MessageIdentifier(UpdateCode.class                 ));
 		add(new MessageIdentifier(DoneMessage.class                ));
 		add(new MessageIdentifier(PathList.class                   ));
 		add(new MessageIdentifier(RootList.class                   ));

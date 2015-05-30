@@ -18,4 +18,6 @@ public class Arguments
 		}};
 	String testIp;
 	String testPort;
+	
+	public String updateManagerDirectory;
 }

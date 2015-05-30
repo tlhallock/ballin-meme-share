@@ -15,6 +15,7 @@ public class WhoIAm extends MachineFound
 	public static int TYPE = 29;
 	
 	protected java.security.PublicKey[] keys;
+	protected String versionString;
 	
 	public WhoIAm(InputStream input) throws IOException
 	{
@@ -25,8 +26,10 @@ public class WhoIAm extends MachineFound
 	{
 		super();
 		keys       = new PublicKey[] {Services.keyManager.getPublicKey()};
+		versionString = "0.0.1";
 	}
 	
+	@Override
 	protected int getType()
 	{
 		return TYPE;
@@ -36,6 +39,7 @@ public class WhoIAm extends MachineFound
 	protected void parse(ByteReader reader) throws IOException
 	{
 		super.parse(reader);
+		versionString = reader.readString();
 		int numKeys = reader.readInt();
 		keys = new PublicKey[numKeys];
 		for (int i = 0; i < numKeys; i++)
@@ -48,6 +52,7 @@ public class WhoIAm extends MachineFound
 	protected void print(AbstractByteWriter buffer) throws IOException
 	{
 		super.print(buffer);
+		buffer.append(versionString);
 		buffer.append(keys.length);
 		for (PublicKey key : keys)
 		{
@@ -63,11 +68,13 @@ public class WhoIAm extends MachineFound
 		connection.getAuthentication().offerRemote(ident, connection.getIp(), keys);
 	}
 
+	@Override
 	public boolean requiresAthentication()
 	{
 		return false;
 	}
 
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

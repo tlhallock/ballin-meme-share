@@ -20,68 +20,29 @@ public class LocalSharePermission extends javax.swing.JPanel {
 
     private final Machine machine;
     private final LocalDirectory local;
+	private PermissionChanger permissionChanger;
     /**
      * Creates new form SharePermission
      */
-    public LocalSharePermission(Machine remote, LocalDirectory local) {
+    public LocalSharePermission(Machine remote, LocalDirectory l) {
         this.machine = remote;
-        this.local = local;
+        this.local = l;
         initComponents();
         setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
+        
+        jComboBox1.setModel(new PermissionChanger(jComboBox1, DbPermissions.getCurrentPermissions(machine, local)) {
+			@Override
+			protected void setPermission(SharingState state)
+			{
+		    	DbPermissions.setSharingState(machine, local, state);
+			}});
+        
         refresh();
     }
 
-    public void save()
-    {
-        if (!listBox.isSelected()) {
-            DbPermissions.setSharingState(machine, local, SharingState.DO_NOT_SHARE);
-            return;
-        }
-        if (!downloadableBox.isSelected()) {
-            DbPermissions.setSharingState(machine, local, SharingState.SHARE_PATHS);
-            return;
-        }
-        DbPermissions.setSharingState(machine, local, SharingState.DOWNLOADABLE);
-    }
-    
     public final void refresh()
     {
         this.machineLabel.setText(machine.getName());
-        setSharing(DbPermissions.isSharing(machine, local));
-    }
-    
-    public final void setSharing(SharingState state)
-    {
-        switch (state)
-        {
-        case DO_NOT_SHARE: // Fall through
-        case NOT_SET:
-            listBox.setSelected(false);
-            downloadableBox.setSelected(false);
-            break;
-        case SHARE_PATHS:
-            listBox.setSelected(true);
-            downloadableBox.setSelected(false);
-            break;
-        case DOWNLOADABLE:
-            listBox.setSelected(true);
-            downloadableBox.setSelected(true);
-            break;
-        }
-        updateEditable();
-    }
-    
-    public void updateEditable()
-    {
-        if (listBox.isSelected())
-        {
-            downloadableBox.setEnabled(true);
-        }
-        else
-        {
-            downloadableBox.setSelected(false);
-            downloadableBox.setEnabled(false);
-        }
     }
     
     /**
@@ -95,35 +56,13 @@ public class LocalSharePermission extends javax.swing.JPanel {
 
         jLabel1 = new javax.swing.JLabel();
         machineLabel = new javax.swing.JLabel();
-        listBox = new javax.swing.JCheckBox();
-        downloadableBox = new javax.swing.JCheckBox();
-        saveButton = new javax.swing.JButton();
+        jComboBox1 = new javax.swing.JComboBox();
 
         jLabel1.setText("Machine:");
 
         machineLabel.setText("loading");
 
-        listBox.setText("Can list");
-        listBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                listBoxStateChanged(evt);
-            }
-        });
-
-        downloadableBox.setText("Can download");
-        downloadableBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                downloadableBoxStateChanged(evt);
-            }
-        });
-
-        saveButton.setText("Save");
-        saveButton.setToolTipText("");
-        saveButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                saveButtonActionPerformed(evt);
-            }
-        });
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -133,13 +72,9 @@ public class LocalSharePermission extends javax.swing.JPanel {
                 .addContainerGap()
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 498, Short.MAX_VALUE)
+                .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 678, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(listBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(downloadableBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(saveButton)
+                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -149,31 +84,15 @@ public class LocalSharePermission extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(machineLabel)
-                    .addComponent(listBox)
-                    .addComponent(downloadableBox)
-                    .addComponent(saveButton))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(13, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
-        save();
-    }//GEN-LAST:event_saveButtonActionPerformed
-
-    private void downloadableBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_downloadableBoxStateChanged
-        updateEditable();
-    }//GEN-LAST:event_downloadableBoxStateChanged
-
-    private void listBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_listBoxStateChanged
-        updateEditable();
-    }//GEN-LAST:event_listBoxStateChanged
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBox downloadableBox;
+    private javax.swing.JComboBox jComboBox1;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JCheckBox listBox;
     private javax.swing.JLabel machineLabel;
-    private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables
 }

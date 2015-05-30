@@ -2,14 +2,17 @@ package org.cnv.shr.util;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
+import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
 
@@ -181,9 +184,54 @@ public class Misc
 	public static final int ICON_SIZE = 22;
 	public static Image getIcon() throws IOException
 	{
-		BufferedImage read = ImageIO.read(ClassLoader.getSystemResourceAsStream(Settings.IMG_DIR + "icon.png"));
+		BufferedImage read = ImageIO.read(ClassLoader.getSystemResourceAsStream(Settings.RES_DIR + "icon.png"));
 		Image scaledInstance = read.getScaledInstance(ICON_SIZE, ICON_SIZE, BufferedImage.SCALE_SMOOTH);
 		return scaledInstance;
+	}
+	
+	public static String readFile(String resourceName)
+	{
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream(resourceName))))
+		{
+			return readAll(reader);
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to read resource " + resourceName + ".", e);
+			return null;
+		}
+	}
+	public static String readAll(BufferedReader reader) throws IOException
+	{
+		StringBuilder builder = new StringBuilder();
+		String line;
+		while ((line = reader.readLine()) != null)
+		{
+			builder.append(line); // careful what happens to the new lines...
+		}
+		return builder.toString();
+	}
+	public static void writeBytes(byte[] bytes, OutputStream output) throws IOException
+	{
+		output.write((byte) ((bytes.length >> 24L) & 0xff));
+		output.write((byte) ((bytes.length >> 16L) & 0xff));
+		output.write((byte) ((bytes.length >>  8L) & 0xff));
+		output.write((byte) ((bytes.length >>  0L) & 0xff));
+		output.write(bytes);
+	}
+	public static byte[] readBytes(InputStream input) throws IOException
+	{
+		int length = 0;
+		length |= (input.read()) << 24L;
+		length |= (input.read()) << 16L;
+		length |= (input.read()) <<  8L;
+		length |= (input.read()) <<  0L;
+		
+		byte[] returnValue = new byte[length];
+		int offset = 0;
+		while ((offset += input.read(returnValue, offset, length - offset)) < length)
+			;
+		return returnValue;
 	}
 	
 	

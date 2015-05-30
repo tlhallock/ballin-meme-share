@@ -20,13 +20,14 @@ public class Settings implements SettingListener
 	public static final String encryptionAlgorithm = "RSA";
 	public static final String VERSION = "0.1";
 	
-	public static final String SQL_DIR  = "sql/";
-	public static final String IMG_DIR  = "imgs/";
+	public static final String RES_DIR  = "res/";
 
 	private File settingsFile;
 	private String localAddress;
 	private LinkedList<Setting> settings = new LinkedList<>();
 	private boolean reading;
+	
+	// These need more listeners...
 	
 	public StringSetting     machineName              = new StringSetting    ("machineName         ".trim(), Misc.getRandomName()                                                         , false,  true, "The name to display for this machine.                                           ".trim()); { settings.add(machineName         );  }
 	public StringSetting     machineIdentifier        = new StringSetting    ("machineIdentifier   ".trim(), Misc.getRandomString(MACHINE_ID_LENGTH)                                      ,  true, false, "A unique identifer for this machine.                                            ".trim()); { settings.add(machineIdentifier   );  }

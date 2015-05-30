@@ -9,20 +9,13 @@ import javax.swing.JComboBox;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
 
 
-public class PermissionChanger extends DefaultComboBoxModel<String> implements ActionListener
+public abstract class PermissionChanger extends DefaultComboBoxModel<String> implements ActionListener
 {
-	private PermissionListener listener;
-	
 	public PermissionChanger(JComboBox box, SharingState current)
 	{
 		super(getOptions());
 		setSelectedItem(current.humanReadable());
 		box.addActionListener(this);
-	}
-	
-	public void setListener(PermissionListener listener)
-	{
-		this.listener = listener;
 	}
 	
 	private SharingState getCurrentState()
@@ -42,12 +35,7 @@ public class PermissionChanger extends DefaultComboBoxModel<String> implements A
 	@Override
 	public void actionPerformed(ActionEvent arg0)
 	{
-		PermissionListener myListener = listener;
-		if (myListener == null)
-		{
-			return;
-		}
-		myListener.setPermission(getCurrentState());
+		setPermission(getCurrentState());
 	}
 	
 	private static String[] getOptions()
@@ -61,8 +49,5 @@ public class PermissionChanger extends DefaultComboBoxModel<String> implements A
 		return options;
 	}
 	
-	interface PermissionListener
-	{
-		public void setPermission(SharingState state);
-	}
+	protected abstract void setPermission(SharingState state);
 }

@@ -7,8 +7,8 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.msg.key.PermissionFailure;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -16,8 +16,6 @@ import org.cnv.shr.util.OutputByteWriter;
 
 public abstract class Message
 {
-	private static final int VERSION = 1;
-	
 	protected Message() {}
 	
 	// This constructor is no longer needed.
@@ -53,37 +51,35 @@ public abstract class Message
 	public    abstract void perform(Communication connection) throws Exception;
 	
 	
-	protected void checkPermissionsVisible(Communication c, Machine machine, RootDirectory root, String action) throws PermissionException, IOException
+	protected void checkPermissionsVisible(Communication c, Machine machine, LocalDirectory root, String action) throws PermissionException, IOException
 	{
 		if (Services.settings.shareWithEveryone.get())
 		{
 			return;
 		}
-		SharingState sharing = DbPermissions.isSharing(machine, root);
-		if (sharing != null && sharing.canList())
+		SharingState currentPermissions = DbPermissions.getCurrentPermissions(machine, root);
+		if (currentPermissions.listable())
 		{
 			return;
 		}
 		
-		PermissionFailure permissionFailure = new PermissionFailure(root.getName(), sharing, action);
-		c.send(permissionFailure);
+		c.send(new PermissionFailure(root.getName(), currentPermissions, action));
 		throw new PermissionException(action);
 	}
 	
-	protected void checkPermissionsDownloadable(Communication c, Machine machine, RootDirectory root, String action) throws PermissionException, IOException
+	protected void checkPermissionsDownloadable(Communication c, Machine machine, LocalDirectory root, String action) throws PermissionException, IOException
 	{
 		if (Services.settings.shareWithEveryone.get())
 		{
 			return;
 		}
-		SharingState sharing = DbPermissions.isSharing(machine, root);
-		if (sharing != null && sharing.canDownload())
+		SharingState currentPermissions = DbPermissions.getCurrentPermissions(machine, root);
+		if (currentPermissions.downloadable())
 		{
 			return;
 		}
 		
-		PermissionFailure permissionFailure = new PermissionFailure(root.getName(), sharing, action);
-		c.send(permissionFailure);
+		c.send(new PermissionFailure(root.getName(), currentPermissions, action));
 		throw new PermissionException(action);
 	}
 	
@@ -93,13 +89,13 @@ public abstract class Message
 		{
 			return;
 		}
-		if (machine.sharingWithOther().canList())
+		SharingState currentPermissions = DbPermissions.getCurrentPermissions(machine);
+		if (currentPermissions.listable())
 		{
 			return;
 		}
 		
-		PermissionFailure permissionFailure = new PermissionFailure(null, machine.sharingWithOther(), action);
-		c.send(permissionFailure);
+		c.send(new PermissionFailure(null, currentPermissions, action));
 		throw new PermissionException(action);
 	}
 }

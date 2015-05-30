@@ -34,6 +34,8 @@ import org.cnv.shr.msg.MessageReader;
 import org.cnv.shr.stng.SettingListener;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.sync.RemoteSynchronizers;
+import org.cnv.shr.updt.UpdateInfo;
+import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -60,6 +62,8 @@ public class Services
 	public static RemoteSynchronizers syncs;
 	public static BlackList blackList;
 	public static Quiter quiter;
+	public static UpdateManager updateManager;
+	public static UpdateInfo codeUpdateInfo;
 	
 	public static void initialize(Arguments args) throws Exception
 	{
@@ -67,6 +71,7 @@ public class Services
 		args.settings.read();
 		createServices(args.settings, args.deleteDb);
 		testStartUp();
+		checkIfUpdateManagerIsRunning();
 		startServices();
 	}
 	
@@ -82,7 +87,7 @@ public class Services
         
 		notifications = new Notifications();
 		keyManager = new KeysService();
-		keyManager.readKeys();
+		keyManager.readKeys(Services.settings.keysFile.get(), Services.settings.keySize.get());
 		localMachine = new Machine.LocalMachine();
 		if (!localMachine.save())
 		{
@@ -95,6 +100,10 @@ public class Services
 		downloads = new DownloadManager();
 		syncs = new RemoteSynchronizers();
 		blackList = new BlackList();
+		String version = Misc.readFile(Settings.RES_DIR + "version.txt");
+		if (version == null) version = "0";
+		updateManager = new UpdateManager(version);
+		updateManager.read();
 		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
 		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
@@ -127,6 +136,11 @@ public class Services
 		checksums = new ChecksumManager();
 		
 		startSystemTray();
+	}
+	
+	private static void checkIfUpdateManagerIsRunning()
+	{
+		
 	}
 	
 	private static void initializeLogging()
@@ -166,6 +180,7 @@ public class Services
 		
 		timer = new Timer();
 		downloads.initiatePendingDownloads();
+		timer.scheduleAtFixedRate(updateManager, 10000L, 24L * 60L * 60L * 1000L);
 //		monitorTimer.schedule(new TimerTask() {
 //			@Override
 //			public void run()
@@ -229,6 +244,8 @@ public class Services
 
 	public static void deInitialize()
 	{
+		if (updateManager != null)
+			updateManager.cancel();
 		if (notifications != null)
 			notifications.stop();
 		if (handlers != null)
@@ -253,6 +270,7 @@ public class Services
 			h2DbCache.close();
 		if (networkManager != null)
 			networkManager.closeAll();
+		LogWrapper.close();
 	}
 	
 	public static void testStartUp() throws Exception

@@ -66,11 +66,11 @@ public class GetPermission extends Message
 		}
 		else if ((local = DbRoots.getLocalByName(rootName)) == null)
 		{
-			permission = SharingState.UNKOWN;
+			permission = SharingState.DO_NOT_SHARE;
 		}
 		else
 		{
-			permission = DbPermissions.isSharing(remote, local);
+			permission = DbPermissions.getCurrentPermissions(remote, local);
 		}
 		
 		connection.send(new GotPermission(rootName, permission));
