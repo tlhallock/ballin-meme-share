@@ -17,3 +17,7 @@ ConvenienceShare/temp/
 /ConvenienceShare/build/
 /ConvenienceShare/dist/
 scripts/dist/
+/Common/nbproject/private/
+/Installer/nbproject/private/
+/Updater/nbproject/private/
+/Tracker/nbproject/private/

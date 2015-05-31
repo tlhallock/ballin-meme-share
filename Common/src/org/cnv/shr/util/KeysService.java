@@ -44,6 +44,7 @@ public class KeysService
 	
 	public void writeKeys(Path f) throws IOException
 	{
+		Misc.ensureDirectory(f, true);
 		try (PrintStream ps = new PrintStream(Files.newOutputStream(f)))
 		{
 			ps.println(keys.size());

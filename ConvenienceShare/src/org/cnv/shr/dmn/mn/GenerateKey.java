@@ -1,7 +1,6 @@
 
 package org.cnv.shr.dmn.mn;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,7 +32,7 @@ public class GenerateKey
 
 		// Save the generated key for the client
 		UpdateManager updateManager = new UpdateManager(null);
-		Services.settings.codeUpdateKey.set(new File(root + "updateKey"));
+		Services.settings.codeUpdateKey.set(root.resolve("updateKey"));
 		updateManager.updateInfo(ip, port, service.getPublicKey());
 		updateManager.write();
 		Files.delete(settingsFile);

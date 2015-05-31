@@ -10,7 +10,7 @@ import javax.swing.JTextArea;
 
 public class TextAreaHandler extends Handler
 {
-	private int logLines;
+		private int logLines;
     private LinkedList<String> logMessages = new LinkedList<>();
     private JTextArea logArea;
     
@@ -50,14 +50,18 @@ public class TextAreaHandler extends Handler
 	public void flush() {}
 
 	@Override
-	public void publish(LogRecord record)
+	public synchronized void publish(LogRecord record)
 	{
 		String message = record.getMessage();
 
-		if (record.getThrown() != null)
+		Throwable thrown = record.getThrown();
+		if (thrown != null)
 		{
 			StringWriter out = new StringWriter();
-			record.getThrown().printStackTrace(new PrintWriter(out));
+			try (PrintWriter s = new PrintWriter(out);)
+			{
+				thrown.printStackTrace(s);
+			}
 			message = message + "\n" + out.toString();
 		}
 		for (String str : message.split("\n"))

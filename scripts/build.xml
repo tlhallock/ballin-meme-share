@@ -120,7 +120,7 @@
 
 		<jar destfile="dist/Installer.jar">
 			<manifest>
-				<attribute name="Main-Class" value="org.cnv.shr.inst.Install2" />
+				<attribute name="Main-Class" value="org.cnv.shr.inst.Install" />
 				<attribute name="Class-Path" value="" />
 			</manifest>
 			<fileset dir="classes/install/" />

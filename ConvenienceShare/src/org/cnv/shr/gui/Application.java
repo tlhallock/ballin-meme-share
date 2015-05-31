@@ -13,17 +13,15 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.Collections;
-import java.util.Date;
 import java.util.EventObject;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -32,44 +30,45 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.db.h2.DbTables.DbObjects;
-import org.cnv.shr.dmn.Notifications.NotificationListener;
+import org.cnv.shr.dmn.Notifications.NotificationListenerImpl;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.ServeInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
-import org.cnv.shr.gui.TableListener.TableRowListener;
-import org.cnv.shr.mdl.Download;
-import org.cnv.shr.mdl.Download.DownloadState;
+import org.cnv.shr.gui.tbl.DownloadTable;
+import org.cnv.shr.gui.tbl.LocalTable;
+import org.cnv.shr.gui.tbl.MachineTable;
+import org.cnv.shr.gui.tbl.MessageTable;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.mdl.UserMessage;
+import org.cnv.shr.msg.key.PermissionFailure.PermissionFailureEvent;
 import org.cnv.shr.stng.Setting;
 import org.cnv.shr.stng.Setting.SettingsEditor;
 import org.cnv.shr.sync.DebugListener;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.TextAreaHandler;
 
 /**
  * 
  * @author John
  */
-public class Application extends javax.swing.JFrame
+public class Application extends javax.swing.JFrame implements NotificationListenerImpl
 {
     LinkedList<ConnectionStatus> connections = new LinkedList<>();
-    NotificationListener listener;
     TextAreaHandler logHandler;
+    
+    
+    LocalTable locals;
+    MachineTable remotes;
+    MessageTable messages;
+    DownloadTable downloads;
     
 	/**
 	 * Creates new form Application
@@ -78,14 +77,13 @@ public class Application extends javax.swing.JFrame
 	{
 		initComponents();
 		initializeSettings();
-		initializeLocals();
-		initializeMachines();
-		initializeMessages();
-		initializeDownloads();
+
+		locals = new LocalTable(this, localsView);
+		remotes = new MachineTable(this, machinesList);
+		downloads = new DownloadTable(this, jTable2);
+		messages = new MessageTable(this, messageTable);
 		
 		connectionsPanel.setLayout(new GridLayout(0, 1));
-		machinesList.setAutoCreateRowSorter(true);
-		localsView.setAutoCreateRowSorter(true);
 		
 		this.addComponentListener(new ComponentAdapter()
 		{
@@ -111,16 +109,14 @@ public class Application extends javax.swing.JFrame
 			}});
 		LogWrapper.getLogger().addHandler(logHandler);
 		
-		listener = createNotificationListener();
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e)
 			{
-				Services.notifications.remove(listener);
 				LogWrapper.getLogger().removeHandler(logHandler);
 			}
 		});
-		Services.notifications.add(listener);
+		Services.notifications.add(this);
 	}
 
 	private void initializeSettings()
@@ -201,105 +197,21 @@ public class Application extends javax.swing.JFrame
 
 	public void refreshAll()
 	{
-		refreshDownloads();
+		downloads.refresh();
 		refreshSettings();
-		refreshLocals();
-		refreshRemotes();
-		refreshMessages();
+		locals.refresh();
+		remotes.refresh();
+		messages.refresh();
 		refreshConnections();
 		refreshServes();
 	}
     
-	// should sync the locals table...
-	private synchronized void refreshLocals()
-	{
-		DefaultTableModel model = (DefaultTableModel) localsView.getModel();
-		while (model.getRowCount() > 0)
-		{
-			model.removeRow(0);
-		}
-
-		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
-		while (listLocals.hasNext())
-		{
-            	LocalDirectory local = listLocals.next();
-                model.addRow(new Object[] {
-                    local.getPathElement().getFullPath(),
-                    local.getDescription(),
-                    local.getTags(),
-                    new NumberOfFiles(local.numFiles()),
-                    new DiskUsage(local.diskSpace()),
-                });
-		}
-	}
-
-	// should sync the locals table...
 	private synchronized void refreshLocal(LocalDirectory local)
 	{
-		DefaultTableModel model = (DefaultTableModel) localsView.getModel();
-		TableListener.removeIfExists(model, "Path", local.getPathElement().getFullPath());
-		
-        model.addRow(new String[] {
-            local.getPathElement().getFullPath(),
-            local.getDescription(),
-            local.getTags(),
-            local.getTotalNumberOfFiles(),
-            local.getTotalFileSize(),
-        });
+		locals.refresh(local);
 	}
 
-	// should sync the machines table...
-	private synchronized void refreshRemote(Machine machine)
-	{
-		DefaultTableModel model = (DefaultTableModel) machinesList.getModel();
-		TableListener.removeIfExists(model, "Id", machine.getIdentifier());
-        model.addRow(new Object[] {
-        		machine.getName(),
-        		machine.getIp() + ":" + machine.getPort(),
-        		machine.getIdentifier(),
-                String.valueOf(machine.sharingWithOther()),
-                new NumberOfFiles(DbMachines.getTotalNumFiles(machine)),
-                new DiskUsage(DbMachines.getTotalDiskspace(machine)),
-                machine.getIp(),
-                machine.getPort(),
-                machine.getNumberOfPorts(),
-            });
-	}
-
-	private void refreshRemote(RemoteDirectory remote)
-	{
-		refreshRemote(remote.getMachine());
-	}
-
-	// should sync the machines table...
-	private synchronized void refreshRemotes()
-	{
-		DefaultTableModel model = (DefaultTableModel) machinesList.getModel();
-		while (model.getRowCount() > 0)
-		{
-			model.removeRow(0);
-		}
-
-        model.addRow(new Object[] {
-        	"Local machine: " + Services.localMachine.getName(),
-            Services.localMachine.getIp() + ":" + Services.localMachine.getPort(),
-            Services.localMachine.getIdentifier(),
-            String.valueOf(Services.localMachine.sharingWithOther()),
-            new NumberOfFiles(DbMachines.getTotalNumFiles(Services.localMachine)),
-            new DiskUsage(DbMachines.getTotalDiskspace(Services.localMachine)),
-            Services.settings.getLocalIp(),
-            Services.settings.servePortBeginE.get(),
-            Services.settings.maxServes.get(),
-        });
-
-		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
-		while (listRemoteMachines.hasNext())
-		{
-			refreshRemote(listRemoteMachines.next());
-		}
-	}
-
-	private void showRemote(final Machine machine)
+	public void showRemote(final Machine machine)
 	{
 		final MachineViewer viewer = new MachineViewer(machine);
 		Services.notifications.registerWindow(viewer);
@@ -308,37 +220,8 @@ public class Application extends javax.swing.JFrame
 		viewer.setVisible(true);
 		LogWrapper.getLogger().info("Showing remote " + machine.getName());
 	}
-        
-	private void refreshMessages()
-	{
-		synchronized (this.messageTable)
-		{
-			DefaultTableModel model = (DefaultTableModel) this.messageTable.getModel();
-			while (model.getRowCount() > 0)
-			{
-				model.removeRow(0);
-			}
-			try (DbIterator<UserMessage> messages = DbMessages.listMessages())
-			{
-				while (messages.hasNext())
-				{
-					UserMessage message = messages.next();
-					model.addRow(new Object[] { 
-							message.getMachine().getName(),
-							message.getMessageType().humanReadable(), 
-							new Date(message.getSent()),
-							message.getMessage(), 
-							String.valueOf(message.getId()),
-					});
-				}
-			}
-			catch (SQLException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to list messages", e);
-			}
-		}
-	}
-	
+
+
 	private void refreshConnections()
 	{
 		for (ConnectionStatus status : connections)
@@ -347,50 +230,9 @@ public class Application extends javax.swing.JFrame
 		}
 	}
 	
-	private synchronized void refreshDownloads()
-	{
-		DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-		while (model.getRowCount() > 0)
-		{
-			model.removeRow(0);
-		}
-		this.maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
-		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
-				DbIterator<Download> downloads = new DbIterator<>(connection, DbObjects.PENDING_DOWNLOAD))
-		{
-			while (downloads.hasNext())
-			{
-				Download download = downloads.next();
-				SharedFile file = download.getFile();
-				RootDirectory directory = file.getRootDirectory();
-				Machine machine = directory.getMachine();
-				DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(new SharedFileId(file));
-				
-				model.addRow(new Object[] {
-						machine.getName(),
-						directory.getName(),
-						file.getPath().getUnbrokenName(),
-						new DiskUsage(file.getFileSize()),
-						new Date(download.getAdded()),
-						download.getState().humanReadable(),
-						String.valueOf(download.getPriority()),
-						download.getTargetFile().toString(),
-						"1",
-						downloadInstance == null ? "N/A" : downloadInstance.getSpeed(),
-						download.getState().equals(DownloadState.ALL_DONE) ?  "100%" : 
-							(downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage())),
-						String.valueOf(download.getId()),
-				});
-			}
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to list downloads.", e);
-		}
-	}
-	
 	private synchronized void refreshServes()
 	{
+		SwingUtilities.invokeLater(new Runnable() { public void run() {
 		DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
 		while (model.getRowCount() > 0)
 		{
@@ -405,7 +247,7 @@ public class Application extends javax.swing.JFrame
 					String.valueOf(instance.getCompletionPercentage()),
 					"Speed goes here...",
 			});
-		}
+		}}});
 	}
 
 	private void refreshSettings()
@@ -1111,19 +953,21 @@ public class Application extends javax.swing.JFrame
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
        DbMessages.clearAll();
-       refreshMessages();
+   		messages.refresh();
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
-        refreshMessages();
+  		messages.refresh();
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
-       refreshRemotes();
+  		remotes.refresh();
     }//GEN-LAST:event_jButton10ActionPerformed
 
     private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
-        refreshDownloads();
+    	// Should not be here...
+  		this.maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
+  		downloads.refresh();
         refreshServes();
     }//GEN-LAST:event_jButton11ActionPerformed
 
@@ -1188,288 +1032,7 @@ public class Application extends javax.swing.JFrame
     // End of variables declaration//GEN-END:variables
 
 
-	private void initializeLocals()
-	{
-		final TableListener tableListener = new TableListener(localsView);
-		tableListener.addListener(new TableRowListener()
-		{
-			@Override
-			public void run(final int row)
-			{
-				final String mId = tableListener.getTableValue("Path", row);
-				if (mId == null)
-				{
-					return;
-				}
-				final LocalDirectory root = DbRoots.getLocal(mId);
-				if (root == null)
-				{
-					LogWrapper.getLogger().info("Unable to find local directory " + mId);
-					return;
-				}
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						LocalDirectoryView localDirectoryView = new LocalDirectoryView();
-						Services.notifications.registerWindow(localDirectoryView);
-						localDirectoryView.view(root);
-						localDirectoryView.setVisible(true);
-						LogWrapper.getLogger().info("Displaying " + mId);
-					}
-				});
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Show";
-			}
-		}, true).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				final String mId = tableListener.getTableValue("Path", row);
-				if (mId == null)
-				{
-					return;
-				}
-				final RootDirectory root = DbRoots.getLocal(mId);
-				if (root == null)
-				{
-					LogWrapper.getLogger().info("Unable to find local directory " + mId);
-					return;
-				}
-				UserActions.remove(root);
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Delete";
-			}
-		}).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(final int row)
-			{
-				final String mId = tableListener.getTableValue("Path", row);
-				if (mId == null)
-				{
-					return;
-				}
-				final LocalDirectory root = DbRoots.getLocal(mId);
-				if (root == null)
-				{
-					LogWrapper.getLogger().info("Unable to find local directory " + mId);
-					return;
-				}
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						UserActions.userSync(root, Collections.singletonList(createLocalListener(root)));
-					}
-				});
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Synchronize";
-			}
-		});
-	}
-	private void initializeMachines()
-	{
-		final TableListener tableListener = new TableListener(machinesList);
-		tableListener.addListener(new TableRowListener()
-		{
-			@Override
-			public void run(final int row)
-			{
-				final String mId = tableListener.getTableValue("Id", row);
-				if (mId == null)
-				{
-					return;
-				}
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						Machine machine = DbMachines.getMachine(mId);
-						if (machine == null)
-						{
-							LogWrapper.getLogger().info("Unable to find machine: " + mId);
-							return;
-						}
-						showRemote(machine);
-					}
-				});
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Show";
-			}
-		}, true).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				final String mId = tableListener.getTableValue("Id", row);
-				if (mId == null)
-				{
-					return;
-				}
-				Machine machine = DbMachines.getMachine(mId);
-				UserActions.syncRoots(machine);
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Synchronize";
-			}
-		}).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				final String mId = tableListener.getTableValue("Id", row);
-				if (mId == null)
-				{
-					return;
-				}
-				
-				if (mId.equals(Services.localMachine.getIdentifier()))
-				{
-					JOptionPane.showMessageDialog(getThis(), 
-							"Unable to delete the local machine.",
-							"Unable to Delete.",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				UserActions.removeMachine(DbMachines.getMachine(mId));
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Delete";
-			}
-		});
-	}
-	private Application getThis() { return this; }
-	private void initializeMessages()
-	{
-		messageTable.setAutoCreateRowSorter(true);
-		final TableListener tableListener = new TableListener(messageTable);
-		tableListener.addListener(new TableRowListener()
-		{
-			@Override
-			public void run(final int row)
-			{
-				UserMessage message = null;
-				final String mId = tableListener.getTableValue("Id", row);
-				if (mId == null)
-				{
-					return;
-				}
-				message = DbMessages.getMessage(Integer.parseInt(mId));
-				if (message == null)
-				{
-					return;
-				}
-				message.open();
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Open";
-			}
-		}, true).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				String mId = null;
-				mId = tableListener.getTableValue("Id", row);
-				if (mId == null)
-				{
-					return;
-				}
-				DbMessages.deleteMessage(Integer.parseInt(mId));
-				refreshMessages();
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Delete";
-			}
-		});
-	}
-	private void initializeDownloads()
-	{
-		jTable2.setAutoCreateRowSorter(true);
-		final TableListener tableListener = new TableListener(jTable2);
-		tableListener.addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				String mId = null;
-				mId = tableListener.getTableValue("Id", row);
-				if (mId == null)
-				{
-					return;
-				}
-				Download download = DbDownloads.getDownload(Integer.parseInt(mId));
-				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(
-						new SharedFileId(download.getFile()));
-				if (dInstance != null)
-				{
-					dInstance.fail("User quit.");
-				}
-				download.delete();
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Delete";
-			}
-		}).addListener(new TableRowListener()
-		{
-			@Override
-			public void run(int row)
-			{
-				String mId = null;
-				mId = tableListener.getTableValue("Id", row);
-				if (mId == null)
-				{
-					return;
-				}
-				Download download = DbDownloads.getDownload(Integer.parseInt(mId));
-				Misc.nativeOpen(download.getTargetFile());
-			}
-
-			@Override
-			public String getString()
-			{
-				return "Open";
-			}
-		});
-	}
-
-	DebugListener createLocalListener(final LocalDirectory root)
+	public DebugListener createLocalListener(final LocalDirectory root)
 	{
 		final DefaultTableModel model = (DefaultTableModel) localsView.getModel();
 		int row = -1;
@@ -1487,6 +1050,8 @@ public class Application extends javax.swing.JFrame
 			return null;
 		}
 
+		final HashMap<String, Object> map = new HashMap<>();
+		
 		final int dirRow = row;
 		return new DebugListener(root)
 		{
@@ -1502,21 +1067,44 @@ public class Application extends javax.swing.JFrame
 				{
 //					return;
 				}
-				
+
+		    map.put("Number of files", new DiskUsage(startSize + bytesAdded)    );
+		    map.put("Total file size", new NumberOfFiles(startNumFiles + filesAdded - filesRemoved)       );
+				locals.setValues(root, map, dirRow);
 				lastGuiUpdate = now;
-				model.setValueAt(new DiskUsage(startSize + bytesAdded), dirRow, 4);
-				model.setValueAt(new NumberOfFiles(startNumFiles + filesAdded - filesRemoved), dirRow, 3);
 			}
 		};
 	}
 	
-	private NotificationListener createNotificationListener()
-	{
-		return new NotificationListener() {
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 			@Override
 			public void localsChanged()
 			{
-				refreshLocals();
+				locals.refresh();
 			}
 
 			@Override
@@ -1528,38 +1116,37 @@ public class Application extends javax.swing.JFrame
 			@Override
 			public void remotesChanged()
 			{
-				refreshRemotes();
+				remotes.refresh();
 			}
 			
 			@Override
 			public void remoteChanged(Machine remote)
 			{
-				// Should check if it was deleted...
-				refreshRemote(remote);
+				remotes.refresh();
 			}
 
 			@Override
 			public void remoteDirectoryChanged(RemoteDirectory remote)
 			{
-				refreshRemote(remote);
+				remotes.refresh();
 			}
 
 			@Override
 			public void downloadAdded(DownloadInstance d)
 			{
-				refreshDownloads();
+				downloads.refresh();
 			}
 
 			@Override
 			public void downloadRemoved(DownloadInstance d)
 			{
-				refreshDownloads();
+				downloads.refresh();
 			}
 
 			@Override
 			public void downloadDone(DownloadInstance d)
 			{
-				refreshDownloads();
+				downloads.refresh();
 			}
 
 			@Override
@@ -1587,7 +1174,7 @@ public class Application extends javax.swing.JFrame
 			@Override
 			public void messageReceived(UserMessage message)
 			{
-				refreshMessages();
+				messages.refresh();
 			}
 
 			@Override
@@ -1605,10 +1192,41 @@ public class Application extends javax.swing.JFrame
 				refreshConnections();
 			}
 
+			public void messagesChanged()
+			{
+				messages.refresh();
+			}
+
 			@Override
 			public void dbException(Exception ex)
 			{
 			}
-		};
-	}
+
+			@Override
+			public void permissionFailure(PermissionFailureEvent event)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void fileAdded(SharedFile file)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void fileChanged(SharedFile file)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void fileDeleted(SharedFile file)
+			{
+				// TODO Auto-generated method stub
+				
+			}
 }

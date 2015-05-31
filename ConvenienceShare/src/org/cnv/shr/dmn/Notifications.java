@@ -1,7 +1,10 @@
 package org.cnv.shr.dmn;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Level;
 
@@ -22,6 +25,7 @@ import org.cnv.shr.util.LogWrapper;
 public class Notifications
 {
 	private final LinkedList<NotificationListener> listeners = new LinkedList<>();
+	private final LinkedList<WeakReference<NotificationListenerImpl>> weakListeners = new LinkedList<>();
 	private boolean stop;
 	private final LinkedBlockingDeque<Runnable> notifiers = new LinkedBlockingDeque<>();
 	private final Thread notificationThread = new Thread(new Runnable() {
@@ -51,17 +55,54 @@ public class Notifications
 		stop = true;
 		notificationThread.interrupt();
 	}
-	
-	public void add(final NotificationListener listener)
+
+	private synchronized List<NotificationListenerImpl> getListeners()
 	{
-		if (!listeners.contains(listener))
+		if (weakListeners.isEmpty())
 		{
-			listeners.add(listener);
+			List<NotificationListenerImpl> w = Collections.emptyList();
+			return w;
 		}
+		
+		LinkedList<NotificationListenerImpl> returnValue = new LinkedList<>();
+		LinkedList<WeakReference<NotificationListenerImpl>> toDel = new LinkedList<>();
+		for (WeakReference<NotificationListenerImpl> ref : weakListeners)
+		{
+			NotificationListenerImpl notificationListenerImpl = ref.get();
+			if (notificationListenerImpl == null)
+			{
+				toDel.add(ref);
+			}
+			else
+			{
+				returnValue.add(notificationListenerImpl);
+			}
+		}
+		
+		weakListeners.removeAll(toDel);
+		return returnValue;
 	}
-	public void remove(final NotificationListener listener)
+	
+	public synchronized void add(final NotificationListenerImpl listener)
 	{
-		listeners.remove(listener);
+		for (WeakReference<NotificationListenerImpl> ref : weakListeners)
+		{
+			NotificationListenerImpl l = ref.get();
+			if (l == null)
+			{
+				continue;
+			}
+			if (l.equals(listener))
+			{
+				return;
+			}
+		}
+
+		weakListeners.add(new WeakReference<Notifications.NotificationListenerImpl>(listener));
+	}
+	public void remove(final NotificationListenerImpl listener)
+	{
+//		listeners.remove(listener);
 	}
 	
 	public void permissionFailure(final PermissionFailureEvent event)
@@ -71,7 +112,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.permissionFailure(event);
 				}
@@ -86,7 +127,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.localsChanged();
 				}
@@ -101,7 +142,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.localDirectoryChanged(local);
 				}
@@ -116,7 +157,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.remoteChanged(machine);
 				}
@@ -131,7 +172,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.remotesChanged();
 				}
@@ -146,7 +187,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.remoteDirectoryChanged(remote);
 				}
@@ -161,7 +202,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.downloadAdded(d);
 				}
@@ -176,7 +217,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.downloadRemoved(d);
 				}
@@ -191,7 +232,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.downloadDone(d);
 				}
@@ -206,7 +247,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.serveAdded(serveInstance);
 				}
@@ -221,7 +262,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.serveRemoved(serveInstance);
 				}
@@ -236,7 +277,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.connectionOpened(c);
 				}
@@ -251,7 +292,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.connectionClosed(c);
 				}
@@ -277,7 +318,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.dbException(ex);
 				}
@@ -292,9 +333,24 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.messageReceived(message);
+				}
+			}
+		});
+	}
+
+	public void messagesChanged()
+	{
+		notifiers.add(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				for (final NotificationListenerImpl listener : getListeners())
+				{
+					listener.messagesChanged();
 				}
 			}
 		});
@@ -307,7 +363,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.fileAdded(lFile);
 				}
@@ -322,7 +378,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.fileChanged(lFile);
 				}
@@ -337,7 +393,7 @@ public class Notifications
 			@Override
 			public void run()
 			{
-				for (final NotificationListener listener : listeners)
+				for (final NotificationListenerImpl listener : getListeners())
 				{
 					listener.fileChanged(localFile);
 				}
@@ -357,15 +413,39 @@ public class Notifications
 //			LogWrapper.getLogger().log(Level.INFO, , e);
 //		}
 	}
-	
-	public static abstract class NotificationListener
+
+	public interface NotificationListenerImpl
 	{
-		public void localsChanged()                                  {}
+		void localsChanged()                                        ;
+		void permissionFailure(final PermissionFailureEvent event)  ;
+		void messageReceived(final UserMessage message)             ;
+		void messagesChanged()                                      ;
+		void localDirectoryChanged(final LocalDirectory local)      ;
+		void remoteChanged(final Machine machine)                   ;
+		void remotesChanged()                                       ;
+		void remoteDirectoryChanged(final RemoteDirectory remote)   ;
+		void downloadAdded(final DownloadInstance d)                ;
+		void downloadRemoved(final DownloadInstance d)              ;
+		void downloadDone(final DownloadInstance d)                 ;
+		void serveAdded(final ServeInstance s)                      ;
+		void serveRemoved(final ServeInstance s)                    ;
+		void connectionOpened(final Communication c)                ;
+		void connectionClosed(final Communication c)                ;
+		void dbException(final Exception ex)                        ;
+		void fileAdded(final SharedFile file)                       ;
+		void fileChanged(final SharedFile file)                     ;
+		void fileDeleted(final SharedFile file)                     ;
+	
+	}
+	public static abstract class NotificationListener implements NotificationListenerImpl
+	{
+		public void localsChanged()                                        {}
 		public void permissionFailure(final PermissionFailureEvent event)  {}
 		public void messageReceived(final UserMessage message)             {}
+		public void messagesChanged()                                      {}
 		public void localDirectoryChanged(final LocalDirectory local)      {}
 		public void remoteChanged(final Machine machine)                   {}
-		public void remotesChanged()                                 {}
+		public void remotesChanged()                                       {}
 		public void remoteDirectoryChanged(final RemoteDirectory remote)   {}
 		public void downloadAdded(final DownloadInstance d)                {}
 		public void downloadRemoved(final DownloadInstance d)              {}

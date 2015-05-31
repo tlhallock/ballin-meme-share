@@ -17,14 +17,22 @@ public class DbMessages
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from MESSAGE;");
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from MESSAGE where M_ID=?;");
 
-	public static DbIterator<UserMessage> listMessages() throws SQLException
+	public static DbIterator<UserMessage> listMessages()
 	{
 		// sort them!!!
-		return new DbIterator<UserMessage>(Services.h2DbCache.getThreadConnection(), DbObjects.MESSAGES);
+		try
+		{
+			return new DbIterator<UserMessage>(Services.h2DbCache.getThreadConnection(), DbObjects.MESSAGES);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list messages", e);
+			return new DbIterator.NullIterator<>();
+		}
 	}
-	
-    public static void clearAll() {
 
+	public static void clearAll()
+	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(DELETE1);)
 		{
@@ -34,7 +42,7 @@ public class DbMessages
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to remove all messages", ex);
 		}
-    }
+	}
 
 	public static UserMessage getMessage(int id)
 	{
@@ -65,6 +73,7 @@ public class DbMessages
 		{
 			stmt.setInt(1, id);
 			stmt.execute();
+			Services.notifications.messagesChanged();
 		}
 		catch (SQLException e)
 		{

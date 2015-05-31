@@ -1,14 +1,12 @@
 package org.cnv.shr.db.h2;
 
-import java.io.Closeable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.logging.Level;
 
 import org.cnv.shr.util.LogWrapper;
 
-public class DbIterator<T extends DbObject> implements Iterator<T>, Closeable
+public class DbIterator<T extends DbObject> implements org.cnv.shr.gui.tbl.DbJTable.MyIt<T>
 {
 	private ResultSet results;
 	private DbTables.DbObjects tableInfo;

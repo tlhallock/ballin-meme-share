@@ -2,11 +2,11 @@ package org.cnv.shr.gui;
 
 import org.cnv.shr.util.Misc;
 
-class DiskUsage implements Comparable<DiskUsage>
+public class DiskUsage implements Comparable<DiskUsage>
 {
 	private final long size;
 	
-	DiskUsage(long fSize)
+	public DiskUsage(long fSize)
 	{
 		this.size = fSize;
 	}

@@ -82,4 +82,18 @@ public class DbDownloads
 		}
 		return null;
 	}
+
+
+	public static DbIterator<Download> listDownloads()
+	{
+		try
+		{
+			return new DbIterator<>(Services.h2DbCache.getThreadConnection(), DbObjects.PENDING_DOWNLOAD);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get downloads", e);
+			return new DbIterator.NullIterator<>();
+		}
+	}
 }

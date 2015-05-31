@@ -15,11 +15,29 @@ import org.cnv.shr.util.LogWrapper;
 
 public class DbMachines
 {
-	private static final QueryWrapper DELETE1 = new QueryWrapper("delete MACHINE where M_ID=?;");
-	private static final QueryWrapper SELECT3 = new QueryWrapper("select M_ID from MACHINE where IDENT = ?");
-	private static final QueryWrapper SELECT2 = new QueryWrapper("select * from MACHINE where IDENT = ?");
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from MACHINE where MACHINE.IS_LOCAL = false");
+	private static final QueryWrapper DELETE1   = new QueryWrapper("delete MACHINE where M_ID=?;");
+	private static final QueryWrapper SELECT3   = new QueryWrapper("select M_ID from MACHINE where IDENT = ?");
+	private static final QueryWrapper SELECT2   = new QueryWrapper("select * from MACHINE where IDENT = ?");
+	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from MACHINE where MACHINE.IS_LOCAL = false");
+	private static final QueryWrapper SELECT1_5 = new QueryWrapper("select * from MACHINE");
 
+
+	public static DbIterator<Machine> listMachines()
+	{
+		ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+		try
+		{
+			return new DbIterator<>(c,
+					c.prepareStatement(SELECT1_5).executeQuery(),
+					DbTables.DbObjects.RMACHINE);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list machines", e);
+			return new DbIterator.NullIterator<>();
+		}
+	}
+	
 	public static DbIterator<Machine> listRemoteMachines()
 	{
 		ConnectionWrapper c = Services.h2DbCache.getThreadConnection();

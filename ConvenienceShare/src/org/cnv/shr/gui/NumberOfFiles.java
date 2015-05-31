@@ -2,11 +2,11 @@ package org.cnv.shr.gui;
 
 import org.cnv.shr.util.Misc;
 
-class NumberOfFiles implements Comparable<NumberOfFiles>
+public class NumberOfFiles implements Comparable<NumberOfFiles>
 {
 	private final long numFiles;
 	
-	NumberOfFiles(long fSize)
+	public NumberOfFiles(long fSize)
 	{
 		this.numFiles = fSize;
 	}
