@@ -14,17 +14,24 @@ import org.cnv.shr.mdl.SharedFile;
 
 public class SharedFileId
 {
+	// Either
 	private String machineIdent;
 	private String rootName;
 	private String path;
+	
+	// Or
 	private String checksum;
+	private long length;
 	
 	public SharedFileId(SharedFile file)
 	{
+		this.checksum = file.getChecksum();
+		
+		
+		
 		this.machineIdent = file.getRootDirectory().getMachine().getIdentifier();
 		this.rootName = file.getRootDirectory().getName();
 		this.path = file.getPath().getFullPath();
-		this.checksum = file.getChecksum();
 	}
 
 	public SharedFileId(String readString, String readString2, String readString3, String readString4)

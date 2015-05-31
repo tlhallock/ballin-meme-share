@@ -10,16 +10,17 @@ public class Main
 	public static void main(String[] args) throws Exception
 	{
 		// What happens with two locals by the same name...
-		// Make kill frame...
+		// Make kill frame if already running...
 		// remove all caching of db objects...
 		
         // Need to break up chunkList
         // Need to break up PathList
 
         // get code updater working
-        // add setting for ip address
+			// get simple tracker (just list machines)
+		
+		
         // start on startup
-        // look for column, don't just set value
         // try to start pending downloads
         // set sharing rules
         // show messages
