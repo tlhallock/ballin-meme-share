@@ -11,7 +11,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.mn.MainTest;
@@ -77,21 +77,26 @@ public class MachineInfo
 		
 		server = new ServerSocket(0);
 		
-		String[] args = new String[]
-		{
-				ProcessInfo.getJavaPath(),
-				"-cp",
-				ProcessInfo.getClassPath(),
-				// Should be in TestUtils
-				"org.cnv.shr.dmn.mn.MainTest",
-				deleteDb ? "-d" : "pass",
-				"-k",  String.valueOf(10000L),
-				"-f",
-				processSettings.getSettingsFile(),
-				"-t",
-				InetAddress.getLoopbackAddress().getHostAddress(), String.valueOf(server.getLocalPort()),
-		};
-		process = Runtime.getRuntime().exec(args, null, new File(ProcessInfo.getJarPath(MainTest.class)));
+		LinkedList<String> args = new LinkedList<>();
+		
+		args.add(ProcessInfo.getJavaPath());
+		args.add("-cp");
+		args.add(ProcessInfo.getClassPath());
+		// Should be in TestUtils
+		args.add("org.cnv.shr.dmn.mn.MainTest");
+		args.add(deleteDb ? "-d" : "pass");
+		args.add("-k");
+		args.add(String.valueOf(10000L));
+		args.add("-f");
+		args.add(processSettings.getSettingsFile());
+		args.add("-t");
+		args.add(InetAddress.getLoopbackAddress().getHostAddress());
+		args.add(String.valueOf(server.getLocalPort()));
+		ProcessBuilder builder = new ProcessBuilder();
+		builder.command(args);
+		
+		builder.directory(ProcessInfo.getJarPath(MainTest.class).toFile());
+		process = builder.start();
 
 		try
 		{
@@ -101,9 +106,6 @@ public class MachineInfo
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
 		}
-
-		System.out.println(Arrays.toString(args));
-		System.out.println("From: " + ProcessInfo.getJarPath(MainTest.class));
 		
 		new OutputThread(name, System.err, new BufferedReader(new InputStreamReader(process.getErrorStream()))).start();
 		new OutputThread(name, System.out, new BufferedReader(new InputStreamReader(process.getInputStream()))).start();

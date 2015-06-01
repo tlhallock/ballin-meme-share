@@ -162,7 +162,7 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	protected void setSharing(SharingState sharingState)
+	public void setDefaultSharingState(SharingState sharingState)
 	{
 		this.defaultShare = sharingState;
 	}
@@ -176,5 +176,10 @@ public class LocalDirectory extends RootDirectory
 	protected SharingState getDbSharing()
 	{
 		return defaultShare;
+	}
+
+	public void setName(String text)
+	{
+		this.name = text;
 	}
 }

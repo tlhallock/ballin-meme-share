@@ -14,7 +14,6 @@ public class PathBreaker
 	public static PathElement[] breakPath(PathElement parent, String path)
 	{
 		path = Misc.sanitizePath(path);
-		System.out.println(path);
 		
 		LinkedList<PathElement> returnValue = new LinkedList<>();
 		

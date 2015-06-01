@@ -1,7 +1,7 @@
 package org.cnv.shr.dmn.mn;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
@@ -11,11 +11,11 @@ import org.cnv.shr.util.ProcessInfo;
 
 public class Restart extends Quiter
 {
-	private File launchDir;
+	private Path launchDir;
 	
-	public Restart() { this (new File("./bin")); }
+	public Restart() { this (ProcessInfo.getJarFile(Main.class).getParent()); }
 	
-	public Restart(File launch) { this.launchDir = launch; }
+	public Restart(Path launch) { this.launchDir = launch; }
 	
 	@Override
 	public void doFinal()
@@ -32,14 +32,13 @@ public class Restart extends Quiter
 		{
 			LinkedList<String> args = new LinkedList<>();
 			args.add("java");
-			args.add("-cp");
-			args.add(ProcessInfo.getClassPath());
-			args.add("org.cnv.shr.dmn.mn.Main");
+			args.add("-jar");
+			args.add(ProcessInfo.getJarFile(Main.class).toString());
 			args.add("-f");
 			args.add(Services.settings.getSettingsFile());
 			
 			System.out.println("Restarting from:");
-			System.out.println(new File(".").getAbsolutePath());
+			System.out.println(launchDir.toString());
 			System.out.println("with:");
 			for (String str : args)
 			{
@@ -48,7 +47,7 @@ public class Restart extends Quiter
 
 			ProcessBuilder builder = new ProcessBuilder();
 			builder.command(args);
-			builder.directory(launchDir.getAbsoluteFile());
+			builder.directory(launchDir.toFile());
 
 			builder.start();
 		}

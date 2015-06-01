@@ -27,49 +27,69 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 	private TableRightClickListener dblClick;
 	private int row = -1;
 	private JTable table;
+	private String keyName;
 	
-	public DbJTable(JTable table)
+	public DbJTable(JTable table, String keyName)
 	{
 		this.table = table;
 		jPopupMenu = new JPopupMenu();
 		table.addMouseListener(this);
 		table.setAutoCreateRowSorter(true);
+		this.keyName = keyName;
 	}
 
-	public synchronized void refresh(T t)
+	public void empty()
 	{
-	}
-
-	public void refresh()
-	{
-		// The entire reason these classes exist is to put refreshes on a different thread
 		SwingUtilities.invokeLater(new Runnable(){
 			@Override
 			public void run()
 			{
-				refreshInternal();
+				synchronized (table)
+				{
+					emptyInternal();
+				}
 			}});
 	}
-	
-	private synchronized void refreshInternal()
+
+	private synchronized void emptyInternal()
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		while (model.getRowCount() > 0)
 		{
 			model.removeRow(0);
 		}
+	}
 
+	public void refresh()
+	{
+		// The entire reason these classes exist is to put refreshes on the event queue
+		SwingUtilities.invokeLater(new Runnable(){
+			@Override
+			public void run()
+			{
+				synchronized (table)
+				{
+					refreshInternal();
+				}
+			}});
+	}
+	
+	private synchronized void refreshInternal()
+	{
+		emptyInternal();
+		
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		int columnCount = table.getColumnCount();
+		String[] names = new String[columnCount];
+		for (int i = 0; i < columnCount; i++)
+		{
+			names[i] = table.getColumnName(i);
+		}
+		HashMap<String, Object> currentRow = new HashMap<>();
+		Object[] rowData = new Object[columnCount];
+		
 		try (MyIt<T> it = list();)
 		{
-			int columnCount = table.getColumnCount();
-			String[] names = new String[columnCount];
-			for (int i = 0; i < columnCount; i++)
-			{
-				names[i] = table.getColumnName(i);
-			}
-
-			Object[] rowData = new String[columnCount];
-			HashMap<String, Object> currentRow = new HashMap<>();
 			while (it.hasNext())
 			{
 				T t = it.next();
@@ -86,36 +106,89 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 			e.printStackTrace();
 		}
 	}
-	
-	public void setValues(T t, HashMap<String, Object> vals, int rowGuess)
+	public void refresh(T t)
 	{
-		SwingUtilities.invokeLater(new Runnable(){
+		SwingUtilities.invokeLater(new Runnable()
+		{
 			@Override
 			public void run()
 			{
-				setValuesInternal(t, vals, rowGuess);
+				synchronized (table)
+				{
+					refreshInternal(t);
+				}
+			}
+		});
+	}
+
+	private synchronized void refreshInternal(T t)
+	{
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		
+		int columnCount = table.getColumnCount();
+		String[] names = new String[columnCount];
+		int keyIndex = -1;
+		for (int i = 0; i < columnCount; i++)
+		{
+			names[i] = table.getColumnName(i);
+			if (names[i].equals(keyName))
+			{
+				keyIndex = i;
+			}
+		}
+		
+		HashMap<String, Object> values = new HashMap<>();
+		fillRow(t, values);
+		String needle = (String) values.get(keyName);
+		
+		int rowCount = table.getRowCount();
+		for (int row = 0; row < rowCount; row++)
+		{
+			String cValue = (String) table.getValueAt(row, keyIndex);
+			if (!cValue.equals(needle))
+			{
+				continue;
+			}
+			
+			for (int col = 0; col < columnCount; col++)
+			{
+				table.setValueAt(values.get(names[col]), row, col);
+			}
+			
+			return;
+		}
+
+		Object[] rowData = new Object[columnCount];
+		for (int i = 0; i < columnCount; i++)
+		{
+			rowData[i] = values.get(names[i]);
+		}
+		model.addRow(rowData);
+	}
+	
+	public void setValues(T t, HashMap<String, Object> vals, int rowGuess)
+	{
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run()
+			{
+				synchronized (table)
+				{
+					setValuesInternal(t, vals, rowGuess);
+				}
 			}});
 	}
 	private synchronized void setValuesInternal(T t, HashMap<String, Object> vals, int rowGuess)
 	{
+		if (rowGuess < 0 || rowGuess > table.getRowCount())
+		{
+			return;
+		}
 		// Fix the rowGuess changing problem.....
-		
-		// Also, get the column by the name:
 		for (Entry<String, Object> entry : vals.entrySet())
 		{
-			// Should do stuff here...
-			table.getColumn(entry.getKey());
-		}
-
-		int columnCount = table.getColumnCount();
-		for (int i=0;i<columnCount;i++)
-		{
-			Object updatedValue = vals.get(table.getColumnName(i));
-			if (updatedValue == null)
-			{
-				continue;
-			}
-			table.setValueAt(updatedValue, rowGuess, i);
+			table.setValueAt(entry.getValue(), rowGuess, 
+					table.getColumn(entry.getKey()).getModelIndex());
 		}
 	}
 
@@ -128,7 +201,6 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		this.dblClick = listener;
 	}
 	
-
 	private T create(int row)
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -150,6 +222,7 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		menu.addActionListener(l);
 		if (mkDblClick)
 		{
+			LogWrapper.getLogger().info("Default action for " + getClass().getName() + " is " + l.getName());
 			dblClick = l;
 		}
 		jPopupMenu.add(menu);
@@ -218,6 +291,7 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		
 		if (me.getClickCount() >= 2 && dblClick != null)
 		{
+			row = nRow;
 			dblClick.perform(create(row));
 		}
 		else
@@ -225,6 +299,8 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 			checkPopup(me);
 		}
 	}
+	
+	
 	
 	
 	

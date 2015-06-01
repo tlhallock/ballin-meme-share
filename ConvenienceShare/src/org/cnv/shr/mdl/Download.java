@@ -223,13 +223,6 @@ public class Download extends DbObject<Integer>
 	public void setDestination(Path destinationFile2)
 	{
 		destinationFile = destinationFile2;
-		try
-		{
-			save();
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to save destination file", e);
-		}
+		tryToSave();
 	}
 }

@@ -50,7 +50,7 @@ public class ChecksumResponse extends DownloadMessage
 	{
 		RemoteFile remoteFile = getDescriptor().getRemote();
 		remoteFile.setChecksum(getDescriptor().getChecksum());
-		remoteFile.save();
+		remoteFile.tryToSave();
 
 		if (!DbDownloads.hasPendingDownload(remoteFile))
 		{

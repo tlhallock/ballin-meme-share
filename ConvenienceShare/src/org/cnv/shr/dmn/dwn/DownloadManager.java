@@ -219,6 +219,13 @@ public class DownloadManager extends TimerTask
 	@Override
 	public void run()
 	{
-		initiatePendingDownloads();
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				initiatePendingDownloads();
+			}
+		});
 	}
 }

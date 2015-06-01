@@ -53,7 +53,7 @@ public class Main
 		
 //		if (true)
 //		{
-//			a.settings = new Settings(new File("/work/ballin-meme-share/instances/i1/settings.props"));
+//			a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
 //		}
 //		else
 //		{
@@ -79,6 +79,16 @@ public class Main
 				Services.quiter.quit();
 			}
 		}
+		
+		
+//		for (;;)
+//		{
+//			synchronized (System.out)
+//			{
+//				Thread.sleep(1000);
+//			}
+//			Thread.sleep(1000);
+//		}
 	}
 	
 	

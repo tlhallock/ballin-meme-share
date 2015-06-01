@@ -96,7 +96,7 @@ public class LocalFile extends SharedFile
 		updateChecksum(fsCopy);
 		
 		fileSize = Files.size(fsCopy);
-		save();
+		tryToSave();
 		Services.notifications.fileChanged(this);
 		return true;
 	}
@@ -130,7 +130,7 @@ public class LocalFile extends SharedFile
 			// save is because refresh doesn't check checksum
 			if (!refreshAndWriteToDb())
 			{
-				save();
+				tryToSave();
 			}
 		}
 		catch (SQLException e)
@@ -155,18 +155,12 @@ public class LocalFile extends SharedFile
 
 	public void ensureChecksummed() throws IOException
 	{
-		if (checksum == null)
+		if (checksum != null)
 		{
-			checksum = Services.checksums.checksumBlocking(getFsFile());
-			try
-			{
-				save();
-			}
-			catch (SQLException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to ensure checksummed", e);
-			}
+			return;
 		}
+		checksum = Services.checksums.checksumBlocking(getFsFile());
+		tryToSave();
 	}
 
 	@Override

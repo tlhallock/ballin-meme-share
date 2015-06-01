@@ -28,25 +28,31 @@ public class IdkWhereToPutThis
 	}
 	
 	
-	public static TimerTask getAttempter()
+	private static TimerTask getAttempter()
 	{
 		return new TimerTask()
 		{
 			@Override
 			public void run()
 			{
-				try
+				Services.userThreads.execute(new Runnable()
 				{
-					attemptAuthentications(Services.keyManager.getPendingAuthenticationRequests());
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
+					@Override
+					public void run()
+					{
+						try
+						{
+							attemptAuthentications(Services.keyManager.getPendingAuthenticationRequests());
+						}
+						catch (IOException e)
+						{
+							e.printStackTrace();
+						}
+					}
+				});
 			}
 		};
 	}
-
 	
 	public static void attemptAuthentications(Set<String> pendingAuthenticationRequests) throws IOException
 	{

@@ -142,25 +142,17 @@ public class DbMachines
 		machine.setPort(port);
 		machine.setName(name);
 		machine.setNumberOfPorts(nports);
-		
-		try
-		{
-			machine.save();
-			// Is the first of these two really necessary?
-			Services.notifications.remoteChanged(machine);
-			Services.notifications.remotesChanged();
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to update machine info for " + ident, e);
-			return;
-		}
+
+		machine.tryToSave();
+		// Is the first of these two really necessary?
+		Services.notifications.remoteChanged(machine);
+		Services.notifications.remotesChanged();
 		for (PublicKey key : publicKeys)
 		{
 			DbKeys.addKey(machine, key);
 		}
 	}
-	
+
 	public static long getTotalNumFiles(Machine machine)
 	{
 		long returnValue = 0;

@@ -16,25 +16,38 @@ class UpdateThread extends Thread
 	@Override
 	public void run()
 	{
+		LogWrapper.getLogger().info("Listening on " + Updater.updateSocket.getLocalPort());
 		while (true)
 		{
 			try (Socket socket = Updater.updateSocket.accept();
 					InputStream input = socket.getInputStream();
 					OutputStream output = socket.getOutputStream();)
 			{
-				byte[] encrypted = Misc.readBytes(input);
-				byte[] decrypted = Updater.service.decrypt(Updater.service.getPrivateKey(), encrypted);
-				Misc.writeBytes(decrypted, output);
-				Misc.writeBytes(Updater.code.getVersion().getBytes("UTF8"), output);
-				int b = input.read();
-				if (b != 0)
+				LogWrapper.getLogger().info("Connected to " + socket.getInetAddress().getHostAddress());
+				
+				// Requires authentication
+				if (input.read() != 0)
 				{
-					copy(output);
-					socket.shutdownOutput();
+					LogWrapper.getLogger().info("Authenticating");
+					byte[] encrypted = Misc.readBytes(input);
+					byte[] decrypted = Updater.service.decrypt(Updater.service.getPrivateKey(), encrypted);
+					Misc.writeBytes(decrypted, output);
 				}
 				
-				// The client will close this. Yup, messy, but i don't care right now, and exceptions are likely anyway.
-				for (;;) input.read();
+				LogWrapper.getLogger().info("Sending latest version.");
+				Misc.writeBytes(Updater.code.getVersion().getBytes("UTF8"), output);
+				
+				if (input.read() == 0)
+				{
+					LogWrapper.getLogger().info("Already up to date.");
+					continue;
+				}
+				
+				LogWrapper.getLogger().info("Serving.");
+				copy(output);
+				socket.shutdownOutput();
+				LogWrapper.getLogger().info("Done.");
+				input.read();
 			}
 			catch (Exception ex)
 			{

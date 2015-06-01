@@ -15,7 +15,7 @@ public class MessageTable extends DbJTable<UserMessage>
 
 	public MessageTable(Application app, JTable table)
 	{
-		super(table);
+		super(table, "Id");
 		this.app = app;
 		
 		addListener(new TableRightClickListener()
@@ -31,7 +31,7 @@ public class MessageTable extends DbJTable<UserMessage>
 			{
 				return "Open";
 			}
-		});
+		}, true);
 		addListener(new TableRightClickListener()
 		{
 			@Override

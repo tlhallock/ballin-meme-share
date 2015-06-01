@@ -50,6 +50,7 @@ import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.key.PermissionFailure.PermissionFailureEvent;
 import org.cnv.shr.stng.Setting;
 import org.cnv.shr.stng.Setting.SettingsEditor;
+import org.cnv.shr.stng.Settings;
 import org.cnv.shr.sync.DebugListener;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;
@@ -77,6 +78,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 	{
 		initComponents();
 		initializeSettings();
+		
+		setTitle("Convenience Share " + Settings.getVersion());
 
 		locals = new LocalTable(this, localsView);
 		remotes = new MachineTable(this, machinesList);
@@ -211,17 +214,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		locals.refresh(local);
 	}
 
-	public void showRemote(final Machine machine)
-	{
-		final MachineViewer viewer = new MachineViewer(machine);
-		Services.notifications.registerWindow(viewer);
-		viewer.setBounds(getBounds());
-		viewer.setTitle("Machine " + machine.getName());
-		viewer.setVisible(true);
-		LogWrapper.getLogger().info("Showing remote " + machine.getName());
-	}
-
-
 	private void refreshConnections()
 	{
 		for (ConnectionStatus status : connections)
@@ -299,6 +291,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jButton6 = new javax.swing.JButton();
         jScrollPane9 = new javax.swing.JScrollPane();
         settingsTable = new javax.swing.JTable();
+        jButton13 = new javax.swing.JButton();
         jPanel8 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         logTextArea = new javax.swing.JTextArea();
@@ -320,8 +313,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton2.setText("Add...");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -346,13 +338,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, false, false, false, true, true, true
             };
 
-            @Override
-			public Class getColumnClass(int columnIndex) {
+            public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            @Override
-			public boolean isCellEditable(int rowIndex, int columnIndex) {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -361,8 +351,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton10.setText("Refresh");
         jButton10.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton10ActionPerformed(evt);
             }
         });
@@ -408,16 +397,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton1.setText("Add...");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
         jButton4.setText("Synchronize All");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
             }
         });
@@ -427,23 +414,21 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
             },
             new String [] {
-                "Path", "Description", "Tags", "Number of files", "Total file size"
+                "Path", "Name", "Description", "Tags", "Number of files", "Total file size"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
             };
             boolean[] canEdit = new boolean [] {
-                false, true, true, false, false
+                false, false, false, false, false, false
             };
 
-            @Override
-			public Class getColumnClass(int columnIndex) {
+            public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            @Override
-			public boolean isCellEditable(int rowIndex, int columnIndex) {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -500,13 +485,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, false, false, false, false, false, false, false, false, false
             };
 
-            @Override
-			public Class getColumnClass(int columnIndex) {
+            public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            @Override
-			public boolean isCellEditable(int rowIndex, int columnIndex) {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -561,24 +544,21 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton7.setText("Initiate pending");
         jButton7.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton7ActionPerformed(evt);
             }
         });
 
         jButton11.setText("Refresh");
         jButton11.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton11ActionPerformed(evt);
             }
         });
 
         jButton12.setText("Clear completed");
         jButton12.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton12ActionPerformed(evt);
             }
         });
@@ -619,8 +599,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         Debug.setText("Print Debug Info");
         Debug.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 DebugActionPerformed(evt);
             }
         });
@@ -629,8 +608,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton8.setText("Test IP");
         jButton8.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton8ActionPerformed(evt);
             }
         });
@@ -647,15 +625,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(15, Short.MAX_VALUE)
+                .addContainerGap(13, Short.MAX_VALUE)
                 .addComponent(jButton8)
                 .addContainerGap())
         );
 
         jButton3.setText("Delete Database!");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -677,17 +654,22 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, true
             };
 
-            @Override
-			public Class getColumnClass(int columnIndex) {
+            public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            @Override
-			public boolean isCellEditable(int rowIndex, int columnIndex) {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
         jScrollPane9.setViewportView(settingsTable);
+
+        jButton13.setText("Update Code");
+        jButton13.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton13ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -701,9 +683,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                         .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(Debug, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(jButton13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(Debug, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jButton6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
@@ -718,8 +702,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton6))
                     .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton13)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -765,8 +751,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton5.setText("Clear all");
         jButton5.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton5ActionPerformed(evt);
             }
         });
@@ -786,13 +771,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, false, false
             };
 
-            @Override
-			public Class getColumnClass(int columnIndex) {
+            public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            @Override
-			public boolean isCellEditable(int rowIndex, int columnIndex) {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -800,8 +783,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton9.setText("Refresh");
         jButton9.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton9ActionPerformed(evt);
             }
         });
@@ -850,8 +832,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         refreshConnections.setText("Refresh");
         refreshConnections.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 refreshConnectionsActionPerformed(evt);
             }
         });
@@ -979,6 +960,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
        DbDownloads.clearCompleted(); // should be moved to user actions and be run on a different thread.
     }//GEN-LAST:event_jButton12ActionPerformed
 
+    private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
+       UpdateFrame u = new UpdateFrame();
+       Services.notifications.registerWindow(u);
+       u.setAlwaysOnTop(true);
+       u.setVisible(true);
+    }//GEN-LAST:event_jButton13ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Debug;
     private javax.swing.JTextField addressLabel;
@@ -987,6 +975,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JButton jButton10;
     private javax.swing.JButton jButton11;
     private javax.swing.JButton jButton12;
+    private javax.swing.JButton jButton13;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
@@ -1065,11 +1054,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 				long now = System.currentTimeMillis();
 				if (now - lastGuiUpdate < 1000)
 				{
-//					return;
+					// return;
 				}
 
-		    map.put("Number of files", new DiskUsage(startSize + bytesAdded)    );
-		    map.put("Total file size", new NumberOfFiles(startNumFiles + filesAdded - filesRemoved)       );
+				map.put("Total file size", new DiskUsage(startSize + bytesAdded));
+				map.put("Number of files", new NumberOfFiles(startNumFiles + filesAdded - filesRemoved));
 				locals.setValues(root, map, dirRow);
 				lastGuiUpdate = now;
 			}

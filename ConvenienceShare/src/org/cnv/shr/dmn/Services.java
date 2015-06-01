@@ -95,7 +95,7 @@ public class Services
 		keyManager = new KeysService();
 		keyManager.readKeys(Services.settings.keysFile.getPath(), Services.settings.keySize.get());
 		localMachine = new Machine.LocalMachine();
-		if (!localMachine.save())
+		if (!localMachine.tryToSave())
 		{
 			localMachine.setId();
 		}
@@ -106,9 +106,7 @@ public class Services
 		downloads = new DownloadManager();
 		syncs = new RemoteSynchronizers();
 		blackList = new BlackList();
-		String version = Misc.readFile(Settings.RES_DIR + "version.txt");
-		if (version == null) version = "0";
-		updateManager = new UpdateManager(version);
+		updateManager = new UpdateManager(Settings.getVersion());
 		updateManager.read();
 		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
@@ -143,7 +141,8 @@ public class Services
 		
 		startSystemTray();
 	}
-	
+
+
 	private static void checkIfUpdateManagerIsRunning(Arguments a) throws Exception
 	{
 		if (a.updateManagerDirectory == null)

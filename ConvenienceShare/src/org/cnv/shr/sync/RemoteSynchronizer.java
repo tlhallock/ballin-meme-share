@@ -17,7 +17,7 @@ public class RemoteSynchronizer extends RootSynchronizer
 	@Override
 	protected boolean updateFile(SharedFile file) throws SQLException
 	{
-		boolean returValue = file.save();
+		boolean returValue = file.tryToSave();
 		if (returValue)
 		{
 			Services.notifications.fileChanged(file);

@@ -179,7 +179,6 @@ public class ChecksumManager extends Thread
 	{
 		lock.lock();
 		stop = true;
-		Services.notifications.remove(listener);
 		condition.signalAll();
 		lock.unlock();
 	}

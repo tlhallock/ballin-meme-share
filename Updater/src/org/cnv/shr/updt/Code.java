@@ -1,56 +1,51 @@
 package org.cnv.shr.updt;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
 import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.ProcessInfo;
 
 public class Code
 {
 	private long timeStamp;
-	private File jar = new File (Updater.getUpdatesDirectory() + "ConvenienceShare.jar");
+	private Path jar = Updater.getUpdatesDirectory().resolve("ConvenienceShare.jar");
 	private String version;
 	
 	public Code() throws ZipException, IOException
 	{
 		checkTime();
+		// Add watch service?
 	}
 	
 	public void checkTime()
 	{
-		if (timeStamp > jar.lastModified())
+		long fsTime;
+		try
+		{
+			fsTime = Files.getLastModifiedTime(jar).toMillis();
+		}
+		catch (IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get fs time.", e1);
+			return;
+		}
+
+		if (timeStamp > fsTime)
 		{
 			return;
 		}
-		long newTimeStamp = jar.lastModified();
 		
-		try (ZipFile zipFile = new ZipFile(jar);
-				BufferedReader inputStream = new BufferedReader(new InputStreamReader(zipFile.getInputStream(zipFile.getEntry("res/version.txt"))));)
+		version = ProcessInfo.getJarVersion(jar);
+		if (version != null)
 		{
-			version = Misc.readAll(inputStream);
+			timeStamp = fsTime;
 		}
-		catch (ZipException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Bad jar file.", e);
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to read jar.", e);
-		}
-		
-		timeStamp = newTimeStamp;
 	}
-	
-	
 	
 	public String getVersion()
 	{
@@ -58,9 +53,9 @@ public class Code
 		return version;
 	}
 
-	public InputStream getStream() throws FileNotFoundException
+	public InputStream getStream() throws IOException
 	{
 		checkTime();
-		return new FileInputStream(jar);
+		return Files.newInputStream(jar);
 	}
 }

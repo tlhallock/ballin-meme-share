@@ -205,4 +205,11 @@ public class Settings implements SettingListener
 	{
 		return settingsFile.toAbsolutePath().toString();
 	}
+
+	public static String getVersion()
+	{
+		String version = Misc.readFile(RES_DIR + "version.txt");
+		if (version == null) version = "0";
+		return version;
+	}
 }

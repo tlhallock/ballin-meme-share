@@ -19,11 +19,9 @@ import org.cnv.shr.util.LogWrapper;
 
 public class DbPaths
 {
-	private static final QueryWrapper DELETE = new QueryWrapper("delete from PELEM as del"
-											+ " where not exists (select R_ID from ROOT where ROOT.PELEM = del.P_ID) "
-											+ " and not exists (select F_ID from SFILE where SFILE.PELEM = del.P_ID)"
-											+ " and not exists (select RID from ROOT_CONTAINS where ROOTS_CONTAINS.PELEM = del.P_ID)"
-											+ " and not exists (select P_ID from PELEM as child where child.PARENT=del.P_ID);");
+	private static final QueryWrapper DELETE = new QueryWrapper("delete from PELEM "
+											+ " where not PELEM.P_ID = 0 "
+											+ " and not exists (select RID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM = PELEM.P_ID)");
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete ROOT_CONTAINS where RID=? and PELEM=?;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
 										 "join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID " + 

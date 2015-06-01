@@ -9,9 +9,11 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.gui.DiskUsage;
+import org.cnv.shr.gui.MachineViewer;
 import org.cnv.shr.gui.NumberOfFiles;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.util.LogWrapper;
 
 public class MachineTable extends DbJTable<Machine>
 {
@@ -19,15 +21,19 @@ public class MachineTable extends DbJTable<Machine>
 
 	public MachineTable(Application app, JTable table)
 	{
-		super(table);
+		super(table, "Id");
 		this.app = app;
 		
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Machine t)
+			void perform(Machine machine)
 			{
-				app.showRemote(t);
+				final MachineViewer viewer = new MachineViewer(machine);
+				Services.notifications.registerWindow(viewer);
+				viewer.setTitle("Machine " + machine.getName());
+				viewer.setVisible(true);
+				LogWrapper.getLogger().info("Showing remote " + machine.getName());
 			}
 			
 			@Override

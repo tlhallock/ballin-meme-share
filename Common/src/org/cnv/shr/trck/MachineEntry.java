@@ -28,7 +28,7 @@ public class MachineEntry
 	MachineEntry(Socket socket, Scanner scanner)
 	{
 		this(scanner);
-		ip = socket.getInetAddress().getHostName();
+		ip = socket.getInetAddress().getHostAddress();
 	}
 	
 	public MachineEntry(Scanner scanner)

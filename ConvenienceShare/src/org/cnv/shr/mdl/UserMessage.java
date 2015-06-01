@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
-import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 
@@ -123,23 +122,15 @@ public class UserMessage extends DbObject<Integer>
 			LogWrapper.getLogger().info("No machine.");
 			return;
 		}
-		
-		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
-				null,
-			    "Would you like to share with machine " + machine.getName(),
-			    "Share message sent on " + new Date(sent),
-			    JOptionPane.YES_NO_OPTION))
+
+		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null, 
+				"Would you like to share with machine " + machine.getName(), 
+				"Share message sent on " + new Date(sent), 
+				JOptionPane.YES_NO_OPTION))
 		{
 			machine.setWeShare(SharingState.DOWNLOADABLE);
-			try
-			{
-				machine.save();
-				Services.notifications.remoteChanged(machine);
-			}
-			catch (SQLException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to save permissions", e);
-			}
+			machine.tryToSave();
+			Services.notifications.remoteChanged(machine);
 		}
 	}
 
@@ -156,13 +147,18 @@ public class UserMessage extends DbObject<Integer>
 			LogWrapper.getLogger().info("Bad message: unknown root.");
 			return;
 		}
-		
+
 		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
 				null,
-			    "Would you like to share root \"" + localByName.getName() + "\" with machine \"" + machine.getName() + "\"",
-			    "Share root message sent on " + new Date(sent),
-			    JOptionPane.YES_NO_OPTION))
+				"Would you like to share root \"" + localByName.getName() + "\" with machine \"" + machine.getName() + "\"",
+				"Share root message sent on " + new Date(sent),
+				JOptionPane.YES_NO_OPTION))
 		{
+			if (localByName.getDefaultSharingState().isMoreRestrictiveThan(state))
+			{
+				localByName.setDefaultSharingState(state);
+				localByName.tryToSave();
+			}
 			DbPermissions.setSharingState(machine, localByName, state);
 			Services.notifications.remoteChanged(machine);
 		}

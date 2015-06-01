@@ -9,4 +9,6 @@ public interface UpdateInfo
 	public int getPort();
 	public PrivateKey getPrivateKey(PublicKey usedKey);
 	public PublicKey getLatestPublicKey();
+	
+	public static final int DEFAULT_UPDATE_PORT = 7005;
 }

@@ -6,8 +6,9 @@
 
 package org.cnv.shr.gui;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
@@ -21,7 +22,7 @@ import org.cnv.shr.util.LogWrapper;
  *
  * @author thallock
  */
-public class CreateMessage extends javax.swing.JFrame {
+public class CreateMessage extends javax.swing.JFrame implements KeyListener {
 
     private final Machine machine;
     /**
@@ -32,6 +33,7 @@ public class CreateMessage extends javax.swing.JFrame {
         initComponents();
         this.machine = machine;
         machineLabel.setText(machine.getName());
+        jTextArea1.addKeyListener(this);
     }
 
     /**
@@ -52,22 +54,21 @@ public class CreateMessage extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
+        charCount = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Send a message");
 
         jButton1.setText("Send");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
         jButton2.setText("Cancel");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -82,10 +83,12 @@ public class CreateMessage extends javax.swing.JFrame {
 
         jLabel2.setText("Limit is ");
 
-        jLabel3.setText("chars.");
+        jLabel3.setText("chars. Currently at: ");
 
         jLabel4.setText(String.valueOf(UserMessage.MAX_MESSAGE_LENGTH)
         );
+
+        charCount.setText("0");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -101,7 +104,9 @@ public class CreateMessage extends javax.swing.JFrame {
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 105, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(charCount, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton1))
@@ -119,7 +124,7 @@ public class CreateMessage extends javax.swing.JFrame {
                     .addComponent(jLabel1)
                     .addComponent(machineLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 265, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 325, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -128,7 +133,8 @@ public class CreateMessage extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel2)
                         .addComponent(jLabel3)
-                        .addComponent(jLabel4)))
+                        .addComponent(jLabel4)
+                        .addComponent(charCount)))
                 .addContainerGap())
         );
 
@@ -144,14 +150,7 @@ public class CreateMessage extends javax.swing.JFrame {
         UserMessage userMessage = UserMessage.createTextMessage(jTextArea1.getText());
         if (machine.isLocal())
         {
-            try
-            {
-                userMessage.save();
-            }
-            catch (SQLException ex)
-            {
-                LogWrapper.getLogger().log(Level.INFO, "Unable to save message:", ex);
-            }
+            userMessage.tryToSave();
             Services.notifications.messageReceived(userMessage);
             dispose();
             return;
@@ -172,6 +171,7 @@ public class CreateMessage extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel charCount;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
@@ -182,4 +182,22 @@ public class CreateMessage extends javax.swing.JFrame {
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JLabel machineLabel;
     // End of variables declaration//GEN-END:variables
+    
+    
+		@Override
+		public void keyTyped(KeyEvent e)
+		{
+			updateCurrentCharCound();
+		}
+
+		private void updateCurrentCharCound()
+		{
+			charCount.setText(String.valueOf(jTextArea1.getText().length()));
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {}
+
+		@Override
+		public void keyReleased(KeyEvent e) {}
 }

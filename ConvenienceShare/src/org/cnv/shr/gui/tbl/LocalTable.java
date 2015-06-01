@@ -21,7 +21,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 
 	public LocalTable(Application app, JTable table)
 	{
-		super(table);
+		super(table, "Path");
 		this.app = app;
 
 		addListener(new TableRightClickListener()
@@ -34,9 +34,8 @@ public class LocalTable extends DbJTable<LocalDirectory>
 			@Override
 			void perform(LocalDirectory root)
 			{
-						LocalDirectoryView localDirectoryView = new LocalDirectoryView();
+						LocalDirectoryView localDirectoryView = new LocalDirectoryView(root);
 						Services.notifications.registerWindow(localDirectoryView);
-						localDirectoryView.view(root);
 						localDirectoryView.setVisible(true);
 						LogWrapper.getLogger().info("Displaying " + root.getName());
 			}
@@ -80,6 +79,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 	protected void fillRow(LocalDirectory local, HashMap<String, Object> currentRow)
 	{
     currentRow.put("Path"           , local.getPathElement().getFullPath()   );
+    currentRow.put("Name"           , local.getName()                        );
     currentRow.put("Description"    , local.getDescription()                 );
     currentRow.put("Tags"           , local.getTags()                        );
     currentRow.put("Number of files", new NumberOfFiles(local.numFiles())    );

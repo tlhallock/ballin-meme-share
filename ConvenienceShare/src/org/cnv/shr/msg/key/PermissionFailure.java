@@ -114,7 +114,7 @@ public class PermissionFailure extends Message
 		else
 		{
 			machine.setTheyShare(currentPermission);
-			machine.save();
+			machine.tryToSave();
 		}
 	}
 	

@@ -90,7 +90,7 @@ public class RemoteDirectory extends RootDirectory
 	}
 
 	@Override
-	protected void setSharing(SharingState sharingState)
+	protected void setDefaultSharingState(SharingState sharingState)
 	{
 		this.sharesWithUs = sharingState;
 	}

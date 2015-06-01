@@ -24,7 +24,6 @@ import org.cnv.shr.util.LogWrapper;
 
 public class Notifications
 {
-	private final LinkedList<NotificationListener> listeners = new LinkedList<>();
 	private final LinkedList<WeakReference<NotificationListenerImpl>> weakListeners = new LinkedList<>();
 	private boolean stop;
 	private final LinkedBlockingDeque<Runnable> notifiers = new LinkedBlockingDeque<>();
@@ -99,10 +98,6 @@ public class Notifications
 		}
 
 		weakListeners.add(new WeakReference<Notifications.NotificationListenerImpl>(listener));
-	}
-	public void remove(final NotificationListenerImpl listener)
-	{
-//		listeners.remove(listener);
 	}
 	
 	public void permissionFailure(final PermissionFailureEvent event)

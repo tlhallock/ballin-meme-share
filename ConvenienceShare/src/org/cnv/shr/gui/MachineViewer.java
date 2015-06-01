@@ -10,13 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.security.PublicKey;
-import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
 import java.util.logging.Level;
 
 import javax.swing.JMenuItem;
@@ -28,16 +23,16 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.TreePath;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Notifications;
+import org.cnv.shr.dmn.Notifications.NotificationListener;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.tbl.FilesTable;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
@@ -59,18 +54,18 @@ public class MachineViewer extends javax.swing.JFrame
     private String rootDirectoryName;
     private PathTreeModel model;
     private Notifications.NotificationListener listener;
+    private FilesTable filesManager;
     /**
      * Creates new form RemoteViewer
      */
     public MachineViewer(Machine rMachine) {
     	machineIdent = rMachine.getIdentifier();
         initComponents();
+        filesManager = new FilesTable(filesTable, this);
 
         pathsTable.setAutoCreateRowSorter(true);
-        filesTable.setAutoCreateRowSorter(true);
 
         addPathsListener();
-        addFilesListener();
         addPopupMenu();
         
         filesTree.addMouseListener(new MouseAdapter() {
@@ -80,7 +75,7 @@ public class MachineViewer extends javax.swing.JFrame
                 if (e.getClickCount() >= 2) {
                     final TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
                     final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                    listFiles(n.getFileList());
+                    filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, n.getFileList());
                 }
             }
         });
@@ -89,64 +84,8 @@ public class MachineViewer extends javax.swing.JFrame
         setMachine(rMachine);
         viewNoDirectory();
         
-        Services.notifications.add(listener = new Notifications.NotificationListener()
-		{
-			@Override
-			public void remoteChanged(Machine remote)
-			{
-				if (remote.getIdentifier().equals(machineIdent))
-				{
-					setMachine(remote);
-				}
-			}
-
-			@Override
-			public void remoteDirectoryChanged(RemoteDirectory remote)
-			{
-				RootDirectory directory = getRootDirectory();
-		    	Machine machine = getMachine();
-				if (directory == null || !directory.getMachine().getIdentifier().equals(machine.getIdentifier())
-									  || !directory.getName().equals(remote.getName()))
-				{
-					return;
-				}
-				
-				// Check if it was deleted...
-
-				view(remote);
-			}
-
-			@Override
-			public void permissionFailure(PermissionFailureEvent event)
-			{
-				String rootName = event.getRootName();
-				if (rootName == null)
-				{
-					if (!event.getMachineIdent().equals(machineIdent))
-					{
-						return;
-					}
-			        remoteSharingWithUs.setText(event.getCurrentSharingState().humanReadable());
-				}
-				else if (rootName.equals(rootDirectoryName))
-				{
-					RootDirectory directory = getRootDirectory();
-					if (directory.isLocal()) return;
-					updatePermissionBoxesRemote((RemoteDirectory) directory);
-				}
-				event.show(getThis());
-			}
-		});
-
-		addWindowListener(new WindowAdapter()
-		{
-			@Override
-			public void windowClosing(WindowEvent evt)
-			{
-				Services.notifications.remove(listener);
-				model.closeConnections();
-			}
-		});
+        Services.notifications.add(createListener());
+        pack();
 		
 		addPermissionListeners();
     }
@@ -168,24 +107,17 @@ public class MachineViewer extends javax.swing.JFrame
 				{
 					return;
 				}
-				try
+				if (isMessaging.isSelected() && !machine.getAllowsMessages())
 				{
-					if (isMessaging.isSelected() && !machine.getAllowsMessages())
-					{
-						machine.setAllowsMessages(true);
-						machine.save();
-						Services.notifications.remoteChanged(machine);
-					}
-					else if (!isMessaging.isSelected() && machine.getAllowsMessages())
-					{
-						machine.setAllowsMessages(false);
-						machine.save();
-						Services.notifications.remoteChanged(machine);
-					}
+					machine.setAllowsMessages(true);
+					machine.tryToSave();
+					Services.notifications.remoteChanged(machine);
 				}
-				catch (SQLException e)
+				else if (!isMessaging.isSelected() && machine.getAllowsMessages())
 				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to save messaging permissions", e);
+					machine.setAllowsMessages(false);
+					machine.tryToSave();
+					Services.notifications.remoteChanged(machine);
 				}
 			}
 		});
@@ -196,18 +128,11 @@ public class MachineViewer extends javax.swing.JFrame
 			{
 				Machine machine = getMachine();
 				machine.setWeShare(state);
-				try
-				{
-					machine.save();
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
+				machine.tryToSave();
 			}
 		});
 	}
-    
+
     public RootDirectory getRootDirectory()
     {
     	if (rootDirectoryName == null)
@@ -239,34 +164,6 @@ public class MachineViewer extends javax.swing.JFrame
             return;
         }
         model.setRoot(remote);
-    }
-
-    private void addFilesListener() {
-        final TableListener tableListener = new TableListener(filesTable);
-        tableListener.addListener(new TableListener.TableRowListener() {
-            @Override
-            public void run(final int row) {
-                try {
-                    final String dirname = tableListener.getTableValue("Path", row);
-                    final String basename = tableListener.getTableValue("Name", row);
-                    final String fullPath = dirname + basename;
-    				RootDirectory directory = getRootDirectory();
-                    final SharedFile remoteFile = DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
-                    if (remoteFile == null) {
-                        LogWrapper.getLogger().info("Unable to get remote file " + fullPath);
-                        return;
-                    }
-                    UserActions.download(remoteFile);
-                } catch (final Exception ex) {
-                    LogWrapper.getLogger().log(Level.INFO, "Unable to show machine at index " + row, ex);
-                }
-            }
-
-            @Override
-            public String getString() {
-                return "Download";
-            }
-        }, true);
     }
 
     private void addPathsListener() {
@@ -330,7 +227,7 @@ public class MachineViewer extends javax.swing.JFrame
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
                 n.ensureExpanded();
                 LogWrapper.getLogger().info("Showing " + n);
-                listFiles(n.getFileList());
+                filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, n.getFileList());
             }
         });
         menu.add(item);
@@ -442,10 +339,7 @@ public class MachineViewer extends javax.swing.JFrame
         this.diskSpaceLabel.setText("Select a directory.");
         this.rootNameLabel.setText("None");
         this.pathField.setText("");
-
-        while (filesTable.getModel().getRowCount() > 0) {
-            ((DefaultTableModel) filesTable.getModel()).removeRow(0);
-        }
+        filesManager.empty();
         updatePermissionBoxesLocal();
 
 		rootIsVisibleCheckBox.setSelected(false);
@@ -466,9 +360,7 @@ public class MachineViewer extends javax.swing.JFrame
         this.pathField.setText(directory.getPathElement().getFullPath());
         this.diskSpaceLabel.setText(directory.getTotalFileSize());
         ((PathTreeModel) filesTree.getModel()).setRoot(directory);
-        while (filesTable.getModel().getRowCount() > 0) {
-            ((DefaultTableModel) filesTable.getModel()).removeRow(0);
-        }
+        filesManager.refresh();
         if (directory.isLocal())
         {
         	updatePermissionBoxesLocal();
@@ -498,32 +390,6 @@ public class MachineViewer extends javax.swing.JFrame
         requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
         requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
         pin.setEnabled(true);
-    }
-
-    private synchronized void listFiles(final List<SharedFile> files) {
-        final DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
-        while (model.getRowCount() > 0) {
-            model.removeRow(0);
-        }
-        for (final SharedFile next : files) {
-            final String path = next.getPath().getFullPath();
-
-            final int indexSlh = path.lastIndexOf('/');
-            final String name = indexSlh < 0 ? path : path.substring(indexSlh + 1);
-            final String relPath = indexSlh < 0 ? "" : path.substring(0, indexSlh + 1);
-
-            final int indexExt = name.lastIndexOf('.');
-            final String ext = indexExt < 0 ? "" : name.substring(indexExt);
-
-            model.addRow(new Object[]{
-                String.valueOf(relPath),
-                String.valueOf(name),
-                new DiskUsage(next.getFileSize()),
-                String.valueOf(next.getChecksum()),
-                String.valueOf(next.getTags()),
-                new Date(next.getLastUpdated()),
-                String.valueOf(ext),});
-        }
     }
 
     /**
@@ -1127,4 +993,58 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JComboBox sharingWithRemoteMachine;
     private javax.swing.JLabel tagsLabel;
     // End of variables declaration//GEN-END:variables
+    
+    
+
+	private NotificationListener createListener()
+	{
+		return listener = new Notifications.NotificationListener()
+		{
+			@Override
+			public void remoteChanged(Machine remote)
+			{
+				if (remote.getIdentifier().equals(machineIdent))
+				{
+					setMachine(remote);
+				}
+			}
+
+			@Override
+			public void remoteDirectoryChanged(RemoteDirectory remote)
+			{
+				RootDirectory directory = getRootDirectory();
+		    	Machine machine = getMachine();
+				if (directory == null || !directory.getMachine().getIdentifier().equals(machine.getIdentifier())
+									  || !directory.getName().equals(remote.getName()))
+				{
+					return;
+				}
+				
+				// Check if it was deleted...
+
+				view(remote);
+			}
+
+			@Override
+			public void permissionFailure(PermissionFailureEvent event)
+			{
+				String rootName = event.getRootName();
+				if (rootName == null)
+				{
+					if (!event.getMachineIdent().equals(machineIdent))
+					{
+						return;
+					}
+			        remoteSharingWithUs.setText(event.getCurrentSharingState().humanReadable());
+				}
+				else if (rootName.equals(rootDirectoryName))
+				{
+					RootDirectory directory = getRootDirectory();
+					if (directory.isLocal()) return;
+					updatePermissionBoxesRemote((RemoteDirectory) directory);
+				}
+				event.show(getThis());
+			}
+		};
+	}
 }

@@ -59,13 +59,13 @@ public abstract class RootDirectory extends DbObject<Integer>
 		totalFileSize                    = row.getLong  ("TSPACE"         );
 		totalNumFiles                    = row.getLong  ("NFILES"         );
 		name                             = row.getString("RNAME");
-		setSharing(       SharingState.get(row.getInt(   "SHARING")));
+		setDefaultSharingState(       SharingState.get(row.getInt(   "SHARING")));
 		
 		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.RMACHINE, row.getInt("MID"));
 		setPath((PathElement) locals.getObject(c, DbTables.DbObjects.PELEM,    row.getInt("PELEM")));
 	}
 
-	protected abstract void setSharing(SharingState sharingState);
+	protected abstract void setDefaultSharingState(SharingState sharingState);
 	protected abstract void setPath(PathElement object);
 
 	@Override
@@ -150,18 +150,11 @@ public abstract class RootDirectory extends DbObject<Integer>
 
 	public void setStats()
 	{
-		try
-		{
-			totalNumFiles = DbRoots.getNumberOfFiles(this);
-			totalFileSize = DbRoots.getTotalFileSize(this);
-			save();
-		}
-		catch (final SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to set stats.", e);
-		}
+		totalNumFiles = DbRoots.getNumberOfFiles(this);
+		totalFileSize = DbRoots.getTotalFileSize(this);
+		tryToSave();
 	}
-	
+
 	public abstract boolean isLocal();
 
 	public long numFiles()

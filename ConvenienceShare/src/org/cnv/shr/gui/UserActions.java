@@ -68,7 +68,7 @@ public class UserActions
 					{
 						// enable messaging
 						machine.setAllowsMessages(true);
-						machine.save();
+						machine.tryToSave();
 					}
 
 					if (params.visible)
@@ -76,12 +76,12 @@ public class UserActions
 						if (params.share)
 						{
 							machine.setWeShare(SharingState.DOWNLOADABLE);
-							machine.save();
+							machine.tryToSave();
 						}
 						else
 						{
 							machine.setWeShare(SharingState.SHARE_PATHS);
-							machine.save();
+							machine.tryToSave();
 						}
 					}
 					
@@ -93,10 +93,6 @@ public class UserActions
 				catch (IOException e)
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Unable to discover " + url, e);
-				}
-				catch (SQLException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to save " + url, e);
 				}
 			}
 		});
@@ -209,11 +205,11 @@ public class UserActions
 			PathElement pathElement = DbPaths.getPathElement(localDirectory);
 
 			LocalDirectory local = new LocalDirectory(pathElement, name);
-			local.save();
+			local.tryToSave();
 			DbPaths.pathLiesIn(pathElement, local);
 			Services.notifications.localChanged(local);
 		}
-		catch (SQLException | IOException e1)
+		catch (IOException e1)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get file path to share: " + localDirectory, e1);
 		}
@@ -246,22 +242,8 @@ public class UserActions
 
 	public static void shareWith(final Machine m, final SharingState share)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				m.setWeShare(share);
-				try
-				{
-					m.save();
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
-			}
-		});
+		m.setWeShare(share);
+		m.tryToSave();
 	}
 
 	public static void shareWith(Machine m, LocalDirectory local, boolean share)

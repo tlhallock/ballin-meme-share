@@ -89,12 +89,19 @@ public class ConnectionManager
 		Communication connection = new Communication(authentication, accepted);
 		connection.send(new WhoIAm());
 		Services.notifications.connectionOpened(connection);
-		ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
-		synchronized (runnables)
+		try
 		{
-			runnables.add(connectionRunnable);
+			ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
+			synchronized (runnables)
+			{
+				runnables.add(connectionRunnable);
+			}
+			connectionRunnable.run();
 		}
-		connectionRunnable.run();
+		finally
+		{
+			Services.notifications.connectionClosed(connection);
+		}
 	}
 	
 	public void closeAll()

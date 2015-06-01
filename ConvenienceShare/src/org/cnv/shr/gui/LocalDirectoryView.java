@@ -7,12 +7,11 @@
 package org.cnv.shr.gui;
 
 import java.awt.GridLayout;
-import java.sql.SQLException;
 import java.util.LinkedList;
-import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
@@ -24,71 +23,89 @@ import org.cnv.shr.util.LogWrapper;
  */
 public class LocalDirectoryView extends javax.swing.JFrame
 {
-	LocalDirectory local;
-        LinkedList<LocalSharePermission> permissions = new LinkedList<>();
+	private String path;
+	LinkedList<LocalSharePermission> permissions = new LinkedList<>();
 
-    /**
-     * Creates new form LocalDirectoryView
-     */
-    public LocalDirectoryView() {
-        initComponents();
-    }
-
-	public void view(LocalDirectory root)
+	public LocalDirectoryView(LocalDirectory root)
 	{
-		this.local = root;
-		setTitle("Unable to open directory.");
+		initComponents();
+
 		if (root == null)
 		{
+			setTitle("Unable to open directory.");
 			return;
 		}
-		setTitle(root.getPathElement().getFullPath());
+		this.path = root.getPathElement().getFullPath();
+		setTitle("LocalDirectory: " + path);
 		pathLabel.setText(root.getPathElement().getFullPath());
+
+		jComboBox1.setModel(new PermissionChanger(jComboBox1, root.getDefaultSharingState())
+		{
+			@Override
+			protected void setPermission(SharingState state)
+			{
+				LocalDirectory local = getLocal();
+				if (local == null) return;
+				local.setDefaultSharingState(state);
+				local.tryToSave();
+				LogWrapper.getLogger().info("Set permission of " + local.getName() + " to " + state.humanReadable());
+			}
+		});
+		
+		refresh(root);
+	}
+
+
+	private void refresh(LocalDirectory root)
+	{
 		tagsString.setText(root.getTags());
 		descriptionString.setText(root.getDescription());
-		
+		jTextField1.setText(root.getName());
+
 		StringBuilder builder = new StringBuilder();
 		for (String string : DbRoots.getIgnores(root).getPatterns())
 		{
 			builder.append(string).append('\n');
 		}
 		ignoreTextArea.setText(builder.toString());
-                
-                permissions.clear();
-                sharePanel.removeAll();
-                sharePanel.setLayout(new GridLayout(0, 1));
-                DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
-                while (listRemoteMachines.hasNext())
-                {
-                    Machine machine = listRemoteMachines.next();
-                    LocalSharePermission permission = new LocalSharePermission(machine, root);
-                    sharePanel.add(permission);
-                    permissions.add(permission);
-                }
+
+		permissions.clear();
+		sharePanel.removeAll();
+		sharePanel.setLayout(new GridLayout(0, 1));
+		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
+		while (listRemoteMachines.hasNext())
+		{
+			Machine machine = listRemoteMachines.next();
+			LocalSharePermission permission = new LocalSharePermission(machine, root);
+			sharePanel.add(permission);
+			permissions.add(permission);
+		}
+		
+		jComboBox1.setSelectedItem(root.getDefaultSharingState().humanReadable());
+	}
+	
+	private LocalDirectory getLocal()
+	{
+		if (path == null) return null;
+		return DbRoots.getLocal(path);
 	}
 	
 	private void save()
 	{
+		LocalDirectory local = getLocal();
 		if (local == null)
 		{
 			return;
 		}
 		
-		// Set the name...
-		
+		local.setName(jTextField1.getText());
 		local.setDescription(descriptionString.getText());
 		local.setTags(tagsString.getText());
-		
-		try
-		{
-			local.save();
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to save local " + local, e);
-		}
 
+		local.tryToSave();
 		DbRoots.setIgnores(local, ignoreTextArea.getText().split("\n"));
+		
+		refresh(getLocal());
 	}
 
     /**
@@ -279,7 +296,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        UserActions.userSync(local, null);
+        UserActions.userSync(getLocal(), null);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

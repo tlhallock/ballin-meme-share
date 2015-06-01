@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.TimerTask;
@@ -16,11 +18,16 @@ import java.util.logging.Level;
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.updt.UpdateInfo;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.OutputByteWriter;
 import org.cnv.shr.util.ProcessInfo;
+
+/**
+ * This file could use some refactoring...
+ */
 
 public class UpdateManager extends TimerTask
 {
@@ -38,76 +45,124 @@ public class UpdateManager extends TimerTask
 	@Override
 	public void run()
 	{
-		checkForUpdates();
+		Services.userThreads.execute(new Runnable()
+		{
+			public void run()
+			{
+				checkForUpdates(true);
+			}
+		});
 	}
 
-	public synchronized void checkForUpdates()
+	public String getUpdateServerUrl()
 	{
-		if (pKey == null)
+		return ip;
+	}
+
+	public int getUpdateServerPort()
+	{
+		return port;
+	}
+
+	public boolean hasKey()
+	{
+		return pKey != null;
+	}
+
+	public void setAddress(String ip, int port)
+	{
+		this.ip = ip;
+		this.port = port;
+	}
+
+	public synchronized void checkForUpdates(boolean authenticate)
+	{
+		if (pKey == null && authenticate)
 		{
 			LogWrapper.getLogger().warning("No way to update code! (No public key)");
 			return;
 		}
-		if (ip == null || port <= 0)
+		if (ip == null)
 		{
 			LogWrapper.getLogger().info("No way to update code! (No ip/port)");
 			return;
 		}
+		
+		if (port <= 0)
+		{
+			port = UpdateInfo.DEFAULT_UPDATE_PORT;
+		}
 
-		try (Socket socket = new Socket(ip, port); 
-				InputStream inputStream = socket.getInputStream(); 
+		try (Socket socket = new Socket(ip, port);
+				InputStream inputStream = socket.getInputStream();
 				OutputStream outputStream = socket.getOutputStream();)
 		{
 			OutputByteWriter writer = new OutputByteWriter(outputStream);
 			ByteReader byteReader = new ByteReader(inputStream);
 
-			byte[] naunce = Misc.createNaunce(Services.settings.minNaunce.get());
-			byte[] encrypted = Services.keyManager.encrypt(pKey, naunce);
-			
-			writer.append(encrypted);
-			byte[] decrypted = byteReader.readVarByteArray();
-			if (!Arrays.equals(naunce, decrypted))
+			writer.append(authenticate);
+			if (authenticate)
 			{
-				LogWrapper.getLogger().info("Update server failed authentication.");
-				return;
+				byte[] naunce = Misc.createNaunce(Services.settings.minNaunce.get());
+				byte[] encrypted = Services.keyManager.encrypt(pKey, naunce);
+
+				writer.appendVarByteArray(encrypted);
+				byte[] decrypted = byteReader.readVarByteArray();
+				if (!Arrays.equals(naunce, decrypted))
+				{
+					LogWrapper.getLogger().info("Update server failed authentication.");
+					return;
+				}
 			}
-			String newVersionString = byteReader.readString();
-			if (!versionIsNewer(newVersionString))
+
+			String serverVersionString = byteReader.readString();
+			if (!versionIsNewer(serverVersionString, currentVersion))
 			{
 				LogWrapper.getLogger().info("We already have the latest version.");
+				writer.append(false);
+				
+				// here we could also check the version on file...
 				return;
 			}
 
-			if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null, 
-					"A new version of code has been found. Would you like to update now?", 
-					"Update ConvenienceShare", 
-					JOptionPane.YES_NO_OPTION))
-			{
-				writer.append(true);
-				update(inputStream);
-			}
-			else
-			{
-				writer.append(false);
-			}
+			update(inputStream, writer, serverVersionString);
 		}
 		catch (IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to open connection to update server", e);
+			
+			Path currentJar = ProcessInfo.getJarFile(Main.class);
+			Path downloadFile = Paths.get(currentJar.toString() + ".new");
+			if (shouldUseDownloadedVersion(downloadFile, currentVersion, false))
+			{
+				LogWrapper.getLogger().info("Found previous code download.");
+				completeUpdate(currentJar, downloadFile);
+			}
 		}
 	}
 	
-	
-	private boolean versionIsNewer(String newVersionString)
+	private boolean confirmUpgrade()
 	{
-		String[] current = currentVersion.split(".");
-		String[] newer = currentVersion.split(".");
+			UserInputWait wait = new UserInputWait();
+			waitForInput(wait);
+			boolean proceed = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
+					"A new version of code has been found. Would you like to update now?",
+					"Update ConvenienceShare",
+					JOptionPane.YES_NO_OPTION);
+			wait.userInput = true;
+			return proceed || wait.interrupted;
+	}
+
+	private boolean versionIsNewer(String serverVersion, String currentVersion)
+	{
+		String[] current = currentVersion.split("\\.");
+		String[] newer = serverVersion.split("\\.");
 		int versionLength = Math.min(current.length, newer.length);
 		for (int i = 0; i < versionLength; i++)
 		{
 			int newerNugget = Integer.parseInt(newer[i]);
 			int currentNugget = Integer.parseInt(current[i]);
-			
+
 			if (newerNugget > currentNugget)
 			{
 				return true;
@@ -121,55 +176,141 @@ public class UpdateManager extends TimerTask
 		return current.length > newer.length;
 	}
 
-	private void update(InputStream input)
+	private void update(InputStream input, OutputByteWriter writer, String version)
 	{
-		String jarPath = ProcessInfo.getJarPath(Main.class);
-		File downloadFile = new File(jarPath + ".new");
-		
-		try (Socket socket = new Socket(ip, port);
-				InputStream inputStream = socket.getInputStream();
-				FileOutputStream outputStream = new FileOutputStream(downloadFile))
+		Path currentJar = ProcessInfo.getJarFile(Main.class);
+		Path downloadFile = Paths.get(currentJar.toString() + ".new");
+		if (shouldUseDownloadedVersion(downloadFile, version, true))
 		{
-			byte[] buffer = new byte[1024];
-			int nread;
-			while ((nread = inputStream.read(buffer, 0, buffer.length)) >= 0)
+			try
 			{
-				outputStream.write(buffer, 0, nread);
+				// Notify done...
+				writer.append(false);
 			}
+			catch (IOException e1)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Server quit on us. No big thing.", e1);
+			}
+			LogWrapper.getLogger().info("Found previous code download.");
+			completeUpdate(currentJar, downloadFile);
+			return;
+		}
+		
+		try
+		{
+			writer.append(true);
+			Files.copy(input, downloadFile, StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch (IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to download new code.", e);
+			try
+			{
+				Files.delete(downloadFile);
+			}
+			catch (IOException e1)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to delete incomplete download.", e);
+			}
+			return;
+		}
+
+		try
+		{
+			// Notify done...
+			writer.append(false);
+		}
+		catch (IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Server quit on us. No big thing.", e1);
+		}
+		
+		completeUpdate(currentJar, downloadFile);
+	}
+
+	private void completeUpdate(Path currentJar, Path downloadFile)
+	{
+		if (!confirmUpgrade())
+		{
 			return;
 		}
 		
 		try
 		{
-			Files.copy(Paths.get(jarPath), Paths.get(jarPath + ".bak"));
+			if (Files.exists(currentJar))
+			{
+				Files.copy(currentJar, Paths.get(currentJar.toString() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
+			}
 		}
 		catch (IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to backup current code.", e);
-			downloadFile.delete();
 			return;
 		}
 
 		try
 		{
-			Files.move(Paths.get(downloadFile.getAbsolutePath()), Paths.get(jarPath));
+			Files.copy(downloadFile, currentJar, StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch (IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to replace current code.", e);
-			downloadFile.delete();
 			return;
 		}
 
+		restart();
+	}
+
+	private void restart()
+	{
+		UserInputWait wait = new UserInputWait();
+		waitForInput(wait);
 		JOptionPane.showMessageDialog(null, 
-				"Code update is complete. ConvenienceShare will now restart.",
-				"Code update.",
+				"Code update is complete. ConvenienceShare will now restart.", 
+				"Code update.", 
 				JOptionPane.INFORMATION_MESSAGE);
+		wait.userInput = true;
 		Main.restart();
+	}
+	
+	private boolean shouldUseDownloadedVersion(Path downloadFile, String requiredVersion, boolean updateOnEqual)
+	{
+		if (!Files.exists(downloadFile))
+		{
+			return false;
+		}
+		String jarVersion = ProcessInfo.getJarVersion(downloadFile);
+		if (jarVersion == null)
+		{
+			return false;
+		}
+		if (versionIsNewer(jarVersion, requiredVersion))
+		{
+			return true;
+		}
+		if (requiredVersion.equals(jarVersion))
+		{
+			return updateOnEqual;
+		}
+		return false;
+	}
+
+	private void waitForInput(UserInputWait wait)
+	{
+		Thread t = Thread.currentThread();
+		Services.timer.schedule(new TimerTask()
+		{
+			@Override
+			public void run()
+			{
+				if (!wait.userInput)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "No user input, proceeding");
+					wait.interrupted = true;
+					t.interrupt();
+				}
+			}
+		}, 10 * 1000);
 	}
 
 	public synchronized void updateInfo(String ip, int port, PublicKey pKey)
@@ -224,5 +365,11 @@ public class UpdateManager extends TimerTask
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to save update info", e);
 		}
+	}
+
+	private static final class UserInputWait
+	{
+		boolean interrupted;
+		boolean userInput;
 	}
 }

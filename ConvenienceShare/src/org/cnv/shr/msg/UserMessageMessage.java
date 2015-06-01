@@ -76,7 +76,7 @@ public class UserMessageMessage extends Message
 		{
 			return;
 		}
-		message.save();
+		message.tryToSave();
 		Services.notifications.messageReceived(message);
 	}
 	

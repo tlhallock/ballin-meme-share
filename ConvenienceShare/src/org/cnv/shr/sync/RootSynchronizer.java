@@ -246,15 +246,16 @@ public abstract class RootSynchronizer implements Runnable
 		try
 		{
 			final SharedFile lFile = fsCopy.create(local, element);
-			if (lFile.save())
+			if (!lFile.tryToSave())
 			{
-				changeCount++;
-				for (final SynchronizationListener listener : listeners)
-				{
-					listener.fileAdded(lFile);
-				}
-				Services.notifications.fileAdded(lFile);
+				return;
 			}
+			changeCount++;
+			for (final SynchronizationListener listener : listeners)
+			{
+				listener.fileAdded(lFile);
+			}
+			Services.notifications.fileAdded(lFile);
 		}
 		catch (final FileOutsideOfRootException ex)
 		{
@@ -263,10 +264,6 @@ public abstract class RootSynchronizer implements Runnable
 		catch (final IOException ex)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get path of file: " + fsCopy, ex);
-		}
-		catch (final SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to add file " + fsCopy, e);
 		}
 	}
 

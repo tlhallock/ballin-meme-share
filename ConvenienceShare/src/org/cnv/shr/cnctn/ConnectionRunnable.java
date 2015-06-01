@@ -50,7 +50,6 @@ public class ConnectionRunnable implements Runnable
 					break;
 				}
 			}
-			Services.notifications.connectionClosed(connection);
 		}
 		catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 		{

@@ -37,7 +37,7 @@ public class AuthenticationTests extends RemotesTest
 		{
 			
 			getMachineInfo(1).launch(true);
-			new UserMessage(Services.localMachine, UserMessage.MessageType.TEXT.getDbValue(), "foobar").save();
+			new UserMessage(Services.localMachine, UserMessage.MessageType.TEXT.getDbValue(), "foobar").tryToSave();
                         
                         
 			UserActions.addMachine(getMachineInfo(0).getUrl(), new AddMachine.AddMachineParams(true));

@@ -120,7 +120,7 @@
 
 		<jar destfile="dist/Installer.jar">
 			<manifest>
-				<attribute name="Main-Class" value="org.cnv.shr.inst.Install" />
+				<attribute name="Main-Class" value="org.cnv.shr.inst.Install2" />
 				<attribute name="Class-Path" value="" />
 			</manifest>
 			<fileset dir="classes/install/" />
@@ -129,6 +129,11 @@
 			<zipfileset file="../instances/updater/updateKey" prefix="dist/" />
 		</jar>
 		<delete file="dist/install_data.zip" />
+	</target>
+        
+	<target name="update" depends="clean,convenienceshare,updater,tracker">
+		<mkdir dir="../instances/updater/updates/" />
+		<copy file="dist/ConvenienceShare.jar" todir="../instances/updater/updates/" />
 	</target>
 
 	<target name="cleanbuild" depends="clean, convenienceshare" />

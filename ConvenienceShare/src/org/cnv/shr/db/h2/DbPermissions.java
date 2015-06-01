@@ -70,7 +70,7 @@ public class DbPermissions
 	{
 		SharingState current = null;
 		SharingState other = machine.sharingWithOther();
-		if (current == null || (other != null && other.getDbValue() < current.getDbValue()))
+		if (current == null || (other != null && other.isMoreRestrictiveThan(current)))
 		{
 			current = other;
 		}
@@ -87,17 +87,17 @@ public class DbPermissions
 	{
 		SharingState current = null;
 		SharingState other = machine.sharingWithOther();
-		if (current == null || (other != null && other.getDbValue() < current.getDbValue()))
+		if (current == null || (other != null && other.isMoreRestrictiveThan(current)))
 		{
 			current = other;
 		}
 		other = root.getDefaultSharingState();
-		if (current == null || (other != null && other.getDbValue() < current.getDbValue()))
+		if (current == null || (other != null && other.isMoreRestrictiveThan(current)))
 		{
 			current = other;
 		}
 		other = isSharing(machine, root);
-		if (current == null || (other != null && other.getDbValue() < current.getDbValue()))
+		if (current == null || (other != null && other.isMoreRestrictiveThan(current)))
 		{
 			current = other;
 		}
@@ -116,8 +116,6 @@ public class DbPermissions
 		DO_NOT_SHARE(1, false, false),
 		SHARE_PATHS (2,  true, false),
 		DOWNLOADABLE(3,  true,  true),
-//		DEFAULT     (4, false, false),
-		
 		;
 		
 		boolean canList;
@@ -166,6 +164,23 @@ public class DbPermissions
 		public boolean listable()
 		{
 			return canList;
+		}
+		
+		public boolean isLessOrEquallyRestriveThan(SharingState other)
+		{
+			return state >= other.state;
+//			switch (this)
+//			{
+//				case DOWNLOADABLE: return true;
+//				case SHARE_PATHS:  return other.equals(SHARE_PATHS) || other.equals(DO_NOT_SHARE);
+//				case DO_NOT_SHARE: return other.equals(DO_NOT_SHARE);
+//				default:           return false;
+//			}
+		}
+		
+		public boolean isMoreRestrictiveThan(SharingState other)
+		{
+			return !isLessOrEquallyRestriveThan(other);
 		}
 	}
 }

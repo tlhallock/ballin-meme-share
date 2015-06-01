@@ -25,7 +25,7 @@ public class DownloadTable extends DbJTable<Download>
 	
 	public DownloadTable(Application app, JTable table)
 	{
-		super(table);
+		super(table, "Id");
 		this.app = app;
 
 		addListener(new TableRightClickListener()
@@ -50,7 +50,7 @@ public class DownloadTable extends DbJTable<Download>
 			{
 				return "Open";
 			}
-		});
+		}, true);
 		addListener(new TableRightClickListener()
 		{
 			@Override
