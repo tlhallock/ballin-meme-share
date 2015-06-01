@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.Inet4Address;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
@@ -15,12 +17,14 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.SettingListener;
 
 public class PortMapper {
+	public static final String portMapperJar = "lib/portmapper-2.0.0-alpha1.jar";
 	static final String PORT_MAPPING_DESCRIPTION = "PortMapper";
-	static final String portMapperJar = "lib/portmapper-2.0.0-alpha1.jar";
 	static final Pattern EXISTING_MAPPING_PATTERN = Pattern
 			.compile("TCP :([0-9]*) -> ([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):([0-9]*) enabled");
+    public static String ip;
+    // I am guessing this is supposed to be the 192.168.0.x, which is why this is not workings...
 
-	static HashMap<Integer, Integer> listPorts() throws IOException,
+	static HashMap<Integer, Integer> listPorts(PrintStream logStream) throws IOException,
 			InterruptedException {
 		HashMap<Integer, Integer> returnValue = new HashMap<>();
 
@@ -38,7 +42,7 @@ public class PortMapper {
 				p.getInputStream()));) {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				System.out.println(line);
+				logStream.println(line);
 				if (!line.contains(PORT_MAPPING_DESCRIPTION)) {
 					continue;
 				}
@@ -59,9 +63,9 @@ public class PortMapper {
 
 	}
 
-	static boolean mapPort(Integer gateway, Integer local, String knownIp)
+	static boolean mapPort(Integer gateway, Integer local, String knownIp, PrintStream logStream)
 			throws IOException, InterruptedException {
-		System.out.println("Mapping port " + gateway + " to " + local + " on "
+		logStream.println("Mapping port " + gateway + " to " + local + " on "
 				+ knownIp);
 		LinkedList<String> arguments = new LinkedList<>();
 		arguments.add("java");
@@ -92,16 +96,16 @@ public class PortMapper {
 				if (line.contains("Shutdown registry")) {
 					p.destroy();
 				}
-				System.out.println(line);
+				logStream.println(line);
 			}
 		} catch (IOException e) {
 			LogWrapper.getLogger().log(Level.INFO, "Unable to map ports", e);
 		}
 
-		return listPorts().containsKey(new Integer(gateway));
+		return listPorts(logStream).containsKey(new Integer(gateway));
 	}
 
-	static boolean removeMapping(int externalPort) throws InterruptedException,
+	static boolean removeMapping(int externalPort, PrintStream logStream) throws InterruptedException,
 			IOException {
 		LinkedList<String> arguments = new LinkedList<>();
 		arguments.add("java");
@@ -125,25 +129,25 @@ public class PortMapper {
 				if (line.contains("Shutdown registry")) {
 					p.destroy();
 				}
-				System.out.println(line);
+				logStream.println(line);
 			}
 		} catch (IOException e) {
 			LogWrapper.getLogger().log(Level.INFO, "Unable to remove port mapping", e);
 		}
-		return !listPorts().containsKey(new Integer(externalPort));
+		return !listPorts(logStream).containsKey(new Integer(externalPort));
 	}
 
-	static void removeAllMappings() throws IOException, InterruptedException {
-		System.out.println("Removing port mappings.");
-		HashMap<Integer, Integer> listPorts = listPorts();
+	public static void removeAllMappings(PrintStream logStream) throws IOException, InterruptedException {
+		logStream.println("Removing port mappings.");
+		HashMap<Integer, Integer> listPorts = listPorts(logStream);
 		for (Integer remote : listPorts.keySet()) {
-			removeMapping(remote);
+			removeMapping(remote, logStream);
 		}
 	}
 
-	public static boolean currentRulesMatch(HashMap<Integer, Integer> ports) throws IOException,
+	public static boolean currentRulesMatch(HashMap<Integer, Integer> ports, PrintStream logStream) throws IOException,
 			InterruptedException {
-		HashMap<Integer, Integer> listPorts = listPorts();
+		HashMap<Integer, Integer> listPorts = listPorts(logStream);
 		if (listPorts.size() != ports.size()) {
 			return false;
 		}
@@ -159,16 +163,40 @@ public class PortMapper {
 		}
 		return true;
 	}
+        
+        public static void addDesiredPorts(PrintStream logStream)
+        {
+			int beginPortI = Services.settings.servePortBeginI.get();
+			int beginPortE = Services.settings.servePortBeginE.get();
+			
+			int nports = Services.settings.maxServes.get();
+			HashMap<Integer, Integer> mappings = new HashMap<>();
+			for (int i = 0; i < nports; i++)
+			{
+				mappings.put(beginPortE + i, beginPortI + i);
+			}
+			try
+			{
+				if (!map(mappings, Inet4Address.getLocalHost().getHostAddress(), logStream))
+				{
+					LogWrapper.getLogger().info("That sux.");
+				}
+			}
+			catch (IOException | InterruptedException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to change port mapping", e);
+			}
+        }
 
-	static boolean map(HashMap<Integer, Integer> ports, String knownIp) throws IOException,
+	static boolean map(HashMap<Integer, Integer> ports, String knownIp, PrintStream logStream) throws IOException,
 			InterruptedException {
-		if (currentRulesMatch(ports)) {
+		if (currentRulesMatch(ports, logStream)) {
 			return true;
 		}
-		System.out.println("Current mappings did not match.");
-		removeAllMappings();
+		logStream.println("Current mappings did not match.");
+		removeAllMappings(logStream);
 		for (Entry<Integer, Integer> port : ports.entrySet()) {
-			if (!mapPort(port.getKey(), port.getValue(), knownIp)) {
+			if (!mapPort(port.getKey(), port.getValue(), knownIp, logStream)) {
 				return false;
 			}
 		}
@@ -181,27 +209,7 @@ public class PortMapper {
 		public void settingChanged()
 		{
 			// restart server threads too...
-
-			int beginPortI = Services.settings.servePortBeginI.get();
-			int beginPortE = Services.settings.servePortBeginE.get();
-			
-			int nports = Services.settings.maxServes.get();
-			HashMap<Integer, Integer> mappings = new HashMap<>();
-			for (int i = 0; i < nports; i++)
-			{
-				mappings.put(beginPortE + i, beginPortI + i);
-			}
-			try
-			{
-				if (!map(mappings, "idk what ip to use"))
-				{
-					LogWrapper.getLogger().info("That sux.");
-				}
-			}
-			catch (IOException | InterruptedException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to change port mapping", e);
-			}
+                    addDesiredPorts(System.out);
 		}
 	}
 }
