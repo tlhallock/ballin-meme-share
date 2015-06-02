@@ -6,6 +6,7 @@ import java.util.logging.Level;
 
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackerAction;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.LogWrapper;
@@ -118,4 +119,14 @@ public class TrackerClient
 	{
 		return entry;
 	}
+        
+        public String getAddress()
+        {
+            return entry.getIp() + ":" + entry.getBeginPort() + "-" + entry.getEndPort();
+        }
+        
+        Iterable<MachineEntry> list(int start)
+        {
+            return null;
+        }
 }

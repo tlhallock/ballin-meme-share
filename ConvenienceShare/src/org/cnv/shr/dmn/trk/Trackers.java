@@ -64,4 +64,9 @@ public class Trackers
 		trackers.add("127.0.0.1", 15, 56);
 		trackers.save(Paths.get("foobar.json"));
 	}
+
+    Iterable<TrackerClient> getClients()
+    {
+        return trackers;
+    }
 }

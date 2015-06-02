@@ -26,6 +26,7 @@ import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.dmn.mn.Arguments;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.mn.Quiter;
+import org.cnv.shr.dmn.trk.Trackers;
 import org.cnv.shr.gui.TaskMenu;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
@@ -65,6 +66,7 @@ public class Services
 	public static Quiter quiter;
 	public static UpdateManager updateManager;
 	public static UpdateInfo codeUpdateInfo;
+        public static Trackers trackers;
 	
 	public static void initialize(Arguments args) throws Exception
 	{
