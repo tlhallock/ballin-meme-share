@@ -12,7 +12,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.Properties;
+import java.util.logging.Level;
 
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class Settings implements SettingListener
@@ -192,8 +194,7 @@ public class Settings implements SettingListener
 		}
 		catch (IOException e)
 		{
-//			LogWrapper.getLogger().info("Unable to save settings.");
-//			LogWrapper.getLogger().log(Level.INFO, , e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save settings.", e);
 		}
 	}
 
@@ -206,10 +207,16 @@ public class Settings implements SettingListener
 		return settingsFile.toAbsolutePath().toString();
 	}
 
+	static String version;
+
 	public static String getVersion()
 	{
-		String version = Misc.readFile(RES_DIR + "version.txt");
-		if (version == null) version = "0";
+		if (version == null)
+		{
+			version = Misc.readFile(RES_DIR + "version.txt");
+			if (version == null)
+				version = "0";
+		}
 		return version;
 	}
 }

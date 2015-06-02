@@ -26,6 +26,7 @@ import javax.crypto.NoSuchPaddingException;
 
 import de.flexiprovider.core.FlexiCoreProvider;
 import de.flexiprovider.core.rijndael.RijndaelKey;
+import de.flexiprovider.core.rsa.RSAPublicKey;
 
 public class KeysService
 {
@@ -122,7 +123,7 @@ public class KeysService
 		return new String[0];
 	}
 
-	public PublicKey getPublicKey()
+	public RSAPublicKey getPublicKey()
 	{
 		return primaryKey.publicKey;
 	}
