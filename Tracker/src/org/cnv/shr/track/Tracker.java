@@ -11,8 +11,7 @@ import java.util.logging.Level;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
-import org.cnv.shr.trck.Comment;
-import org.cnv.shr.trck.Done;
+import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
@@ -36,13 +35,27 @@ public class Tracker implements Runnable
 	{
 		while (true)
 		{
-			try (Socket socket       = serverSocket.accept();
-					JsonGenerator output = TrackObjectUtils.generatorFactory.createGenerator(socket.getOutputStream());
-					JsonParser input     = TrackObjectUtils.parserFactory.createParser(socket.getInputStream());)
+			if (serverSocket.isClosed())
 			{
-				MachineEntry entry = authenticateClient(input, output);
+				break;
+			}
+			LogWrapper.getLogger().info("Waiting on " + serverSocket.getLocalPort());
+			
+			try (Socket socket       = serverSocket.accept();
+					JsonParser input     = TrackObjectUtils.parserFactory.createParser(socket.getInputStream());
+					JsonGenerator output = TrackObjectUtils.generatorFactory.createGenerator(socket.getOutputStream());)
+			{
+				output.writeStartArray();
+				if (!input.next().equals(JsonParser.Event.START_ARRAY))
+				{
+					fail("Messages should be arrays", input, output);
+				}
+				String hostName = socket.getInetAddress().getHostAddress();
+				LogWrapper.getLogger().info("Connected to " + hostName);
+				MachineEntry entry = authenticateClient(input, output, hostName);
 				handleAction(output, input, entry);
-				waitForClient(input);
+				output.writeEnd();
+				waitForClient(input, output);
 			}
 			catch (IOException e)
 			{
@@ -57,19 +70,27 @@ public class Tracker implements Runnable
 				LogWrapper.getLogger().log(Level.INFO, "Error performing request:", e);
 			}
 		}
+		
+		store.close();
 	}
 
-	private void waitForClient(JsonParser input)
+	private void waitForClient(JsonParser input, JsonGenerator generator)
 	{
-		TrackObjectUtils.read(input, new Done());
+		generator.flush();
+		EnsureClosed ensureClosed = new EnsureClosed(generator);
+		Track.timer.schedule(ensureClosed, 10 * 1000);
+		input.next().equals(JsonParser.Event.END_ARRAY);
+		ensureClosed.closed = true;
+		
+//		TrackObjectUtils.read(input, new Done());
 	}
 
-	private MachineEntry authenticateClient(JsonParser input, JsonGenerator generator) throws TrackerException
+	private MachineEntry authenticateClient(JsonParser input, JsonGenerator generator, String realAddress) throws TrackerException
 	{
 		MachineEntry claimedClient = new MachineEntry();
 		if (!TrackObjectUtils.read(input, claimedClient))
 		{
-			fail("Request with Machine Entry", input, generator);
+			fail("Request with no Machine Entry", input, generator);
 		}
 		
 		MachineEntry entry = store.getMachine(claimedClient.getIdentifer());
@@ -83,10 +104,12 @@ public class Tracker implements Runnable
 		generator.writeStartObject();
 		if (claimedClient.getKeyStr().equals(entry.getKeyStr()))
 		{
+			LogWrapper.getLogger().info("Keys matched.");
 			generator.write("keysMatch", true);
 		}
 		else
 		{
+			LogWrapper.getLogger().info("Keys did not match.");
 			generator.write("keysMatch", false);
 			generator.write("prevKey", entry.getKeyStr());
 		}
@@ -103,6 +126,8 @@ public class Tracker implements Runnable
 			fail("Authentication failed.", input, generator);
 		}
 
+		LogWrapper.getLogger().info("Client authenticated.");
+		claimedClient.setIp(realAddress);
 		store.machineFound(claimedClient, System.currentTimeMillis());
 		return claimedClient;
 	}
@@ -128,7 +153,7 @@ public class Tracker implements Runnable
 				if (key == null) break;
 				switch (key)
 				{
-				case "decrypted":    decrypted = Misc.format(input.getString());
+				case "decrypted":    decrypted = Misc.format(input.getString()); break;
 				}
 				break;
 			case END_OBJECT:
@@ -153,19 +178,23 @@ public class Tracker implements Runnable
 		{
 			fail("Request with no action.", input, output);
 		}
+
+		LogWrapper.getLogger().info("Tracker action: " + action.name());
 		
 		FileEntry file;
 		MachineEntry other;
-		Comment comment;
+		CommentEntry comment;
 		switch (action)
 		{
 		case CLAIM_FILE:
+			// this should be a stream...
 			file = new FileEntry();
-			if (!TrackObjectUtils.read(input, file))
+			TrackObjectUtils.openArray(input);
+			while (TrackObjectUtils.next(input, file))
 			{
-				fail("Claim without a file", input, output);
+				LogWrapper.getLogger().info("Adding " + file.toString());
+				store.machineClaims(entry, file);
 			}
-			store.machineClaims(entry, file);
 			break;
 		case LIST_ALL_MACHINES:
 			store.listMachines(output);
@@ -187,29 +216,40 @@ public class Tracker implements Runnable
 			{
 				fail("List without a file", input, output);
 			}
-			store.listMachines(file, output);
+			int offset = 0;
+			String param = request.getParam("offset");
+			if (param != null)
+			{
+				try
+				{
+					offset = Integer.parseInt(param);
+				}
+				catch (NumberFormatException ex)
+				{
+					LogWrapper.getLogger().info("Bad offset: " + param);
+				}
+			}
+			store.listMachines(file, output, offset);
 			break;
 		case LIST_TRACKERS:
 			break;
 		case LOSE_FILE:
 			file = new FileEntry();
-			if (!TrackObjectUtils.read(input, file))
+			TrackObjectUtils.openArray(input);
+			while (TrackObjectUtils.next(input, file))
 			{
-				fail("Removed without a file", input, output);
+				LogWrapper.getLogger().info("Removing " + file.toString());
+				store.machineLost(entry, file);
 			}
-			store.machineLost(entry, file);
 			break;
 		case POST_COMMENT:
-			comment = new Comment();
+			comment = new CommentEntry();
 			if (!TrackObjectUtils.read(input, comment))
 			{
 				fail("Post without a comment.", input, output);
 			}
-			other = new MachineEntry();
-			if (!TrackObjectUtils.read(input, other))
-			{
-				fail("Post without a machine.", input, output);
-			}
+			LogWrapper.getLogger().info(comment.toString());
+			comment.setOrigin(entry.getIdentifer());
 			store.postComment(comment);
 			break;
 		case POST_MACHINE:
@@ -222,27 +262,34 @@ public class Tracker implements Runnable
 	
 	private void fail(String message, JsonParser input, JsonGenerator generator) throws TrackerException
 	{
+		LogWrapper.getLogger().info("Fail: " + message);
+		
 		generator.writeStartObject();
 		generator.write("errorMsg", message);
 		generator.writeEnd();
 		generator.flush();
 
-		final Thread t = Thread.currentThread();
-		class EnsureClosed extends TimerTask
-		{
-			boolean closed = false;
-			@Override
-			public void run()
-			{
-				if (closed) return;
-				generator.close();
-			}
-		}
-		
-		EnsureClosed task = new EnsureClosed();
-		Track.timer.schedule(task, 10 * 1000);
-		waitForClient(input);
-		task.closed = true;
+		waitForClient(input, generator);
 		throw new TrackerException(message);
+	}
+
+	class EnsureClosed extends TimerTask
+	{
+		JsonGenerator generator;
+		Thread t;
+		
+		public EnsureClosed(JsonGenerator generator)
+		{
+			this.generator = generator;
+			this.t = Thread.currentThread();
+		}
+		boolean closed = false;
+		@Override
+		public void run()
+		{
+			if (closed) return;
+			generator.close();
+			t.interrupt();
+		}
 	}
 }

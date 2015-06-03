@@ -6,6 +6,7 @@ import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
+import org.cnv.shr.db.h2.DbIterator.NullIterator;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -22,7 +23,9 @@ public class DbFiles
 	private static final QueryWrapper SELECT2   = new QueryWrapper("select * from SFILE where F_ID=?;");
 	private static final QueryWrapper DELETE1   = new QueryWrapper("delete from SFILE where F_ID=?;");
 	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from SFILE where PELEM=? and ROOT=?;");
-	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM=NULL limit 1;");
+	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE where CHKSUM=? join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL;");
+	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NULL limit 1;");
+	private static final QueryWrapper CHECKED   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NOT NULL;");
 
 	public static SharedFile getFile(RootDirectory root, PathElement element)
 	{
@@ -119,6 +122,43 @@ public class DbFiles
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get file by id " + int1, e);
 			return null;
+		}
+	}
+
+	public static LocalFile getFile(String checksum)
+	{
+		// Delete from pending too...
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT3);)
+		{
+			stmt.setString(1, checksum);
+			ResultSet executeQuery = stmt.executeQuery();
+			if (!executeQuery.next())
+			{
+				return null;
+			}
+			DbObject allocated = DbTables.DbObjects.LFILE.allocate(executeQuery);
+			allocated.fill(c, executeQuery, new DbLocals());
+			return (LocalFile) allocated;
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get file by checksum " + checksum, e);
+			return null;
+		}
+	}
+
+	public static DbIterator<LocalFile> getChecksummedFiles()
+	{
+		try 
+		{
+			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+			return new DbIterator<LocalFile>(c, c.prepareStatement(CHECKED).executeQuery(), DbTables.DbObjects.LFILE);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list files without a checksum", e);
+			return new NullIterator<>();
 		}
 	}
 }

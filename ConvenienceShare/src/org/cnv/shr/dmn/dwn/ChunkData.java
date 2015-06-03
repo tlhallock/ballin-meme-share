@@ -20,7 +20,7 @@ public class ChunkData
 {
 	public static void read(Chunk chunk, File f, InputStream input) throws IOException, NoSuchAlgorithmException
 	{
-//		final InputStream oInput = input;
+		final InputStream oInput = input;
 //		input = new GZIPInputStream(new InputStream() {
 //			@Override
 //			public int read() throws IOException

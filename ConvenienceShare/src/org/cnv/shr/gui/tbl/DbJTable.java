@@ -342,5 +342,6 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 	}
 	
 	
-	public interface MyIt<T extends DbObject> extends Iterator<T>, Closeable {}
+	public interface MyIt<T extends DbObject> extends CloseableIt<T> {}
+	public interface CloseableIt<T> extends Iterator<T>, Closeable {}
 }

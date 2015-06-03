@@ -21,14 +21,13 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbChunks;
 import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.trk.TrackerClient;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
@@ -89,41 +88,9 @@ public class DownloadInstance
 	private void requestSeeders()
 	{
 		download.setState(DownloadState.FINDING_PEERS);
-		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
-		
-		outer:
-		while (listRemoteMachines.hasNext())
+		for (TrackerClient client : Services.trackers.getClients())
 		{
-			final Machine remote = listRemoteMachines.next();
-			
-			for (Seeder seeder : seeders.values())
-			{
-				if (seeder.is(remote))
-				{
-					continue outer;
-				}
-			}
-			
-			Services.userThreads.execute(new Runnable() {
-				@Override
-				public void run()
-				{
-					try
-					{
-						Communication openConnection = Services.networkManager.openConnection(remote, false);
-						if (openConnection == null)
-						{
-							return;
-						}
-						openConnection.send(new LookingFor(remoteFile));
-						openConnection.finish();
-					}
-					catch (IOException e)
-					{
-						// TODO Auto-generated catch block
-						LogWrapper.getLogger().log(Level.INFO, "Unable to request seeder.", e);
-					}
-				}});
+			client.requestSeeders(remoteFile, seeders.values());
 		}
 	}
 

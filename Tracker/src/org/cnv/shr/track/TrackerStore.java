@@ -11,7 +11,7 @@ import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
 
-import org.cnv.shr.trck.Comment;
+import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackerEntry;
@@ -23,6 +23,7 @@ public class TrackerStore
 	private Connection c;
 
 	private PreparedStatement listMachinesStatement;
+	private PreparedStatement addTrackerStatement;
 	private PreparedStatement listTrackersStatement;
 	private PreparedStatement listAllMachinesStatement;
 	private PreparedStatement listCommentsStatement;
@@ -32,28 +33,33 @@ public class TrackerStore
 	private PreparedStatement machineFoundStatement;
 	private PreparedStatement machineClaimsStatement;
 	private PreparedStatement machineLostStatement;
-	private PreparedStatement machineVerifiedStatement;
-
+	private PreparedStatement removeMachineStatement;
+	private PreparedStatement fileFoundStatement;
+	private PreparedStatement cleanFilesStatement;
 	private PreparedStatement getMachineIdStatement;
+//	private PreparedStatement fileRemovedStatement;
 	
 	
 	TrackerStore() throws SQLException
 	{
 		c = createConnection();
 		
-		getMachineIdStatement      = c.prepareStatement("select M_ID from MACHINE where MACHINE.IDENT = ?;");
-		
-		listMachinesStatement      = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR from MACHINE join MACHINE_CONTAINS on MACHINE_CONTAINS.MID=MACHINE.M_ID join SFILE on SFILE.F_ID=MACHINE_CONTAINS.FID where SFILE.CHKSUM=?;");
+		getMachineIdStatement      = c.prepareStatement("select M_ID from MACHINE where MACHINE.IDENT = ? LIMIT 1;");
+		addTrackerStatement        = c.prepareStatement("insert into TRACKER values(DEFAULT, ?, ?, ?, ?);");
+		listMachinesStatement      = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE join MACHINE_CONTAINS on MACHINE_CONTAINS.MID=MACHINE.M_ID join SFILE on SFILE.F_ID=MACHINE_CONTAINS.FID where SFILE.CHKSUM=? LIMIT ? OFFSET ?;");
 		listTrackersStatement      = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE from TRACKER;");
-		listAllMachinesStatement   = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR from MACHINE;");
-		listCommentsStatement      = c.prepareStatement("select SENT, RATING, MESSAGE, IDENT from RATING_COMMENT join MACHINE on OID=MACHINE.M_ID where DID=?;");
+		listAllMachinesStatement   = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE;");
+		listCommentsStatement      = c.prepareStatement("select SENT, RATING, MESSAGE, IDENT from RATING_COMMENT join MACHINE on OID=MACHINE.M_ID where DID=(select M_ID from MACHINE where ident=?);");
 		postCommentStatement       = c.prepareStatement("merge into RATING_COMMENT key (OID, DID) values((select C_ID from RATING_COMMENT where OID=? and DID=?), ?, ?, ?, ?, ?);");
-		getMachineStatement        = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, KEYSTR from MACHINE where IDENT=?;");
+		getMachineStatement        = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, KEYSTR, MNAME from MACHINE where IDENT=?;");
 		machineFoundStatement      = c.prepareStatement("merge into MACHINE key (IDENT) values((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?);");
-		machineClaimsStatement     = c.prepareStatement("");
-		machineLostStatement       = c.prepareStatement("delete FROM MACHINE_CONTAINS where MID=? and FID=?;");
-		listFilesStatement         = c.prepareStatement("select CHKSUM, FSIZE from SFILE join MACHINE_CONTAINS on FID=F_ID where MID=?;");
-		machineVerifiedStatement   = c.prepareStatement("");
+		machineClaimsStatement     = c.prepareStatement("merge into MACHINE_CONTAINS key(FID, MID) values((select M_ID from MACHINE where IDENT=?),(select F_ID from SFILE where CHKSUM=?));");
+		machineLostStatement       = c.prepareStatement("delete from MACHINE_CONTAINS where MID=(select M_ID from MACHINE where IDENT=?) and FID=(select F_ID from SFILE where CHKSUM=?);");
+		listFilesStatement         = c.prepareStatement("select CHKSUM, FSIZE from SFILE join MACHINE_CONTAINS on FID=F_ID where MID=(select M_ID from MACHINE where IDENT=?);");
+		removeMachineStatement     = c.prepareStatement("delete from MACHINE where IDENT=?;");
+		fileFoundStatement         = c.prepareStatement("merge into SFILE key (CHKSUM) values ((select F_ID from SFILE where CHKSUM=?), ?, ?)");
+		cleanFilesStatement        = c.prepareStatement("delete from SFILE where not exists (select FID from MACHINE_CONTAINS where FID=SFILE.F_ID);");
+//		fileRemovedStatement       = c.prepareStatement("delete from MACHINE_CONTAINS where FID=(select F_ID from SFILE where CHKSUM=?);");
 	}
 
 	// Queries
@@ -63,6 +69,7 @@ public class TrackerStore
 		try (ResultSet results = listAllMachinesStatement.executeQuery())
 		{
 			MachineEntry entry = new MachineEntry();
+			int count = 0;
 			while (results.next())
 			{
 				int ndx = 1;
@@ -72,10 +79,14 @@ public class TrackerStore
 				long lastActive = results.getLong(ndx++);
 				String ident = results.getString(ndx++);
 				String keyString = results.getString(ndx++);
+				String name = results.getString(ndx++);
 				
-				entry.set(ident, keyString, ip, port, port + nports);
+				entry.set(ident, keyString, ip, port, port + nports, name);
 				entry.print(output);
+				count++;
 			}
+			
+			LogWrapper.getLogger().info("Listed " + count + " machines.");
 		}
 		catch (SQLException e)
 		{
@@ -84,6 +95,24 @@ public class TrackerStore
 		finally
 		{
 			output.writeEnd();
+		}
+	}
+	
+	public void addTracker(TrackerEntry entry)
+	{
+		try
+		{
+			int ndx = 1;
+			addTrackerStatement.setString(ndx++, entry.getIp());
+			addTrackerStatement.setInt(ndx++, entry.getBeginPort());
+			addTrackerStatement.setInt(ndx++, entry.getEndPort());
+			addTrackerStatement.setLong(ndx++, System.currentTimeMillis());
+
+			addTrackerStatement.execute();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
 		}
 	}
 	
@@ -115,24 +144,31 @@ public class TrackerStore
 		}
 	}
 	
-	public void listMachines(FileEntry entry, JsonGenerator output)
+	public void listMachines(FileEntry entry, JsonGenerator output, int offset)
 	{
 		output.writeStartArray();
-		try (ResultSet results = listMachinesStatement.executeQuery())
+		try
 		{
-			MachineEntry machineEntry = new MachineEntry();
-			while (results.next())
+			listMachinesStatement.setString(1, entry.getChecksum());
+			listMachinesStatement.setInt(2, TrackerEntry.MACHINE_PAGE_SIZE);
+			listMachinesStatement.setInt(3, offset);
+			try (ResultSet results = listMachinesStatement.executeQuery())
 			{
-				int ndx = 1;
-				String ip = results.getString(ndx++);
-				int port  = results.getInt(ndx++);
-				int nports = results.getInt(ndx++);
-				long lastActive = results.getLong(ndx++);
-				String ident = results.getString(ndx++);
-				String keyString = results.getString(ndx++);
+				MachineEntry machineEntry = new MachineEntry();
+				while (results.next())
+				{
+					int ndx = 1;
+					String ip = results.getString(ndx++);
+					int port = results.getInt(ndx++);
+					int nports = results.getInt(ndx++);
+					long lastActive = results.getLong(ndx++);
+					String ident = results.getString(ndx++);
+					String keyString = results.getString(ndx++);
+					String name = results.getString(ndx++);
 
-				machineEntry.set(ident, keyString, ip, port, port + nports);
-				machineEntry.print(output);
+					machineEntry.set(ident, keyString, ip, port, port + nports, name);
+					machineEntry.print(output);
+				}
 			}
 		}
 		catch (SQLException e)
@@ -149,19 +185,23 @@ public class TrackerStore
 	{
 		String did = entry.getIdentifer();
 		generator.writeStartArray();
-		try (ResultSet results = listCommentsStatement.executeQuery())
+		try
 		{
-			Comment comment = new Comment();
-			while (results.next())
+			listCommentsStatement.setString(1, did);
+			try (ResultSet results = listCommentsStatement.executeQuery())
 			{
-				int ndx = 1;
-				long sent = results.getLong(ndx++);
-				int rating = results.getInt(ndx++);
-				String message = results.getString(ndx++);
-				String oid = results.getString(ndx++);
-				
-				comment.set(oid, did, message, rating, sent);
-				comment.print(generator);
+				CommentEntry comment = new CommentEntry();
+				while (results.next())
+				{
+					int ndx = 1;
+					long sent = results.getLong(ndx++);
+					int rating = results.getInt(ndx++);
+					String message = results.getString(ndx++);
+					String oid = results.getString(ndx++);
+
+					comment.set(oid, did, message, rating, sent);
+					comment.print(generator);
+				}
 			}
 		}
 		catch (SQLException e)
@@ -174,20 +214,47 @@ public class TrackerStore
 		}
 	}
 	
+	public int getMachineId(String ident)
+	{
+		try
+		{
+			getMachineIdStatement.setString(1, ident);
+			try (ResultSet results = getMachineIdStatement.executeQuery())
+			{
+				if (!results.next())
+				{
+					return -1;
+				}
+				return results.getInt(1);
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+		}
+		return -1;
+	}
+
 	public MachineEntry getMachine(String ident)
 	{
-		try (ResultSet results = getMachineStatement.executeQuery())
+		try
 		{
-			if (results.next())
+			getMachineStatement.setString(1, ident);
+			try (ResultSet results = getMachineStatement.executeQuery())
 			{
+				if (!results.next())
+				{
+					return null;
+				}
 				int ndx = 1;
 				String ip = results.getString(ndx++);
-				int port  = results.getInt(ndx++);
+				int port = results.getInt(ndx++);
 				int nports = results.getInt(ndx++);
 				long lastActive = results.getLong(ndx++);
 				String keyString = results.getString(ndx++);
-				
-				return new MachineEntry(ident, keyString, ip, port, port + nports);
+				String name = results.getString(ndx++);
+
+				return new MachineEntry(ident, keyString, ip, port, port + nports, name);
 			}
 		}
 		catch (SQLException e)
@@ -200,17 +267,21 @@ public class TrackerStore
 	public void listFiles(MachineEntry entry, JsonGenerator output)
 	{
 		output.writeStartArray();
-		try (ResultSet results = listFilesStatement.executeQuery())
+		try
 		{
-			FileEntry fileEntry = new FileEntry();
-			while (results.next())
+			listFilesStatement.setString(1, entry.getIdentifer());
+			try (ResultSet results = listFilesStatement.executeQuery())
 			{
-				int ndx = 1;
-				String checksum = results.getString(ndx++);
-				long size = results.getLong(ndx++);
+				FileEntry fileEntry = new FileEntry();
+				while (results.next())
+				{
+					int ndx = 1;
+					String checksum = results.getString(ndx++);
+					long size = results.getLong(ndx++);
 
-				fileEntry.set(checksum, size);
-				fileEntry.print(output);
+					fileEntry.set(checksum, size);
+					fileEntry.print(output);
+				}
 			}
 		}
 		catch (SQLException e)
@@ -223,26 +294,26 @@ public class TrackerStore
 		}
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-	
-	public void postComment(Comment comment)
+	public void postComment(CommentEntry comment)
 	{
+		int oid = getMachineId(comment.getOrigin());
+		int did = getMachineId(comment.getDestination());
+		if (oid < 0 || did < 0)
+		{
+			LogWrapper.getLogger().info("Unable to find machines for comment " + comment);
+			return;
+		}
 		try
 		{
+		  int ndx = 1;
+		  postCommentStatement.setInt   (ndx++, oid);
+		  postCommentStatement.setInt   (ndx++, did);
+		  postCommentStatement.setInt   (ndx++, oid);
+		  postCommentStatement.setInt   (ndx++, did);
+		  postCommentStatement.setLong  (ndx++, comment.getDate());
+		  postCommentStatement.setInt   (ndx++, comment.getRating());
+		  postCommentStatement.setString(ndx++, comment.getText());
+
 			postCommentStatement.execute();
 		}
 		catch (SQLException e)
@@ -260,7 +331,7 @@ public class TrackerStore
 			
 			
 			machineFoundStatement.setString(ndx++, machine.getIdentifer());
-			machineFoundStatement.setString(ndx++, "No name");
+			machineFoundStatement.setString(ndx++, machine.getName());
 			machineFoundStatement.setString(ndx++, machine.getIp());
 			machineFoundStatement.setInt   (ndx++, machine.getPortBegin());
 			machineFoundStatement.setInt   (ndx++, machine.getPortEnd() - machine.getPortBegin());
@@ -274,16 +345,51 @@ public class TrackerStore
 			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
 		}
 	}
-	// entries
+
 	public void machineClaims(MachineEntry machine, FileEntry file)
 	{
 		try
 		{
-			machineClaimsStatement.execute();
+			c.setAutoCommit(false);
+			try
+			{
+				int ndx = 1;
+				fileFoundStatement.setString(ndx++, file.getChecksum());
+				fileFoundStatement.setLong(  ndx++, file.getFileSize());
+				fileFoundStatement.setString(ndx++, file.getChecksum());
+				fileFoundStatement.execute();
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+			}
+			try
+			{
+				int ndx = 1;
+				machineClaimsStatement.setString(ndx++, machine.getIdentifer());
+				machineClaimsStatement.setString(ndx++, file.getChecksum());
+				machineClaimsStatement.execute();
+				c.commit();
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+			}
 		}
-		catch (SQLException e)
+		catch (SQLException e1)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e1);
+		}
+		finally
+		{
+			try
+			{
+				c.setAutoCommit(true);
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+			}
 		}
 	}
 	
@@ -291,53 +397,73 @@ public class TrackerStore
 	{
 		try
 		{
+			int ndx = 1;
+			machineLostStatement.setString(ndx++, machine.getIdentifer());
+			machineLostStatement.setString(ndx++, file.getChecksum());
 			machineLostStatement.execute();
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
 		}
+		cleanFiles();
 	}
 	
-
-	public void machineValidated(MachineEntry claimedClient, long currentTimeMillis)
-	{
-		try
-		{
-			machineVerifiedStatement.execute();
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
-		}
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-
 	public static Connection createConnection() throws SQLException
 	{
 //		return DriverManager.getConnection("jdbc:h2:" + Paths.get("tracker_store").toAbsolutePath(), "sa", "");
 		Path path = Paths.get("..", "instances", "tracker", "tracker_store");
 		Misc.ensureDirectory(path, true);
 		return DriverManager.getConnection("jdbc:h2:" + path.toAbsolutePath(), "sa", "");
+	}
+
+	public void cleanFiles()
+	{
+		try
+		{
+			cleanFilesStatement.execute();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+		}
+	}
+
+	public void removeMachine(MachineEntry entry1)
+	{
+		try
+		{
+			removeMachineStatement.setString(1, entry1.getIdentifer());
+			removeMachineStatement.execute();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+		}
+	}
+
+	public void debug(String tableName)
+	{
+		Misc.debugTable(tableName, c);
+	}
+
+	public void close()
+	{
+		try { getMachineIdStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { addTrackerStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { listMachinesStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { listTrackersStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { listAllMachinesStatement.close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { listCommentsStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { postCommentStatement    .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { getMachineStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { machineFoundStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { machineClaimsStatement  .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { machineLostStatement    .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { listFilesStatement      .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { removeMachineStatement  .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { fileFoundStatement      .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { cleanFilesStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { c                       .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close connection.", ex); }
 	}
 }

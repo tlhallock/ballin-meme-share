@@ -31,6 +31,11 @@ public class TrackObjectUtils
 	public static JsonParser openArray(InputStream input) throws JsonException
 	{
 		JsonParser parser = parserFactory.createParser(input);
+		return openArray(parser);
+	}
+
+	public static JsonParser openArray(JsonParser parser)
+	{
 		Event event = parser.next();
 		if (!event.equals(JsonParser.Event.START_ARRAY))
 		{
@@ -38,10 +43,9 @@ public class TrackObjectUtils
 		}
 		return parser;
 	}
-	
+
 	public static <T extends TrackObject> boolean next(JsonParser parser, T t)
 	{
-		String key = null;
 		while (parser.hasNext())
 		{
 			JsonParser.Event e = parser.next();

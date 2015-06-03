@@ -89,6 +89,15 @@ public class UserActions
 					openConnection.send(new FindMachines());
 
 					openConnection.finish();
+					
+					if (params.open)
+					{
+						final MachineViewer viewer = new MachineViewer(machine);
+						Services.notifications.registerWindow(viewer);
+						viewer.setTitle("Machine " + machine.getName());
+						viewer.setVisible(true);
+						LogWrapper.getLogger().info("Showing remote " + machine.getName());
+					}
 				}
 				catch (IOException e)
 				{

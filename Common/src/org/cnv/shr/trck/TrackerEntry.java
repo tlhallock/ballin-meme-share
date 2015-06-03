@@ -10,6 +10,11 @@ public class TrackerEntry implements TrackObject
 	private String url;
 	private int begin;
 	private int end;
+	public static int TRACKER_PORT_END   = 9005;
+	public static int TRACKER_PORT_BEGIN = 9001;
+        public static int MACHINE_PAGE_SIZE  = 50;
+	
+	private Boolean sync;
 	
 	public TrackerEntry(String url, int portB, int portE)
 	{
@@ -17,9 +22,16 @@ public class TrackerEntry implements TrackObject
 		this.begin = portB;
 		this.end = portE;
 	}
+	
+	public TrackerEntry(TrackerEntry entry)
+	{
+		this.url = entry.url;
+		this.begin = entry.begin;
+		this.end = entry.end;
+	}
 
 	public TrackerEntry() {}
-	
+
 	@Override
 	public void read(JsonParser parser)
 	{
@@ -48,6 +60,18 @@ public class TrackerEntry implements TrackObject
 				case "endPort":   end   = bd.intValue(); break;
 				}
 				break;
+			case VALUE_FALSE:
+				switch(key)
+				{
+				case "sync" : sync = false; break;
+				}
+				break;
+			case VALUE_TRUE:
+				switch(key)
+				{
+				case "sync" : sync = true; break;
+				}
+				break;
 			case END_OBJECT:
 				return;
 			default:
@@ -63,6 +87,8 @@ public class TrackerEntry implements TrackObject
 		generator.write("url", url);
 		generator.write("beginPort", begin);
 		generator.write("endPort", end);
+		if (sync != null)
+			generator.write("sync", sync);
 		generator.writeEnd();
 	}
 	
@@ -93,11 +119,18 @@ public class TrackerEntry implements TrackObject
 		return end;
 	}
 
-    public Object getAddress() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public Object getAddress() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+	public String getAddress()
+	{
+		return url + ":" + begin + "-" + end;
+	}
+	
+	public boolean shouldSync()
+	{
+		return sync != null && sync;
+	}
+	
+	public void setSync(boolean val)
+	{
+		sync = val;
+	}
 }

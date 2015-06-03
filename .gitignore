@@ -21,3 +21,16 @@ scripts/dist/
 /Installer/nbproject/private/
 /Updater/nbproject/private/
 /Tracker/nbproject/private/
+instances/
+Installer/manifest.mf
+*keys.txt
+*~
+Common/json/
+Common/.classpath
+ConvenienceShare/.classpath
+*settings.props
+*.classpath
+/Common/build/
+/Common/dist/
+/Common/nbbuild/
+/Common/nbdist/

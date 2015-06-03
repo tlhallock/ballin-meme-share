@@ -11,6 +11,9 @@ import java.io.OutputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -369,6 +372,64 @@ public class Misc
 			LogWrapper.getLogger().log(Level.INFO, "Unable to start open process", e);
 		}
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	public static void debugTable(String tableName, Connection c)
+	{
+		try
+		{
+			StringBuilder builder = new StringBuilder();
+
+			builder.append("Printing " + tableName).append('\n');
+			LogWrapper.getLogger().info(builder.toString());
+			builder.setLength(0);
+			builder.append("----------------------------------------------").append('\n');
+			LogWrapper.getLogger().info(builder.toString());
+			builder.setLength(0);
+			try (ResultSet executeQuery2 = c.prepareStatement("select * from " + tableName + ";").executeQuery();)
+			{
+				int ncols = executeQuery2.getMetaData().getColumnCount();
+				for (int i = 1; i <= ncols; i++)
+				{
+					builder.append(executeQuery2.getMetaData().getColumnName(i)).append(",");
+				}
+				builder.append('\n');
+				LogWrapper.getLogger().info(builder.toString());
+				builder.setLength(0);
+
+				while (executeQuery2.next())
+				{
+					for (int i = 1; i <= ncols; i++)
+					{
+						builder.append(executeQuery2.getObject(i)).append(",");
+					}
+					builder.append('\n');
+					LogWrapper.getLogger().info(builder.toString());
+					builder.setLength(0);
+				}
+				builder.append("----------------------------------------------").append('\n');
+				LogWrapper.getLogger().info(builder.toString());
+				builder.setLength(0);
+			}
+		}
+		catch (SQLException ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to debug", ex);
+		}
+	}
+	
+	
 	
 	
 //	public static void listRemotes(PrintStream ps)

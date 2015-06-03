@@ -130,6 +130,15 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		{
 			LogWrapper.getLogger().log(Level.WARNING, "Unable to extract update public key", e1);
 		}
+
+		try (InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream("dist/trackers");)
+		{
+			Files.copy(systemResourceAsStream, root.resolve("app" + File.separator + "trackers"), StandardCopyOption.REPLACE_EXISTING);
+		}
+		catch (IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to extract update public key", e1);
+		}
 		
 		LinkedList<String> args = new LinkedList<>();
 		args.add("java");
@@ -138,6 +147,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		args.add("-f");
 		args.add(stgs.getSettingsFile());
 		args.add("-d");
+		args.add("-g");
 
 		System.out.println("Restarting from:");
 		System.out.println(root);

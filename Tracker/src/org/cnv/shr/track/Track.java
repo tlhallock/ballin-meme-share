@@ -1,7 +1,10 @@
 package org.cnv.shr.track;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -9,27 +12,28 @@ import java.util.Timer;
 import java.util.logging.Level;
 
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class Track
 {
-	static int TRACKER_PORT_BEGIN = 9001;
-	static int TRACKER_PORT_END   = 9002;
-	
 	static KeysService keys;
 	static Timer timer;
 
-	public static void main(String[] args) throws ClassNotFoundException, SQLException
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, UnknownHostException
 	{
+		LogWrapper.logToFile(Paths.get("..", "instances", "tracker", "tracker_log.txt"), 1024 * 1024);
+		LogWrapper.getLogger().info("Address: " + InetAddress.getLocalHost().getHostAddress());
+		
 		timer = new Timer();
 		
 		Class.forName("org.h2.Driver");
 		createDb();
 		keys = new KeysService();
 		
-		for (int port = TRACKER_PORT_BEGIN; port < TRACKER_PORT_END; port++)
+		for (int port = TrackerEntry.TRACKER_PORT_BEGIN; port < TrackerEntry.TRACKER_PORT_END; port++)
 		{
 			try
 			{

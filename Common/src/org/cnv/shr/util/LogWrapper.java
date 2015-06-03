@@ -1,7 +1,7 @@
 package org.cnv.shr.util;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -15,7 +15,7 @@ public class LogWrapper
 	// This should never be created...
 	private LogWrapper() throws Exception { throw new Exception("Do not create the wrapper..."); }
 
-	public static synchronized void logToFile(final File file, final long logLength)
+	public static synchronized void logToFile(final Path file, final long logLength)
 	{
 		if (fileHandler != null)
 		{
@@ -29,7 +29,7 @@ public class LogWrapper
 		try
 		{
 			Misc.ensureDirectory(file, true);
-			CircularOutputStream output = new CircularOutputStream(file, logLength);
+			CircularOutputStream output = new CircularOutputStream(file.toFile(), logLength);
 			logger.addHandler(fileHandler = createFileHandler(output));
 		}
 		catch (IOException e1)

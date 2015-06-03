@@ -38,6 +38,7 @@ import org.cnv.shr.dmn.Notifications.NotificationListenerImpl;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.ServeInstance;
+import org.cnv.shr.dmn.trk.BrowserFrame;
 import org.cnv.shr.gui.tbl.DownloadTable;
 import org.cnv.shr.gui.tbl.LocalTable;
 import org.cnv.shr.gui.tbl.MachineTable;
@@ -293,6 +294,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         settingsTable = new javax.swing.JTable();
         jButton13 = new javax.swing.JButton();
         jButton14 = new javax.swing.JButton();
+        jButton15 = new javax.swing.JButton();
         jPanel8 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         logTextArea = new javax.swing.JTextArea();
@@ -679,6 +681,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
+        jButton15.setText("Show trackers");
+        jButton15.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton15ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -688,8 +697,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane9, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                        .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGap(18, 18, 18))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(jButton15)
+                                .addGap(139, 139, 139)))
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jButton14, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jButton13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -711,7 +726,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                         .addComponent(jButton6))
                     .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton13)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton13)
+                    .addComponent(jButton15))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton14)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -912,7 +929,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         AddMachine addMachine = new AddMachine();
         addMachine.setAlwaysOnTop(true);
         Services.notifications.registerWindow(addMachine);
-		addMachine.setVisible(true);
+        addMachine.setVisible(true);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void DebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DebugActionPerformed
@@ -981,6 +998,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         new PortMapperFrame().setVisible(true);
     }//GEN-LAST:event_jButton14ActionPerformed
 
+    private void jButton15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton15ActionPerformed
+        new BrowserFrame().setVisible(true);
+    }//GEN-LAST:event_jButton15ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Debug;
     private javax.swing.JTextField addressLabel;
@@ -991,6 +1012,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JButton jButton12;
     private javax.swing.JButton jButton13;
     private javax.swing.JButton jButton14;
+    private javax.swing.JButton jButton15;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;

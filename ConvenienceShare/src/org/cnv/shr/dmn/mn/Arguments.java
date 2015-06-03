@@ -12,6 +12,7 @@ public class Arguments
 	// needs to have a quitting and testing...
 	public boolean connectedToTestStream = false;
 	public boolean deleteDb = false;
+	public boolean showGui = false;
 	public Settings settings = new Settings(Settings.DEFAULT_SETTINGS_FILE);
 	public Quiter quiter = new Quiter() {
 		@Override
@@ -33,7 +34,10 @@ public class Arguments
 			{
 				deleteDb = true;
 			}
-			
+			if (args[i].equals("-g"))
+			{
+				showGui = true;
+			}
 			if (args[i].equals("-f") && i < args.length - 1)
 			{
 				settings = new Settings(Paths.get(args[i + 1]));

@@ -34,7 +34,7 @@ public class AcceptKey extends javax.swing.JFrame {
     public static boolean showAcceptDialog(String url, String machineName, String machineIdentifier, String key)
     {
         AcceptKey acceptKey = new AcceptKey();
-		Services.notifications.registerWindow(acceptKey);
+        Services.notifications.registerWindow(acceptKey);
         acceptKey.jLabel6.setText(url);
         acceptKey.jLabel7.setText(machineName);
         acceptKey.jLabel8.setText(machineIdentifier);

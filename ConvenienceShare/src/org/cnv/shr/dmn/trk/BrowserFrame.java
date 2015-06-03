@@ -5,68 +5,147 @@
  */
 package org.cnv.shr.dmn.trk;
 
-import com.sun.security.ntlm.Client;
-import java.util.HashMap;
+import java.awt.GridLayout;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+
 import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.AddMachine;
+import org.cnv.shr.gui.MachineViewer;
+import org.cnv.shr.gui.tbl.DbJTable.CloseableIt;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.MachineEntry;
+import org.cnv.shr.trck.TrackerEntry;
+import org.cnv.shr.util.LogWrapper;
+
 
 /**
  *
  * @author thallock
  */
-public class BrowserFrame extends javax.swing.JFrame {
+public class BrowserFrame extends javax.swing.JFrame implements ListSelectionListener {
 
     private Map<String, TrackerClient> clients = new Hashtable<>();
+    private ArrayList<MachineEntry> machines = new ArrayList<>();
+    private List<CommentEntry> comments = new LinkedList<>();
+    
+    private TrackerClient currentClient;
+    private MachineEntry currentMachine;
+    
     int listStart = 0;
+    boolean hasMore;
+    private final Object sync = new Object();
     /**
      * Creates new form BrowserFrame
      */
     public BrowserFrame() {
         initComponents();
+        Services.notifications.registerWindow(this);
+        commentPanel.setLayout(new GridLayout(0, 1));
+        jTable1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        refreshTrackers();
+        pack();
+        jList1.getSelectionModel().addListSelectionListener(this);
     }
 
-    public void refreshTrackers()
-    {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                jList1.removeAll();
-                
-                    clients.clear();
-                    for (TrackerClient client : Services.trackers.getClients())
-                    {
-                        DefaultListModel model = (DefaultListModel) jList1.getModel();
-                        String key = client.getAddress();
-                        model.addElement(key);
-                        clients.put(key, client);
-                }
-            }});
-    }
-    
-    private void show(TrackerClient client)
-    {
-        
-        SwingUtilities.invokeLater(new Runnable() {
-            
-            @Override
-            public void run() {
-                listStart = 0;
-                DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-                for (MachineEntry entry : client.list(listStart))
-                {
-                    model.addRow(new Object[] {
-                        entry.getAddress(),
-                        entry.getIdentifier(),
-                    });
-                }
-            }
-        });
-    }
+	public final void refreshTrackers()
+	{
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				synchronized (sync)
+				{
+					DefaultListModel model = (DefaultListModel) jList1.getModel();
+					model.clear();
+
+					clients.clear();
+					for (TrackerClient client : Services.trackers.getClients())
+					{
+						String key = client.getAddress();
+						model.addElement(key);
+						clients.put(key, client);
+					}
+				}
+			}
+		});
+	}
+
+	private void show(TrackerClient client, boolean fromStart)
+	{
+		BrowserFrame b = this;
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				boolean success;
+				synchronized (sync)
+				{
+					if (fromStart)
+					{
+						listStart = 0;
+					}
+					success = showClientInternal(client);
+				}
+				if (!success)
+				{
+					JOptionPane.showMessageDialog(b, "Unable to connect to tracker.", "Unable to connect to tracker.", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
+	}
+
+	private boolean showClientInternal(TrackerClient client)
+	{
+		jButton1.setEnabled(true);
+		jButton2.setEnabled(true);
+		jButton6.setEnabled(true);
+		currentClient = client;
+		
+		DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+		while (model.getRowCount() > 0) model.removeRow(0);
+		machines.clear();
+		try (CloseableIt<MachineEntry> iterator = client.list(listStart);)
+		{
+			while (iterator.hasNext())
+			{
+				MachineEntry entry = iterator.next();
+				if (entry == null)
+					break;
+				machines.add(entry);
+				model.addRow(new Object[] {
+								entry.getName(),
+				        entry.getAddress(),
+				        entry.getIdentifer(),
+				});
+			}
+			hasMore = true;
+                        jButton9.setEnabled(listStart > 0);
+			jButton8.setEnabled(hasMore);
+			return true;
+		}
+		catch (Exception e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list machines: ", e);
+			return false;
+		}
+	}
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -76,9 +155,10 @@ public class BrowserFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPopupMenu1 = new javax.swing.JPopupMenu();
+        jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuItem1 = new javax.swing.JMenuItem();
         jSplitPane1 = new javax.swing.JSplitPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jList1 = new javax.swing.JList();
         jPanel1 = new javax.swing.JPanel();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
@@ -86,101 +166,169 @@ public class BrowserFrame extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jPanel2 = new javax.swing.JPanel();
-        jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
+        ratingLabel = new javax.swing.JLabel();
+        filesLabl = new javax.swing.JLabel();
+        jButton3 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        commentPanel = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        jButton3 = new javax.swing.JButton();
+        jButton6 = new javax.swing.JButton();
+        jButton8 = new javax.swing.JButton();
+        jButton9 = new javax.swing.JButton();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        jPanel3 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jList1 = new javax.swing.JList();
+        jButton4 = new javax.swing.JButton();
+        jButton7 = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        jMenuItem2.setText("Show");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        jPopupMenu1.add(jMenuItem2);
+
+        jMenuItem1.setText("Delete highlighted item");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        jPopupMenu1.add(jMenuItem1);
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Trackers");
 
         jSplitPane1.setDividerLocation(201);
 
-        jList1.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jList1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jList1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jList1MouseClicked(evt);
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Tracker Options:"));
+
+        jButton1.setText("Add known trackers");
+        jButton1.setEnabled(false);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
             }
         });
-        jScrollPane1.setViewportView(jList1);
 
-        jSplitPane1.setLeftComponent(jScrollPane1);
-
-        jButton1.setText("List");
-
-        jButton2.setText("Syncrhonize");
+        jButton2.setText("Upload file metadata");
+        jButton2.setEnabled(false);
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         jSplitPane2.setDividerLocation(200);
 
+        jTable1.setAutoCreateRowSorter(true);
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
             new String [] {
-                "Address", "Identifier"
+                "Name", "Address", "Identifier"
             }
         ) {
-            boolean[] canEdit = new boolean [] {
-                false, false
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
+            }
+        });
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable1MouseClicked(evt);
             }
         });
         jScrollPane2.setViewportView(jTable1);
 
         jSplitPane2.setLeftComponent(jScrollPane2);
 
-        jPanel3.setBackground(new java.awt.Color(255, 102, 102));
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 322, Short.MAX_VALUE)
-        );
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Machine Options:"));
 
         jLabel1.setText("Average rating:");
 
         jLabel2.setText("Total number of files:");
 
-        jLabel3.setText("No machine selected");
+        ratingLabel.setText("No machine selected");
 
-        jLabel4.setText("No machine selected");
+        filesLabl.setText("No machine selected");
 
         jButton3.setText("Open");
+        jButton3.setEnabled(false);
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
+        jButton5.setText("Add Comment");
+        jButton5.setEnabled(false);
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout commentPanelLayout = new javax.swing.GroupLayout(commentPanel);
+        commentPanel.setLayout(commentPanelLayout);
+        commentPanelLayout.setHorizontalGroup(
+            commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 530, Short.MAX_VALUE)
+        );
+        commentPanelLayout.setVerticalGroup(
+            commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 314, Short.MAX_VALUE)
+        );
+
+        jScrollPane3.setViewportView(commentPanel);
+
+        jLabel3.setText("Name:");
+
+        jLabel4.setText("No machine selected");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jButton5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton3))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jLabel3))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                            .addComponent(ratingLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 236, Short.MAX_VALUE)
+                            .addComponent(filesLabl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -188,43 +336,155 @@ public class BrowserFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(jLabel3))
+                    .addComponent(ratingLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(filesLabl, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton3)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton3)
+                    .addComponent(jButton5))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE))
         );
 
         jSplitPane2.setRightComponent(jPanel2);
+
+        jButton6.setText("Refresh");
+        jButton6.setEnabled(false);
+        jButton6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton6ActionPerformed(evt);
+            }
+        });
+
+        jButton8.setText("Next");
+        jButton8.setEnabled(false);
+        jButton8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton8ActionPerformed(evt);
+            }
+        });
+
+        jButton9.setText("Prev");
+        jButton9.setEnabled(false);
+        jButton9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton9ActionPerformed(evt);
+            }
+        });
+
+        jLabel5.setText("Viewing form:");
+
+        jLabel6.setText("0");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jSplitPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jButton9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton8))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton6)
                 .addContainerGap())
-            .addComponent(jSplitPane2)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jButton1)
+                        .addComponent(jButton2)
+                        .addComponent(jButton6))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel5))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jButton9)
+                            .addComponent(jButton8))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE))
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE))
         );
 
         jSplitPane1.setRightComponent(jPanel1);
+
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("All trackers:"));
+
+        jList1.setModel(new DefaultListModel());
+        jList1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jList1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jList1MousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                jList1MouseReleased(evt);
+            }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jList1MouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(jList1);
+
+        jButton4.setText("Add...");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+
+        jButton7.setText("Remove");
+        jButton7.setEnabled(false);
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButton7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton4)
+                .addGap(6, 6, 6))
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton4)
+                    .addComponent(jButton7))
+                .addContainerGap())
+        );
+
+        jSplitPane1.setLeftComponent(jPanel3);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -234,78 +494,289 @@ public class BrowserFrame extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 495, Short.MAX_VALUE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jList1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jList1MouseClicked
-        if (evt.getClickCount() < 2)
+        if (evt.getClickCount() >= 2)
         {
-            return;
-        }
-            TrackerClient client = clients.get((String) jList1.getModel().getElementAt(jList1.getSelectedIndex()));
+            int selectedIndex = jList1.getSelectedIndex();
+            if (selectedIndex < 0) return;
+						TrackerClient client = clients.get((String) jList1.getModel().getElementAt(selectedIndex));
             if (client == null)
             {
                 return;
             }
             
-            show(client);
+            show(client, true);
+        }
+        else
+        {
+            doPopup(evt);
+        }
     }//GEN-LAST:event_jList1MouseClicked
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(BrowserFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(BrowserFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(BrowserFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(BrowserFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+    private void doPopup(java.awt.event.MouseEvent evt)
+    {
+			if (!evt.isPopupTrigger())
+			{
+				return;
+			}
+			int row = jList1.getSelectedIndex();
+			if (row >= 0)
+			{
+				jList1.setSelectedIndex(row);
+			}
+			jPopupMenu1.show(evt.getComponent(), evt.getX(), evt.getY());
+    }
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    	AddTracker addTracker = new AddTracker(this);
+    	addTracker.setAlwaysOnTop(true);
+    	addTracker.setLocation(getLocation());
+    	addTracker.setVisible(true);
+    }//GEN-LAST:event_jButton4ActionPerformed
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        deleteTheRow();
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+    private void deleteTheRow() {
+        int selectedIndex = jList1.getSelectedIndex();
+        if (selectedIndex < 0) {
+            return;
+        }
+        TrackerClient client = clients.get((String) jList1.getModel().getElementAt(selectedIndex));
+        if (client == null) {
+            return;
+        }
+        Services.trackers.remove(client);
+        Services.trackers.save(Services.settings.trackerFile.getPath());
+        refreshTrackers();
+    }
+    
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+
+      int selectedIndex = jList1.getSelectedIndex();
+      if (selectedIndex < 0) return;
+    	TrackerClient client = clients.get((String) jList1.getModel().getElementAt(selectedIndex));
+            if (client == null)
+            {
+                return;
+            }
+            
+            show(client, true);
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
+
+    private void jList1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jList1MousePressed
+        doPopup(evt);
+    }//GEN-LAST:event_jList1MousePressed
+
+    private void jList1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jList1MouseReleased
+        doPopup(evt);
+    }//GEN-LAST:event_jList1MouseReleased
+
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+      if (evt.getClickCount() < 2) return;  
+    	Services.userThreads.execute(new Runnable() {
+					@Override
+					public void run()
+					{
+						refreshComments();
+					}});
+    }//GEN-LAST:event_jTable1MouseClicked
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        if (currentClient == null || currentMachine == null) return;
+        MakeComment makeComment = new MakeComment(currentClient, currentMachine.getIdentifer(), this);
+//        Services.notification.registerWindow(makeComment);
+        makeComment.setAlwaysOnTop(true);
+        makeComment.setVisible(true);
+    }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        if (currentMachine == null) return;
+        
+        Machine machine = DbMachines.getMachine(currentMachine.getIdentifer());
+        if (machine != null)
+        {
+				final MachineViewer viewer = new MachineViewer(machine);
+				Services.notifications.registerWindow(viewer);
+				viewer.setTitle("Machine " + machine.getName());
+				viewer.setVisible(true);
+				LogWrapper.getLogger().info("Showing remote " + machine.getName());
+                                
+        }
+        else if (JOptionPane.showConfirmDialog(this, "This machine is not currently in the database, would you like to add it?",
+                    "Not currently in database", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+            {
+                        AddMachine addMachine = new AddMachine(currentMachine.getIp() + ":" + currentMachine.getPortBegin());
+                        addMachine.setAlwaysOnTop(true);
+                        Services.notifications.registerWindow(addMachine);
+                        addMachine.setVisible(true);
+            }
+        
+        
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+        Services.userThreads.execute(new Runnable() {
+            @Override
             public void run() {
-                new BrowserFrame().setVisible(true);
+                refreshAll();
             }
         });
-    }
+                
+    }//GEN-LAST:event_jButton6ActionPerformed
+
+	private void refreshAll()
+	{
+		refreshTrackers();
+		if (currentClient != null)
+		{
+			show(currentClient, false);
+		}
+		if (currentMachine != null)
+		{
+			refreshComments();
+		}
+	}
+    
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				if (currentClient == null)
+				{
+					return;
+				}
+				currentClient.addOthers();
+
+				if (isVisible())
+				{
+					refreshAll();
+				}
+			}
+		});
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        Services.userThreads.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (currentClient == null) return;
+                currentClient.sync();
+            }
+        });
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        deleteTheRow();
+    }//GEN-LAST:event_jButton7ActionPerformed
+
+    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+			listStart += TrackerEntry.MACHINE_PAGE_SIZE;
+			if (currentClient != null)
+			{
+				show(currentClient, false);
+			}
+    }//GEN-LAST:event_jButton8ActionPerformed
+
+    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+        listStart = Math.max(0, listStart - TrackerEntry.MACHINE_PAGE_SIZE);
+			if (currentClient != null)
+			{
+				show(currentClient, false);
+			}
+    }//GEN-LAST:event_jButton9ActionPerformed
+    
+    void refreshComments()
+    {
+    	if (!isVisible())
+    	{
+    		return;
+    	}
+			int index = jTable1.getSelectedRow();
+			if (index < 0 || index >= machines.size())
+			{
+			    return;
+			}
+		comments.clear();
+		currentMachine = machines.get(index);
+		jLabel4.setText(currentMachine.getName());
+		jButton5.setEnabled(true);
+		jButton3.setEnabled(true);
+		commentPanel.removeAll();
+                        
+		try (CloseableIt<CommentEntry> listComments = currentClient.listComments(currentMachine);)
+		{
+			int count = 0;
+			double sum = 0;
+			filesLabl.setText("Not supported yet.");
+			commentPanel.removeAll();
+			while (listComments.hasNext())
+			{
+				CommentEntry entry = listComments.next();
+				if (entry == null)
+				{
+					break;
+				}
+				commentPanel.add(new CommentPanel(entry, count));
+				System.out.println(entry);
+				comments.add(entry);
+
+				count++;
+				sum += entry.getRating();
+
+				ratingLabel.setText(String.valueOf(sum / count));
+			}
+		}
+		catch (Exception ex)
+		{
+			LogWrapper.getLogger().log(Level.SEVERE, "Unable to list comments.", ex);
+			JOptionPane.showMessageDialog(this, "Unable to list comments.", "Unable to list comments.", JOptionPane.ERROR_MESSAGE);
+		}
+	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel commentPanel;
+    private javax.swing.JLabel filesLabl;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
+    private javax.swing.JButton jButton6;
+    private javax.swing.JButton jButton7;
+    private javax.swing.JButton jButton8;
+    private javax.swing.JButton jButton9;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JList jList1;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPopupMenu jPopupMenu1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JTable jTable1;
+    private javax.swing.JLabel ratingLabel;
     // End of variables declaration//GEN-END:variables
 
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+        jButton7.setEnabled(jList1.getSelectedIndex() >= 0);
+    }
 }

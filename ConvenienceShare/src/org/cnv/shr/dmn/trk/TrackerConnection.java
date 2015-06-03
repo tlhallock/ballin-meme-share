@@ -11,7 +11,6 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.trck.TrackerAction;
 import org.cnv.shr.trck.TrackerRequest;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
@@ -25,21 +24,33 @@ public class TrackerConnection implements Closeable
 	JsonParser parser;
 	JsonGenerator generator;
 
-	public TrackerConnection(TrackerAction action, String url, int port) throws IOException
+	TrackerConnection(String url, int port) throws IOException
 	{
 		socket = new Socket(url, port);
-		parser = TrackObjectUtils.parserFactory.createParser(socket.getInputStream());
+	}
+
+	void connect(TrackerRequest request) throws IOException
+	{
 		generator = TrackObjectUtils.generatorFactory.createGenerator(socket.getOutputStream());
-		
+		generator.writeStartArray();
 		RSAPublicKey publicKey = Services.keyManager.getPublicKey();
 		MachineEntry local = new MachineEntry(
 				Services.settings.machineIdentifier.get(),
 				publicKey,
 				"not used.",
 				Services.settings.servePortBeginE.get(),
-				Services.settings.servePortBeginE.get() + Services.settings.numThreads.get());
+				Services.settings.servePortBeginE.get() + Services.settings.numThreads.get(),
+				Services.settings.machineName.get());
 		local.print(generator);
 		generator.flush();
+
+		parser = TrackObjectUtils.parserFactory.createParser(socket.getInputStream());
+		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+		{
+			LogWrapper.getLogger().info("Tracker connection did not start with an array.");
+			socket.close();
+			return;
+		}
 		
 		generator.writeStartObject();
 		byte[] naunceRequest = new byte[0];
@@ -61,8 +72,8 @@ public class TrackerConnection implements Closeable
 				if (key == null) break;
 				switch (key)
 				{
-				case "prevKey":      publicKey     = KeyPairObject.deSerializePublicKey(parser.getString());
-				case "decrypted":    naunceRequest = Misc.format(parser.getString());
+				case "prevKey":      publicKey     = KeyPairObject.deSerializePublicKey(parser.getString()); break;
+				case "naunce":       naunceRequest = Misc.format(parser.getString());                        break;
 				}
 				break;
 			case END_OBJECT:
@@ -76,7 +87,7 @@ public class TrackerConnection implements Closeable
 		generator.writeEnd();
 		generator.flush();
 		
-		new TrackerRequest(action).print(generator);
+		request.print(generator);
 		generator.flush();
 	}
 

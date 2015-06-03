@@ -8,7 +8,9 @@ import java.nio.file.Paths;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.UpdateManager;
+import org.cnv.shr.dmn.trk.Trackers;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.updt.UpdateInfo;
 import org.cnv.shr.updt.UpdateInfoImpl;
 import org.cnv.shr.util.KeysService;
@@ -39,6 +41,10 @@ public class GenerateKey
 		{
 			Files.delete(settingsFile);
 		}
+		
+		Trackers trackers = new Trackers();
+		trackers.add("127.0.0.1", TrackerEntry.TRACKER_PORT_BEGIN, TrackerEntry.TRACKER_PORT_END);
+		trackers.save(Paths.get("..", "instances", "tracker", "trackers"));
 		
 		System.out.println("Done.");
 	}

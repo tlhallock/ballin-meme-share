@@ -45,6 +45,12 @@
 
 
 	<target name="common" depends="cpylibs">
+                <!-- just for now... -->
+		<javac srcdir="../Common/json" destdir="classes/common/">
+			<classpath refid="jars" />
+		</javac>
+                
+                
 		<javac srcdir="../Common/src" destdir="classes/common/">
 			<classpath refid="jars" />
 		</javac>
@@ -92,7 +98,7 @@
 
 
 	<target name="tracker" depends="common">
-		<javac srcdir="../Tracker/" destdir="classes/track/">
+		<javac srcdir="../Tracker/src" destdir="classes/track/">
 			<classpath refid="others" />
 		</javac>
 
@@ -127,6 +133,7 @@
 			<fileset dir="classes/common/" />
 			<zipfileset file="dist/install_data.zip" prefix="dist/" />
 			<zipfileset file="../instances/updater/updateKey" prefix="dist/" />
+			<zipfileset file="../instances/tracker/trackers" prefix="dist/" />
 		</jar>
 		<delete file="dist/install_data.zip" />
 	</target>

@@ -26,6 +26,7 @@ import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.dmn.mn.Arguments;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.mn.Quiter;
+import org.cnv.shr.dmn.trk.BrowserFrame;
 import org.cnv.shr.dmn.trk.Trackers;
 import org.cnv.shr.gui.TaskMenu;
 import org.cnv.shr.gui.UserActions;
@@ -77,6 +78,10 @@ public class Services
 		checkIfUpdateManagerIsRunning(args);
 		startServices();
 		
+		if (args.showGui)
+		{
+			UserActions.showGui();
+		}
 		
 		System.out.println(Misc.INITIALIZED_STRING);
 		System.out.println("-------------------------------------------------------------------------");
@@ -90,6 +95,10 @@ public class Services
 		settings.write();
 		settings.listenToSettings();
 		initializeLogging();
+		
+		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
+		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
+		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
 		
 		h2DbCache = new DbConnectionCache(deleteDb);
         
@@ -111,9 +120,8 @@ public class Services
 		updateManager = new UpdateManager(Settings.getVersion());
 		updateManager.read();
 		
-		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
-		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
-		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
+		trackers = new Trackers();
+		trackers.load(settings.trackerFile.getPath());
 
 		int numServeThreads = Math.max(1, settings.maxServes.get());
 		handlers = new RequestHandler[numServeThreads];
@@ -162,7 +170,7 @@ public class Services
 			public void settingChanged()
 			{
 				LogWrapper.logToFile(
-						Services.settings.logToFile.get() ? Services.settings.logFile.get() : null,
+						Services.settings.logToFile.get() ? Services.settings.logFile.getPath() : null,
 						Services.settings.logLength.get());
 			}};
 		LogWrapper.getLogger().setLevel(Level.INFO);
@@ -206,19 +214,25 @@ public class Services
 //			}}, 1000);
 		
 //		Also need to attempt remote authentications...
-		
-		UserActions.showGui();
 	}
 	
 	private static void startSystemTray() throws IOException, AWTException
 	{
 		PopupMenu menu = new PopupMenu();
-		MenuItem item = new MenuItem("Show");
+		MenuItem item = new MenuItem("Show application");
 		item.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
 				UserActions.showGui();
+			}});
+		menu.add(item);
+		item = new MenuItem("Show trackers");
+		item.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				new BrowserFrame().setVisible(true);
 			}});
 		menu.add(item);
 		item = new MenuItem("Quit");

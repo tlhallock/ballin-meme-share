@@ -65,9 +65,10 @@ public class Settings implements SettingListener
 	public DirectorySetting  stagingDirectory         = new DirectorySetting ("stagingDirectory    ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "tmpD"     ), false,  true, "Directory to put files currently being served.                                  ".trim()); { settings.add(stagingDirectory    );  }
 	public DirectorySetting  servingDirectory         = new DirectorySetting ("servingDirectory    ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "stage"    ), false,  true, "Directory to put files currently being downloaded.                              ".trim()); { settings.add(servingDirectory    );  }
 	public FileSetting       keysFile                 = new FileSetting      ("keysFile            ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "keys.json"), false,  true, "File to put public/private key information.                                     ".trim()); { settings.add(keysFile            );  }
-	public FileSetting       logFile                  = new FileSetting      ("logFile             ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "log.txt"  ), false,  true, "File to put log messages if logging to file.                                    ".trim()); { settings.add(logFile             );  }
+	public FileSetting       logFile                  = new FileSetting      ("logFile             ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "log.txt"  ),  true,  true, "File to put log messages if logging to file.                                    ".trim()); { settings.add(logFile             );  }
 	public FileSetting       dbFile                   = new FileSetting      ("dbFile              ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "files"    ), false,  true, "File to put database.                                                           ".trim()); { settings.add(dbFile              );  }
 	public FileSetting       codeUpdateKey            = new FileSetting      ("codeUpdateKey       ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "updateKey"), false,  true, "File containing key to authenticate code updates.                               ".trim()); { settings.add(codeUpdateKey       );  }
+	public FileSetting       trackerFile              = new FileSetting      ("trackerFile         ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "trackers" ), false,  true, "File containing tracker urls.                                                   ".trim()); { settings.add(trackerFile         );  }
 	
 	public Settings(Path settingsFile)
 	{
@@ -93,6 +94,7 @@ public class Settings implements SettingListener
 		logFile         .set(Paths.get(applicationDirectory.get().getPath(), "log.txt"  ));
 		dbFile          .set(Paths.get(applicationDirectory.get().getPath(), "files"    ));
 		codeUpdateKey   .set(Paths.get(applicationDirectory.get().getPath(), "updateKey"));
+		codeUpdateKey   .set(Paths.get(applicationDirectory.get().getPath(), "trackers" ));
 	}
 	
 	public void listenToSettings()

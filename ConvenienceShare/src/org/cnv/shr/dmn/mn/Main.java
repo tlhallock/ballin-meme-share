@@ -1,8 +1,10 @@
 package org.cnv.shr.dmn.mn;
 
+import java.nio.file.Paths;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.LogWrapper;
 
 public class Main
@@ -51,10 +53,10 @@ public class Main
 		Arguments a = new Arguments();
 		a.parseArgs(args);
 		
-//		if (true)
-//		{
-//			a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
-//		}
+		if (true)
+		{
+			a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
+		}
 //		else
 //		{
 //			a.settings = new Settings(new File("/work/ballin-meme-share/instances/i2/settings.props"));

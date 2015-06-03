@@ -18,26 +18,33 @@ public class AddMachine extends javax.swing.JFrame {
         public boolean share;
         public boolean visible;
         public boolean message;
+				public boolean open;
         
         public AddMachineParams()
         {
             this(false);
         }
-        
+                
         public AddMachineParams(boolean defaultValue)
         {
             acceptKeys = defaultValue;
             share = defaultValue;
             visible = defaultValue;
             message = defaultValue;
+            open = defaultValue;
         }
     }
 
     /**
      * Creates new form AddMachine
      */
-    public AddMachine() {
+    public AddMachine()
+    {
         initComponents();
+    }
+    public AddMachine(String url) {
+        initComponents();
+        this.jTextField1.setText(url);
     }
     
     private void updateBoxes()
@@ -70,22 +77,21 @@ public class AddMachine extends javax.swing.JFrame {
         addKeys = new javax.swing.JCheckBox();
         message = new javax.swing.JCheckBox();
         visible = new javax.swing.JCheckBox();
+        jCheckBox1 = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Add machine...");
 
         jButton1.setText("Add");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
         jButton2.setText("Cancel");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -93,40 +99,24 @@ public class AddMachine extends javax.swing.JFrame {
         jLabel1.setText("Url:");
 
         share.setSelected(true);
-        share.setText("Share");
-        share.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-                shareActionPerformed(evt);
-            }
-        });
+        share.setText("Let machine download from shared folders");
 
         addKeys.setSelected(true);
         addKeys.setText("Add keys");
-        addKeys.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addKeysActionPerformed(evt);
-            }
-        });
 
         message.setSelected(true);
         message.setText("Accept messages");
-        message.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-                messageActionPerformed(evt);
+
+        visible.setSelected(true);
+        visible.setText("Let machine view shared folders");
+        visible.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                visibleStateChanged(evt);
             }
         });
 
-        visible.setSelected(true);
-        visible.setText("Show directories");
-        visible.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-                visibleActionPerformed(evt);
-            }
-        });
+        jCheckBox1.setSelected(true);
+        jCheckBox1.setText("Open if connected");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -136,6 +126,7 @@ public class AddMachine extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jButton2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton1))
@@ -144,13 +135,15 @@ public class AddMachine extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(addKeys)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(share, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(visible, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(visible)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(share)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(message)))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(message, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(addKeys, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGap(18, 18, 18)
+                                .addComponent(jCheckBox1)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -163,10 +156,13 @@ public class AddMachine extends javax.swing.JFrame {
                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(addKeys)
-                    .addComponent(message)
                     .addComponent(visible)
-                    .addComponent(share))
+                    .addComponent(addKeys)
+                    .addComponent(jCheckBox1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(share)
+                    .addComponent(message))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
@@ -183,37 +179,28 @@ public class AddMachine extends javax.swing.JFrame {
         params.acceptKeys = addKeys.isSelected();
         params.share = share.isSelected();
         params.visible = visible.isSelected();
-        params.message = visible.isSelected();
-        
-        UserActions.addMachine(jTextField1.getText(), params);
+        params.message = message.isSelected();
+        params.open = jCheckBox1.isSelected();
+        String url = jTextField1.getText();
         dispose();
+        
+				UserActions.addMachine(url, params);
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 
-    private void addKeysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addKeysActionPerformed
-       updateBoxes();
-    }//GEN-LAST:event_addKeysActionPerformed
-
-    private void shareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shareActionPerformed
+    private void visibleStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_visibleStateChanged
         updateBoxes();
-    }//GEN-LAST:event_shareActionPerformed
-
-    private void visibleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_visibleActionPerformed
-        updateBoxes();
-    }//GEN-LAST:event_visibleActionPerformed
-
-    private void messageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_messageActionPerformed
-        updateBoxes();
-    }//GEN-LAST:event_messageActionPerformed
+    }//GEN-LAST:event_visibleStateChanged
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox addKeys;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JCheckBox message;

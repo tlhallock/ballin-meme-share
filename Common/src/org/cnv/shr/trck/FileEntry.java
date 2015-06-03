@@ -79,4 +79,14 @@ public class FileEntry implements TrackObject
 	{
 		return TrackObjectUtils.toString(this);
 	}
+
+	public String getChecksum()
+	{
+		return checksum;
+	}
+	
+	public long getFileSize()
+	{
+		return fileSize;
+	}
 }

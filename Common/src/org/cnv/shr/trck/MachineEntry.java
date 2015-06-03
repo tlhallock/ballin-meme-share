@@ -13,6 +13,7 @@ public class MachineEntry implements TrackObject
 {
 	private String ident;
 	private String keyStr;
+	private String name;
 	
 	private String ip;
 	private int beginPort;
@@ -20,18 +21,19 @@ public class MachineEntry implements TrackObject
 	
 	public MachineEntry() {}
 
-	public MachineEntry(String ident, RSAPublicKey key, String ip, int beginPort, int endPort)
+	public MachineEntry(String ident, RSAPublicKey key, String ip, int beginPort, int endPort, String name)
 	{
-		this(ident, KeyPairObject.serialize(key), ip, beginPort, endPort);
+		this(ident, KeyPairObject.serialize(key), ip, beginPort, endPort, name);
 	}
 	
-	public MachineEntry(String ident, String key, String ip, int beginPort, int endPort)
+	public MachineEntry(String ident, String key, String ip, int beginPort, int endPort, String name)
 	{
 		this.ident = ident;
 		this.keyStr = key;
 		this.ip = ip;
 		this.beginPort = beginPort;
 		this.endPort = endPort;
+		this.name = name;
 	}
 
 	@Override
@@ -53,6 +55,7 @@ public class MachineEntry implements TrackObject
 				case "ip":    ip       = parser.getString();  break;
 				case "key":   keyStr   = parser.getString();  break;
 				case "ident": ident    = parser.getString();  break;
+				case "name":  name     = parser.getString();  break;
 				}
 				break;
 			case VALUE_NUMBER:
@@ -79,6 +82,7 @@ public class MachineEntry implements TrackObject
 		generator.write("ip", ip);
 		generator.write("beginPort", beginPort);
 		generator.write("endPort", endPort);
+		generator.write("name", name);
 		generator.writeEnd();
 	}
 	
@@ -92,13 +96,14 @@ public class MachineEntry implements TrackObject
 		return keyStr;
 	}
 	
-	public void set(String ident, String key, String ip, int beginPort, int endPort)
+	public void set(String ident, String key, String ip, int beginPort, int endPort, String name)
 	{
 		this.ident = ident;
 		this.keyStr = key;
 		this.ip = ip;
 		this.beginPort = beginPort;
 		this.endPort = endPort;
+		this.name = name;
 	}
 
 	public String getIdentifer()
@@ -108,7 +113,7 @@ public class MachineEntry implements TrackObject
 
 	public int getPortEnd()
 	{
-		return endPort;
+		return Math.min(endPort, beginPort + 1);
 	}
 
 	public int getPortBegin()
@@ -120,9 +125,24 @@ public class MachineEntry implements TrackObject
 	{
 		return ip;
 	}
-	
+
+	public String getName()
+	{
+		return name;
+	}
+
 	public String toString()
 	{
 		return TrackObjectUtils.toString(this);
+	}
+
+	public String getAddress()
+	{
+		return ip + ":" + beginPort + "-" + endPort;
+	}
+
+	public void setIp(String realAddress)
+	{
+		this.ip = realAddress;
 	}
 }
