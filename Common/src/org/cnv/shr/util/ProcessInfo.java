@@ -1,12 +1,10 @@
 package org.cnv.shr.util;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -18,17 +16,37 @@ public class ProcessInfo
 	public static Path getJarPath(Class c)
 	{
 		String path = c.getProtectionDomain().getCodeSource().getLocation().getPath();
-
-		try
+		switch (Misc.getOperatingSystem())
 		{
-			return Paths.get(URLDecoder.decode(path, "UTF-8"));
-		}
-		catch (UnsupportedEncodingException e)
-		{
-//			LogWrapper.getLogger().log(Level.INFO, , e);
-			e.printStackTrace();
+		case Apple:   return Paths.get(path);
+		case Linux:   return Paths.get(path);
+		case Windows: 
+			if (path.startsWith("/"))
+			{
+				path = path.substring(1);
+			}
 			return Paths.get(path);
+		default:
+			break;
+			
 		}
+		
+		Paths.get("C:/Users/thallock/Documents/Source/ballin-meme-share/ConvenienceShare/bin/");
+
+//		try
+//		{
+			return Paths.get(path);
+					
+					
+					
+//					URLDecoder.decode(path, "UTF-8"));
+//		}
+//		catch (UnsupportedEncodingException e)
+//		{
+////			LogWrapper.getLogger().log(Level.INFO, , e);
+//			e.printStackTrace();
+//			return Paths.get(path);
+//		}
 	}
 	
 	private static String getJarName()
@@ -54,11 +72,9 @@ public class ProcessInfo
 	public static String getJarVersion(Path jar)
 	{
 		try (ZipFile zipFile = new ZipFile(jar.toFile());
-				BufferedReader inputStream = new BufferedReader(new InputStreamReader(zipFile.getInputStream(zipFile.getEntry("res/version.txt"))));)
+				InputStream inputStream = zipFile.getInputStream(zipFile.getEntry("META-INF/MANIFEST.MF"));)
 		{
-			String version = Misc.readAll(inputStream);
-			LogWrapper.getLogger().info("Found version " + version);
-			return version;
+			return new Manifest(inputStream).getMainAttributes().getValue("Implementation-Version");
 		}
 		catch (ZipException e)
 		{

@@ -83,7 +83,7 @@ public class ConnectionManager
 		return null;
 	}
 	
-	public synchronized void handleConnection(Socket accepted) throws IOException
+	public void handleConnection(Socket accepted) throws IOException
 	{
 		Authenticator authentication = new Authenticator();
 		Communication connection = new Communication(authentication, accepted);

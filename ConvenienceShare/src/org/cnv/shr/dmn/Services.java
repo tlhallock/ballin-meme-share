@@ -117,7 +117,7 @@ public class Services
 		downloads = new DownloadManager();
 		syncs = new RemoteSynchronizers();
 		blackList = new BlackList();
-		updateManager = new UpdateManager(Settings.getVersion());
+		updateManager = new UpdateManager(Settings.getVersion(Main.class));
 		updateManager.read();
 		
 		trackers = new Trackers();

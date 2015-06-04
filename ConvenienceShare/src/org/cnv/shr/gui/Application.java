@@ -38,6 +38,7 @@ import org.cnv.shr.dmn.Notifications.NotificationListenerImpl;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.ServeInstance;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.trk.BrowserFrame;
 import org.cnv.shr.gui.tbl.DownloadTable;
 import org.cnv.shr.gui.tbl.LocalTable;
@@ -80,7 +81,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		initComponents();
 		initializeSettings();
 		
-		setTitle("Convenience Share " + Settings.getVersion());
+		setTitle("Convenience Share " + Settings.getVersion(Main.class));
 
 		locals = new LocalTable(this, localsView);
 		remotes = new MachineTable(this, machinesList);

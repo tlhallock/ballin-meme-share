@@ -14,6 +14,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 
 public class Trackers
@@ -34,6 +35,7 @@ public class Trackers
 	
 	public void save(Path trackersFile)
 	{
+		Misc.ensureDirectory(trackersFile, true);
 		try (JsonGenerator generator = TrackObjectUtils.generatorFactory.createGenerator(Files.newOutputStream(trackersFile));)
 		{
 			generator.writeStartArray();

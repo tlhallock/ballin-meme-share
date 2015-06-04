@@ -29,7 +29,7 @@ public abstract class PermissionChanger extends DefaultComboBoxModel<String> imp
 				return state;
 			}
 		}
-		return null;
+		return SharingState.DO_NOT_SHARE;
 	}
 
 	@Override

@@ -16,7 +16,7 @@ class UpdateThread extends Thread
 	@Override
 	public void run()
 	{
-		LogWrapper.getLogger().info("Listening on " + Updater.updateSocket.getLocalPort());
+		LogWrapper.getLogger().info("Listening on " + Updater.updateSocket.getInetAddress().getHostAddress() + ":" + Updater.updateSocket.getLocalPort());
 		while (true)
 		{
 			try (Socket socket = Updater.updateSocket.accept();

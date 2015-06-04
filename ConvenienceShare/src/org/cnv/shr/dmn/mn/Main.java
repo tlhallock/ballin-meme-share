@@ -49,13 +49,15 @@ public class Main
         // make standalone key server
 		// Need to check versions when messaging.
 
-		
 		Arguments a = new Arguments();
 		a.parseArgs(args);
 		
 		if (true)
 		{
 			a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
+			a.settings.servePortBeginE.set(9990);
+			a.settings.servePortBeginI.set(9990);
+			a.showGui = true;
 		}
 //		else
 //		{

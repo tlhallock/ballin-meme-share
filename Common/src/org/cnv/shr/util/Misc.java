@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 
 import javax.imageio.ImageIO;
@@ -200,8 +201,24 @@ public class Misc
 		return scaledInstance;
 	}
 	
+	public static String getVersion(Class clazz)
+	{
+		try (InputStream input = clazz.getClassLoader().getResourceAsStream("META-INF/MANIFEST.MF");)
+		{
+			String value = new Manifest(input).getMainAttributes().getValue("Implementation-Version");
+			value = "0.0.0.0.0.1";
+			return value;
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to get version:", e);
+			return null;
+		}
+	}
+	
 	public static String readFile(String resourceName)
 	{
+		// close it
 		InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream(resourceName);
 		Objects.requireNonNull(systemResourceAsStream, "Jar is missing file " + resourceName);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(systemResourceAsStream)))
@@ -252,6 +269,12 @@ public class Misc
 	}
 	
 	private static OperatingSystem system = OperatingSystem.getOperatingSystem();
+	
+	public static OperatingSystem getOperatingSystem()
+	{
+		return system;
+	}
+	
 	public static String sanitizePath(String path)
 	{
 		if (!system.equals(OperatingSystem.Windows))

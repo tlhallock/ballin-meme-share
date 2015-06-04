@@ -41,6 +41,7 @@ public class Code
 		}
 		
 		version = ProcessInfo.getJarVersion(jar);
+		LogWrapper.getLogger().info("read version " + version + " from jar.");
 		if (version != null)
 		{
 			timeStamp = fsTime;

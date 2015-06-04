@@ -61,6 +61,8 @@
 			<classpath refid="others" />
 		</javac>
 
+		<buildnumber file="build.num"/>
+		<property name="version" value="1.0.0"/>
 
 		<jar destfile="dist/ConvenienceShare.jar">
 			<manifest>
@@ -69,11 +71,11 @@
                            libs/FlexiProvider-1.7p7.signed.jar 
                            libs/CoDec-build17-jdk13.jar
                            libs/h2-1.4.187.jar" />
+				<attribute name="Implementation-Version" value="${version}.${build.number}"/>
 			</manifest>
 			<fileset dir="classes/convenience/" />
 			<fileset dir="classes/common/" />
 			<zipfileset dir="../ConvenienceShare/src/res/" prefix="res"/>
-			<zipfileset file="version.txt" prefix="res"/>
 		</jar>
 	</target>
 

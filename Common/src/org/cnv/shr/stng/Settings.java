@@ -211,11 +211,11 @@ public class Settings implements SettingListener
 
 	static String version;
 
-	public static String getVersion()
+	public static String getVersion(Class clazz)
 	{
 		if (version == null)
 		{
-			version = Misc.readFile(RES_DIR + "version.txt");
+			version = Misc.getVersion(clazz);
 			if (version == null)
 				version = "0";
 		}
