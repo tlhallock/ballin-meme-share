@@ -17,6 +17,7 @@ import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.ExplorerSyncIterator;
 import org.cnv.shr.sync.FileFileSource;
 import org.cnv.shr.sync.FileSource;
@@ -25,6 +26,9 @@ import org.cnv.shr.sync.RemoteFileSource;
 import org.cnv.shr.sync.RemoteSynchronizer;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.sync.RootSynchronizer;
+import org.cnv.shr.sync.SynchronizationTask;
+import org.cnv.shr.sync.SynchronizationTask.TaskListener;
+import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
 
 
@@ -49,13 +53,38 @@ public class PathTreeModel implements TreeModel
 		{
 			synchronizer.quit();
 		}
+		iterator = null;
+		rootSource = null;
+		synchronizer = null;
 	}
 	
 	public void setRoot(final RootDirectory newRoot)
 	{
-		final RootDirectory oldroot = this.rootDirectory;
+		final PathTreeModelNode oldroot = this.root;
 		this.rootDirectory = newRoot;
 		closeConnections();
+		
+		startRemoteSynchronizer(newRoot);
+		this.root = new PathTreeModelNode(null, this, DbPaths.ROOT);
+		try
+		{
+				iterator.queueSyncTask(rootSource, DbPaths.ROOT, this.root);
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to create remote synchronizer", e);
+		}
+		
+		Services.userThreads.execute(synchronizer);
+		this.root.expand();
+		for (final TreeModelListener listener : listeners)
+		{
+			listener.treeStructureChanged(new TreeModelEvent(this, new Object[] {oldroot}));
+		}
+	}
+
+	private void startRemoteSynchronizer(final RootDirectory newRoot)
+	{
 		try
 		{
 			iterator = new ExplorerSyncIterator(rootDirectory);
@@ -73,23 +102,12 @@ public class PathTreeModel implements TreeModel
 				iterator.setCloseable(createRemoteSynchronizer);
 				synchronizer = new RemoteSynchronizer((RemoteDirectory) rootDirectory, iterator);
 			}
-			
-			this.root = new PathTreeModelNode(null, this, DbPaths.ROOT);
-			iterator.queueSyncTask(rootSource, DbPaths.ROOT, this.root);
-			Services.userThreads.execute(synchronizer);
-			this.root.expand();
 		}
 		catch (final IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to create remote synchronizer", e);
-		}
-		if (oldroot == null)
-		{
-			return;
-		}
-		for (final TreeModelListener listener : listeners)
-		{
-			listener.treeStructureChanged(new TreeModelEvent(this, new Object[] {oldroot}));
+			closeConnections();
+			setToNullSynchronizers(newRoot);
 		}
 	}
 	
@@ -210,5 +228,63 @@ public class PathTreeModel implements TreeModel
 		{
 			return e instanceof NoPath;
 		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+	private void setToNullSynchronizers(final RootDirectory newRoot)
+	{
+		iterator = new ExplorerSyncIterator(newRoot) {
+			@Override
+			public SynchronizationTask next()
+			{ throw new RuntimeException("Don't call this."); }
+			@Override
+			public SynchronizationTask queueSyncTask(final FileSource file, final PathElement dbDir, final TaskListener listener) throws IOException
+			{ return null; }
+			@Override
+			public void close() throws IOException {}
+		};
+		rootSource = new FileSource() {
+			@Override
+			public boolean stillExists() { return false; }
+			@Override
+			public FileSourceIterator listFiles() throws IOException { return FileSource.NULL_ITERATOR; }
+			@Override
+			public String getName() { throw new RuntimeException("Don't call this."); }
+			@Override
+			public boolean isDirectory() { throw new RuntimeException("Don't call this."); }
+			@Override
+			public boolean isFile() { throw new RuntimeException("Don't call this."); }
+			@Override
+			public String getCanonicalPath() { throw new RuntimeException("Don't call this."); }
+			@Override
+			public long getFileSize() { throw new RuntimeException("Don't call this."); }
+			@Override
+			public SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException { { throw new RuntimeException("Don't call this."); }}
+		};
+		synchronizer = new RootSynchronizer(newRoot, iterator) {
+			@Override
+			public void quit() {}
+			@Override
+			public void addListener(final SynchronizationListener listener) {}
+			@Override
+			public void removeListener(final SynchronizationListener listener) {}
+			@Override
+			public void run() {}
+			@Override
+			protected boolean updateFile(SharedFile file) {return false;}
+		};
 	}
 }

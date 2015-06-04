@@ -52,6 +52,18 @@ public class TrackerConnection implements Closeable
 			return;
 		}
 		
+		authenticate(publicKey);
+		
+		request.print(generator);
+		generator.flush();
+	}
+
+	private void authenticate(RSAPublicKey publicKey) throws IOException
+	{
+		if (!getNeedsAuthentication())
+		{
+			return;
+		}
 		generator.writeStartObject();
 		byte[] naunceRequest = new byte[0];
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
@@ -86,9 +98,30 @@ public class TrackerConnection implements Closeable
 		generator.write("decrypted", Misc.format(Services.keyManager.decrypt(publicKey, naunceRequest)));
 		generator.writeEnd();
 		generator.flush();
-		
-		request.print(generator);
-		generator.flush();
+	}
+
+	private boolean getNeedsAuthentication() throws IOException
+	{
+		boolean needsAuthentication;
+		if (!parser.next().equals(JsonParser.Event.START_OBJECT) ||
+				!parser.next().equals(JsonParser.Event.KEY_NAME) ||
+				!parser.getString().equals("need-authentication"))
+				
+		{
+			throw new IOException("Expected a authentication notice.");
+		}
+		switch (parser.next())
+		{
+		case VALUE_FALSE: needsAuthentication = false; break;
+		case VALUE_TRUE:  needsAuthentication = true;  break;
+		default:
+			throw new IOException("Expected a authentication notice.");
+		}
+		if (!parser.next().equals(JsonParser.Event.END_OBJECT))
+		{
+			throw new IOException("Expected a authentication notice.");
+		}
+		return needsAuthentication;
 	}
 
 

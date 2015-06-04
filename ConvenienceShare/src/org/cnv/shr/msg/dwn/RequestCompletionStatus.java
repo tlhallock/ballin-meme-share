@@ -6,13 +6,13 @@ import java.io.InputStream;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class RequestCompletionStatus extends DownloadMessage
 {
-	public RequestCompletionStatus(SharedFileId descriptor) { super (descriptor); }
+	public RequestCompletionStatus(FileEntry descriptor) { super (descriptor); }
 	
 	public RequestCompletionStatus(InputStream stream) throws IOException
 	{
@@ -35,6 +35,7 @@ public class RequestCompletionStatus extends DownloadMessage
 		return TYPE;
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

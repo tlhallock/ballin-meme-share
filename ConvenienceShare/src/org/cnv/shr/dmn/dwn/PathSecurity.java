@@ -19,6 +19,7 @@ public class PathSecurity
 	static Path secureMakeDirs(Path rootFile, Path path)
 	{
 		Path root;
+		Misc.ensureDirectory(rootFile, false);
 		try
 		{
 			root = rootFile.normalize().toRealPath();

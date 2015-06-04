@@ -4,6 +4,8 @@ import java.awt.Component;
 import java.util.LinkedList;
 import java.util.Properties;
 
+import org.cnv.shr.util.LogWrapper;
+
 public abstract class Setting<T>
 {
 	protected T value;
@@ -78,6 +80,7 @@ public abstract class Setting<T>
 
 	protected void notifyListeners()
 	{
+		LogWrapper.getLogger().info("Set " + getName() + " to " + String.valueOf(get()));
 		for (SettingListener l : listeners)
 		{
 			l.settingChanged();

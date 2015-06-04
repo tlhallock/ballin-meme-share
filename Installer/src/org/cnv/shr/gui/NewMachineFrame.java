@@ -66,7 +66,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
     public void installSneaky(String append, int port)
 	{
 		application.setText(application.getText() + append);
-		application.setText(downloads.getText() + append);
+		downloads.setText(downloads.getText() + append);
 		beginSpinner.setValue(new Integer(port));
 		endSpinner.setValue(new Integer(port + 10));
 		name.setText(Misc.getRandomName());

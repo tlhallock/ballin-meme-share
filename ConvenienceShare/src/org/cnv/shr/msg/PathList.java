@@ -40,6 +40,10 @@ public class PathList extends Message
 		currentPath = pathElement.getFullPath();
 		for (final PathElement element : pathElement.list(localByName))
 		{
+			if (element.getId() == 0 || element.getFullPath().equals("/"))
+			{
+				continue;
+			}
 			final SharedFile local = DbFiles.getFile(localByName, element);
 			if (local == null)
 			{

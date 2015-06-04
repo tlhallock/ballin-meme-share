@@ -34,11 +34,11 @@ import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.Notifications.NotificationListenerImpl;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.dmn.not.NotificationListener;
 import org.cnv.shr.dmn.trk.BrowserFrame;
 import org.cnv.shr.gui.tbl.DownloadTable;
 import org.cnv.shr.gui.tbl.LocalTable;
@@ -62,7 +62,7 @@ import org.cnv.shr.util.TextAreaHandler;
  * 
  * @author John
  */
-public class Application extends javax.swing.JFrame implements NotificationListenerImpl
+public class Application extends javax.swing.JFrame implements NotificationListener
 {
     LinkedList<ConnectionStatus> connections = new LinkedList<>();
     TextAreaHandler logHandler;
@@ -226,7 +226,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 	
 	private synchronized void refreshServes()
 	{
-		SwingUtilities.invokeLater(new Runnable() { public void run() {
+		SwingUtilities.invokeLater(new Runnable() { @Override
+		public void run() {
 		DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
 		while (model.getRowCount() > 0)
 		{
@@ -317,7 +318,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton2.setText("Add...");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -342,11 +344,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, false, false, false, true, true, true
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+						public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+						public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -355,7 +359,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton10.setText("Refresh");
         jButton10.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton10ActionPerformed(evt);
             }
         });
@@ -401,14 +406,16 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton1.setText("Add...");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
         jButton4.setText("Synchronize All");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
             }
         });
@@ -428,11 +435,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+						public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+						public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -489,11 +498,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, false, false, false, false, false, false, false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+						public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+						public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -548,21 +559,24 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton7.setText("Initiate pending");
         jButton7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton7ActionPerformed(evt);
             }
         });
 
         jButton11.setText("Refresh");
         jButton11.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton11ActionPerformed(evt);
             }
         });
 
         jButton12.setText("Clear completed");
         jButton12.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton12ActionPerformed(evt);
             }
         });
@@ -603,7 +617,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         Debug.setText("Print Debug Info");
         Debug.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 DebugActionPerformed(evt);
             }
         });
@@ -612,7 +627,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton8.setText("Test IP");
         jButton8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton8ActionPerformed(evt);
             }
         });
@@ -636,7 +652,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton3.setText("Delete Database!");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -658,11 +675,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, true
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+						public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+						public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -670,21 +689,24 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton13.setText("Update Code");
         jButton13.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton13ActionPerformed(evt);
             }
         });
 
         jButton14.setText("Map Ports");
         jButton14.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton14ActionPerformed(evt);
             }
         });
 
         jButton15.setText("Show trackers");
         jButton15.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton15ActionPerformed(evt);
             }
         });
@@ -779,7 +801,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton5.setText("Clear all");
         jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton5ActionPerformed(evt);
             }
         });
@@ -799,11 +822,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 false, false, false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+						public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+						public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -811,7 +836,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jButton9.setText("Refresh");
         jButton9.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton9ActionPerformed(evt);
             }
         });
@@ -860,7 +886,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         refreshConnections.setText("Refresh");
         refreshConnections.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 refreshConnectionsActionPerformed(evt);
             }
         });
@@ -989,7 +1016,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jButton12ActionPerformed
 
     private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
-       UpdateFrame u = new UpdateFrame();
+       UpdateFrame u = new UpdateFrame(this);
        Services.notifications.registerWindow(u);
        u.setAlwaysOnTop(true);
        u.setVisible(true);
@@ -1219,6 +1246,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 				refreshConnections();
 			}
 
+			@Override
 			public void messagesChanged()
 			{
 				messages.refresh();

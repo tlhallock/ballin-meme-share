@@ -6,7 +6,7 @@ import java.io.InputStream;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -14,7 +14,7 @@ public class DownloadFailure extends DownloadMessage
 {
 	private String message;
 	
-	public DownloadFailure(String message, SharedFileId descriptor)
+	public DownloadFailure(String message, FileEntry descriptor)
 	{
 		super(descriptor);
 		this.message = message;

@@ -34,10 +34,15 @@ public class AcceptKey extends javax.swing.JFrame {
     public static boolean showAcceptDialog(String url, String machineName, String machineIdentifier, String key)
     {
         AcceptKey acceptKey = new AcceptKey();
+        acceptKey.setTitle("Would you like to accept a key from " + machineName);
         Services.notifications.registerWindow(acceptKey);
         acceptKey.jLabel6.setText(url);
         acceptKey.jLabel7.setText(machineName);
         acceptKey.jLabel8.setText(machineIdentifier);
+        if (key.length() > 50 - "...".length())
+        {
+        	key = key.substring(0, 50) + "...";
+        }
         acceptKey.jLabel5.setText(key);
         
         acceptKey.lock.lock();

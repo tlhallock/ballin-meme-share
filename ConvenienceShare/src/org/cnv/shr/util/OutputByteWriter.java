@@ -1,11 +1,12 @@
 package org.cnv.shr.util;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 
 import org.cnv.shr.cnctn.ConnectionStatistics;
 
-public class OutputByteWriter extends AbstractByteWriter
+public class OutputByteWriter extends AbstractByteWriter implements Closeable
 {
 	private OutputStream output;
 	ConnectionStatistics stats;
@@ -45,5 +46,11 @@ public class OutputByteWriter extends AbstractByteWriter
 	public long getLength()
 	{
 		return length;
+	}
+
+	@Override
+	public void close() throws IOException
+	{
+		output.close();
 	}
 }

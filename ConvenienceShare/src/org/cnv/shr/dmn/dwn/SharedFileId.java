@@ -19,31 +19,18 @@ public class SharedFileId
 	private String rootName;
 	private String path;
 	
-	// Or
-	private String checksum;
-	private long length;
-	
 	public SharedFileId(SharedFile file)
 	{
-		this.checksum = file.getChecksum();
-		
-		
-		
 		this.machineIdent = file.getRootDirectory().getMachine().getIdentifier();
 		this.rootName = file.getRootDirectory().getName();
 		this.path = file.getPath().getFullPath();
 	}
 
-	public SharedFileId(String readString, String readString2, String readString3, String readString4)
+	public SharedFileId(String readString, String readString2, String readString3)
 	{
 		this.machineIdent = readString;
 		this.rootName = readString2;
 		this.path = readString3;
-		this.checksum = readString4;
-		if (this.checksum.length() == 0)
-		{
-			this.checksum = null;
-		}
 	}
 
 	public String getMachineIdent()
@@ -61,15 +48,6 @@ public class SharedFileId
 		return path;
 	}
 
-	public String getChecksum()
-	{
-		if (checksum == null)
-		{
-			return "";
-		}
-		return checksum;
-	}
-	
 	@Override
 	public int hashCode()
 	{
@@ -86,8 +64,7 @@ public class SharedFileId
 		SharedFileId o = (SharedFileId) other;
 		return machineIdent.equals(o.machineIdent)
 				&& rootName.equals(o.rootName)
-				&& path.equals(path)
-				&& (checksum == null || o.checksum == null || checksum.equals(o.checksum));
+				&& path.equals(path);
 	}
 	
 	public LocalFile getLocal()
@@ -108,6 +85,6 @@ public class SharedFileId
 	@Override
 	public String toString()
 	{
-		return machineIdent + " : " + rootName + " : " + path + " : " + checksum;
+		return machineIdent + " : " + rootName + " : " + path;
 	}
 }

@@ -7,7 +7,12 @@ import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,6 +31,7 @@ import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.dmn.mn.Arguments;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.mn.Quiter;
+import org.cnv.shr.dmn.not.Notifications;
 import org.cnv.shr.dmn.trk.BrowserFrame;
 import org.cnv.shr.dmn.trk.Trackers;
 import org.cnv.shr.gui.TaskMenu;
@@ -50,6 +56,8 @@ public class Services
 	public static ExecutorService connectionThreads;
 	/** To handle incoming network traffic **/
 	public static RequestHandler[] handlers;
+	public static ServerSocket[] sockets;
+	
 	public static Settings settings;
 	/** delete this **/
 	public static Notifications notifications;
@@ -67,13 +75,19 @@ public class Services
 	public static Quiter quiter;
 	public static UpdateManager updateManager;
 	public static UpdateInfo codeUpdateInfo;
-        public static Trackers trackers;
+	public static Trackers trackers;
 	
 	public static void initialize(Arguments args) throws Exception
 	{
-		quiter = args.quiter;
-		args.settings.read();
-		createServices(args.settings, args.deleteDb);
+		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+			@Override
+			public void uncaughtException(Thread t, Throwable e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Uncaught exception in thread " + t.getName() + ":" + t.getId(), e);
+			}
+		});
+		
+		createServices(args.settings);
 		testStartUp();
 		checkIfUpdateManagerIsRunning(args);
 		startServices();
@@ -89,19 +103,8 @@ public class Services
 	}
 	
 	
-	private static void createServices(Settings stgs, boolean deleteDb) throws Exception
+	private static void createServices(Settings stgs) throws Exception
 	{
-		settings = stgs;
-		settings.write();
-		settings.listenToSettings();
-		initializeLogging();
-		
-		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
-		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
-		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
-		
-		h2DbCache = new DbConnectionCache(deleteDb);
-        
 		notifications = new Notifications();
 		keyManager = new KeysService();
 		keyManager.readKeys(Services.settings.keysFile.getPath(), Services.settings.keySize.get());
@@ -123,25 +126,11 @@ public class Services
 		trackers = new Trackers();
 		trackers.load(settings.trackerFile.getPath());
 
-		int numServeThreads = Math.max(1, settings.maxServes.get());
-		handlers = new RequestHandler[numServeThreads];
-		int successCount = 0;
+		handlers = new RequestHandler[sockets.length];
 		for (int i = 0; i < handlers.length; i++)
 		{
-			int port = settings.servePortBeginI.get() + i;
-			try
-			{
-				handlers[i] = new RequestHandler(port);
-				successCount++;
-			}
-			catch (IOException ex)
-			{
-				LogWrapper.getLogger().log(Level.WARNING, "Unable to start on port " + port, ex);
-			}
-		}
-		if (successCount <= 0)
-		{
-			throw new Exception("Unable to start serve threads!");
+			if(sockets[i] != null)
+				handlers[i] = new RequestHandler(sockets[i]);
 		}
 		
 		userThreads        = Executors.newCachedThreadPool();
@@ -159,6 +148,7 @@ public class Services
 		{
 			return;
 		}
+		LogWrapper.getLogger().info("We have a an update manager directory.");
 		codeUpdateInfo = new UpdateInfoImpl(a.updateManagerDirectory);
 	}
 	
@@ -198,8 +188,9 @@ public class Services
 		}
 		
 		timer = new Timer();
-		downloads.initiatePendingDownloads();
+		downloads.startDownloadInitiator();
 		timer.scheduleAtFixedRate(updateManager, 10000L, 24L * 60L * 60L * 1000L);
+		timer.schedule(h2DbCache, 1000); // for testing we can make it small...
 //		monitorTimer.schedule(new TimerTask() {
 //			@Override
 //			public void run()
@@ -306,5 +297,63 @@ public class Services
 //			throw new Exception("SystemTray not supported on this OS.");
 //		}
 		// So far, check ip, check String.getBytes(), check sha1, check encryption, check port
+	}
+
+
+	public static boolean isAlreadyRunning(Arguments args) throws FileNotFoundException, IOException
+	{
+		quiter = args.quiter;
+		args.settings.read();
+
+		settings = args.settings;
+		settings.write();
+		settings.listenToSettings();
+		initializeLogging();
+		
+		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
+		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
+		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
+		
+		try (Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(), settings.servePortBeginI.get());)
+		{
+			return true;
+		}
+		catch (Exception ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to connect to begin port. Good.\n" + ex.getMessage());
+		}
+
+		int numServeThreads = Math.max(1, settings.maxServes.get());
+		sockets = new ServerSocket[numServeThreads];
+		int successCount = 0;
+		for (int i = 0; i < sockets.length; i++)
+		{
+			int port = settings.servePortBeginI.get() + i;
+			try
+			{
+				sockets[i] = new ServerSocket(port);
+				successCount++;
+			}
+			catch (IOException ex)
+			{
+				LogWrapper.getLogger().log(Level.WARNING, "Unable to start on port " + port, ex);
+			}
+		}
+		if (successCount <= 0)
+		{
+			return true;
+		}
+
+		try
+		{
+			h2DbCache = new DbConnectionCache(args.deleteDb);
+		}
+		catch (Exception e)
+		{
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to open database ", e);
+			return true;
+		}
+		
+		return false;
 	}
 }

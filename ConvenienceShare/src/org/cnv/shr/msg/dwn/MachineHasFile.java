@@ -6,7 +6,6 @@ import java.io.InputStream;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -19,7 +18,7 @@ public class MachineHasFile extends DownloadMessage
 	
 	public MachineHasFile(SharedFile file)
 	{
-		super(new SharedFileId(file));
+		super(file.getFileEntry());
 		
 		if (file == null)
 		{
@@ -70,7 +69,7 @@ public class MachineHasFile extends DownloadMessage
 		}
 		downloadInstance.addSeeder(connection.getMachine(), connection);
 	}
-	
+
 	@Override
 	public String toString()
 	{

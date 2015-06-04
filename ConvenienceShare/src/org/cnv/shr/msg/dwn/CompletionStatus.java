@@ -6,7 +6,7 @@ import java.io.InputStream;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.ServeInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -16,7 +16,7 @@ public class CompletionStatus extends DownloadMessage
 	
 	private double percentComplete;
 	
-	public CompletionStatus(SharedFileId descriptor, double d)
+	public CompletionStatus(FileEntry descriptor, double d)
 	{
 		super(descriptor);
 		percentComplete = d;

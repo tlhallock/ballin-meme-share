@@ -9,7 +9,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -24,7 +24,7 @@ public class ChunkList extends DownloadMessage
 		super(input);
 	}
 	
-	public ChunkList(List<Chunk> chunks2, String checksum, SharedFileId descriptor)
+	public ChunkList(List<Chunk> chunks2, String checksum, FileEntry descriptor)
 	{
 		super(descriptor);
 		chunks = chunks2;
@@ -60,11 +60,11 @@ public class ChunkList extends DownloadMessage
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor(), connection);
 		if (downloadInstance == null)
 		{
-			///
+			return;
 		}
 		downloadInstance.foundChunks(connection.getMachine(), chunks);
 	}
-	
+
 	@Override
 	public String toString()
 	{

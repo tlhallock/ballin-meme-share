@@ -7,16 +7,19 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
+import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
-public class ChecksumRequest extends DownloadMessage
+public class ChecksumRequest extends Message
 {
 	public static int TYPE = 32;
+	
+	private SharedFileId descriptor;
 
 	public ChecksumRequest(RemoteFile remoteFile)
 	{
-		super(new SharedFileId(remoteFile));
+		descriptor = new SharedFileId(remoteFile);
 	}
 	
 	public ChecksumRequest(InputStream stream) throws IOException
@@ -35,7 +38,7 @@ public class ChecksumRequest extends DownloadMessage
 	{
 		StringBuilder builder = new StringBuilder();
 		
-		builder.append("I wanna download " + getDescriptor());
+		builder.append("I wanna download " + descriptor);
 		
 		return builder.toString();
 	}
@@ -43,15 +46,21 @@ public class ChecksumRequest extends DownloadMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		LocalFile local = getDescriptor().getLocal();
+		LocalFile local = descriptor.getLocal();
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Creating checksum");
 		local.ensureChecksummed();
 		connection.send(new ChecksumResponse(local));
 	}
 
 	@Override
-	protected void finishParsing(ByteReader reader) throws IOException {}
+	protected void parse(ByteReader reader) throws IOException
+	{
+		descriptor = reader.readSharedFileId();
+	}
 
 	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException {}
+	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
+	{
+		buffer.append(descriptor);
+	}
 }

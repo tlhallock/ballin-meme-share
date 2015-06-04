@@ -8,6 +8,7 @@ import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -333,9 +334,18 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 				return;
 			}
 
+			LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
 			Services.userThreads.execute(new Runnable() {
+				@Override
 				public void run() {
-					perform(create);
+					try
+					{
+						perform(create);
+					}
+					catch (Exception ex)
+					{
+						LogWrapper.getLogger().log(Level.INFO, null, ex);
+					}
 				};
 			});
 		}

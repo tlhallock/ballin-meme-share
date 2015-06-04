@@ -1,7 +1,6 @@
 package org.cnv.shr.db.h2;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -30,9 +29,18 @@ public class DbConnectionCache extends TimerTask
 			LogWrapper.getLogger().info("Creating database.");
 			DbTables.createDb(c);
 		}
+
+		String file = getDbFile();
+		LogWrapper.getLogger().info("DbFile: " + file );
+		LogWrapper.getLogger().info("Connect with:");
+		LogWrapper.getLogger().info("java -cp ConvenienceShare/libs/h2-1.4.187.jar org.h2.tools.Shell ".trim());
+		LogWrapper.getLogger().info("jdbc:h2:" + file);
+		LogWrapper.getLogger().info("org.h2.Driver                                                    ".trim());
+		LogWrapper.getLogger().info("sa                                                               ".trim());
+		LogWrapper.getLogger().info("                                                                 ".trim());
+		LogWrapper.getLogger().info("                                                                 ".trim());
 	}
 
-	Connection c;
 	public synchronized ConnectionWrapper getThreadConnection()
 	{
 		long id = Thread.currentThread().getId();
@@ -41,25 +49,11 @@ public class DbConnectionCache extends TimerTask
 		{
 			if (returnValue == null)
 			{
-				Misc.ensureDirectory(Services.settings.dbFile.get(), true);
-				String file = Services.settings.dbFile.get().getAbsolutePath();
-				LogWrapper.getLogger().info("DbFile: " + file);
-				
-				if (c == null || c.isClosed())
+				if (returnValue == null || returnValue.isClosed())
 				{
-					c = DriverManager.getConnection("jdbc:h2:" + file, "sa", "");
+					returnValue = new ConnectionWrapper(DriverManager.getConnection("jdbc:h2:" + getDbFile(), "sa", ""));
 				}
 				
-				returnValue = new ConnectionWrapper(c);
-
-				LogWrapper.getLogger().info("Connect with:");
-				LogWrapper.getLogger().info("java -cp ConvenienceShare/libs/h2-1.4.187.jar org.h2.tools.Shell ".trim());
-				LogWrapper.getLogger().info("jdbc:h2:" + file);
-				LogWrapper.getLogger().info("org.h2.Driver                                                    ".trim());
-				LogWrapper.getLogger().info("sa                                                               ".trim());
-				LogWrapper.getLogger().info("                                                                 ".trim());
-				LogWrapper.getLogger().info("                                                                 ".trim());
-
 				connections.put(id, returnValue);
 			}
 		}
@@ -67,13 +61,20 @@ public class DbConnectionCache extends TimerTask
 		{
 			LogWrapper.getLogger().log(Level.WARNING, "Unable to create db connection", e);
 		}
-		// slight sync issue here...
 		returnValue.setInUse();
 		return returnValue;
+	}
+
+	private String getDbFile()
+	{
+		Misc.ensureDirectory(Services.settings.dbFile.get(), true);
+		return Services.settings.dbFile.get().getAbsolutePath();
 	}
 	
 	public synchronized void flush()
 	{
+		LogWrapper.getLogger().info("Flushing db connections.");
+		
 		for (final ConnectionWrapper wrapper : connections.values())
 		{
 			Services.timer.scheduleAtFixedRate(wrapper, 1000, 1000);

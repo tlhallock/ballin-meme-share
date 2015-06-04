@@ -69,6 +69,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 			@Override
 			public void run()
 			{
+				LogWrapper.getLogger().info("Refreshing trackers");
 				synchronized (sync)
 				{
 					DefaultListModel model = (DefaultListModel) jList1.getModel();
@@ -117,6 +118,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 		jButton2.setEnabled(true);
 		jButton6.setEnabled(true);
 		currentClient = client;
+
+		LogWrapper.getLogger().info("Showing " + client);
 		
 		DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
 		while (model.getRowCount() > 0) model.removeRow(0);
@@ -126,6 +129,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 			while (iterator.hasNext())
 			{
 				MachineEntry entry = iterator.next();
+				LogWrapper.getLogger().info("Listed machine " + entry);
 				if (entry == null)
 					break;
 				machines.add(entry);
@@ -136,8 +140,9 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 				});
 			}
 			hasMore = true;
-                        jButton9.setEnabled(listStart > 0);
+      jButton9.setEnabled(listStart > 0);
 			jButton8.setEnabled(hasMore);
+			jLabel6.setText(String.valueOf(listStart));
 			return true;
 		}
 		catch (Exception e)
@@ -189,7 +194,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 
         jMenuItem2.setText("Show");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
             }
         });
@@ -197,7 +203,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 
         jMenuItem1.setText("Delete highlighted item");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem1ActionPerformed(evt);
             }
         });
@@ -213,7 +220,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jButton1.setText("Add known trackers");
         jButton1.setEnabled(false);
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
@@ -221,7 +229,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jButton2.setText("Upload file metadata");
         jButton2.setEnabled(false);
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -244,16 +253,19 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
                 false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+						public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+						public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            @Override
+						public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jTable1MouseClicked(evt);
             }
         });
@@ -274,7 +286,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jButton3.setText("Open");
         jButton3.setEnabled(false);
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -282,7 +295,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jButton5.setText("Add Comment");
         jButton5.setEnabled(false);
         jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton5ActionPerformed(evt);
             }
         });
@@ -358,7 +372,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jButton6.setText("Refresh");
         jButton6.setEnabled(false);
         jButton6.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton6ActionPerformed(evt);
             }
         });
@@ -366,7 +381,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jButton8.setText("Next");
         jButton8.setEnabled(false);
         jButton8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton8ActionPerformed(evt);
             }
         });
@@ -374,7 +390,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jButton9.setText("Prev");
         jButton9.setEnabled(false);
         jButton9.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton9ActionPerformed(evt);
             }
         });
@@ -434,13 +451,16 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jList1.setModel(new DefaultListModel());
         jList1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         jList1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
+            @Override
+						public void mousePressed(java.awt.event.MouseEvent evt) {
                 jList1MousePressed(evt);
             }
-            public void mouseReleased(java.awt.event.MouseEvent evt) {
+            @Override
+						public void mouseReleased(java.awt.event.MouseEvent evt) {
                 jList1MouseReleased(evt);
             }
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            @Override
+						public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jList1MouseClicked(evt);
             }
         });
@@ -448,7 +468,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 
         jButton4.setText("Add...");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
             }
         });
@@ -456,7 +477,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jButton7.setText("Remove");
         jButton7.setEnabled(false);
         jButton7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton7ActionPerformed(evt);
             }
         });
@@ -505,7 +527,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         {
             int selectedIndex = jList1.getSelectedIndex();
             if (selectedIndex < 0) return;
-						TrackerClient client = clients.get((String) jList1.getModel().getElementAt(selectedIndex));
+						TrackerClient client = clients.get(jList1.getModel().getElementAt(selectedIndex));
             if (client == null)
             {
                 return;
@@ -547,10 +569,11 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         if (selectedIndex < 0) {
             return;
         }
-        TrackerClient client = clients.get((String) jList1.getModel().getElementAt(selectedIndex));
+        TrackerClient client = clients.get(jList1.getModel().getElementAt(selectedIndex));
         if (client == null) {
             return;
         }
+				LogWrapper.getLogger().info("Removing " + client);
         Services.trackers.remove(client);
         Services.trackers.save(Services.settings.trackerFile.getPath());
         refreshTrackers();
@@ -560,7 +583,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 
       int selectedIndex = jList1.getSelectedIndex();
       if (selectedIndex < 0) return;
-    	TrackerClient client = clients.get((String) jList1.getModel().getElementAt(selectedIndex));
+    	TrackerClient client = clients.get(jList1.getModel().getElementAt(selectedIndex));
             if (client == null)
             {
                 return;
@@ -706,11 +729,15 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 			}
 		comments.clear();
 		currentMachine = machines.get(index);
+		LogWrapper.getLogger().info("Showing " + currentMachine);
+		
 		jLabel4.setText(currentMachine.getName());
 		jButton5.setEnabled(true);
 		jButton3.setEnabled(true);
 		commentPanel.removeAll();
-                        
+
+		ratingLabel.setText("0");
+		
 		try (CloseableIt<CommentEntry> listComments = currentClient.listComments(currentMachine);)
 		{
 			int count = 0;
@@ -720,6 +747,9 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 			while (listComments.hasNext())
 			{
 				CommentEntry entry = listComments.next();
+
+				LogWrapper.getLogger().info("Listed comment " + entry);
+				
 				if (entry == null)
 				{
 					break;

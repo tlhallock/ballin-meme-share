@@ -2,34 +2,27 @@ package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.TimerTask;
 import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.ConnectionWrapper;
-import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
-import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
-import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
-import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
-import org.cnv.shr.msg.dwn.ChecksumRequest;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.LogWrapper;
 
-public class DownloadManager extends TimerTask
+public class DownloadManager
 {
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from Download order by ADDED group by PRIORITY where DSTATE=?");
-	
-	private HashMap<SharedFileId, DownloadInstance> downloads = new HashMap<>();
+	// Need to remove old ones...
+	HashMap<FileEntry, DownloadInstance> downloads = new HashMap<>();
+	DownloadInitiator initiator = new DownloadInitiator();
 
 	public DownloadInstance download(SharedFile remoteFile) throws UnknownHostException, IOException
 	{
@@ -42,22 +35,22 @@ public class DownloadManager extends TimerTask
 			LogWrapper.getLogger().info("Trying to download local file " + remoteFile);
 			return null;
 		}
+		LogWrapper.getLogger().info("Trying to download " + remoteFile);
 		return download((RemoteFile) remoteFile);
 	}
 
 	public DownloadInstance download(RemoteFile file) throws UnknownHostException, IOException
 	{
-		DownloadInstance download = createDownload(new Download(file));
-		download.begin();
-		return download;
+		return createDownload(new Download(file));
 	}
 
-	private synchronized DownloadInstance createDownload(Download d) throws UnknownHostException, IOException
+	synchronized DownloadInstance createDownload(Download d) throws UnknownHostException, IOException
 	{
 		DownloadInstance prev = downloads.get(d.getFile().getId());
 		if (prev != null)
 		{
-			return prev;
+			LogWrapper.getLogger().info("Already downloading.");
+			return null;
 		}
 
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();)
@@ -72,7 +65,8 @@ public class DownloadManager extends TimerTask
 		String checksum = d.getFile().getChecksum();
 		if (checksum == null)
 		{
-			requestChecksum(d.getFile());
+			LogWrapper.getLogger().info("File is not checksummed.");
+			initiator.requestChecksum(d.getFile());
 			return null;
 		}
 
@@ -81,9 +75,25 @@ public class DownloadManager extends TimerTask
 			return null;
 		}
 
+		LogWrapper.getLogger().info("Creating download instance");
 		DownloadInstance instance = new DownloadInstance(d);
 		Services.notifications.downloadAdded(instance);
-		downloads.put(new SharedFileId(d.getFile()), instance);
+		downloads.put(d.getFile().getFileEntry(), instance);
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				try
+				{
+					instance.continueDownload();
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to download.", e);
+				}
+			}
+		});
 		return instance;
 	}
 
@@ -94,7 +104,7 @@ public class DownloadManager extends TimerTask
 		{
 			return;
 		}
-		initiatePendingDownloads();
+		initiator.initiatePendingDownloads();
 	}
 
 	public synchronized LinkedList<DownloadInstance> getDownloadInstances(Communication c)
@@ -110,7 +120,7 @@ public class DownloadManager extends TimerTask
 		return returnValue;
 	}
 
-	public synchronized DownloadInstance getDownloadInstanceForGui(SharedFileId descriptor)
+	public synchronized DownloadInstance getDownloadInstanceForGui(FileEntry descriptor)
 	{
 		DownloadInstance downloadInstance = downloads.get(descriptor);
 		if (downloadInstance == null)
@@ -119,7 +129,7 @@ public class DownloadManager extends TimerTask
 		}
 		return downloadInstance;
 	}
-	public synchronized DownloadInstance getDownloadInstance(SharedFileId descriptor, Communication connection)
+	public synchronized DownloadInstance getDownloadInstance(FileEntry descriptor, Communication connection)
 	{
 		DownloadInstance downloadInstance = downloads.get(descriptor);
 		if (downloadInstance == null)
@@ -133,63 +143,10 @@ public class DownloadManager extends TimerTask
 		return downloadInstance;
 	}
 
-	public void initiatePendingDownloads()
+
+	public void startDownloadInitiator()
 	{
-		if (true)
-		{
-			return;
-		}
-		// Fix this ugly mess
-		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();)
-		{
-			StatementWrapper prepareStatement;
-			ResultSet results;
-			try
-			{
-				prepareStatement = connection.prepareStatement(SELECT1);
-				prepareStatement.setInt(1, DownloadState.QUEUED.toInt());
-				results = prepareStatement.executeQuery();
-			}
-			catch (SQLException e1)
-			{
-				e1.printStackTrace();
-				return;
-			}
-			try (DbIterator<Download> dbIterator = new DbIterator<Download>(connection, results, DbObjects.PENDING_DOWNLOAD);)
-			{
-				while (dbIterator.hasNext())
-				{
-					if (downloads.size() >= Services.settings.maxDownloads.get())
-					{
-						return;
-					}
-					final Download next = dbIterator.next();
-					Services.userThreads.execute(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							try
-							{
-								DownloadInstance createDownload = createDownload(next);
-								if (createDownload != null)
-								{
-									createDownload.begin();
-								}
-							}
-							catch (IOException e)
-							{
-								LogWrapper.getLogger().log(Level.INFO, "Unable to begin download.", e);
-							}
-						}
-					});
-				}
-			}
-		}
-		catch (SQLException e1)
-		{
-			e1.printStackTrace();
-		}
+		Services.timer.scheduleAtFixedRate(initiator, 1000, 10 * 60 * 1000);
 	}
 
 	public void quitAllDownloads()
@@ -200,32 +157,8 @@ public class DownloadManager extends TimerTask
 		}
 	}
 
-	public void requestChecksum(RemoteFile remote)
+	public void initiatePendingDownloads()
 	{
-		try
-		{
-			Communication openConnection = Services.networkManager.openConnection(remote.getRootDirectory().getMachine(), false);
-			if (openConnection != null)
-			{
-				openConnection.send(new ChecksumRequest(remote));
-			}
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to send checksum request.", e);
-		}
-	}
-
-	@Override
-	public void run()
-	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				initiatePendingDownloads();
-			}
-		});
+		initiator.initiatePendingDownloads();
 	}
 }

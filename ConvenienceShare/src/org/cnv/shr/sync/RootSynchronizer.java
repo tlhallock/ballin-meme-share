@@ -37,7 +37,7 @@ public abstract class RootSynchronizer implements Runnable
 	private LinkedList<SynchronizationListener> listeners = new LinkedList<>();
 	private boolean quit;
 	
-	public RootSynchronizer(final RootDirectory remoteDirectory, final SyncrhonizationTaskIterator iterator) throws IOException
+	public RootSynchronizer(final RootDirectory remoteDirectory, final SyncrhonizationTaskIterator iterator)
 	{
 		this.iterator = iterator;
 		this.local = remoteDirectory;
@@ -146,7 +146,9 @@ public abstract class RootSynchronizer implements Runnable
 		final String name = PathElement.sanitizeFilename(f);
 		if (name == null 
 				|| accountedFor.contains(name)
-				|| !local.pathIsSecure(Paths.get(f.getCanonicalPath())))
+				|| !local.pathIsSecure(
+						Paths.get(local.getPathElement().getFsPath(), 
+								f.getCanonicalPath()).normalize()))
 		{
 			return;
 		}
@@ -183,12 +185,14 @@ public abstract class RootSynchronizer implements Runnable
 			}
 			
 			// remove directory from database
-			DbPaths.pathDoesNotLieIn(element, local);
+			DbPaths.pathDoesNotLieIn(element.getBrokenBegin(), local);
 			
 			return;
 		}
 		
-		if (!local.pathIsSecure(Paths.get(fsCopy.getCanonicalPath())))
+		if (!local.pathIsSecure(
+				Paths.get(local.getPathElement().getFsPath(), 
+						fsCopy.getCanonicalPath()).normalize()))
 		{
 			return;
 		}

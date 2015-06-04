@@ -168,7 +168,8 @@ public class DbPaths
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper merge = c.prepareStatement(MERGE1);)
 		{
-			while (element.getParent() != element)
+			PathElement prev;
+			do
 			{
 				merge.setInt(1, local.getId());
 				merge.setLong(2, element.getId());
@@ -177,8 +178,8 @@ public class DbPaths
 				{
 					return;
 				}
-				element = element.getParent();
-			}
+				element = (prev = element).getParent();
+			} while (prev.getId() != element.getId());
 		}
 		catch (SQLException e)
 		{
@@ -187,21 +188,16 @@ public class DbPaths
 	}
 	public static void pathDoesNotLieIn(PathElement element, RootDirectory local)
 	{
-		if (!element.isBroken() && element.getName().equals("/") && element.getParent() == DbPaths.ROOT)
+		if (element.getId() == 0)
 		{
 			return;
 		}
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(DELETE2);)
 		{
-			while (element.getParent() != element)
-			{
-				stmt.setInt(1, local.getId());
-				stmt.setLong(2, element.getId());
-				stmt.execute();
-				
-				element = element.getParent();
-			}
+			stmt.setInt( 1, local.getId());
+			stmt.setLong(2, element.getId());
+			stmt.execute();
 		}
 		catch (SQLException e)
 		{

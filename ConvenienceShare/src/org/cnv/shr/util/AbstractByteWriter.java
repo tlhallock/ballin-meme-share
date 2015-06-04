@@ -32,30 +32,30 @@ public abstract class AbstractByteWriter
 
 	public AbstractByteWriter append(short i) throws IOException
 	{
-		append((byte) ((i >>  8L) & 0xff));
-		append((byte) ((i >>  0L) & 0xff)); 
+		append((byte) (i >>  8L & 0xff));
+		append((byte) (i >>  0L & 0xff)); 
 		return this;
 	}
 
 	public AbstractByteWriter append(int i) throws IOException
 	{
-		append((byte) ((i >> 24L) & 0xff));
-		append((byte) ((i >> 16L) & 0xff));
-		append((byte) ((i >>  8L) & 0xff));
-		append((byte) ((i >>  0L) & 0xff));
+		append((byte) (i >> 24L & 0xff));
+		append((byte) (i >> 16L & 0xff));
+		append((byte) (i >>  8L & 0xff));
+		append((byte) (i >>  0L & 0xff));
 		return this;
 	}
 
 	public AbstractByteWriter append(long i) throws IOException
 	{
-		append((byte) ((i >> 56L) & 0xff));
-		append((byte) ((i >> 48L) & 0xff));
-		append((byte) ((i >> 40L) & 0xff));
-		append((byte) ((i >> 32L) & 0xff));
-		append((byte) ((i >> 24L) & 0xff));
-		append((byte) ((i >> 16L) & 0xff));
-		append((byte) ((i >>  8L) & 0xff));
-		append((byte) ((i >>  0L) & 0xff));
+		append((byte) (i >> 56L & 0xff));
+		append((byte) (i >> 48L & 0xff));
+		append((byte) (i >> 40L & 0xff));
+		append((byte) (i >> 32L & 0xff));
+		append((byte) (i >> 24L & 0xff));
+		append((byte) (i >> 16L & 0xff));
+		append((byte) (i >>  8L & 0xff));
+		append((byte) (i >>  0L & 0xff));
 		return this;
 	}
 	
@@ -114,7 +114,6 @@ public abstract class AbstractByteWriter
 		append(key.getMachineIdent());
 		append(key.getRootName());
 		append(key.getPath());
-		append(key.getChecksum());
 		return this;
 	}
 	

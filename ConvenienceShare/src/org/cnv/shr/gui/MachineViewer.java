@@ -29,8 +29,7 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.Notifications;
-import org.cnv.shr.dmn.Notifications.NotificationListener;
+import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.tbl.FilesTable;
 import org.cnv.shr.mdl.LocalFile;
@@ -53,7 +52,7 @@ public class MachineViewer extends javax.swing.JFrame
     private String machineIdent;
     private String rootDirectoryName;
     private PathTreeModel model;
-    private Notifications.NotificationListener listener;
+    private NotificationListenerAdapter listener;
     private FilesTable filesManager;
     /**
      * Creates new form RemoteViewer
@@ -298,7 +297,7 @@ public class MachineViewer extends javax.swing.JFrame
         {
         	keysString = keysString.substring(0, 50) + "...";
         }
-        keysLabel.setText(keysString);
+//        keysLabel.setText(keysString);
 
         final DefaultTableModel model = (DefaultTableModel) pathsTable.getModel();
         while (model.getRowCount() > 0)
@@ -399,11 +398,9 @@ public class MachineViewer extends javax.swing.JFrame
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         isMessaging = new javax.swing.JCheckBox();
         machineLabel = new javax.swing.JLabel();
-        keysLabel = new javax.swing.JLabel();
         jButton3 = new javax.swing.JButton();
         jSplitPane1 = new javax.swing.JSplitPane();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -449,12 +446,11 @@ public class MachineViewer extends javax.swing.JFrame
         remoteSharingWithUs = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
+        jButton4 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jLabel1.setText("Machine:");
-
-        jLabel2.setText("Keys:");
 
         jButton1.setText("Request");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -466,8 +462,6 @@ public class MachineViewer extends javax.swing.JFrame
         isMessaging.setText("Allow messages");
 
         machineLabel.setText("Loading...");
-
-        keysLabel.setText("Loading...");
 
         jButton3.setText("Synchronize Roots");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
@@ -783,6 +777,9 @@ public class MachineViewer extends javax.swing.JFrame
 
         jLabel15.setText("Loading...");
 
+        jButton4.setText("Clear Browsing data");
+        jButton4.setEnabled(false);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -792,9 +789,8 @@ public class MachineViewer extends javax.swing.JFrame
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel14)
-                        .addGap(18, 18, 18)
-                        .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jButton4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -802,13 +798,13 @@ public class MachineViewer extends javax.swing.JFrame
                         .addGap(18, 18, 18)
                         .addComponent(pin))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(24, 24, 24)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(keysLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel14))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -838,23 +834,17 @@ public class MachineViewer extends javax.swing.JFrame
                             .addComponent(remoteSharingWithUs))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(keysLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2)
                             .addComponent(jButton2)
                             .addComponent(sharingWithRemoteMachine, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4))))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(12, 12, 12)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton3)
-                            .addComponent(pin)
-                            .addComponent(isMessaging)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel14)
-                            .addComponent(jLabel15))))
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel15)
+                            .addComponent(jLabel14))))
+                .addGap(12, 12, 12)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton3)
+                    .addComponent(pin)
+                    .addComponent(isMessaging)
+                    .addComponent(jButton4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 378, Short.MAX_VALUE))
         );
@@ -952,6 +942,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton7;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
@@ -960,7 +951,6 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -980,7 +970,6 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
-    private javax.swing.JLabel keysLabel;
     private javax.swing.JLabel machineLabel;
     private javax.swing.JLabel numFilesLabel;
     private javax.swing.JTextField pathField;
@@ -998,10 +987,10 @@ public class MachineViewer extends javax.swing.JFrame
     
     
 
-	private NotificationListener createListener()
+	private NotificationListenerAdapter createListener()
 	{
             MachineViewer viewer = this;
-		return listener = new Notifications.NotificationListener()
+		return listener = new NotificationListenerAdapter()
 		{
 			@Override
 			public void remoteChanged(Machine remote)

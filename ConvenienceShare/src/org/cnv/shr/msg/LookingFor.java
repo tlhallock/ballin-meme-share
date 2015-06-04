@@ -8,6 +8,7 @@ import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.dwn.MachineHasFile;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -19,7 +20,7 @@ public class LookingFor extends Message
 	private long fileSize;
 	
 	
-	public LookingFor(SharedFile file)
+	public LookingFor(FileEntry file)
 	{
 		checksum = file.getChecksum();
 		fileSize = file.getFileSize();
@@ -33,7 +34,7 @@ public class LookingFor extends Message
 	@Override
 	protected void parse(ByteReader reader) throws IOException
 	{
-
+		
 	}
 
 	@Override

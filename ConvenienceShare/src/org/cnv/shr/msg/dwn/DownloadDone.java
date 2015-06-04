@@ -6,13 +6,13 @@ import java.io.InputStream;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.ServeInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class DownloadDone extends DownloadMessage
 {
-	public DownloadDone(SharedFileId descriptor) { super(descriptor); }
+	public DownloadDone(FileEntry descriptor) { super(descriptor); }
 
 	public DownloadDone(InputStream stream) throws IOException
 	{

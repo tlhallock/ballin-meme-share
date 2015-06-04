@@ -11,6 +11,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbTables;
+import org.cnv.shr.trck.FileEntry;
 
 public abstract class SharedFile extends DbObject<Integer>
 {
@@ -84,13 +85,21 @@ public abstract class SharedFile extends DbObject<Integer>
 	{
 		this.lastModified = long1;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return rootDirectory + ":" + path;
+	}
 
 	@Override
 	public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 	{
 		id = row.getInt("F_ID");
 
-		rootDirectory =  (RootDirectory) locals.getObject(c, DbTables.DbObjects.LROOT, row.getInt("ROOT"));
+		int rootId = row.getInt("ROOT");
+		
+		rootDirectory =  fillRoot(c, locals, rootId);
 		path          =    (PathElement) locals.getObject(c, DbTables.DbObjects.PELEM, row.getInt("PELEM"));
 		
 		tags = row.getString("TAGS");
@@ -99,6 +108,7 @@ public abstract class SharedFile extends DbObject<Integer>
 		lastModified = row.getLong("MODIFIED");
 	}
 
+	protected abstract RootDirectory fillRoot(ConnectionWrapper c, DbLocals locals, int rootId);
 
 	@Override
 	public boolean save(ConnectionWrapper c) throws SQLException
@@ -135,4 +145,9 @@ public abstract class SharedFile extends DbObject<Integer>
 	}
 
 	public abstract boolean isLocal();
+	
+	public FileEntry getFileEntry()
+	{
+		return new FileEntry(getChecksum(), fileSize);
+	}
 }

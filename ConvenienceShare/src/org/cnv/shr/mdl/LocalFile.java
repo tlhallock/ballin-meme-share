@@ -8,7 +8,10 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbFiles;
+import org.cnv.shr.db.h2.DbLocals;
+import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
@@ -45,7 +48,7 @@ public class LocalFile extends SharedFile
 		{
 			if (shouldChecksum())
 			{
-				checksum = Services.checksums.checksumBlocking(f);
+				checksum = Services.checksums.checksumBlocking(f, Level.FINE);
 			}
 		}
 		catch (IOException ex)
@@ -109,7 +112,7 @@ public class LocalFile extends SharedFile
 		}
 		try
 		{
-			checksum = Services.checksums.checksumBlocking(fsCopy);
+			checksum = Services.checksums.checksumBlocking(fsCopy, Level.FINE);
 		}
 		catch (IOException e)
 		{
@@ -159,7 +162,7 @@ public class LocalFile extends SharedFile
 		{
 			return;
 		}
-		checksum = Services.checksums.checksumBlocking(getFsFile());
+		checksum = Services.checksums.checksumBlocking(getFsFile(), Level.FINE);
 		tryToSave();
 	}
 
@@ -167,5 +170,11 @@ public class LocalFile extends SharedFile
 	public boolean isLocal()
 	{
 		return true;
+	}
+
+	@Override
+	protected LocalDirectory fillRoot(ConnectionWrapper c, DbLocals locals, int rootId)
+	{
+		return (LocalDirectory) locals.getObject(c, DbTables.DbObjects.LROOT, rootId);
 	}
 }

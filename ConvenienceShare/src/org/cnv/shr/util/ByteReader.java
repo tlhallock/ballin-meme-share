@@ -49,8 +49,8 @@ public class ByteReader
 	{
 		int i = 0;
 
-		i |= (readByte()) << 8;
-		i |= (readByte()) << 0;
+		i |= readByte() << 8;
+		i |= readByte() << 0;
 
 		return i;
 	}
@@ -67,9 +67,9 @@ public class ByteReader
 		stats.bytesRead(1);
 
 		i |=      firstByte << 24L;
-		i |= (readByte()) << 16L;
-		i |= (readByte()) <<  8L;
-		i |= (readByte()) <<  0L;
+		i |= readByte() << 16L;
+		i |= readByte() <<  8L;
+		i |= readByte() <<  0L;
 
 		return i;
 	}
@@ -88,14 +88,14 @@ public class ByteReader
 	{
 		long i = 0;
 
-		i |= (readByte()) << 56L;
-		i |= (readByte()) << 48L;
-		i |= (readByte()) << 40L;
-		i |= (readByte()) << 32L;
-		i |= (readByte()) << 24L;
-		i |= (readByte()) << 16L;
-		i |= (readByte()) <<  8L;
-		i |= (readByte()) <<  0L;
+		i |= readByte() << 56L;
+		i |= readByte() << 48L;
+		i |= readByte() << 40L;
+		i |= readByte() << 32L;
+		i |= readByte() << 24L;
+		i |= readByte() << 16L;
+		i |= readByte() <<  8L;
+		i |= readByte() <<  0L;
 
 		return i;
 	}
@@ -107,7 +107,7 @@ public class ByteReader
 	
 	public byte[] readVarByteArray() throws IOException
 	{
-		int size = (int) readInt();
+		int size = readInt();
 		if (size > Services.settings.maxStringSize.get())
 		{
 			throw new IOException("Received string that is way too big!! Size=" + size);
@@ -144,7 +144,6 @@ public class ByteReader
 	public SharedFileId readSharedFileId() throws IOException
 	{
 		return new org.cnv.shr.dmn.dwn.SharedFileId(
-				readString(),
 				readString(),
 				readString(),
 				readString());
