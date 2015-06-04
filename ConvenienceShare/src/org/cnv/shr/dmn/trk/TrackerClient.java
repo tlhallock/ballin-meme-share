@@ -11,9 +11,9 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Seeder;
 import org.cnv.shr.gui.tbl.DbJTable.CloseableIt;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.trck.CommentEntry;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerAction;
@@ -164,6 +164,7 @@ public class TrackerClient
 		};
 		return iterator;
 	}
+	
 
 	CloseableIt<CommentEntry> listComments(MachineEntry machine) throws Exception
 	{
@@ -251,7 +252,15 @@ public class TrackerClient
 			connection.generator.writeEnd();
 			connection.generator.flush();
 			connection.parser.next();
+			
+			LogWrapper.getLogger().info("Posted comment " + comment);
 		}
+	}
+	
+	@Override
+	public String toString()
+	{
+		return trackerEntry.toString();
 	}
 
 	void addOthers()
@@ -267,6 +276,8 @@ public class TrackerClient
 			connection.generator.writeEnd();
 			connection.generator.flush();
 			connection.parser.next();
+
+			LogWrapper.getLogger().info("Added " + entry);
 		}
 		catch (Exception ex)
 		{
@@ -289,7 +300,7 @@ public class TrackerClient
 	
 
 	
-	public void requestSeeders(SharedFile remoteFile, Collection<Seeder> seeders)
+	public void requestSeeders(FileEntry remoteFile, Collection<Seeder> seeders)
 	{
 		try (TrackerConnection connection = connect(TrackerAction.LIST_SEEDERS))
 		{
@@ -325,8 +336,10 @@ public class TrackerClient
 		}
 	}
 
-	private void addSeeder(SharedFile remoteFile, MachineEntry entry)
+	private void addSeeder(FileEntry remoteFile, MachineEntry entry)
 	{
+		LogWrapper.getLogger().info("Found seeder " + entry);
+		
 		try
 		{
 			Communication openConnection = Services.networkManager.openConnection(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false);

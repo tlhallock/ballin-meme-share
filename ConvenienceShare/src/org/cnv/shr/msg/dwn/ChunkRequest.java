@@ -6,7 +6,7 @@ import java.io.InputStream;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
-import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -15,7 +15,7 @@ public class ChunkRequest extends DownloadMessage
 	private Chunk chunk;
 
 	public static int TYPE = 16;
-	public ChunkRequest(SharedFileId descriptor, Chunk removeFirst)
+	public ChunkRequest(FileEntry descriptor, Chunk removeFirst)
 	{
 		super(descriptor);
 		this.chunk = removeFirst;
@@ -46,7 +46,7 @@ public class ChunkRequest extends DownloadMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		checkPermissionsDownloadable(connection, connection.getMachine(), getDescriptor().getLocal().getRootDirectory(), "Sending chunk.");
+		checkPermissionsDownloadable(connection, connection.getMachine(), getLocal().getRootDirectory(), "Sending chunk.");
 		Services.server.getServeInstance(connection).serve(chunk);
 	}
 

@@ -18,23 +18,27 @@ public class DbDownloads
 	private static final QueryWrapper SELECT2 = new QueryWrapper("select * from DOWNLOAD where Q_ID=?;");
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from DOWNLOAD where DSTATE=?;");
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK join DOWNLOAD on DID = Q_ID where DSTATE=?;");
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select Q_ID from DOWNLOAD where FID=?;");
+	private static final QueryWrapper SELECTID = new QueryWrapper("select Q_ID from DOWNLOAD where FID=?;");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from Download where DSTATE=? group by PRIORITY order by ADDED;");
 
-	public static boolean hasPendingDownload(SharedFile remoteFile)
+	public static Integer getPendingDownloadId(SharedFile remoteFile)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(SELECT1);)
+				StatementWrapper stmt = c.prepareStatement(SELECTID);)
 		{
 			
 			stmt.setInt(1, remoteFile.getId());
 			ResultSet executeQuery = stmt.executeQuery();
-			return executeQuery.next();
+			if (executeQuery.next())
+			{
+				return executeQuery.getInt(1);
+			}
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to see if we want to download " + remoteFile, e);
-			return false;
 		}
+		return null;
 	}
 
     public static void clearCompleted()
@@ -71,7 +75,7 @@ public class DbDownloads
 			ResultSet executeQuery = stmt.executeQuery();
 			if (executeQuery.next())
 			{
-				DbObject allocate = DbObjects.CHUNK.allocate(executeQuery);
+				DbObject allocate = DbObjects.PENDING_DOWNLOAD.allocate(executeQuery);
 				allocate.fill(c, executeQuery, new DbLocals());
 				return (Download) allocate;
 			}
@@ -93,6 +97,22 @@ public class DbDownloads
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get downloads", e);
+			return new DbIterator.NullIterator<>();
+		}
+	}
+
+	public static DbIterator<Download> listPendingDownloads()
+	{
+		try
+		{
+			ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
+			StatementWrapper prepareStatement = connection.prepareStatement(DbDownloads.SELECT1);
+			prepareStatement.setInt(1, DownloadState.QUEUED.toInt());
+			return new DbIterator<Download>(connection, prepareStatement.executeQuery(), DbObjects.PENDING_DOWNLOAD);
+		}
+		catch (SQLException e1)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to send checksum request.", e1);
 			return new DbIterator.NullIterator<>();
 		}
 	}

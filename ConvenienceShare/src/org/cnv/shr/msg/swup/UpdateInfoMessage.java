@@ -67,6 +67,6 @@ public class UpdateInfoMessage extends Message
 		}
 		
 		Services.updateManager.updateInfo(ip, port, pKey);
-		Services.updateManager.checkForUpdates(true);
+		Services.updateManager.checkForUpdates(null, true);
 	}
 }

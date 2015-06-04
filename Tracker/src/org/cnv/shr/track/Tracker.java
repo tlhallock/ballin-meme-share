@@ -31,6 +31,7 @@ public class Tracker implements Runnable
 		store = new TrackerStore();
 	}
 
+	@Override
 	public void run()
 	{
 		while (true)
@@ -45,6 +46,9 @@ public class Tracker implements Runnable
 					JsonParser input     = TrackObjectUtils.parserFactory.createParser(socket.getInputStream());
 					JsonGenerator output = TrackObjectUtils.generatorFactory.createGenerator(socket.getOutputStream());)
 			{
+				EnsureClosed ensureClosed = new EnsureClosed(output);
+				Track.timer.schedule(ensureClosed, 10 * 60 * 1000);
+				
 				output.writeStartArray();
 				if (!input.next().equals(JsonParser.Event.START_ARRAY))
 				{
@@ -56,6 +60,7 @@ public class Tracker implements Runnable
 				handleAction(output, input, entry);
 				output.writeEnd();
 				waitForClient(input, output);
+				ensureClosed.closed = true;
 			}
 			catch (IOException e)
 			{
@@ -92,13 +97,23 @@ public class Tracker implements Runnable
 		{
 			fail("Request with no Machine Entry", input, generator);
 		}
+		claimedClient.setIp(null);
 		
 		MachineEntry entry = store.getMachine(claimedClient.getIdentifer());
 		if (entry == null)
 		{
+			generator.writeStartObject();
+			generator.write("need-authentication", false);
+			generator.writeEnd();
+			
+			claimedClient.setIp(realAddress);
 			store.machineFound(claimedClient, System.currentTimeMillis());
 			return claimedClient;
 		}
+		
+		generator.writeStartObject();
+		generator.write("need-authentication", true);
+		generator.writeEnd();
 		
 		// authenticate
 		generator.writeStartObject();
@@ -114,7 +129,7 @@ public class Tracker implements Runnable
 			generator.write("prevKey", entry.getKeyStr());
 		}
 
-		byte[] createNaunce = Misc.createNaunce(1024);
+		byte[] createNaunce = Misc.createNaunce(117);
 		byte[] encrypt = Track.keys.encrypt(entry.getKey(), createNaunce);
 		generator.write("naunce", Misc.format(encrypt));
 		generator.writeEnd();

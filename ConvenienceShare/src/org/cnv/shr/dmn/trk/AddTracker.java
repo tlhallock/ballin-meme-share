@@ -8,6 +8,7 @@ package org.cnv.shr.dmn.trk;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.TrackerEntry;
+import org.cnv.shr.util.Misc;
 
 /**
  *
@@ -58,14 +59,16 @@ public class AddTracker extends javax.swing.JFrame {
 
         jButton1.setText("Cancel");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
         jButton2.setText("Add");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -129,7 +132,7 @@ public class AddTracker extends javax.swing.JFrame {
 			@Override
 			public void run()
 			{
-				int negom = Math.min(Integer.MAX_VALUE - 1, (Integer) jSpinner1.getValue());
+				int negom = Math.min(Misc.MAX_PORT - 1, (Integer) jSpinner1.getValue());
 				int end = Math.max(negom + 1, (Integer) jSpinner2.getValue());
 				Services.trackers.add(jTextField1.getText(), negom, end);
 				Services.trackers.save(Services.settings.trackerFile.getPath());

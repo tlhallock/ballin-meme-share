@@ -50,7 +50,7 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 				}
 				catch (SQLException e)
 				{
-					e.printStackTrace();
+					LogWrapper.getLogger().log(Level.INFO, null, e);
 				}
 			}
 		}
@@ -60,7 +60,7 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			LogWrapper.getLogger().log(Level.INFO, null, e);
 		}
 	}
 	
@@ -199,6 +199,19 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		public int getUpdateCount() throws SQLException
 		{
 			return statement.getUpdateCount();
+		}
+	}
+
+	public boolean isClosed()
+	{
+		try
+		{
+			return connection.isClosed();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, null, e);
+			return true;
 		}
 	}
 }

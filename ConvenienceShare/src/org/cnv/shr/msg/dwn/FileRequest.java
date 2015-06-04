@@ -8,7 +8,6 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.ServeInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -23,7 +22,7 @@ public class FileRequest extends DownloadMessage
 
 	public FileRequest(RemoteFile remoteFile, int chunkSize)
 	{
-		super(new SharedFileId(remoteFile));
+		super(remoteFile.getFileEntry());
 		this.chunkSize = chunkSize;
 	}
 	
@@ -51,7 +50,7 @@ public class FileRequest extends DownloadMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		LocalFile local = getDescriptor().getLocal();
+		LocalFile local = getLocal();
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Serve file");
 		ServeInstance serve = Services.server.serve(local, connection, chunkSize);
 		serve.sendChunks(chunks);

@@ -53,7 +53,7 @@ public class LocalDirectory extends RootDirectory
 		id = null;
 		description = "";
 		tags = "";
-		defaultShare = SharingState.DO_NOT_SHARE;
+		defaultShare = SharingState.valueOf(Services.settings.defaultPermission.get());
 	}
 	
 	public LocalDirectory(Integer id)

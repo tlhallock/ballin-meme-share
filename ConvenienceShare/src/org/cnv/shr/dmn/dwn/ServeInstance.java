@@ -131,7 +131,7 @@ public class ServeInstance
 		System.out.println(string);
 		try
 		{
-			connection.send(new DownloadFailure(string, new SharedFileId(local)));
+			connection.send(new DownloadFailure(string, local.getFileEntry()));
 		}
 		catch (IOException e)
 		{
@@ -146,7 +146,7 @@ public class ServeInstance
 		{
 			String checksum = stage(chunks);
 			LogWrapper.getLogger().info("Sending chunks.");
-			connection.send(new ChunkList(chunks, checksum, new SharedFileId(local)));
+			connection.send(new ChunkList(chunks, checksum, local.getFileEntry()));
 		}
 		catch (NoSuchAlgorithmException | IOException e)
 		{
@@ -162,7 +162,7 @@ public class ServeInstance
 			try
 			{
 				LogWrapper.getLogger().info("Sending chunk " + chunk);
-				connection.send(new ChunkResponse(new SharedFileId(local), chunk));
+				connection.send(new ChunkResponse(local.getFileEntry(), chunk));
 				// Right here I could check that the checksum matches...
 				ChunkData.write(chunk, tmpFile, connection.getOut());
 			}

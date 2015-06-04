@@ -99,6 +99,7 @@ public class TrackerEntry implements TrackObject
 		this.end = end;
 	}
 	
+	@Override
 	public String toString()
 	{
 		return TrackObjectUtils.toString(this);

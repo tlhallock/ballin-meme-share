@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.TimerTask;
 import java.util.logging.Level;
 
 import org.cnv.shr.util.LogWrapper;
@@ -23,6 +24,7 @@ class UpdateThread extends Thread
 					InputStream input = socket.getInputStream();
 					OutputStream output = socket.getOutputStream();)
 			{
+				ensureEventuallyClosed(socket);
 				LogWrapper.getLogger().info("Connected to " + socket.getInetAddress().getHostAddress());
 				
 				// Requires authentication
@@ -54,6 +56,28 @@ class UpdateThread extends Thread
 				LogWrapper.getLogger().log(Level.INFO, "Error while serving code:", ex);
 			}
 		}
+	}
+
+	private void ensureEventuallyClosed(Socket socket)
+	{
+		Updater.timer.schedule(new TimerTask()
+		{
+			@Override
+			public void run()
+			{
+				try
+				{
+					if (!socket.isClosed())
+					{
+						socket.close();
+					}
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Error while closing code:", e);
+				}
+			}
+		}, 10 * 60 * 1000);
 	}
 	
 	private void copy(OutputStream out) throws FileNotFoundException, IOException

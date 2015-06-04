@@ -7,6 +7,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.dwn.ChunkRequest;
+import org.cnv.shr.trck.FileEntry;
 
 public class Seeder
 {
@@ -23,7 +24,7 @@ public class Seeder
 		this.connection = openConnection;
 	}
 	
-	public ChunkRequest request(SharedFileId descriptor, Chunk removeFirst) throws IOException
+	public ChunkRequest request(FileEntry descriptor, Chunk removeFirst) throws IOException
 	{
 		ChunkRequest msg = new ChunkRequest(descriptor, removeFirst);
 		pending.put(System.currentTimeMillis(), msg);

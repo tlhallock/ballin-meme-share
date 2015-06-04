@@ -85,6 +85,7 @@ public class MessageReader
 		add(new MessageIdentifier(UpdateInfoMessage.class          ));
 		add(new MessageIdentifier(UpdateInfoRequest.class          ));
 		add(new MessageIdentifier(UpdateInfoRequestRequest.class   ));
+		add(new MessageIdentifier(ShowApplication.class            ));
 
 		LogWrapper.getLogger().info("Message map:\n" + this);
 	}
@@ -177,6 +178,7 @@ public class MessageReader
 				LogWrapper.getLogger().info("Received message of type " + name);
 				Message newInstance = constructor.newInstance(DUMMY_STREAM);
 				newInstance.parse(stream);
+				LogWrapper.getLogger().info("Read " + newInstance);
 				return newInstance;
 //			catch (Exception e)
 //			{

@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.dmn.mn.Main;
@@ -47,9 +48,10 @@ public class UpdateManager extends TimerTask
 	{
 		Services.userThreads.execute(new Runnable()
 		{
+			@Override
 			public void run()
 			{
-				checkForUpdates(true);
+				checkForUpdates(null, true);
 			}
 		});
 	}
@@ -75,7 +77,7 @@ public class UpdateManager extends TimerTask
 		this.port = port;
 	}
 
-	public synchronized void checkForUpdates(boolean authenticate)
+	public synchronized void checkForUpdates(JFrame origin, boolean authenticate)
 	{
 		if (pKey == null && authenticate)
 		{
@@ -125,7 +127,7 @@ public class UpdateManager extends TimerTask
 				return;
 			}
 
-			update(inputStream, writer, serverVersionString);
+			update(inputStream, writer, serverVersionString, origin);
 		}
 		catch (IOException e)
 		{
@@ -136,16 +138,16 @@ public class UpdateManager extends TimerTask
 			if (shouldUseDownloadedVersion(downloadFile, currentVersion, false))
 			{
 				LogWrapper.getLogger().info("Found previous code download.");
-				completeUpdate(currentJar, downloadFile);
+				completeUpdate(currentJar, downloadFile, origin);
 			}
 		}
 	}
 	
-	private boolean confirmUpgrade()
+	private boolean confirmUpgrade(JFrame origin)
 	{
 			UserInputWait wait = new UserInputWait();
 			waitForInput(wait);
-			boolean proceed = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
+			boolean proceed = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(origin,
 					"A new version of code has been found. Would you like to update now?",
 					"Update ConvenienceShare",
 					JOptionPane.YES_NO_OPTION);
@@ -176,7 +178,7 @@ public class UpdateManager extends TimerTask
 		return current.length > newer.length;
 	}
 
-	private void update(InputStream input, OutputByteWriter writer, String version)
+	private void update(InputStream input, OutputByteWriter writer, String version, JFrame origin)
 	{
 		Path currentJar = ProcessInfo.getJarFile(Main.class);
 		Path downloadFile = Paths.get(currentJar.toString() + ".new");
@@ -192,7 +194,7 @@ public class UpdateManager extends TimerTask
 				LogWrapper.getLogger().log(Level.INFO, "Server quit on us. No big thing.", e1);
 			}
 			LogWrapper.getLogger().info("Found previous code download.");
-			completeUpdate(currentJar, downloadFile);
+			completeUpdate(currentJar, downloadFile, origin);
 			return;
 		}
 		
@@ -225,12 +227,12 @@ public class UpdateManager extends TimerTask
 			LogWrapper.getLogger().log(Level.INFO, "Server quit on us. No big thing.", e1);
 		}
 		
-		completeUpdate(currentJar, downloadFile);
+		completeUpdate(currentJar, downloadFile, origin);
 	}
 
-	private void completeUpdate(Path currentJar, Path downloadFile)
+	private void completeUpdate(Path currentJar, Path downloadFile, JFrame origin)
 	{
-		if (!confirmUpgrade())
+		if (!confirmUpgrade(origin))
 		{
 			return;
 		}
@@ -258,14 +260,14 @@ public class UpdateManager extends TimerTask
 			return;
 		}
 
-		restart();
+		restart(origin);
 	}
 
-	private void restart()
+	private void restart(JFrame origin)
 	{
 		UserInputWait wait = new UserInputWait();
 		waitForInput(wait);
-		JOptionPane.showMessageDialog(null, 
+		JOptionPane.showMessageDialog(origin, 
 				"Code update is complete. ConvenienceShare will now restart.", 
 				"Code update.", 
 				JOptionPane.INFORMATION_MESSAGE);

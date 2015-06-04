@@ -1,6 +1,7 @@
 package org.cnv.shr.trck;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -12,6 +13,7 @@ public class FileEntry implements TrackObject
 	
 	public FileEntry(String checksum, long fileSize)
 	{
+		Objects.requireNonNull(checksum);
 		this.checksum = checksum;
 		this.fileSize = fileSize;
 	}
@@ -75,6 +77,7 @@ public class FileEntry implements TrackObject
 		this.fileSize = fileSize;
 	}
 	
+	@Override
 	public String toString()
 	{
 		return TrackObjectUtils.toString(this);
@@ -88,5 +91,22 @@ public class FileEntry implements TrackObject
 	public long getFileSize()
 	{
 		return fileSize;
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return (checksum + String.valueOf(fileSize)).hashCode();
+	};
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (!(o instanceof FileEntry))
+		{
+			return false;
+		}
+		FileEntry other = (FileEntry) o;
+		return other.getChecksum().equals(getChecksum()) && other.getFileSize() == fileSize;
 	}
 }

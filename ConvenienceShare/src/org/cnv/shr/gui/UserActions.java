@@ -206,7 +206,7 @@ public class UserActions
 		});
 	}
 
-	public static void addLocalImmediately(final Path localDirectory, final String name)
+	public static LocalDirectory addLocalImmediately(final Path localDirectory, final String name)
 	{
 		try
 		{
@@ -215,12 +215,21 @@ public class UserActions
 
 			LocalDirectory local = new LocalDirectory(pathElement, name);
 			local.tryToSave();
-			DbPaths.pathLiesIn(pathElement, local);
-			Services.notifications.localChanged(local);
+			if (local.getId() == null)
+			{
+				local = DbRoots.getLocalByName(local.getName());
+			}
+			if (local != null)
+			{
+				DbPaths.pathLiesIn(pathElement, local);
+				Services.notifications.localChanged(local);
+			}
+			return local;
 		}
 		catch (IOException e1)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get file path to share: " + localDirectory, e1);
+			return null;
 		}
 	}
 

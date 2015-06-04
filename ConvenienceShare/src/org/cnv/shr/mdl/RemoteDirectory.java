@@ -37,6 +37,8 @@ public class RemoteDirectory extends RootDirectory
 	public RemoteDirectory(final int int1)
 	{
 		super(int1);
+		// just for now...   
+		DbPaths.pathLiesIn(DbPaths.ROOT, this);
 	}
 
 	@Override
@@ -64,7 +66,12 @@ public class RemoteDirectory extends RootDirectory
 	
 	public String getLocalMirrorName()
 	{
-		return "mirror." + getMachine().getIdentifier() + ":" + getName();
+		String string = "mirror" + "." + PathSecurity.getFsName(getName()) + "." + getMachine().getIdentifier();
+		if (string.length() > MAX_DIRECTORY_NAME_LENGTH)
+		{
+			string = string.substring(0, MAX_DIRECTORY_NAME_LENGTH);
+		}
+		return string;
 	}
 
 	@Override

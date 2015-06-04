@@ -25,7 +25,7 @@ public class ExplorerSyncIterator extends SyncrhonizationTaskIterator
 //	private LinkedBlockingDeque<SynchronizationTask> tasks = new LinkedBlockingDeque<>();
 	private LinkedList<SynchronizationTask> tasks = new LinkedList<>();
 	
-	public ExplorerSyncIterator(final RootDirectory remoteDirectory) throws IOException
+	public ExplorerSyncIterator(final RootDirectory remoteDirectory)
 	{
 		root = remoteDirectory;
 	}

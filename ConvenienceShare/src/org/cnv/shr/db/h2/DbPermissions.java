@@ -70,11 +70,11 @@ public class DbPermissions
 	{
 		SharingState current = null;
 		SharingState other = machine.sharingWithOther();
-		if (current == null || (other != null && other.isMoreRestrictiveThan(current)))
+		if (current == null || other != null && other.isMoreRestrictiveThan(current))
 		{
 			current = other;
 		}
-		return current == null ? SharingState.DO_NOT_SHARE : current;
+		return current == null ? SharingState.valueOf(Services.settings.defaultPermission.get()) : current;
 	}
 
 	public static SharingState getCurrentPermissions(RemoteDirectory root)
@@ -87,21 +87,21 @@ public class DbPermissions
 	{
 		SharingState current = null;
 		SharingState other = machine.sharingWithOther();
-		if (current == null || (other != null && other.isMoreRestrictiveThan(current)))
+		if (current == null || other != null && other.isMoreRestrictiveThan(current))
 		{
 			current = other;
 		}
 		other = root.getDefaultSharingState();
-		if (current == null || (other != null && other.isMoreRestrictiveThan(current)))
+		if (current == null || other != null && other.isMoreRestrictiveThan(current))
 		{
 			current = other;
 		}
 		other = isSharing(machine, root);
-		if (current == null || (other != null && other.isMoreRestrictiveThan(current)))
+		if (current == null || other != null && other.isMoreRestrictiveThan(current))
 		{
 			current = other;
 		}
-		return current == null ? SharingState.DO_NOT_SHARE : current;
+		return current == null ? SharingState.valueOf(Services.settings.defaultPermission.get()) : current;
 	}
 	
 	

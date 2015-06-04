@@ -34,16 +34,18 @@ public class DbFiles
 		{
 			stmt.setLong(1, element.getId());
 			stmt.setInt(2, root.getId());
-			
-			ResultSet executeQuery = stmt.executeQuery();
-			if (!executeQuery.next())
+
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				return null;
+				if (!executeQuery.next())
+				{
+					return null;
+				}
+				DbObjects lfile = root.isLocal() ? DbTables.DbObjects.LFILE : DbTables.DbObjects.RFILE;
+				DbObject allocate = lfile.allocate(executeQuery);
+				allocate.fill(c, executeQuery, new DbLocals().setObject(element).setObject(root));
+				return (SharedFile) allocate;
 			}
-			DbObjects lfile = root.isLocal() ? DbTables.DbObjects.LFILE : DbTables.DbObjects.RFILE;
-			DbObject allocate = lfile.allocate(executeQuery);
-			allocate.fill(c, executeQuery, new DbLocals().setObject(element).setObject(root));
-			return (SharedFile) allocate;
 		}
 		catch (SQLException e)
 		{
@@ -57,7 +59,8 @@ public class DbFiles
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(UNCHECKED);)
 		{
-			ResultSet executeQuery = stmt.executeQuery();
+			try (ResultSet executeQuery = stmt.executeQuery();)
+			{
 			if (!executeQuery.next())
 			{
 				return null;
@@ -65,6 +68,7 @@ public class DbFiles
 			DbObject allocate = DbTables.DbObjects.LFILE.allocate(executeQuery);
 			allocate.fill(c, executeQuery, new DbLocals());
 			return (LocalFile) allocate;
+			}
 		}
 		catch (SQLException e)
 		{
@@ -97,26 +101,28 @@ public class DbFiles
 		return (LocalFile) getFile((RootDirectory) root, element);
 	}
 
-	public static SharedFile getFile(String checksum, long fileSize)
+	public static LocalFile getFile(String checksum, long fileSize)
 	{
-		return null;
+		return getFile(checksum);
 	}
 
 	public static SharedFile getFile(int int1)
 	{
 		// Delete from pending too...
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); 
 				StatementWrapper stmt = c.prepareStatement(SELECT2);)
 		{
 			stmt.setInt(1, int1);
-			ResultSet executeQuery = stmt.executeQuery();
-			if (!executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				return null;
+				if (!executeQuery.next())
+				{
+					return null;
+				}
+				DbObject allocated = DbTables.DbObjects.RFILE.allocate(executeQuery);
+				allocated.fill(c, executeQuery, new DbLocals());
+				return (SharedFile) allocated;
 			}
-			DbObject allocated = DbTables.DbObjects.RFILE.allocate(executeQuery);
-			allocated.fill(c, executeQuery, new DbLocals());
-			return (SharedFile) allocated;
 		}
 		catch (SQLException e)
 		{

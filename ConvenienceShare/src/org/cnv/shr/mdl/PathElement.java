@@ -200,6 +200,10 @@ public class PathElement extends DbObject<Long>
 	public static String sanitizeFilename(FileSource f)
 	{
 		String name = f.getName();
+		if (name.length() == 0)
+		{
+			return name;
+		}
 		if (f.isDirectory())
 		{
 			if (name.charAt(name.length() - 1) != '/')
@@ -219,5 +223,15 @@ public class PathElement extends DbObject<Long>
 	public boolean equals(PathElement other)
 	{
 		return id == other.id;
+	}
+
+	public PathElement getBrokenBegin()
+	{
+		PathElement c = this;
+		while (c.isBroken())
+		{
+			c = c.getParent();
+		}
+		return c;
 	}
 }

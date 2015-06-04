@@ -13,11 +13,11 @@ public class RequestHandler extends Thread
 	ServerSocket socket;
 	int port;
 	
-	public RequestHandler(int port) throws IOException
+	public RequestHandler(ServerSocket socket)
 	{
-		this.port = port;
+		this.port = socket.getLocalPort();
 		LogWrapper.getLogger().info("Starting on port " + port);
-		this.socket = new ServerSocket(port);
+		this.socket = socket;
 	}
 	
 	public void quit()

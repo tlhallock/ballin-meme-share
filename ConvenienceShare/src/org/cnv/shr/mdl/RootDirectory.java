@@ -25,6 +25,8 @@ import org.cnv.shr.util.Misc;
 
 public abstract class RootDirectory extends DbObject<Integer>
 {
+	public static final int MAX_DIRECTORY_NAME_LENGTH = 256;
+	
 	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into ROOT key(R_ID) VALUES ("
 			+ "(select R_ID from ROOT where MID=? and RNAME=?)"
 			+ ", ?, ?, ?, ?, ?, ?, ?, ?, ?);");
@@ -46,6 +48,10 @@ public abstract class RootDirectory extends DbObject<Integer>
 		super(null);
 		this.machine = machine2;
 		this.name = name;
+		if (this.name.length() > MAX_DIRECTORY_NAME_LENGTH)
+		{
+			this.name = name.substring(0, MAX_DIRECTORY_NAME_LENGTH);
+		}
 		this.tags = tags2;
 		this.description = description2;
 	}
@@ -71,6 +77,10 @@ public abstract class RootDirectory extends DbObject<Integer>
 	@Override
 	public boolean save(final ConnectionWrapper c) throws SQLException
 	{
+		if (this.name.length() > MAX_DIRECTORY_NAME_LENGTH)
+		{
+			this.name = name.substring(0, MAX_DIRECTORY_NAME_LENGTH);
+		}
 		try (StatementWrapper stmt = c.prepareStatement(MERGE1);)
 		{
 			int ndx = 1;
@@ -96,6 +106,12 @@ public abstract class RootDirectory extends DbObject<Integer>
 			}
 			return false;
 		}
+	}
+	
+	@Override
+	public String toString()
+	{
+		return machine.getName() + ":" + getPathElement().getFullPath();
 	}
 	
 	protected abstract SharingState getDbSharing();

@@ -8,12 +8,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -39,15 +45,18 @@ public class Misc
 	}
 	public static void ensureDirectory(File f, boolean file)
 	{
+		if (f == null)
+		{
+			f = new File(".");
+		}
 		if (file)
 		{
-			f = f.getParentFile();
-			if (f == null)
-			{
-				f = new File(".");
-			}
+			ensureDirectory(f.getParentFile(), false);
 		}
-		f.mkdirs();
+		else
+		{
+			f.mkdirs();
+		}
 	}
 	
 	public static String format(byte[] bytes)
@@ -226,10 +235,10 @@ public class Misc
 	}
 	public static void writeBytes(byte[] bytes, OutputStream output) throws IOException
 	{
-		output.write((byte) ((bytes.length >> 24) & 0xff));
-		output.write((byte) ((bytes.length >> 16) & 0xff));
-		output.write((byte) ((bytes.length >>  8) & 0xff));
-		output.write((byte) ((bytes.length >>  0) & 0xff));
+		output.write((byte) (bytes.length >> 24 & 0xff));
+		output.write((byte) (bytes.length >> 16 & 0xff));
+		output.write((byte) (bytes.length >>  8 & 0xff));
+		output.write((byte) (bytes.length >>  0 & 0xff));
 		output.write(bytes);
 	}
 	public static byte[] readBytes(InputStream input) throws IOException
@@ -338,6 +347,12 @@ public class Misc
 	
 	public static void nativeOpen(Path f)
 	{
+		if (f == null)
+		{
+			LogWrapper.getLogger().info("Cannot null path.");
+			return;
+		}
+
 		LinkedList<String> returnValue = new LinkedList<>();
 		switch (system)
 		{
@@ -428,6 +443,51 @@ public class Misc
 			LogWrapper.getLogger().log(Level.INFO, "Unable to debug", ex);
 		}
 	}
+	public static HashSet<String> collectIps()
+	{
+		HashSet<String> ips = new HashSet<>();
+		try
+		{
+			InetAddress localhost = InetAddress.getLocalHost();
+			ips.add(localhost.getHostAddress());
+			InetAddress[] allMyIps = InetAddress.getAllByName(localhost.getCanonicalHostName());
+			if (allMyIps != null && allMyIps.length > 1)
+			{
+				for (int i = 0; i < allMyIps.length; i++)
+				{
+					if (!allMyIps[i].getHostAddress().contains("%"))
+					{
+						ips.add(allMyIps[i].getHostAddress());
+					}
+				}
+			}
+		}
+		catch (UnknownHostException e)
+		{
+			LogWrapper.getLogger().info(" (error retrieving server host name)");
+		}
+	
+		try
+		{
+			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
+			{
+				NetworkInterface intf = en.nextElement();
+				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();)
+				{
+					String hostAddress = enumIpAddr.nextElement().getHostAddress();
+					if (!hostAddress.contains("%"))
+					{
+						ips.add(hostAddress);
+					}
+				}
+			}
+		}
+		catch (SocketException e)
+		{
+			LogWrapper.getLogger().info(" (error retrieving network interface list)");
+		}
+		return ips;
+	}
 	
 	
 	
@@ -472,4 +532,6 @@ public class Misc
 //			}
 //		}
 //	}
+	
+	public static final int MAX_PORT = 65535;
 }

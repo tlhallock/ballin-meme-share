@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -21,18 +22,21 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbChunks;
 import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.trk.TrackerClient;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
+import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
-import org.cnv.shr.util.FileOutsideOfRootException;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class DownloadInstance
 {
@@ -44,28 +48,46 @@ public class DownloadInstance
 	private HashMap<String, Seeder> seeders = new HashMap<>();
 	private RemoteFile remoteFile;
 	
-	// TODO: native IO
-	private Path tmpFile;
+	private Path destination;
 	
 	private HashMap<String, ChunkRequest> pending = new HashMap<>();
 	// These should be stored on file...
 	private Download download;
 	
-	DownloadInstance(Download d)
+	DownloadInstance(Download d) throws IOException
 	{
 		this.download = d;
-		d.setState(DownloadState.NOT_STARTED);
 		remoteFile = d.getFile();
+		Objects.requireNonNull(remoteFile.getChecksum(), "The remote file should already have a checksum.");
+		setDestinationFile();
+		allocate();
+		recover();
 	}
-	
-	public synchronized void begin() throws UnknownHostException, IOException
+
+	public synchronized void continueDownload() throws UnknownHostException, IOException
 	{
-		if (!download.getState().equals(DownloadState.NOT_STARTED))
+		DownloadState state = download.getState();
+		if (state.hasYetTo(DownloadState.GETTING_META_DATA))
 		{
+			getMetaData();
 			return;
 		}
-		setDestinationFile();
+		
+		queue();
+		requestSeeders();
+	}
+
+	private void getMetaData() throws UnknownHostException, IOException
+	{
 		download.setState(DownloadState.GETTING_META_DATA);
+		
+		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
+		{
+			download.setState(DownloadState.DOWNLOADING);
+			continueDownload();
+			return;
+		}
+		
 		FileRequest request = new FileRequest(remoteFile, CHUNK_SIZE);
 		Machine machine = remoteFile.getRootDirectory().getMachine();
 		Communication openConnection = Services.networkManager.openConnection(machine, false);
@@ -79,19 +101,26 @@ public class DownloadInstance
 		seeder.send(request);
 	}
 
+	private void requestSeeders()
+	{
+//		download.setState(DownloadState.FINDING_PEERS);
+		Services.userThreads.execute(new Runnable() {
+			@Override
+			public void run()
+			{
+				FileEntry fileEntry = remoteFile.getFileEntry();
+				for (TrackerClient client : Services.trackers.getClients())
+				{
+					client.requestSeeders(fileEntry, seeders.values());
+				}
+			}
+		});
+	}
+
 	public void addSeeder(Machine machine, Communication connection)
 	{
 		seeders.put(connection.getUrl(), new Seeder(machine, connection));
 		queue();
-	}
-
-	private void requestSeeders()
-	{
-		download.setState(DownloadState.FINDING_PEERS);
-		for (TrackerClient client : Services.trackers.getClients())
-		{
-			client.requestSeeders(remoteFile, seeders.values());
-		}
 	}
 
 	public void foundChunks(Machine machine, List<Chunk> chunks) throws IOException
@@ -100,29 +129,39 @@ public class DownloadInstance
 		{
 			return;
 		}
-		if (remoteFile.getChecksum() == null)
+		
+		for (Chunk chunk : chunks)
 		{
-			throw new RuntimeException("The remote file should already have a checksum.");
+			DbChunks.addChunk(download, chunk);
 		}
 		
-		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
+		if (!DbChunks.hasAllChunks(download, CHUNK_SIZE))
 		{
-			requestSeeders();
-			allocate();
-			recover();
-			queue();
+			return;
 		}
+		download.setState(DownloadState.DOWNLOADING);
+		Services.userThreads.execute(new Runnable() { @Override public void run() {
+				try
+				{
+					continueDownload();
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to continue download.", e);
+				}
+			}});
 	}
 	
 	private void recover()
 	{
+		DownloadState prev = download.getState();
 		download.setState(DownloadState.RECOVERING);
 		try (DbIterator<DbChunks.DbChunk> iterator = DbChunks.getAllChunks(download))
 		{
 			while (iterator.hasNext())
 			{
 				DbChunk next = iterator.next();
-				if (ChunkData.test(next.chunk, tmpFile))
+				if (ChunkData.test(next.chunk, destination))
 				{
 					if (!next.done)
 					{
@@ -148,34 +187,19 @@ public class DownloadInstance
 		{
 			e1.printStackTrace();
 		}
+		download.setState(prev);
 	}
 	
 	private void allocate() throws IOException
 	{
-		download.setState(DownloadState.ALLOCATING);
-		Path file = PathSecurity.getMirrorDirectory(remoteFile);
-		
-		// ensure that we are sharing this mirror...
-		// This should use a better name...
-		UserActions.addLocalImmediately(file, remoteFile.getRootDirectory().getLocalMirrorName());
-		
-		String str = remoteFile.getPath().getFsPath();
-		tmpFile = PathSecurity.secureMakeDirs(file, Paths.get(str));
-		if (tmpFile == null)
-		{
-			throw new FileOutsideOfRootException(file, str);
-		}
-		LogWrapper.getLogger().info("Downloading \"" + 
-				remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" +
-				tmpFile + "\"");
-
-		if (Files.size(tmpFile) > 0)
+		if (!download.getState().hasYetTo(DownloadState.ALLOCATING) && Files.size(destination) > 0)
 		{
 			return;
 		}
+		download.setState(DownloadState.ALLOCATING);
 		
 		// Should checkout random access file.setLength()
-		try (OutputStream outputStream = Files.newOutputStream(tmpFile);)
+		try (OutputStream outputStream = Files.newOutputStream(destination);)
 		{
 			for (long i = 0; i < remoteFile.getFileSize(); i++)
 			{
@@ -207,7 +231,7 @@ public class DownloadInstance
 				Seeder seeder = getRandomSeeder();
 				try
 				{
-					pending.put(c.getChecksum(), seeder.request(new SharedFileId(remoteFile), c));
+					pending.put(c.getChecksum(), seeder.request(remoteFile.getFileEntry(), c));
 				}
 				catch (IOException e)
 				{
@@ -241,10 +265,10 @@ public class DownloadInstance
 			return;
 		}
 		// TODO: java nio
-		ChunkData.read(chunkRequest.getChunk(), tmpFile.toFile(), communication.getIn());
+		ChunkData.read(chunkRequest.getChunk(), destination.toFile(), communication.getIn());
 		pending.remove(chunk.getChecksum());
 		DbChunks.chunkDone(download, chunk, true);
-		communication.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
+		communication.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage()));
 		queue();
 	}
 	
@@ -270,7 +294,7 @@ public class DownloadInstance
 		
 		try
 		{
-			Files.move(tmpFile, download.getTargetFile(), StandardCopyOption.REPLACE_EXISTING);
+			Files.move(destination, download.getTargetFile(), StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch (IOException e)
 		{
@@ -285,22 +309,30 @@ public class DownloadInstance
 
 	public void setDestinationFile()
 	{
-		Path destinationFile;
 		File localRootF = remoteFile.getRootDirectory().getLocalRoot();
 		Path localRoot = Paths.get(localRootF.getAbsolutePath());
-		String str = remoteFile.getPath().getFsPath();
-		Path ext = Paths.get(str);
-		int index = 0;
-		do
+		destination = Paths.get(localRoot.toString(), remoteFile.getPath().getFullPath());
+		destination = PathSecurity.secureMakeDirs(localRoot, destination);
+		if (destination == null)
 		{
-			destinationFile = PathSecurity.secureMakeDirs(localRoot, ext);
-			if (destinationFile == null)
+			fail("Unable to get destination file " + destination);
+		}
+		download.setDestination(destination);
+
+		Path file = PathSecurity.getMirrorDirectory(remoteFile);
+		
+		String localMirrorName = remoteFile.getRootDirectory().getLocalMirrorName();
+		LocalDirectory local = DbRoots.getLocalByName(localMirrorName);
+		if (local == null)
+		{
+			local = UserActions.addLocalImmediately(file, localMirrorName);
+			if (local == null)
 			{
-				fail("Unable to copy to destination...");
+				fail("Unable to create local mirror");
 			}
-			ext = Paths.get(str + "." + index++);
-		} while (Files.exists(destinationFile));
-		download.setDestination(destinationFile);
+		}
+		Misc.ensureDirectory(file, true);
+		LogWrapper.getLogger().info("Downloading \"" + remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" + destination + "\"");
 	}
 
 	public Path getDestinationFile()
@@ -325,7 +357,7 @@ public class DownloadInstance
 	
 	private boolean checkChecksum() throws IOException
 	{
-		String checksumBlocking = Services.checksums.checksumBlocking(tmpFile);
+		String checksumBlocking = Services.checksums.checksumBlocking(destination, Level.INFO);
 		return checksumBlocking.equals(remoteFile.getChecksum());
 	}
 
@@ -348,7 +380,7 @@ public class DownloadInstance
 		{
 			try
 			{
-				seeder.send(new CompletionStatus(new SharedFileId(remoteFile), getCompletionPercentage()));
+				seeder.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage()));
 			}
 			catch (IOException e)
 			{

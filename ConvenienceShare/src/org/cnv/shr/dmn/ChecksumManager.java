@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbFiles;
-import org.cnv.shr.dmn.Notifications.NotificationListener;
+import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.SharedFile;
@@ -30,11 +30,11 @@ public class ChecksumManager extends Thread
 	
 	// Need to add a notifications listener...
 	
-	NotificationListener listener;
+	NotificationListenerAdapter listener;
 	
 	public ChecksumManager()
 	{
-		Services.notifications.add(listener = new Notifications.NotificationListener()
+		Services.notifications.add(listener = new NotificationListenerAdapter()
 		{
 			@Override
 			public void localsChanged()
@@ -114,7 +114,7 @@ public class ChecksumManager extends Thread
 		String checksum = null;
 		try
 		{
-			checksum = checksumBlocking(sf.getFsFile());
+			checksum = checksumBlocking(sf.getFsFile(), Level.INFO);
 			if (checksum != null)
 			{
 				sf.setChecksum(checksum);
@@ -142,10 +142,10 @@ public class ChecksumManager extends Thread
 		}
 	}
 
-	public String checksumBlocking(Path f) throws IOException
+	public String checksumBlocking(Path f, Level level) throws IOException
 	{
-		LogWrapper.getLogger().fine("Checksumming " + f);
-		
+		LogWrapper.getLogger().log(level, "Checksumming " + f);
+
 		MessageDigest digest = null;
 		try
 		{
@@ -170,7 +170,7 @@ public class ChecksumManager extends Thread
 			}
 
 			String digestToString = digestToString(digest);
-			LogWrapper.getLogger().fine("Done checksumming " + f + ": " + digestToString);
+			LogWrapper.getLogger().log(level, "Done checksumming " + f + ": " + digestToString);
 			return digestToString;
 		}
 	}

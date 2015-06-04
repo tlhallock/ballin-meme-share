@@ -76,7 +76,14 @@ public class PathTreeModelNode implements TaskListener
 	@Override
 	public String toString()
 	{
-		return element.getUnbrokenName();
+		if (element.getId() == 0)
+		{
+			return model.rootDirectory.getName();
+		}
+		else
+		{
+			return element.getUnbrokenName();
+		}
 	}
 	
 	@Override
@@ -138,7 +145,7 @@ public class PathTreeModelNode implements TaskListener
 		// Should clean this one up...
 		for (final PathElement e : list)
 		{
-			if (e.getFullPath().equals("/"))
+			if (e.getId() == 0)
 			{
 				list.remove(e);
 				break;
@@ -170,7 +177,7 @@ public class PathTreeModelNode implements TaskListener
 			allChildren.add(node);
 			try
 			{
-				model.iterator.queueSyncTask(p.getSource(), pathElement, node);
+					model.iterator.queueSyncTask(p.getSource(), pathElement, node);
 			}
 			catch (final IOException e)
 			{

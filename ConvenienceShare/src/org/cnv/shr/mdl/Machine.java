@@ -33,12 +33,11 @@ public class Machine extends DbObject<Integer>
 	private SharingState weShareToThem;
 	private SharingState sharesWithUs;
 	
-	
 	public Machine(String identifier)
 	{
 		super(null);
 		this.identifier = identifier;
-		weShareToThem = SharingState.DO_NOT_SHARE;
+		weShareToThem = SharingState.valueOf(Services.settings.defaultPermission.get());
 	}
 	
 	protected Machine() { super(null); }
@@ -54,14 +53,14 @@ public class Machine extends DbObject<Integer>
 			id             = row.getInt    ("M_ID");        
 			name           = row.getString ("MNAME");        
 			ip             = row.getString ("IP");    
-			port		   = row.getInt    ("PORT");
+			port		       = row.getInt    ("PORT");
 			nports         = row.getInt    ("NPORTS");
-		    lastActive     = row.getLong   ("LAST_ACTIVE");
-		    weShareToThem        = SharingState.get(row.getInt("SHARING"));
-		    sharesWithUs   = SharingState.get(row.getInt("SHARES_WITH_US"));
-		    identifier     = row.getString ("IDENT");
-		    allowsMessages = row.getBoolean("MESSAGES");
-		    acceptPeers    = row.getBoolean("ACCEPT_PEERS");
+		  lastActive     = row.getLong   ("LAST_ACTIVE");
+		  weShareToThem  = SharingState.get(row.getInt("SHARING"));
+		  sharesWithUs   = SharingState.get(row.getInt("SHARES_WITH_US"));
+		  identifier     = row.getString ("IDENT");
+		  allowsMessages = row.getBoolean("MESSAGES");
+		  acceptPeers    = row.getBoolean("ACCEPT_PEERS");
 	}
 
 	@Override

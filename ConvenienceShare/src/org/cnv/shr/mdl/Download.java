@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
+import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
@@ -29,7 +30,7 @@ public class Download extends DbObject<Integer>
 	
 	public Download(RemoteFile remote)
 	{
-		super(null);
+		super(DbDownloads.getPendingDownloadId(remote));
 		this.file = remote;
 		this.currentState = DownloadState.QUEUED;
 		this.added = System.currentTimeMillis();
@@ -60,6 +61,8 @@ public class Download extends DbObject<Integer>
 	public void setState(DownloadState state)
 	{
 		this.currentState = state;
+		LogWrapper.getLogger().info("Setting download state for " + this + " to " + state.name());
+		
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(UPDATE1);)
 		{
@@ -119,6 +122,12 @@ public class Download extends DbObject<Integer>
 			return false;
 		}
 	}
+	
+	@Override
+	public String toString()
+	{
+		return "Download of " + file;
+	}
 
 	public DownloadState getState()
 	{
@@ -141,11 +150,11 @@ public class Download extends DbObject<Integer>
 	public enum DownloadState
 	{
 		QUEUED              (1),
-		NOT_STARTED         (2),
-		GETTING_META_DATA   (3),
-		FINDING_PEERS       (4),
-		RECOVERING          (5),
-		ALLOCATING          (6),
+//		NOT_STARTED         (2),
+		ALLOCATING          (3),
+		RECOVERING          (4),
+		GETTING_META_DATA   (5),
+//		FINDING_PEERS       (6),
 		DOWNLOADING         (7),
 		PLACING_IN_FS       (8),
 		ALL_DONE            (9),
@@ -180,6 +189,15 @@ public class Download extends DbObject<Integer>
 		public String humanReadable()
 		{
 			return name();
+		}
+		
+		public boolean comesAfter(DownloadState other)
+		{
+			return dbValue > other.dbValue;
+		}
+		public boolean hasYetTo(DownloadState other)
+		{
+			return !comesAfter(other);
 		}
 	}
 	

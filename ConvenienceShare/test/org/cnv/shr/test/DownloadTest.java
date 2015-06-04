@@ -11,9 +11,9 @@ import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.Notifications.NotificationListener;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
+import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.gui.AddMachine;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
@@ -58,7 +58,7 @@ public class DownloadTest extends RemotesTest
 			PathElement pathElement = DbPaths.getPathElement(DbPaths.ROOT, relativize.toString());
 			SharedFile file = DbFiles.getFile(DbRoots.getRoot(machine, rootName), pathElement);
 
-			class MyNotificationListener extends NotificationListener
+			class MyNotificationListener extends NotificationListenerAdapter
 			{
 				boolean done;
 				boolean fail;

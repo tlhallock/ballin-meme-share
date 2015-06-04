@@ -9,7 +9,6 @@ import javax.swing.JTable;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.gui.DiskUsage;
 import org.cnv.shr.mdl.Download;
@@ -17,6 +16,7 @@ import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class DownloadTable extends DbJTable<Download>
@@ -33,7 +33,14 @@ public class DownloadTable extends DbJTable<Download>
 			@Override
 			void perform(Download download)
 			{
-				if (!download.getState().equals(DownloadState.ALL_DONE))
+				DownloadState state = download.getState();
+				if (state == null)
+				{
+					// why would this happen?
+					LogWrapper.getLogger().warning("The download has no state.");
+					return;
+				}
+				if (!state.equals(DownloadState.ALL_DONE))
 				{
 
 					JOptionPane.showMessageDialog(app, 
@@ -57,7 +64,7 @@ public class DownloadTable extends DbJTable<Download>
 			void perform(Download download)
 			{
 				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(
-						new SharedFileId(download.getFile()));
+						download.getFile().getFileEntry());
 				if (dInstance != null)
 				{
 					dInstance.fail("User quit.");
@@ -85,7 +92,7 @@ public class DownloadTable extends DbJTable<Download>
 		SharedFile file = download.getFile();
 		RootDirectory directory = file.getRootDirectory();
 		Machine machine = directory.getMachine();
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(new SharedFileId(file));
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(file.getFileEntry());
 		
 		currentRow.put("Machine",           machine.getName()                                                                                                                                             );
 		currentRow.put("Directory",         directory.getName()                                                                                                                                           );
@@ -97,7 +104,7 @@ public class DownloadTable extends DbJTable<Download>
 		currentRow.put("Local path",        download.getTargetFile().toString()                                                                                                                           );
 		currentRow.put("Number of Mirrors", "1"                                                                                                                                                           );
 		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()                                                                                                );
-		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100%" : (downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage())));
+		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100%" : downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage()));
 		currentRow.put("Id",                String.valueOf(download.getId())                                                                                                                              );
 	}
 

@@ -3,6 +3,10 @@ package org.cnv.shr.mdl;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.DbLocals;
+import org.cnv.shr.db.h2.DbTables;
+
 
 public class RemoteFile extends SharedFile
 {
@@ -40,5 +44,11 @@ public class RemoteFile extends SharedFile
 	public RemoteDirectory getRootDirectory()
 	{
 		return (RemoteDirectory) super.getRootDirectory();
+	}
+
+	@Override
+	protected RemoteDirectory fillRoot(ConnectionWrapper c, DbLocals locals, int rootId)
+	{
+		return (RemoteDirectory) locals.getObject(c, DbTables.DbObjects.RROOT, rootId);
 	}
 }
