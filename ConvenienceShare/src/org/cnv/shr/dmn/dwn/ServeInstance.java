@@ -1,15 +1,14 @@
 package org.cnv.shr.dmn.dwn;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
@@ -21,24 +20,22 @@ import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.dwn.ChunkList;
 import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.DownloadFailure;
+import org.cnv.shr.msg.dwn.RequestCompletionStatus;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
 
-public class ServeInstance
+public class ServeInstance extends TimerTask
 {
 	private LocalFile local;
-	Path tmpFile;
-	int chunkSize;
-	Communication connection;
+	private Communication connection;
 	
 	private double lastCompletionPercentage;
 	
-	ServeInstance(Communication communication, LocalFile local, int chunkSize)
+	ServeInstance(Communication communication, LocalFile local)
 	{
 		this.local = local;
 		this.connection = communication;
-		this.chunkSize = chunkSize;
 	}
 
 	public Machine getMachine()
@@ -51,25 +48,12 @@ public class ServeInstance
 		return local;
 	}
 	
-	private String stage(List<Chunk> chunks) throws FileNotFoundException, IOException, NoSuchAlgorithmException
+	private void serverChunks(int chunkSize) throws IOException, NoSuchAlgorithmException
 	{
 		local.ensureChecksummed();
 		
-		if (tmpFile != null)
-		{
-			for (Chunk c : chunks)
-			{
-				c.setChecksum(ChunkData.getChecksum(c, tmpFile));
-			}
-			
-			return local.getChecksum();
-		}
-		
+		List<Chunk> chunks = new ArrayList<>(50);
 
-		LogWrapper.getLogger().info("Staging.");
-		tmpFile = PathSecurity.secureMakeDirs(Services.settings.servingDirectory.getPath(),
-					Paths.get(PathSecurity.getFsName(local.getRootDirectory().getName())
-					, local.getPath().getFsPath()));
 		Path toShare = local.getFsFile();
 		if (!local.getRootDirectory().contains(toShare))
 		{
@@ -81,9 +65,8 @@ public class ServeInstance
 		
 		byte[] buffer = new byte[1024];
 		long offsetInFile = 0;
-		
-		try (   InputStream inputStream = Files.newInputStream(toShare);
-				OutputStream outputStream = Files.newOutputStream(tmpFile);)
+
+		try (InputStream inputStream = Files.newInputStream(toShare);)
 		{
 			boolean atEndOfFile = false;
 			while (!atEndOfFile)
@@ -110,25 +93,25 @@ public class ServeInstance
 					offsetInFile += nread;
 					digest.update(buffer, 0, nread);
 					totalDigest.update(buffer, 0, nread);
-					outputStream.write(buffer, 0, nread);
 				}
 
 				Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest));
 				chunks.add(chunk);
-//				Chunk oldChunk = chunks.add(chunk.toString(), chunk);
-//				if (oldChunk != null)
-//				{
-//					fail("Duplicate chunk checksum");
-//				}
+				
+				if (chunks.size() > 50)
+				{
+					connection.send(new ChunkList(chunks, local.getFileEntry()));
+					chunks = new ArrayList<>(50);
+				}
 			}
 		}
 
-		return ChecksumManager.digestToString(totalDigest);
+		connection.send(new ChunkList(chunks, local.getFileEntry()));
 	}
 
 	private void fail(String string)
 	{
-		System.out.println(string);
+		LogWrapper.getLogger().info("Quiting download: " + string);
 		try
 		{
 			connection.send(new DownloadFailure(string, local.getFileEntry()));
@@ -140,17 +123,22 @@ public class ServeInstance
 		connection.finish();
 	}
 
-	public void sendChunks(List<Chunk> chunks)
+	public void sendChunks(int chunkSize)
 	{
 		try
 		{
-			String checksum = stage(chunks);
-			LogWrapper.getLogger().info("Sending chunks.");
-			connection.send(new ChunkList(chunks, checksum, local.getFileEntry()));
+			LogWrapper.getLogger().info("Sending chunks of size " + chunkSize);
+			serverChunks(chunkSize);
 		}
-		catch (NoSuchAlgorithmException | IOException e)
+		catch (NoSuchAlgorithmException e)
 		{
-			// send failure
+			fail(e.getMessage());
+			LogWrapper.getLogger().log(Level.SEVERE, "Algorithm not supported", e);
+			Services.quiter.quit();
+		}
+		catch (IOException e)
+		{
+			fail(e.getMessage());
 			LogWrapper.getLogger().log(Level.INFO, "Unable to send chunks", e);
 		}
 	}
@@ -164,7 +152,7 @@ public class ServeInstance
 				LogWrapper.getLogger().info("Sending chunk " + chunk);
 				connection.send(new ChunkResponse(local.getFileEntry(), chunk));
 				// Right here I could check that the checksum matches...
-				ChunkData.write(chunk, tmpFile, connection.getOut());
+				ChunkData.write(chunk, local.getFsFile(), connection.getOut());
 			}
 			catch (IOException e)
 			{
@@ -176,14 +164,6 @@ public class ServeInstance
 	
 	public void quit()
 	{
-		try
-		{
-			Files.delete(tmpFile);
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to delete staged file.", e);
-		}
 		connection.finish();
 	}
 
@@ -201,10 +181,25 @@ public class ServeInstance
 	{
 		return c.equals(connection);
 	}
-	
-	enum ServeState
+
+	@Override
+	public void run()
 	{
-		STAGING,
-		SERVING,
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				try
+				{
+					connection.send(new RequestCompletionStatus(local.getFileEntry()));
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Could not request status.", e);
+					fail("Unable to request status.");
+				}
+			}
+		});
 	}
 }

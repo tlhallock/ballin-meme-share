@@ -17,7 +17,7 @@ public class ServeManager
 		return serves.get(communication.getUrl());
 	}
 
-	public synchronized ServeInstance serve(LocalFile file, Communication c, int chunkSize)
+	public synchronized ServeInstance serve(LocalFile file, Communication c)
 	{
 		for (ServeInstance instance : serves.values())
 		{
@@ -26,7 +26,7 @@ public class ServeManager
 				return instance;
 			}
 		}
-		ServeInstance instance = new ServeInstance(c, file, chunkSize);
+		ServeInstance instance = new ServeInstance(c, file);
 		serves.put(c.getUrl(), instance);
 		Services.notifications.serveAdded(instance);
 		return instance;

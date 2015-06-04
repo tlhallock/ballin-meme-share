@@ -19,8 +19,10 @@ public class DbChunks
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK where DID=?;");
 	private static final QueryWrapper SELECT4 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, END_OFFSET-BEGIN_OFFSET from CHUNK where DID=? and IS_DOWNLOADED=true;");
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
-	private static final QueryWrapper SELECT3 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=? and IS_DOWNLOADED=false;");
-	private static final QueryWrapper SELECT2 = new QueryWrapper("select count(C_ID) from CHUNK where DID=?;");
+	private static final QueryWrapper SELECT3 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=? and IS_DOWNLOADED=false limit ?;");
+//	private static final QueryWrapper SELECT2 = new QueryWrapper("select count(C_ID) from CHUNK where DID=?;");
+	private static final QueryWrapper SELECT5 = new QueryWrapper("select count(C_ID) from CHUNK where DID=? and END_OFFSET=? and BEGIN_OFFSET=?;");
+//	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=?;");
 
 	public static final class DbChunk extends DbObject<Integer>
@@ -59,6 +61,7 @@ public class DbChunks
 
 	public static void addChunk(Download d, Chunk c)
 	{
+		throw new RuntimeException("Implement me!");
 //		@Override
 //		public boolean save(Connection c) throws SQLException
 //		{
@@ -93,28 +96,32 @@ public class DbChunks
 
 	public static boolean hasAllChunks(Download d, long chunkSize)
 	{
-		int count = 0;
-		for (long l = 0; l < d.getFile().getFileSize(); l += chunkSize)
-		{
-			count++;
-		}
-
+		// should check for each chunk, in reverse order...
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(SELECT2))
+				StatementWrapper stmt = c.prepareStatement(SELECT5))
 		{
-			stmt.setInt(1, d.getId());
-			ResultSet results = stmt.executeQuery();
-			if (!results.next())
+			long fileSize = d.getFile().getFileSize();
+			long end = fileSize - (fileSize % chunkSize);
+			while (end > 0)
 			{
-				return false;
+				stmt.setInt(1, d.getId());
+				stmt.setLong(2, end);
+				stmt.setLong(3, end - chunkSize);
+				try (ResultSet results = stmt.executeQuery();)
+				{
+					if (!results.next() || results.getInt(1) <= 0)
+					{
+						return false;
+					}
+				}
 			}
-			return results.getInt(1) == count;
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to see if we have all chunks for " + d, e);
+			return false;
 		}
-		return false;
+		return true;
 	}
 
 	public static List<Chunk> getNextChunks(Download d, int max)
@@ -123,14 +130,17 @@ public class DbChunks
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(SELECT3))
 		{
-			stmt.setInt(1, d.getId()); // ths file
-			ResultSet results = stmt.executeQuery();
-			while (results.next() && returnValue.size() < max)
+			stmt.setInt(1, d.getId()); // this file
+			stmt.setInt(2, max);
+			try (ResultSet results = stmt.executeQuery();)
 			{
-				long end = results.getLong(1);
-				long begin = results.getLong(2);
-				String checksum = results.getString(3);
-				returnValue.add(new Chunk(begin, end, checksum));
+				while (results.next() && returnValue.size() < max)
+				{
+					long end = results.getLong(1);
+					long begin = results.getLong(2);
+					String checksum = results.getString(3);
+					returnValue.add(new Chunk(begin, end, checksum));
+				}
 			}
 		}
 		catch (SQLException e)
@@ -182,12 +192,14 @@ public class DbChunks
 		{
 			int ndx = 1;
 			// the query
-			stmt.setInt(ndx++, d.getId()); // ths file
-			
-			ResultSet results = stmt.executeQuery();
-			while (results.next())
+			stmt.setInt(ndx++, d.getId()); // this file
+
+			try (ResultSet results = stmt.executeQuery();)
 			{
-				done += results.getLong(1) - results.getLong(2);
+				while (results.next())
+				{
+					done += results.getLong(1) - results.getLong(2);
+				}
 			}
 		}
 		catch (SQLException e)

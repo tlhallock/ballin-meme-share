@@ -27,5 +27,5 @@ public abstract class Quiter
 		}
 	}
 	
-	public abstract void doFinal();
+	protected abstract void doFinal();
 }

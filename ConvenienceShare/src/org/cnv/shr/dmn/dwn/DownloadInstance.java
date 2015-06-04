@@ -134,12 +134,7 @@ public class DownloadInstance
 		{
 			DbChunks.addChunk(download, chunk);
 		}
-		
-		if (!DbChunks.hasAllChunks(download, CHUNK_SIZE))
-		{
-			return;
-		}
-		download.setState(DownloadState.DOWNLOADING);
+
 		Services.userThreads.execute(new Runnable() { @Override public void run() {
 				try
 				{
@@ -150,6 +145,11 @@ public class DownloadInstance
 					LogWrapper.getLogger().log(Level.INFO, "Unable to continue download.", e);
 				}
 			}});
+		
+		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
+		{
+			download.setState(DownloadState.DOWNLOADING);
+		}
 	}
 	
 	private void recover()

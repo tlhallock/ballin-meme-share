@@ -2,11 +2,9 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedList;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
@@ -16,7 +14,6 @@ import org.cnv.shr.util.ByteReader;
 public class FileRequest extends DownloadMessage
 {
 	private int chunkSize;
-	private LinkedList<Chunk> chunks = new LinkedList<>();
 
 	public static int TYPE = 13;
 
@@ -52,8 +49,8 @@ public class FileRequest extends DownloadMessage
 	{
 		LocalFile local = getLocal();
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Serve file");
-		ServeInstance serve = Services.server.serve(local, connection, chunkSize);
-		serve.sendChunks(chunks);
+		ServeInstance serve = Services.server.serve(local, connection);
+		serve.sendChunks(chunkSize);
 	}
 
 	@Override

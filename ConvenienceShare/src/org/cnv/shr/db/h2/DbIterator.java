@@ -116,5 +116,13 @@ public class DbIterator<T extends DbObject> implements org.cnv.shr.gui.tbl.DbJTa
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to close query.", e);
 		}
+		try
+		{
+			results.close();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close results.", e);
+		}
 	}
 }

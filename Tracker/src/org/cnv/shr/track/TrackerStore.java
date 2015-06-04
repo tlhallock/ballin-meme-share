@@ -1,5 +1,6 @@
 package org.cnv.shr.track;
 
+import java.io.Closeable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -18,7 +19,7 @@ import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
-public class TrackerStore
+public class TrackerStore implements Closeable
 {
 	private Connection c;
 

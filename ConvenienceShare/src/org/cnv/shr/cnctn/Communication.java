@@ -10,11 +10,13 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.TimerTask;
 import java.util.logging.Level;
 
 import javax.crypto.NoSuchPaddingException;
 
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
@@ -201,6 +203,22 @@ public class Communication implements Closeable
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to close output.", e);
 		}
+		Services.timer.schedule(new TimerTask() {
+			@Override
+			public void run()
+			{
+				if (socket.isClosed())
+					return;
+				try
+				{
+					socket.close();
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to close after expired.", e);
+				}
+			}
+		}, 1 * 60 * 1000);
 	}
 	
 	public void setDone()

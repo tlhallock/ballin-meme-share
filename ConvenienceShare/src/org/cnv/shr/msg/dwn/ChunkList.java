@@ -24,7 +24,7 @@ public class ChunkList extends DownloadMessage
 		super(input);
 	}
 	
-	public ChunkList(List<Chunk> chunks2, String checksum, FileEntry descriptor)
+	public ChunkList(List<Chunk> chunks2, FileEntry descriptor)
 	{
 		super(descriptor);
 		chunks = chunks2;
