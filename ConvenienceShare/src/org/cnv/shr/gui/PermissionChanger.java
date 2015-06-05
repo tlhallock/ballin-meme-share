@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 
-import org.cnv.shr.db.h2.DbPermissions.SharingState;
+import org.cnv.shr.db.h2.SharingState;
 
 
 public abstract class PermissionChanger extends DefaultComboBoxModel<String> implements ActionListener

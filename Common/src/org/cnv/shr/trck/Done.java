@@ -27,4 +27,24 @@ public class Done implements TrackObject
 		generator.writeStartObject();
 		generator.writeEnd();
 	}
+
+	
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			}                                      
+		}                                        
+	}                                          
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

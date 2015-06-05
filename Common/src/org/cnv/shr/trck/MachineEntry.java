@@ -145,4 +145,62 @@ public class MachineEntry implements TrackObject
 	{
 		this.ip = realAddress;
 	}
+
+	
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("ident", ident);
+		generator.write("keyStr", keyStr);
+		generator.write("name", name);
+		generator.write("ip", ip);
+		generator.write("beginPort", beginPort);
+		generator.write("endPort", endPort);
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "ident":
+				ident = parser.getString();
+				break;
+			case "keyStr":
+				keyStr = parser.getString();
+				break;
+			case "name":
+				name = parser.getString();
+				break;
+			case "ip":
+				ip = parser.getString();
+				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "beginPort":
+				beginPort = new BigDecimal(parser.getString()).intValue();
+				break;
+			case "endPort":
+				endPort = new BigDecimal(parser.getString()).intValue();
+				break;
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbPermissions.SharingState;
+import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.PathSecurity;
 import org.cnv.shr.sync.ConsecutiveDirectorySyncIterator;

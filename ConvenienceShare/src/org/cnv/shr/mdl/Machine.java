@@ -10,7 +10,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
-import org.cnv.shr.db.h2.DbPermissions.SharingState;
+import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 
 public class Machine extends DbObject<Integer>

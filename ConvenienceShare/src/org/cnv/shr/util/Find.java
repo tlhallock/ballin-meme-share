@@ -8,8 +8,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.cnv.shr.dmn.Services;
-
 public class Find implements Iterator<File>
 {
 	private File next;

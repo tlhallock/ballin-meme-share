@@ -129,6 +129,11 @@ public class KeyPairObject
 				privdQ      ,
 				privcrtCoeff);
 	}
+
+	public static String serialize(PublicKey publicKey)
+	{
+		return serialize((RSAPublicKey) publicKey);
+	}
 	
 	public static String serialize(RSAPublicKey publicKey)
 	{

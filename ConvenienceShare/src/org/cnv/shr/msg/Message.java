@@ -5,7 +5,7 @@ import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPermissions;
-import org.cnv.shr.db.h2.DbPermissions.SharingState;
+import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;

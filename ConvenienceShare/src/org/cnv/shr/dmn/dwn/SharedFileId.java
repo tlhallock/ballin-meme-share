@@ -1,5 +1,8 @@
 package org.cnv.shr.dmn.dwn;
 
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
+
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
@@ -87,4 +90,44 @@ public class SharedFileId
 	{
 		return machineIdent + " : " + rootName + " : " + path;
 	}
+
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("machineIdent", machineIdent);
+		generator.write("rootName", rootName);
+		generator.write("path", path);
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "machineIdent":
+				machineIdent = parser.getString();
+				break;
+			case "rootName":
+				rootName = parser.getString();
+				break;
+			case "path":
+				path = parser.getString();
+				break;
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

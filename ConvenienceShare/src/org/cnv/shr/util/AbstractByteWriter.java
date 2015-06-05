@@ -5,7 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.PublicKey;
 import java.util.logging.Level;
 
-import org.cnv.shr.db.h2.DbPermissions.SharingState;
+import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.stng.Settings;

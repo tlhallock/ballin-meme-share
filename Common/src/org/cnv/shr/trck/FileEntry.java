@@ -109,4 +109,42 @@ public class FileEntry implements TrackObject
 		FileEntry other = (FileEntry) o;
 		return other.getChecksum().equals(getChecksum()) && other.getFileSize() == fileSize;
 	}
+
+	
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("checksum", checksum);
+		generator.write("fileSize", fileSize);
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("checksum")) {
+				checksum = parser.getString();
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			if (key.equals("fileSize")) {
+				fileSize = new BigDecimal(parser.getString()).longValue();
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

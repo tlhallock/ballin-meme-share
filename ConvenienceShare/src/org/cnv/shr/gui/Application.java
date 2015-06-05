@@ -39,8 +39,8 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMessages;
-import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.ServeInstance;
@@ -163,9 +163,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }
     
     jComboBox1.setModel(new PermissionChanger(jComboBox1, 
-    		DbPermissions.SharingState.valueOf(Services.settings.defaultPermission.get())) {
+    		SharingState.valueOf(Services.settings.defaultPermission.get())) {
         @Override
-        protected void setPermission(DbPermissions.SharingState state) {
+        protected void setPermission(SharingState state) {
             Services.settings.defaultPermission.set(state.name());
         }
     });

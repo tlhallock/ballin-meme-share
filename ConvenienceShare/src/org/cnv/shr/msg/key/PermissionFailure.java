@@ -5,13 +5,15 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPermissions;
-import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
@@ -160,4 +162,47 @@ public class PermissionFailure extends Message
 			return machine.getIdentifier();
 		}
 	}
+
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("rootName", rootName);
+		generator.write("currentPermission",currentPermission.getDbValue());
+		generator.write("action", action);
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "rootName":
+				rootName = parser.getString();
+				break;
+			case "action":
+				action = parser.getString();
+				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			if (key.equals("currentPermission")) {
+				currentPermission = JsonThing.readSharingState(parser);
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

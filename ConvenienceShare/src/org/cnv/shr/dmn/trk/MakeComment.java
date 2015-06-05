@@ -6,10 +6,10 @@
 
 package org.cnv.shr.dmn.trk;
 
-import java.io.IOException;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.swing.JOptionPane;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.util.LogWrapper;

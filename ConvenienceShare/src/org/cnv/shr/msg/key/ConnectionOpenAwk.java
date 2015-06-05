@@ -3,10 +3,14 @@ package org.cnv.shr.msg.key;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
+
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.Misc;
 
 public class ConnectionOpenAwk extends KeyMessage
 {
@@ -65,4 +69,25 @@ public class ConnectionOpenAwk extends KeyMessage
 	{
 		return "You are authenticated too!";
 	}
+
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
+		generator.write("naunceRequest", Misc.format(naunceRequest));
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			}                                      
+		}                                        
+	}                                          
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

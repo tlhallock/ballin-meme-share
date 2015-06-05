@@ -124,4 +124,58 @@ public class CommentEntry implements TrackObject
 	{
 		this.originIdent = identifer;
 	}
+
+	
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("originIdent", originIdent);
+		generator.write("destIdent", destIdent);
+		generator.write("text", text);
+		generator.write("rating", rating);
+		generator.write("date", date);
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "originIdent":
+				originIdent = parser.getString();
+				break;
+			case "destIdent":
+				destIdent = parser.getString();
+				break;
+			case "text":
+				text = parser.getString();
+				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "rating":
+				rating = new BigDecimal(parser.getString()).intValue();
+				break;
+			case "date":
+				date = new BigDecimal(parser.getString()).longValue();
+				break;
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

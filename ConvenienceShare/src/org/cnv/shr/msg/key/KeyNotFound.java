@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Objects;
 
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
+
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.IdkWhereToPutThis;
 import org.cnv.shr.dmn.Services;
@@ -103,4 +106,23 @@ public class KeyNotFound extends KeyMessage
 		}
 		return builder.toString();
 	}
+
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			}                                      
+		}                                        
+	}                                          
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -1,19 +1,15 @@
 package org.cnv.shr.msg.key;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.security.PublicKey;
+
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
-
-import de.flexiprovider.core.rijndael.RijndaelKey;
+import org.cnv.shr.util.Misc;
 
 public class ConnectionOpened extends KeyMessage
 {
@@ -66,6 +62,23 @@ public class ConnectionOpened extends KeyMessage
 		}
 	}
 	
-	
-	
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			}                                      
+		}                                        
+	}                                          
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

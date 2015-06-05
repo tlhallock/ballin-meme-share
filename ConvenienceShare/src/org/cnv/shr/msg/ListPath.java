@@ -3,6 +3,9 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
+
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
@@ -72,4 +75,40 @@ public class ListPath extends Message
 		builder.append("What files are under ").append(rootName).append(":").append(path);
 		return builder.toString();
 	}
+	
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("rootName", rootName);
+		generator.write("path", path);
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "rootName":
+				rootName = parser.getString();
+				break;
+			case "path":
+				path = parser.getString();
+				break;
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

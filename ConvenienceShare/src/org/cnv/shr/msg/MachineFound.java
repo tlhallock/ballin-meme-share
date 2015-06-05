@@ -2,6 +2,10 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbMachines;
@@ -94,4 +98,61 @@ public class MachineFound extends Message
 		
 		return builder.toString();
 	}
+
+	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	protected void generate(JsonGenerator generator) {
+		generator.writeStartObject();
+		generator.write("ip", ip);
+		generator.write("port", port);
+		generator.write("nports", nports);
+		generator.write("name", name);
+		generator.write("ident", ident);
+		generator.write("lastActive", lastActive);
+		generator.writeEnd();
+	}
+
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "ip":
+				ip = parser.getString();
+				break;
+			case "name":
+				name = parser.getString();
+				break;
+			case "ident":
+				ident = parser.getString();
+				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				port = new BigDecimal(parser.getString()).intValue();
+				break;
+			case "nports":
+				nports = new BigDecimal(parser.getString()).intValue();
+				break;
+			case "lastActive":
+				lastActive = new BigDecimal(parser.getString()).longValue();
+				break;
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }
