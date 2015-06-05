@@ -81,22 +81,42 @@ public class NewAesKey extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("encryptedAesKey", Misc.format(encryptedAesKey));
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsencryptedAesKey = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsencryptedAesKey)
+				{
+					throw new RuntimeException("Message needs encryptedAesKey");
+				}
 				return;                                
-			}                                      
-		}                                        
-	}                                          
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("encryptedAesKey")) {
+				needsencryptedAesKey = false;
+				encryptedAesKey = Misc.format(parser.getString());
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	public String getJsonName() { return "NewAesKey"; }
+	public NewAesKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

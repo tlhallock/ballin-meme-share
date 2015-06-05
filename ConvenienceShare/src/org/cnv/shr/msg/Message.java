@@ -3,6 +3,8 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.json.stream.JsonGenerator;
+
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.SharingState;
@@ -12,9 +14,10 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.key.PermissionFailure;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.OutputByteWriter;
 
-public abstract class Message
+public abstract class Message implements Jsonable
 {
 	protected Message() {}
 	
@@ -101,4 +104,6 @@ public abstract class Message
 		c.finish();
 		throw new PermissionException(action);
 	}
+
+	public abstract void generate(JsonGenerator logFile);
 }

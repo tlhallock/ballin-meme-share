@@ -57,19 +57,26 @@ public class Failure extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("message", message);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsmessage = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsmessage)
+				{
+					throw new RuntimeException("Message needs message");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -77,6 +84,7 @@ public class Failure extends Message
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("message")) {
+				needsmessage = false;
 				message = parser.getString();
 			}
 			break;
@@ -84,5 +92,7 @@ public class Failure extends Message
 			}
 		}
 	}
+	public String getJsonName() { return "Failure"; }
+	public Failure(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

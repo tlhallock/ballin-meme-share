@@ -80,39 +80,54 @@ public class GotPermission extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("rootName", rootName);
-		generator.write("permission",permission.getDbValue());
+		generator.write("permission",permission.name());
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsrootName = true;
+		boolean needspermission = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsrootName)
+				{
+					throw new RuntimeException("Message needs rootName");
+				}
+				if (needspermission)
+				{
+					throw new RuntimeException("Message needs permission");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 		case VALUE_STRING:
 			if (key==null) break;
-			if (key.equals("rootName")) {
+			switch(key) {
+			case "rootName":
+				needsrootName = false;
 				rootName = parser.getString();
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("permission")) {
-				permission = JsonThing.readSharingState(parser);
+				break;
+			case "permission":
+				needspermission = false;
+				permission = SharingState.valueOf(parser.getString());;
+				break;
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "GotPermission"; }
+	public GotPermission(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

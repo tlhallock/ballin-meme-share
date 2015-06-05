@@ -2,7 +2,7 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
+import java.util.Objects;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -66,19 +66,26 @@ public class EmptyMessage extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("size", size);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needssize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needssize)
+				{
+					throw new RuntimeException("Message needs size");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -86,12 +93,15 @@ public class EmptyMessage extends Message
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("size")) {
-				size = new BigDecimal(parser.getString()).intValue();
+				needssize = false;
+				size = Integer.parseInt(parser.getString());
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "EmptyMessage"; }
+	public EmptyMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

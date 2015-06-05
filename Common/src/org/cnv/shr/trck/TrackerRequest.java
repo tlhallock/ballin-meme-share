@@ -81,7 +81,20 @@ public class TrackerRequest implements TrackObject
 		return params.get(string);
 	}
 
-	
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+
+	@Override
+	public void generate(JsonGenerator generator)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void parse(JsonParser parser)
+	{
+		// TODO Auto-generated method stub
+		
+	}
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

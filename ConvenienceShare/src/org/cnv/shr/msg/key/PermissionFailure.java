@@ -17,6 +17,7 @@ import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -164,21 +165,38 @@ public class PermissionFailure extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("rootName", rootName);
-		generator.write("currentPermission",currentPermission.getDbValue());
+		generator.write("currentPermission",currentPermission.name());
 		generator.write("action", action);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsrootName = true;
+		boolean needscurrentPermission = true;
+		boolean needsaction = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsrootName)
+				{
+					throw new RuntimeException("Message needs rootName");
+				}
+				if (needscurrentPermission)
+				{
+					throw new RuntimeException("Message needs currentPermission");
+				}
+				if (needsaction)
+				{
+					throw new RuntimeException("Message needs action");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -187,22 +205,24 @@ public class PermissionFailure extends Message
 			if (key==null) break;
 			switch(key) {
 			case "rootName":
+				needsrootName = false;
 				rootName = parser.getString();
 				break;
+			case "currentPermission":
+				needscurrentPermission = false;
+				currentPermission = SharingState.valueOf(parser.getString());;
+				break;
 			case "action":
+				needsaction = false;
 				action = parser.getString();
 				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("currentPermission")) {
-				currentPermission = JsonThing.readSharingState(parser);
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "PermissionFailure"; }
+	public PermissionFailure(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

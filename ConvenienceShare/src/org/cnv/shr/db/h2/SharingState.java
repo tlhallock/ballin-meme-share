@@ -1,11 +1,11 @@
 package org.cnv.shr.db.h2;
 
-import java.math.BigDecimal;
-
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
-public enum SharingState
+import org.cnv.shr.util.Jsonable;
+
+public enum SharingState implements Jsonable
 	{
 		DO_NOT_SHARE(1, false, false),
 		SHARE_PATHS (2,  true, false),
@@ -80,19 +80,26 @@ public enum SharingState
 		}
 		
 		// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("state", state);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsstate = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsstate)
+				{
+					throw new RuntimeException("Message needs state");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -100,12 +107,14 @@ public enum SharingState
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("state")) {
-				state = new BigDecimal(parser.getString()).intValue();
+				needsstate = false;
+				state = Integer.parseInt(parser.getString());
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "SharingState"; }
 		// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	}

@@ -11,10 +11,7 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
@@ -27,7 +24,7 @@ public class RootList extends Message
 {
 	public static int TYPE = 3;
 	
-	private List<RootDirectory> sharedDirectories = new LinkedList<>();
+	private LinkedList<RootListChild> sharedDirectories = new LinkedList<>();
 
 	public RootList()
 	{
@@ -45,7 +42,7 @@ public class RootList extends Message
 	
 	private void add(RootDirectory root)
 	{
-		sharedDirectories.add(root);
+		sharedDirectories.add(new RootListChild(root));
 	}
 
 	@Override
@@ -55,8 +52,9 @@ public class RootList extends Message
 		Machine machine = connection.getMachine();
 		
 		boolean changed = true;
-		for (RootDirectory root : sharedDirectories)
+		for (RootListChild rootC : sharedDirectories)
 		{
+			RootDirectory root = rootC.getRoot(connection.getMachine());
 			accountedFor.add(root.getName());
 			root.setMachine(machine);
 			root.tryToSave();
@@ -93,16 +91,10 @@ public class RootList extends Message
 	@Override
 	protected void parse(ByteReader reader) throws IOException
 	{
-		Machine machine = DbMachines.getMachine(reader.readString());
 		int numFolders = reader.readInt();
 		for (int i = 0; i < numFolders; i++)
 		{
-			String name        = reader.readString();
-			String tags        = reader.readString();
-			String description = reader.readString();
-			SharingState state = SharingState.get(reader.readInt());
-			
-			sharedDirectories.add(new RemoteDirectory(machine, name, tags, description, state));
+			sharedDirectories.add(new RootListChild(reader));
 		}
 	}
 
@@ -111,13 +103,9 @@ public class RootList extends Message
 	{
 		buffer.append(Services.localMachine.getIdentifier());
 		buffer.append(sharedDirectories.size());
-		for (RootDirectory dir : sharedDirectories)
+		for (RootListChild dir : sharedDirectories)
 		{
-			buffer.append(dir.getName());
-			buffer.append(dir.getTags());
-			buffer.append(dir.getDescription());
-			buffer.append(DbPermissions.getCurrentPermissions(
-					connection.getMachine(), (LocalDirectory) dir));
+			dir.append(buffer);
 		}
 	}
 	
@@ -134,7 +122,7 @@ public class RootList extends Message
 		StringBuilder builder = new StringBuilder();
 		
 		builder.append("Root directories are: ");
-		for (RootDirectory directory : sharedDirectories)
+		for (RootListChild directory : sharedDirectories)
 		{
 			builder.append(directory.getName()).append(':');
 		}
@@ -143,21 +131,96 @@ public class RootList extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
+		generator.writeStartArray("sharedDirectories");
+		for (org.cnv.shr.msg.RootListChild elem : sharedDirectories)
+		{
+		elem.generate(generator);
+		}
+		generator.writeEnd();
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needssharedDirectories = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needssharedDirectories)
+				{
+					throw new RuntimeException("Message needs sharedDirectories");
+				}
 				return;                                
-			}                                      
-		}                                        
-	}                                          
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case START_ARRAY:
+			if (key==null) break;
+			if (key.equals("sharedDirectories")) {
+				needssharedDirectories = false;
+				sharedDirectories = new LinkedList<>();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				while (parser.hasNext())                    
+				{                                           
+					e = parser.next();                        
+					switch (e)                                
+					{                                         
+					case START_ARRAY:                         
+					case START_OBJECT:                        
+					case VALUE_TRUE:                          
+					case VALUE_NUMBER:                        
+					case VALUE_STRING:                        
+						if (key == null)                        
+								break;                              
+					case END_ARRAY:                           
+						break;                                  
+					default:                                  
+						break;                                  
+					}                                         
+				}                                           
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	public String getJsonName() { return "RootList"; }
+	public RootList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

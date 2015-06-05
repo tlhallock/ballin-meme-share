@@ -10,6 +10,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -84,32 +85,59 @@ public class MachineHasFile extends DownloadMessage
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("hasFile", hasFile);
+		descriptor.generate(generator);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsdescriptor = true;
+		boolean needshasFile = true;
+		boolean needshasFile = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsdescriptor)
+				{
+					throw new RuntimeException("Message needs descriptor");
+				}
+				if (needshasFile)
+				{
+					throw new RuntimeException("Message needs hasFile");
+				}
+				if (needshasFile)
+				{
+					throw new RuntimeException("Message needs hasFile");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
+			}
+			break;
 		case VALUE_FALSE:
 			if (key==null) break;
 			if (key.equals("hasFile")) {
+				needshasFile = false;
 				hasFile = false;
 			}
 			break;
 		case VALUE_TRUE:
 			if (key==null) break;
 			if (key.equals("hasFile")) {
+				needshasFile = false;
 				hasFile = true;
 			}
 			break;
@@ -117,5 +145,7 @@ public class MachineHasFile extends DownloadMessage
 			}
 		}
 	}
+	public String getJsonName() { return "MachineHasFile"; }
+	public MachineHasFile(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

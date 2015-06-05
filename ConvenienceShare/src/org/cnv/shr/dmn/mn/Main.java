@@ -4,11 +4,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.ShowApplication;
+import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.OutputByteWriter;
 
@@ -19,8 +21,9 @@ public class Main
 	{
 		Arguments a = new Arguments();
 		a.parseArgs(args);
+		Settings settings;
 		
-//		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
+		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
 		a.settings.servePortBeginE.set(9990);
 		a.settings.servePortBeginI.set(9990);
 		a.showGui = true;

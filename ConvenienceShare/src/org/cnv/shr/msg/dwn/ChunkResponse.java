@@ -67,31 +67,54 @@ public class ChunkResponse extends DownloadMessage
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
+		chunk.generate(generator);
+		descriptor.generate(generator);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needschunk = true;
+		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needschunk)
+				{
+					throw new RuntimeException("Message needs chunk");
+				}
+				if (needsdescriptor)
+				{
+					throw new RuntimeException("Message needs descriptor");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 		case START_OBJECT:
 			if (key==null) break;
-			if (key.equals("chunk")) {
+			switch(key) {
+			case "chunk":
+				needschunk = false;
 				chunk = JsonThing.readChunk(parser);
+				break;
+			case "descriptor":
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
+				break;
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "ChunkResponse"; }
+	public ChunkResponse(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

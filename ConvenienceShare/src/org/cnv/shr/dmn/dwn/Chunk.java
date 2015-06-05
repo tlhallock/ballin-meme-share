@@ -1,7 +1,6 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Scanner;
 
 import javax.json.stream.JsonGenerator;
@@ -9,8 +8,9 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.Jsonable;
 
-public class Chunk
+public class Chunk implements Jsonable
 {
 	private String checksum;
 	private long begin;
@@ -91,21 +91,38 @@ public class Chunk
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("checksum", checksum);
 		generator.write("begin", begin);
 		generator.write("end", end);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needschecksum = true;
+		boolean needsbegin = true;
+		boolean needsend = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needschecksum)
+				{
+					throw new RuntimeException("Message needs checksum");
+				}
+				if (needsbegin)
+				{
+					throw new RuntimeException("Message needs begin");
+				}
+				if (needsend)
+				{
+					throw new RuntimeException("Message needs end");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -113,6 +130,7 @@ public class Chunk
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("checksum")) {
+				needschecksum = false;
 				checksum = parser.getString();
 			}
 			break;
@@ -120,10 +138,12 @@ public class Chunk
 			if (key==null) break;
 			switch(key) {
 			case "begin":
-				begin = new BigDecimal(parser.getString()).longValue();
+				needsbegin = false;
+				begin = Long.parseLong(parser.getString());
 				break;
 			case "end":
-				end = new BigDecimal(parser.getString()).longValue();
+				needsend = false;
+				end = Long.parseLong(parser.getString());
 				break;
 			}
 			break;
@@ -131,5 +151,7 @@ public class Chunk
 			}
 		}
 	}
+	public String getJsonName() { return "Chunk"; }
+	public Chunk(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

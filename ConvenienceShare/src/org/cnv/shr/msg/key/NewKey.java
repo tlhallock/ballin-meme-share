@@ -84,33 +84,54 @@ public class NewKey extends KeyMessage
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("newKey", KeyPairObject.serialize(newKey));
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsnewKey = true;
+		boolean needsnaunceRequest = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsnewKey)
+				{
+					throw new RuntimeException("Message needs newKey");
+				}
+				if (needsnaunceRequest)
+				{
+					throw new RuntimeException("Message needs naunceRequest");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 		case VALUE_STRING:
 			if (key==null) break;
-			if (key.equals("newKey")) {
-				newKey = JsonThing.readKey(parser);
+			switch(key) {
+			case "newKey":
+				needsnewKey = false;
+				newKey = KeyPairObject.deSerializePublicKey(parser.getString());
+				break;
+			case "naunceRequest":
+				needsnaunceRequest = false;
+				naunceRequest = Misc.format(parser.getString());
+				break;
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "NewKey"; }
+	public NewKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

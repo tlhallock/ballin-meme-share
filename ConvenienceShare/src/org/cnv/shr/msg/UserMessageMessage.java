@@ -93,20 +93,32 @@ public class UserMessageMessage extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("type", type);
 		generator.write("messageStr", messageStr);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsmessageStr = true;
+		boolean needstype = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsmessageStr)
+				{
+					throw new RuntimeException("Message needs messageStr");
+				}
+				if (needstype)
+				{
+					throw new RuntimeException("Message needs type");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -114,18 +126,22 @@ public class UserMessageMessage extends Message
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("messageStr")) {
+				needsmessageStr = false;
 				messageStr = parser.getString();
 			}
 			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("type")) {
-				type = new BigDecimal(parser.getString()).intValue();
+				needstype = false;
+				type = Integer.parseInt(parser.getString());
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "UserMessageMessage"; }
+	public UserMessageMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

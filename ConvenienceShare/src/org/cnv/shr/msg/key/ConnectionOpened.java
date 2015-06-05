@@ -63,22 +63,42 @@ public class ConnectionOpened extends KeyMessage
 	}
 	
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsdecryptedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsdecryptedNaunce)
+				{
+					throw new RuntimeException("Message needs decryptedNaunce");
+				}
 				return;                                
-			}                                      
-		}                                        
-	}                                          
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("decryptedNaunce")) {
+				needsdecryptedNaunce = false;
+				decryptedNaunce = Misc.format(parser.getString());
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	public String getJsonName() { return "ConnectionOpened"; }
+	public ConnectionOpened(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

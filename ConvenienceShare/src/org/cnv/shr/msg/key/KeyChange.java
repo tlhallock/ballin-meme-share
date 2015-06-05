@@ -77,7 +77,9 @@ public class KeyChange extends KeyMessage
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("oldKey", KeyPairObject.serialize(oldKey));
 		generator.write("newKey", KeyPairObject.serialize(newKey));
@@ -85,14 +87,34 @@ public class KeyChange extends KeyMessage
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsoldKey = true;
+		boolean needsnewKey = true;
+		boolean needsdecryptedProof = true;
+		boolean needsnaunceRequest = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsoldKey)
+				{
+					throw new RuntimeException("Message needs oldKey");
+				}
+				if (needsnewKey)
+				{
+					throw new RuntimeException("Message needs newKey");
+				}
+				if (needsdecryptedProof)
+				{
+					throw new RuntimeException("Message needs decryptedProof");
+				}
+				if (needsnaunceRequest)
+				{
+					throw new RuntimeException("Message needs naunceRequest");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -101,10 +123,20 @@ public class KeyChange extends KeyMessage
 			if (key==null) break;
 			switch(key) {
 			case "oldKey":
-				oldKey = JsonThing.readKey(parser);
+				needsoldKey = false;
+				oldKey = KeyPairObject.deSerializePublicKey(parser.getString());
 				break;
 			case "newKey":
-				newKey = JsonThing.readKey(parser);
+				needsnewKey = false;
+				newKey = KeyPairObject.deSerializePublicKey(parser.getString());
+				break;
+			case "decryptedProof":
+				needsdecryptedProof = false;
+				decryptedProof = Misc.format(parser.getString());
+				break;
+			case "naunceRequest":
+				needsnaunceRequest = false;
+				naunceRequest = Misc.format(parser.getString());
 				break;
 			}
 			break;
@@ -112,5 +144,7 @@ public class KeyChange extends KeyMessage
 			}
 		}
 	}
+	public String getJsonName() { return "KeyChange"; }
+	public KeyChange(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

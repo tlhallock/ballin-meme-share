@@ -2,13 +2,13 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -16,11 +16,13 @@ import org.cnv.shr.util.ByteReader;
 
 public class MachineFound extends Message
 {
+	@MyParserIgnore
 	private String ip;
 	protected int port;
 	protected int nports;
 	protected String name;
 	protected String ident;
+	@MyParserIgnore
 	private long lastActive;
 	
 	public MachineFound(InputStream stream) throws IOException
@@ -100,24 +102,44 @@ public class MachineFound extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
-		generator.write("ip", ip);
 		generator.write("port", port);
 		generator.write("nports", nports);
 		generator.write("name", name);
 		generator.write("ident", ident);
-		generator.write("lastActive", lastActive);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsname = true;
+		boolean needsident = true;
+		boolean needsport = true;
+		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsname)
+				{
+					throw new RuntimeException("Message needs name");
+				}
+				if (needsident)
+				{
+					throw new RuntimeException("Message needs ident");
+				}
+				if (needsport)
+				{
+					throw new RuntimeException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new RuntimeException("Message needs nports");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -125,13 +147,12 @@ public class MachineFound extends Message
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
-			case "ip":
-				ip = parser.getString();
-				break;
 			case "name":
+				needsname = false;
 				name = parser.getString();
 				break;
 			case "ident":
+				needsident = false;
 				ident = parser.getString();
 				break;
 			}
@@ -140,13 +161,12 @@ public class MachineFound extends Message
 			if (key==null) break;
 			switch(key) {
 			case "port":
-				port = new BigDecimal(parser.getString()).intValue();
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
 				break;
 			case "nports":
-				nports = new BigDecimal(parser.getString()).intValue();
-				break;
-			case "lastActive":
-				lastActive = new BigDecimal(parser.getString()).longValue();
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;
@@ -154,5 +174,7 @@ public class MachineFound extends Message
 			}
 		}
 	}
+	public String getJsonName() { return "MachineFound"; }
+	public MachineFound(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

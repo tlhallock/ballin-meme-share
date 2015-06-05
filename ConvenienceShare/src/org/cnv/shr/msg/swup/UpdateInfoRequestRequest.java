@@ -48,11 +48,13 @@ public class UpdateInfoRequestRequest extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		while (parser.hasNext()) {                 
@@ -64,5 +66,7 @@ public class UpdateInfoRequestRequest extends Message
 			}                                      
 		}                                        
 	}                                          
+	public String getJsonName() { return "UpdateInfoRequestRequest"; }
+	public UpdateInfoRequestRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

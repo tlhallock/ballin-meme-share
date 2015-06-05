@@ -46,10 +46,10 @@
 
 
 	<target name="common" depends="cpylibs">
-                <!-- just for now... -->
+                <!-- just for now... 
 		<javac srcdir="../Common/json" destdir="classes/common/">
 			<classpath refid="jars" />
-		</javac>
+		</javac>-->
                 
                 
 		<javac srcdir="../Common/src" destdir="classes/common/">
@@ -72,7 +72,7 @@
                            libs/FlexiProvider-1.7p7.signed.jar 
                            libs/CoDec-build17-jdk13.jar
                            libs/h2-1.4.187.jar
-                           lib/javax.json-1.0.1.jar" />
+                           libs/javax.json-1.0.1.jar" />
 				<attribute name="Implementation-Version" value="${version}.${build.number}"/>
 			</manifest>
 			<fileset dir="classes/convenience/" />
@@ -113,7 +113,8 @@
 				<attribute name="Class-Path" value="lib/javax.json-1.0.1.jar
                            libs/FlexiProvider-1.7p7.signed.jar 
                            libs/CoDec-build17-jdk13.jar
-                           libs/h2-1.4.187.jar" />
+                           libs/h2-1.4.187.jar
+                           libs/javax.json-1.0.1.jar" />
 			</manifest>
 			<fileset dir="classes/update/" />
 			<fileset dir="classes/common/" />

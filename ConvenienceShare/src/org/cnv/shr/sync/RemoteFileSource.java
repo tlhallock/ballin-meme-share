@@ -11,7 +11,7 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.PathList;
-import org.cnv.shr.msg.PathList.Child;
+import org.cnv.shr.msg.PathListChild;
 import org.cnv.shr.util.FileOutsideOfRootException;
 
 public class RemoteFileSource implements FileSource
@@ -71,7 +71,7 @@ public class RemoteFileSource implements FileSource
 		}
 		
 		final Iterator<String> subDirs = directoryList.getSubDirs().iterator();
-		final Iterator<Child> children = directoryList.getChildren().iterator();
+		final Iterator<PathListChild> children = directoryList.getChildren().iterator();
 		return new FileSourceIterator()
 		{
 			boolean onFiles;

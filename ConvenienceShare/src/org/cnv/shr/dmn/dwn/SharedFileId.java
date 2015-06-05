@@ -14,8 +14,9 @@ import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.util.Jsonable;
 
-public class SharedFileId
+public class SharedFileId implements Jsonable
 {
 	// Either
 	private String machineIdent;
@@ -92,21 +93,38 @@ public class SharedFileId
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("machineIdent", machineIdent);
 		generator.write("rootName", rootName);
 		generator.write("path", path);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsmachineIdent = true;
+		boolean needsrootName = true;
+		boolean needspath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsmachineIdent)
+				{
+					throw new RuntimeException("Message needs machineIdent");
+				}
+				if (needsrootName)
+				{
+					throw new RuntimeException("Message needs rootName");
+				}
+				if (needspath)
+				{
+					throw new RuntimeException("Message needs path");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -115,12 +133,15 @@ public class SharedFileId
 			if (key==null) break;
 			switch(key) {
 			case "machineIdent":
+				needsmachineIdent = false;
 				machineIdent = parser.getString();
 				break;
 			case "rootName":
+				needsrootName = false;
 				rootName = parser.getString();
 				break;
 			case "path":
+				needspath = false;
 				path = parser.getString();
 				break;
 			}
@@ -129,5 +150,7 @@ public class SharedFileId
 			}
 		}
 	}
+	public String getJsonName() { return "SharedFileId"; }
+	public SharedFileId(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

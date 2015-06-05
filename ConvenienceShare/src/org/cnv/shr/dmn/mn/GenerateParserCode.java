@@ -8,10 +8,13 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -36,7 +39,9 @@ import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.msg.PathList;
+import org.cnv.shr.msg.PathListChild;
 import org.cnv.shr.msg.RootList;
+import org.cnv.shr.msg.RootListChild;
 import org.cnv.shr.msg.ShowApplication;
 import org.cnv.shr.msg.UserMessageMessage;
 import org.cnv.shr.msg.Wait;
@@ -47,6 +52,7 @@ import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.DownloadDone;
+import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.msg.dwn.MachineHasFile;
 import org.cnv.shr.msg.dwn.NewAesKey;
@@ -75,13 +81,22 @@ public class GenerateParserCode
 	private static final String GENERATOR_UNIQUE = "LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK";
 	private static final Path[] rootDirs = new Path[]
 	{
-		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\ConvenienceShare\\src"),
-		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\Common\\src"),
-		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\Updater\\src"),
-		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\Installer\\src"),
-		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\Tracker\\src"),
+//		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\ConvenienceShare\\src"),
+//		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\Common\\src"),
+//		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\Updater\\src"),
+//		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\Installer\\src"),
+//		Paths.get("C:\\Users\\thallock\\Documents\\Source\\ballin-meme-share\\Tracker\\src"),
+		
+
+		Paths.get("/work/ballin-meme-share/ConvenienceShare/src"),
+		Paths.get("/work/ballin-meme-share/Common/src"),
+		Paths.get("/work/ballin-meme-share/Updater/src"),
+		Paths.get("/work/ballin-meme-share/Installer/src"),
+		Paths.get("/work/ballin-meme-share/Tracker/src"),
 	};
 	
+	
+	private static final HashSet<String> keys = new HashSet<>();
 	
 	
 	private static final String[] IGNORES = new String[]
@@ -112,13 +127,14 @@ public class GenerateParserCode
 				Chunk.class                      ,
 				SharedFileId.class               ,
 				SharingState.class               ,
+				PathListChild.class              ,
+				RootListChild.class              ,
 				
 				
 				
 				
 				
-				
-				
+				DownloadFailure.class            ,
 				ChunkList.class                  ,
 				DownloadDone.class               ,
 				CompletionStatus.class           ,
@@ -162,36 +178,50 @@ public class GenerateParserCode
 				ShowApplication.class            ,
 			})
 		{
-			replaceFile(c);
+			try
+			{
+				replaceFile(c);
+			}
+			catch (Exception e)
+			{
+				System.out.println("Error on " + c);
+				e.printStackTrace();
+				return;
+			}
 		}
 	}
 
 	private static void printParser(PrintStream output, Class c)
 	{
-		
-		if (c.getName().equals("org.cnv.shr.msg.GotPermission"))
-		{
-			System.out.println("We are here.");
-		}
-		HashMap<Event, List<Parser>> parsers = new HashMap<>();
-		for (Field field : c.getDeclaredFields())
-		{
-			if (shouldIgnore(field))
-			{
-				continue;
-			}
-			List<Parser> parser = getParser(parsers, field);
-			if (parser == null)
-			{
-				System.out.println("Ignoring " + field.getType().getName());
-				continue;
-			}
-			for (Parser p : parser)
-			{
-				p.add(field);
-			}
-		}
+		HashMap<Event, List<Parser>> parsers = getParsersFor(c);
 		printParsers(parsers, output);
+	}
+
+	private static HashMap<Event, List<Parser>> getParsersFor(Class c)
+	{
+		HashMap<Event, List<Parser>> parsers = new HashMap<>();
+		while (shouldContinue(c))
+		{
+			for (Field field : c.getDeclaredFields())
+			{
+				if (shouldIgnore(field))
+				{
+					continue;
+				}
+				List<Parser> parser = getParser(parsers, field);
+				if (parser == null)
+				{
+					System.err.println("Need parser type for " + field.getName());
+					continue;
+				}
+				for (Parser p : parser)
+				{
+					p.add(field);
+				}
+			}
+			c = c.getSuperclass();
+		}
+		return parsers;
 	}
 
 	private static boolean shouldIgnore(Field field)
@@ -226,14 +256,30 @@ public class GenerateParserCode
 	
 	private static void printParsers(HashMap<JsonParser.Event, List<Parser>> parsers, PrintStream ps)
 	{
+		ps.println("\t@Override                                    ");
 		ps.println("\tpublic void parse(JsonParser parser) {       ");
 		ps.println("\t\tString key = null;                         ");
+		for (Entry<JsonParser.Event, List<Parser>> entry : parsers.entrySet())
+		{
+			for (Parser p : entry.getValue())
+			{
+				p.printDecls(ps);
+			}
+		}
 		ps.println("\t\twhile (parser.hasNext()) {                 ");
 		ps.println("\t\t\tJsonParser.Event e = parser.next();      ");
 		ps.println("\t\t\tswitch (e)                               ");
 		ps.println("\t\t\t{                                        ");
 		ps.println("\t\t\tcase END_OBJECT:                         ");
-		ps.println("\t\t\t	return;                                ");
+//		ps.println("\t\t\t\tvalidate();                            ");
+		for (Entry<JsonParser.Event, List<Parser>> entry : parsers.entrySet())
+		{
+			for (Parser p : entry.getValue())
+			{
+				p.printValidator(ps);
+			}
+		}
+		ps.println("\t\t\t\treturn;                                ");
 		if (parsers.isEmpty())
 		{
 			ps.println("\t\t\t}                                      ");
@@ -259,6 +305,9 @@ public class GenerateParserCode
 	}
 	
 	
+	
+	
+	
 	static class Parser
 	{
 		JsonParser.Event jsonType;
@@ -273,6 +322,24 @@ public class GenerateParserCode
 		{
 			fields.add(field);
 		}
+		
+		public void printDecls(PrintStream ps)
+		{
+			for (Field f : fields)
+			{
+				ps.println("\t\tboolean needs" + f.getName() + " = true;");
+			}
+		}
+		public void printValidator(PrintStream ps)
+		{
+			for (Field f : fields)
+			{
+				ps.println("\t\t\t\tif (needs" + f.getName() + ")");
+				ps.println("\t\t\t\t{");
+				ps.println("\t\t\t\t\tthrow new RuntimeException(\"Message needs " + f.getName() + "\");");
+				ps.println("\t\t\t\t}");
+			}
+		}
 
 		public void print(PrintStream ps)
 		{
@@ -284,6 +351,7 @@ public class GenerateParserCode
 				for (Field f : fields)
 				{
 					ps.println("\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
+					ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
 					ps.println("\t\t\t\t" + f.getName() + " = " + getAssignment(jsonType, f) + ";");
 				}
 			}
@@ -293,6 +361,7 @@ public class GenerateParserCode
 				for (Field f : fields)
 				{
 					ps.println("\t\t\tcase \"" + f.getName() + "\":");
+					ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
 					ps.println("\t\t\t\t" + f.getName() + " = " + getAssignment(jsonType, f) + ";");
 					ps.println("\t\t\t\tbreak;");
 				}
@@ -307,101 +376,195 @@ public class GenerateParserCode
 	{
 		switch (f.getType().getName())
 		{
+		case "org.cnv.shr.msg.key.MsgMap": return "new MsgMap(parser)";
+		case "class org.cnv.shr.msg.PathList":
+			return "(new PathList(parser)).setParent(this)";
+		case "org.cnv.shr.trck.FileEntry":
+			return "new FileEntry(parser)";
 		case "org.cnv.shr.db.h2.SharingState":
-			return "JsonThing.readSharingState(parser)";
+			return "SharingState.valueOf(parser.getString());";
 		case "org.cnv.shr.dmn.dwn.SharedFileId":
 			return "JsonThing.readFileId(parser)";
 		case "org.cnv.shr.dmn.dwn.Chunk":
 			return "JsonThing.readChunk(parser)";
 		case "java.security.PublicKey":
-			return "JsonThing.readKey(parser)";
-		case "[B":
-			break;
+			return "KeyPairObject.deSerializePublicKey(parser.getString())";
 
+		case "java.lang.Boolean":
 		case "boolean":
 			switch (jsonType)
 			{
 			case VALUE_TRUE:  return "true";
 			case VALUE_FALSE: return "false";
+			default:
+				return null;
 			}
-		case "int": return "new BigDecimal(parser.getString()).intValue()";
-		case "long":return "new BigDecimal(parser.getString()).longValue()";
-		case "double": return "new BigDecimal(parser.getString()).doubleValue()";
+//		case "int":              return "new BigDecimal(parser.getString()).intValue()";
+//		case "long":             return "new BigDecimal(parser.getString()).longValue()";
+//		case "double":           return "new BigDecimal(parser.getString()).doubleValue()";
+		case "int":              return "Integer.parseInt("   + "parser.getString())";
+		case "long":             return "Long.parseLong("     + "parser.getString())";
+		case "double":           return "Double.parseDouble(" + "parser.getString())";
+		
+		
+		
+		
+		case "[B":               return "Misc.format(parser.getString())";
 		case "java.lang.String": return "parser.getString()";
+		case "java.util.List":
+		case "java.util.LinkedList":
+				return "new LinkedList<>();\n" + parseList(f);
 		default:
 		}
 		return null;
+	}
+
+	private static String parseList(Field f)
+	{
+		Type ptype = ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
+		getParsersFor(ptype);
+		Event jsonType = getJsonType(ptype.getTypeName());
+//		new Parser(jsonType);
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+		builder.append("\t\t\t\twhile (parser.hasNext())                    ").append('\n');
+		builder.append("\t\t\t\t{                                           ").append('\n');
+		builder.append("\t\t\t\t\te = parser.next();                        ").append('\n');
+		builder.append("\t\t\t\t\tswitch (e)                                ").append('\n');
+		builder.append("\t\t\t\t\t{                                         ").append('\n');
+		builder.append("\t\t\t\t\tcase START_ARRAY:                         ").append('\n');
+		builder.append("\t\t\t\t\tcase START_OBJECT:                        ").append('\n');
+		builder.append("\t\t\t\t\tcase VALUE_TRUE:                          ").append('\n');
+		builder.append("\t\t\t\t\tcase VALUE_NUMBER:                        ").append('\n');
+		builder.append("\t\t\t\t\tcase VALUE_STRING:                        ").append('\n');
+		builder.append("\t\t\t\t\t\tif (key == null)                        ").append('\n');
+		builder.append("\t\t\t\t\t\t\t\tbreak;                              ").append('\n');
+		builder.append("\t\t\t\t\tcase END_ARRAY:                           ").append('\n');
+		builder.append("\t\t\t\t\t\tbreak;                                  ").append('\n');
+		builder.append("\t\t\t\t\tdefault:                                  ").append('\n');
+		builder.append("\t\t\t\t\t\tbreak;                                  ").append('\n');
+		builder.append("\t\t\t\t\t}                                         ").append('\n');
+		builder.append("\t\t\t\t}                                           ").append('\n');
+		builder.append("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+		return builder.toString();
 	}
 
 	private static Event getJsonType(String fieldName)
 	{
 		switch (fieldName)
 		{
-//			output.println("\tgenerator.write(\"" + field.getName() + "\", " + field.getName() + ");\n");
+		case "org.cnv.shr.msg.key.MsgMap":
+		case "java.util.List":
+		case "java.util.LinkedList":
+			return JsonParser.Event.START_ARRAY;
+
+		case "org.cnv.shr.msg.PathListChild":
+		case "org.cnv.shr.msg.RootListChild":
+		case "class org.cnv.shr.msg.PathList":
+		case "org.cnv.shr.trck.FileEntry":
 		case "org.cnv.shr.dmn.dwn.SharedFileId":
 		case "org.cnv.shr.dmn.dwn.Chunk":
+		case "java.util.HashMap":
 			return JsonParser.Event.START_OBJECT;
-		case "java.security.PublicKey":
-			return JsonParser.Event.VALUE_STRING;
-		case "[B":
-			break;
 
+		case "java.lang.Boolean":
 		case "boolean":
 			return JsonParser.Event.VALUE_TRUE;
 
-		case "org.cnv.shr.db.h2.SharingState":
 		case "int":
 		case "long":
 		case "double":
 			return JsonParser.Event.VALUE_NUMBER;
-			
-			
+
+		case "org.cnv.shr.db.h2.SharingState":
+		case "[B":
+		case "java.security.PublicKey":
 		case "java.lang.String":
 			return JsonParser.Event.VALUE_STRING;
 		default:
+			System.err.println("Need parser type for " + fieldName);
+			return null;
 		}
-		return null;
 	}
 
 	private static void printGenerator(PrintStream output, Class c)
 	{
-		output.println("\tprotected void generate(JsonGenerator generator) {");
+		output.println("\t@Override");
+		output.println("\tpublic void generate(JsonGenerator generator) {");
+		output.println("\t\tgenerator.write(getJsonName());");
 		output.println("\t\tgenerator.writeStartObject();");
 
-		for (Field field : c.getDeclaredFields())
+		while (shouldContinue(c))
 		{
-			if (shouldIgnore(field)) continue;
-			switch (field.getType().getName())
+			for (Field field : c.getDeclaredFields())
 			{
-			case "org.cnv.shr.db.h2.SharingState":
-				output.println("\t\tgenerator.write(\"" + field.getName() + "\"," + field.getName() + ".getDbValue());");
-				break;
-			case "org.cnv.shr.dmn.dwn.SharedFileId":
-				break;
-			case "org.cnv.shr.dmn.dwn.Chunk":
-				break;
-			case "java.security.PublicKey":
-				output.println("\t\tgenerator.write(\"" + field.getName() + "\", KeyPairObject.serialize(" + field.getName() + "));");
-				break;
-			case "[B":
-				output.println("\t\tgenerator.write(\"" + field.getName() + "\", Misc.format(" + field.getName() + "));");
-				break;
+				if (shouldIgnore(field))
+					continue;
 				
-			case "int": 
-			case "java.lang.String":
-			case "long":
-			case "boolean":
-			case "double":
-				output.println("\t\tgenerator.write(\"" + field.getName() + "\", " + field.getName() + ");");
-				break;
-			default:
-				System.out.println("\t\t\t" + field.getType() + " " + field.getName());
+				printField(output, field.getType(), field.getName(), field.getGenericType());
 			}
+			c = c.getSuperclass();
 		}
 
 		output.println("\t\tgenerator.writeEnd();");
-		output.println("\t}\n");
+		output.println("\t}");
 	}
+
+private static void printField(PrintStream output, Class typeName, String fieldName, Type genericType)
+{
+	switch (typeName.getName())
+	{
+	case "java.util.HashMap":
+	case "org.cnv.shr.mdl.PathElement":
+	case "org.cnv.shr.mdl.RemoteDirectory":
+		output.println("fix me");
+		break;
+	case "org.cnv.shr.msg.RootListChild":
+	case "org.cnv.shr.msg.key.MsgMap":
+	case "org.cnv.shr.dmn.dwn.Chunk":
+	case "org.cnv.shr.dmn.dwn.SharedFileId":
+	case "org.cnv.shr.trck.FileEntry":
+	case "org.cnv.shr.msg.PathListChild":
+		output.println("\t\t" + fieldName + ".generate(generator);");
+		break;
+	case "org.cnv.shr.db.h2.SharingState":
+		output.println("\t\tgenerator.write(\"" + fieldName + "\"," + fieldName + ".name());");
+		break;
+	case "java.security.PublicKey":
+		output.println("\t\tgenerator.write(\"" + fieldName + "\", KeyPairObject.serialize(" + fieldName + "));");
+		break;
+	case "[B":
+		output.println("\t\tgenerator.write(\"" + fieldName + "\", Misc.format(" + fieldName + "));");
+		break;
+
+	case "java.lang.Integer":
+	case "java.lang.Long":
+	case "java.lang.Boolean":
+		output.println("\t\tif (" + fieldName + "!=null)");
+	case "int":
+	case "java.lang.String":
+	case "long":
+	case "boolean":
+	case "double":
+		output.println("\t\tgenerator.write(\"" + fieldName + "\", " + fieldName + ");");
+		break;
+	case "java.util.List":
+	case "java.util.LinkedList":
+		ParameterizedType ptype = (ParameterizedType) genericType;
+		Type type = ptype.getActualTypeArguments()[0];
+		
+		output.println("\t\tgenerator.writeStartArray(\"" + fieldName + "\");");
+		output.println("\t\tfor (" + type.getTypeName() + " elem : " + fieldName + ")");
+		output.println("\t\t{");
+		printField(output, (Class<?>) type, "elem", type);
+		output.println("\t\t}");
+		output.println("\t\tgenerator.writeEnd();");
+		break;
+	default:
+		throw new RuntimeException("Nothing for " + typeName + " " + fieldName);
+	}
+}
 	
 	private static Path getPathForFile(Class c)
 	{
@@ -445,6 +608,9 @@ public class GenerateParserCode
 					{
 						printGenerator(output, c);
 						printParser(output, c);
+						printType(output, c);
+						printConstructor(output, c);
+//						printValidator(output, c);
 						output.println(line);
 						state = 2;
 					}
@@ -464,6 +630,43 @@ public class GenerateParserCode
 		}
 	}
 	
+//	private static void printValidator(PrintStream output, Class c)
+//	{
+//		output.println("\tpublic void validate() {");
+//
+//		while (shouldContinue(c))
+//		{
+//			for (Field field : c.getDeclaredFields())
+//			{
+//				if (shouldIgnore(field))
+//					continue;
+//				output.println("\t\tjava.util.Objects.requireNonNull(" + field.getName() + ");");
+//			}
+//			c = c.getSuperclass();
+//		}
+//		output.println("\t}");
+//	}
+
+	private static void printConstructor(PrintStream ps, Class c)
+	{
+		if (c.getName().equals(org.cnv.shr.db.h2.SharingState.class.getName()))
+		{
+			return;
+		}
+		String substring = c.getName().substring(c.getName().lastIndexOf('.') + 1);
+		ps.println("\tpublic " + substring + "(JsonParser parser) { parse(parser); }");
+	}
+
+	private static void printType(PrintStream ps, Class c)
+	{
+		String substring = c.getName().substring(c.getName().lastIndexOf('.') + 1);
+		if (!keys.add(substring))
+		{
+			throw new RuntimeException("Two classes by the same name: " + c.getName());
+		}
+		ps.println("\tpublic String getJsonName() { return \"" + substring + "\"; }");
+	}
+
 	public static void Files_move(Path origin, Path dest) throws IOException
 	{
 //		Files.move(backup, original, StandardCopyOption.REPLACE_EXISTING);
@@ -484,6 +687,10 @@ public class GenerateParserCode
 		Files.delete(origin);
 	}
 	
+	private static boolean shouldContinue(Class c)
+	{
+		return c != null && c.getName().startsWith("org.cnv.shr");
+	}
 	
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK

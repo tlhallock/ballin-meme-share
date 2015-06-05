@@ -13,7 +13,9 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class OpenConnection extends KeyMessage
 {
@@ -83,21 +85,38 @@ public class OpenConnection extends KeyMessage
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("sourcePublicKey", KeyPairObject.serialize(sourcePublicKey));
 		generator.write("destinationPublicKey", KeyPairObject.serialize(destinationPublicKey));
 		generator.write("requestedNaunce", Misc.format(requestedNaunce));
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needssourcePublicKey = true;
+		boolean needsdestinationPublicKey = true;
+		boolean needsrequestedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needssourcePublicKey)
+				{
+					throw new RuntimeException("Message needs sourcePublicKey");
+				}
+				if (needsdestinationPublicKey)
+				{
+					throw new RuntimeException("Message needs destinationPublicKey");
+				}
+				if (needsrequestedNaunce)
+				{
+					throw new RuntimeException("Message needs requestedNaunce");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -106,10 +125,16 @@ public class OpenConnection extends KeyMessage
 			if (key==null) break;
 			switch(key) {
 			case "sourcePublicKey":
-				sourcePublicKey = JsonThing.readKey(parser);
+				needssourcePublicKey = false;
+				sourcePublicKey = KeyPairObject.deSerializePublicKey(parser.getString());
 				break;
 			case "destinationPublicKey":
-				destinationPublicKey = JsonThing.readKey(parser);
+				needsdestinationPublicKey = false;
+				destinationPublicKey = KeyPairObject.deSerializePublicKey(parser.getString());
+				break;
+			case "requestedNaunce":
+				needsrequestedNaunce = false;
+				requestedNaunce = Misc.format(parser.getString());
 				break;
 			}
 			break;
@@ -117,5 +142,7 @@ public class OpenConnection extends KeyMessage
 			}
 		}
 	}
+	public String getJsonName() { return "OpenConnection"; }
+	public OpenConnection(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

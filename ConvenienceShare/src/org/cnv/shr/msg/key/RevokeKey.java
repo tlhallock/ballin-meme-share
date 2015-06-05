@@ -53,19 +53,26 @@ public class RevokeKey extends Message
 
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("revoke", KeyPairObject.serialize(revoke));
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsrevoke = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsrevoke)
+				{
+					throw new RuntimeException("Message needs revoke");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -73,12 +80,15 @@ public class RevokeKey extends Message
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("revoke")) {
-				revoke = JsonThing.readKey(parser);
+				needsrevoke = false;
+				revoke = KeyPairObject.deSerializePublicKey(parser.getString());
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "RevokeKey"; }
+	public RevokeKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

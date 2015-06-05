@@ -112,20 +112,32 @@ public class FileEntry implements TrackObject
 
 	
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("checksum", checksum);
 		generator.write("fileSize", fileSize);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needschecksum = true;
+		boolean needsfileSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needschecksum)
+				{
+					throw new RuntimeException("Message needs checksum");
+				}
+				if (needsfileSize)
+				{
+					throw new RuntimeException("Message needs fileSize");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -133,18 +145,22 @@ public class FileEntry implements TrackObject
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("checksum")) {
+				needschecksum = false;
 				checksum = parser.getString();
 			}
 			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("fileSize")) {
-				fileSize = new BigDecimal(parser.getString()).longValue();
+				needsfileSize = false;
+				fileSize = Long.parseLong(parser.getString());
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "FileEntry"; }
+	public FileEntry(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

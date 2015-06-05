@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
+import org.cnv.shr.util.Misc;
+
 public class TrackerEntry implements TrackObject
 {
 	private String url;
@@ -12,7 +14,7 @@ public class TrackerEntry implements TrackObject
 	private int end;
 	public static int TRACKER_PORT_END   = 9005;
 	public static int TRACKER_PORT_BEGIN = 9001;
-        public static int MACHINE_PAGE_SIZE  = 50;
+  public static int MACHINE_PAGE_SIZE  = 50;
 	
 	private Boolean sync;
 	
@@ -137,21 +139,50 @@ public class TrackerEntry implements TrackObject
 
 	
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("url", url);
 		generator.write("begin", begin);
 		generator.write("end", end);
+		if (sync!=null)
+		generator.write("sync", sync);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsurl = true;
+		boolean needssync = true;
+		boolean needssync = true;
+		boolean needsbegin = true;
+		boolean needsend = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsurl)
+				{
+					throw new RuntimeException("Message needs url");
+				}
+				if (needssync)
+				{
+					throw new RuntimeException("Message needs sync");
+				}
+				if (needssync)
+				{
+					throw new RuntimeException("Message needs sync");
+				}
+				if (needsbegin)
+				{
+					throw new RuntimeException("Message needs begin");
+				}
+				if (needsend)
+				{
+					throw new RuntimeException("Message needs end");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -159,17 +190,34 @@ public class TrackerEntry implements TrackObject
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("url")) {
+				needsurl = false;
 				url = parser.getString();
+			}
+			break;
+		case VALUE_FALSE:
+			if (key==null) break;
+			if (key.equals("sync")) {
+				needssync = false;
+				sync = false;
+			}
+			break;
+		case VALUE_TRUE:
+			if (key==null) break;
+			if (key.equals("sync")) {
+				needssync = false;
+				sync = true;
 			}
 			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
 			case "begin":
-				begin = new BigDecimal(parser.getString()).intValue();
+				needsbegin = false;
+				begin = Integer.parseInt(parser.getString());
 				break;
 			case "end":
-				end = new BigDecimal(parser.getString()).intValue();
+				needsend = false;
+				end = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;
@@ -177,5 +225,7 @@ public class TrackerEntry implements TrackObject
 			}
 		}
 	}
+	public String getJsonName() { return "TrackerEntry"; }
+	public TrackerEntry(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

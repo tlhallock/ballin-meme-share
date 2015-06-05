@@ -148,7 +148,9 @@ public class MachineEntry implements TrackObject
 
 	
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("ident", ident);
 		generator.write("keyStr", keyStr);
@@ -158,14 +160,44 @@ public class MachineEntry implements TrackObject
 		generator.write("endPort", endPort);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsident = true;
+		boolean needskeyStr = true;
+		boolean needsname = true;
+		boolean needsip = true;
+		boolean needsbeginPort = true;
+		boolean needsendPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsident)
+				{
+					throw new RuntimeException("Message needs ident");
+				}
+				if (needskeyStr)
+				{
+					throw new RuntimeException("Message needs keyStr");
+				}
+				if (needsname)
+				{
+					throw new RuntimeException("Message needs name");
+				}
+				if (needsip)
+				{
+					throw new RuntimeException("Message needs ip");
+				}
+				if (needsbeginPort)
+				{
+					throw new RuntimeException("Message needs beginPort");
+				}
+				if (needsendPort)
+				{
+					throw new RuntimeException("Message needs endPort");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -174,15 +206,19 @@ public class MachineEntry implements TrackObject
 			if (key==null) break;
 			switch(key) {
 			case "ident":
+				needsident = false;
 				ident = parser.getString();
 				break;
 			case "keyStr":
+				needskeyStr = false;
 				keyStr = parser.getString();
 				break;
 			case "name":
+				needsname = false;
 				name = parser.getString();
 				break;
 			case "ip":
+				needsip = false;
 				ip = parser.getString();
 				break;
 			}
@@ -191,10 +227,12 @@ public class MachineEntry implements TrackObject
 			if (key==null) break;
 			switch(key) {
 			case "beginPort":
-				beginPort = new BigDecimal(parser.getString()).intValue();
+				needsbeginPort = false;
+				beginPort = Integer.parseInt(parser.getString());
 				break;
 			case "endPort":
-				endPort = new BigDecimal(parser.getString()).intValue();
+				needsendPort = false;
+				endPort = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;
@@ -202,5 +240,7 @@ public class MachineEntry implements TrackObject
 			}
 		}
 	}
+	public String getJsonName() { return "MachineEntry"; }
+	public MachineEntry(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

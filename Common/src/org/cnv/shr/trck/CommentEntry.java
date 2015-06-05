@@ -127,7 +127,9 @@ public class CommentEntry implements TrackObject
 
 	
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("originIdent", originIdent);
 		generator.write("destIdent", destIdent);
@@ -136,14 +138,39 @@ public class CommentEntry implements TrackObject
 		generator.write("date", date);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsoriginIdent = true;
+		boolean needsdestIdent = true;
+		boolean needstext = true;
+		boolean needsrating = true;
+		boolean needsdate = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsoriginIdent)
+				{
+					throw new RuntimeException("Message needs originIdent");
+				}
+				if (needsdestIdent)
+				{
+					throw new RuntimeException("Message needs destIdent");
+				}
+				if (needstext)
+				{
+					throw new RuntimeException("Message needs text");
+				}
+				if (needsrating)
+				{
+					throw new RuntimeException("Message needs rating");
+				}
+				if (needsdate)
+				{
+					throw new RuntimeException("Message needs date");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -152,12 +179,15 @@ public class CommentEntry implements TrackObject
 			if (key==null) break;
 			switch(key) {
 			case "originIdent":
+				needsoriginIdent = false;
 				originIdent = parser.getString();
 				break;
 			case "destIdent":
+				needsdestIdent = false;
 				destIdent = parser.getString();
 				break;
 			case "text":
+				needstext = false;
 				text = parser.getString();
 				break;
 			}
@@ -166,10 +196,12 @@ public class CommentEntry implements TrackObject
 			if (key==null) break;
 			switch(key) {
 			case "rating":
-				rating = new BigDecimal(parser.getString()).intValue();
+				needsrating = false;
+				rating = Integer.parseInt(parser.getString());
 				break;
 			case "date":
-				date = new BigDecimal(parser.getString()).longValue();
+				needsdate = false;
+				date = Long.parseLong(parser.getString());
 				break;
 			}
 			break;
@@ -177,5 +209,7 @@ public class CommentEntry implements TrackObject
 			}
 		}
 	}
+	public String getJsonName() { return "CommentEntry"; }
+	public CommentEntry(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

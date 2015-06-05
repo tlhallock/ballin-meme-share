@@ -53,21 +53,42 @@ public class RequestCompletionStatus extends DownloadMessage
 	protected void finishWriting(AbstractByteWriter buffer) throws IOException {}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
+		descriptor.generate(generator);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsdescriptor)
+				{
+					throw new RuntimeException("Message needs descriptor");
+				}
 				return;                                
-			}                                      
-		}                                        
-	}                                          
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	public String getJsonName() { return "RequestCompletionStatus"; }
+	public RequestCompletionStatus(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

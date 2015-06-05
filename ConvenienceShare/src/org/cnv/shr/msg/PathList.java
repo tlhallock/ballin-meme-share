@@ -11,12 +11,12 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
-import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -30,7 +30,7 @@ public class PathList extends Message
 	private String name;
 	private String currentPath;
 	private LinkedList<String> subDirs = new LinkedList<>();
-	private LinkedList<Child> children = new LinkedList<>();
+	private LinkedList<PathListChild> children = new LinkedList<>();
 
 	public PathList(final InputStream input) throws IOException
 	{
@@ -54,7 +54,7 @@ public class PathList extends Message
 			}
 			else
 			{
-				children.add(new Child(local));
+				children.add(new PathListChild(this, local));
 			}
 		}
 	}
@@ -71,7 +71,7 @@ public class PathList extends Message
 			builder.append('\t').append(subdir).append('\n');
 		}
 		builder.append("Files:\n");
-		for (final Child c : children)
+		for (final PathListChild c : children)
 		{
 			builder.append('\t').append(c.name).append('\n');
 		}
@@ -92,7 +92,9 @@ public class PathList extends Message
 		final int numFiles = reader.readInt();
 		for (int i = 0; i < numFiles; i++)
 		{
-			children.add(new Child(reader));
+			PathListChild e = new PathListChild(reader);
+			e.setParent(this);
+			children.add(e);
 		}
 	}
 
@@ -107,7 +109,7 @@ public class PathList extends Message
 			buffer.append(sub);
 		}
 		buffer.append(children.size());
-		for (final Child c : children)
+		for (final PathListChild c : children)
 		{
 			c.write(buffer);
 		}
@@ -131,6 +133,7 @@ public class PathList extends Message
 		return getPath().getFullPath();
 	}
 	
+	@MyParserIgnore
 	RemoteDirectory rootCache;
 	RemoteDirectory getRoot(final Machine machine)
 	{
@@ -141,11 +144,12 @@ public class PathList extends Message
 		return rootCache = (RemoteDirectory) DbRoots.getRoot(machine, name);
 	}
 
-	private RemoteDirectory getRoot()
+	RemoteDirectory getRoot()
 	{
 		return rootCache;
 	}
-	
+
+	@MyParserIgnore
 	PathElement elemCache;
 	PathElement getPath()
 	{
@@ -155,51 +159,8 @@ public class PathList extends Message
 		}
 		return elemCache = DbPaths.getPathElement(currentPath);
 	}
-	
-	public class Child
-	{
-		private String name;
-		private long size;
-		private String checksum;
-		private String tags;
-		private long lastModified;
-		
-		Child(final SharedFile l)
-		{
-			this.name = l.getPath().getUnbrokenName();
-			this.size = l.getFileSize();
-			this.checksum = l.getChecksum() == null ? "" : l.getChecksum();
-			this.tags = l.getTags();
-			this.lastModified = l.getLastUpdated();
-		}
-		
-		Child (final ByteReader bytes) throws IOException
-		{
-			name = bytes.readString();
-			size = bytes.readLong();
-			checksum = bytes.readString();
-			tags = bytes.readString();
-			lastModified = bytes.readLong();
-		}
-		
-		public void write(final AbstractByteWriter buffer) throws IOException
-		{
-			buffer.append(name);
-			buffer.append(size);
-			buffer.append(checksum);
-			buffer.append(tags == null ? "" : tags);
-			buffer.append(lastModified);
-		}
-		
-		public RemoteFile create() 
-		{
-			final PathElement pathElement = DbPaths.getPathElement(getPath(), name);
-			return new RemoteFile(getRoot(), pathElement,
-					size, checksum, tags, lastModified);
-		}
-	}
 
-	public LinkedList<Child> getChildren()
+	public LinkedList<PathListChild> getChildren()
 	{
 		return children;
 	}
@@ -217,31 +178,178 @@ public class PathList extends Message
 	
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("name", name);
 		generator.write("currentPath", currentPath);
+		generator.writeStartArray("subDirs");
+		for (java.lang.String elem : subDirs)
+		{
+		generator.write("elem", elem);
+		}
+		generator.writeEnd();
+		generator.writeStartArray("children");
+		for (org.cnv.shr.msg.PathListChild elem : children)
+		{
+		elem.generate(generator);
+		}
+		generator.writeEnd();
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needssubDirs = true;
+		boolean needschildren = true;
+		boolean needsname = true;
+		boolean needscurrentPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needssubDirs)
+				{
+					throw new RuntimeException("Message needs subDirs");
+				}
+				if (needschildren)
+				{
+					throw new RuntimeException("Message needs children");
+				}
+				if (needsname)
+				{
+					throw new RuntimeException("Message needs name");
+				}
+				if (needscurrentPath)
+				{
+					throw new RuntimeException("Message needs currentPath");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case START_ARRAY:
+			if (key==null) break;
+			switch(key) {
+			case "subDirs":
+				needssubDirs = false;
+				subDirs = new LinkedList<>();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				while (parser.hasNext())                    
+				{                                           
+					e = parser.next();                        
+					switch (e)                                
+					{                                         
+					case START_ARRAY:                         
+					case START_OBJECT:                        
+					case VALUE_TRUE:                          
+					case VALUE_NUMBER:                        
+					case VALUE_STRING:                        
+						if (key == null)                        
+								break;                              
+					case END_ARRAY:                           
+						break;                                  
+					default:                                  
+						break;                                  
+					}                                         
+				}                                           
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
+				break;
+			case "children":
+				needschildren = false;
+				children = new LinkedList<>();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				while (parser.hasNext())                    
+				{                                           
+					e = parser.next();                        
+					switch (e)                                
+					{                                         
+					case START_ARRAY:                         
+					case START_OBJECT:                        
+					case VALUE_TRUE:                          
+					case VALUE_NUMBER:                        
+					case VALUE_STRING:                        
+						if (key == null)                        
+								break;                              
+					case END_ARRAY:                           
+						break;                                  
+					default:                                  
+						break;                                  
+					}                                         
+				}                                           
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
 			case "name":
+				needsname = false;
 				name = parser.getString();
 				break;
 			case "currentPath":
+				needscurrentPath = false;
 				currentPath = parser.getString();
 				break;
 			}
@@ -250,5 +358,7 @@ public class PathList extends Message
 			}
 		}
 	}
+	public String getJsonName() { return "PathList"; }
+	public PathList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

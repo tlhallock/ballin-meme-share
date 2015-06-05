@@ -80,19 +80,26 @@ public class GetPermission extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("rootName", rootName);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsrootName = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsrootName)
+				{
+					throw new RuntimeException("Message needs rootName");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -100,6 +107,7 @@ public class GetPermission extends Message
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("rootName")) {
+				needsrootName = false;
 				rootName = parser.getString();
 			}
 			break;
@@ -107,5 +115,7 @@ public class GetPermission extends Message
 			}
 		}
 	}
+	public String getJsonName() { return "GetPermission"; }
+	public GetPermission(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

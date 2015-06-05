@@ -3,7 +3,6 @@ package org.cnv.shr.msg.key;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
-import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Objects;
 
@@ -19,7 +18,7 @@ import org.cnv.shr.util.Misc;
 
 public class KeyNotFound extends KeyMessage
 {
-	HashMap<PublicKey, byte[]> tests = new HashMap<>();
+	private MsgMap tests = new MsgMap();
 
 	public KeyNotFound(InputStream stream) throws IOException
 	{
@@ -108,21 +107,42 @@ public class KeyNotFound extends KeyMessage
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
+		tests.generate(generator);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needstests = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needstests)
+				{
+					throw new RuntimeException("Message needs tests");
+				}
 				return;                                
-			}                                      
-		}                                        
-	}                                          
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case START_ARRAY:
+			if (key==null) break;
+			if (key.equals("tests")) {
+				needstests = false;
+				tests = new MsgMap(parser);
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	public String getJsonName() { return "KeyNotFound"; }
+	public KeyNotFound(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

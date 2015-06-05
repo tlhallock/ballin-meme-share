@@ -69,32 +69,55 @@ public class CompletionStatus extends DownloadMessage
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("percentComplete", percentComplete);
+		descriptor.generate(generator);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsdescriptor = true;
+		boolean needspercentComplete = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsdescriptor)
+				{
+					throw new RuntimeException("Message needs descriptor");
+				}
+				if (needspercentComplete)
+				{
+					throw new RuntimeException("Message needs percentComplete");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
+			}
+			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("percentComplete")) {
-				percentComplete = new BigDecimal(parser.getString()).doubleValue();
+				needspercentComplete = false;
+				percentComplete = Double.parseDouble(parser.getString());
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "CompletionStatus"; }
+	public CompletionStatus(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

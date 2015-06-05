@@ -13,7 +13,9 @@ import org.cnv.shr.util.ByteReader;
 
 public abstract class DownloadMessage extends Message
 {
-	private FileEntry descriptor;
+	protected FileEntry descriptor;
+	
+	protected DownloadMessage() {}
 	
 	protected DownloadMessage(InputStream input) throws IOException
 	{

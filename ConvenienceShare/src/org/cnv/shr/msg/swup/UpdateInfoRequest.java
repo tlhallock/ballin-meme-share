@@ -13,6 +13,8 @@ import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.Misc;
 
 public class UpdateInfoRequest extends Message
 {
@@ -65,33 +67,54 @@ public class UpdateInfoRequest extends Message
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("publicKey", KeyPairObject.serialize(publicKey));
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needspublicKey = true;
+		boolean needsnaunceRequest = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needspublicKey)
+				{
+					throw new RuntimeException("Message needs publicKey");
+				}
+				if (needsnaunceRequest)
+				{
+					throw new RuntimeException("Message needs naunceRequest");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 		case VALUE_STRING:
 			if (key==null) break;
-			if (key.equals("publicKey")) {
-				publicKey = JsonThing.readKey(parser);
+			switch(key) {
+			case "publicKey":
+				needspublicKey = false;
+				publicKey = KeyPairObject.deSerializePublicKey(parser.getString());
+				break;
+			case "naunceRequest":
+				needsnaunceRequest = false;
+				naunceRequest = Misc.format(parser.getString());
+				break;
 			}
 			break;
 			default: break;
 			}
 		}
 	}
+	public String getJsonName() { return "UpdateInfoRequest"; }
+	public UpdateInfoRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

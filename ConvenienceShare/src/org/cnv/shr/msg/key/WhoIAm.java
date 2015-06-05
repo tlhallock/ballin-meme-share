@@ -13,6 +13,7 @@ import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.KeyPairObject;
 
 public class WhoIAm extends MachineFound
 {
@@ -78,20 +79,56 @@ public class WhoIAm extends MachineFound
 	}
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("pKey", KeyPairObject.serialize(pKey));
 		generator.write("versionString", versionString);
+		generator.write("port", port);
+		generator.write("nports", nports);
+		generator.write("name", name);
+		generator.write("ident", ident);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needspKey = true;
+		boolean needsversionString = true;
+		boolean needsname = true;
+		boolean needsident = true;
+		boolean needsport = true;
+		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needspKey)
+				{
+					throw new RuntimeException("Message needs pKey");
+				}
+				if (needsversionString)
+				{
+					throw new RuntimeException("Message needs versionString");
+				}
+				if (needsname)
+				{
+					throw new RuntimeException("Message needs name");
+				}
+				if (needsident)
+				{
+					throw new RuntimeException("Message needs ident");
+				}
+				if (needsport)
+				{
+					throw new RuntimeException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new RuntimeException("Message needs nports");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -100,10 +137,33 @@ public class WhoIAm extends MachineFound
 			if (key==null) break;
 			switch(key) {
 			case "pKey":
-				pKey = JsonThing.readKey(parser);
+				needspKey = false;
+				pKey = KeyPairObject.deSerializePublicKey(parser.getString());
 				break;
 			case "versionString":
+				needsversionString = false;
 				versionString = parser.getString();
+				break;
+			case "name":
+				needsname = false;
+				name = parser.getString();
+				break;
+			case "ident":
+				needsident = false;
+				ident = parser.getString();
+				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+				break;
+			case "nports":
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;
@@ -111,5 +171,7 @@ public class WhoIAm extends MachineFound
 			}
 		}
 	}
+	public String getJsonName() { return "WhoIAm"; }
+	public WhoIAm(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

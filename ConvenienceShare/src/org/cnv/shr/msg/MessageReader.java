@@ -16,6 +16,7 @@ import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.DownloadDone;
+import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.msg.dwn.MachineHasFile;
 import org.cnv.shr.msg.dwn.NewAesKey;
@@ -85,6 +86,7 @@ public class MessageReader
 		add(new MessageIdentifier(UpdateInfoRequest.class          ));
 		add(new MessageIdentifier(UpdateInfoRequestRequest.class   ));
 		add(new MessageIdentifier(ShowApplication.class            ));
+		add(new MessageIdentifier(DownloadFailure.class            ));
 
 		LogWrapper.getLogger().info("Message map:\n" + this);
 	}

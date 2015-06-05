@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -14,6 +16,8 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 
 import javax.crypto.NoSuchPaddingException;
+import javax.json.Json;
+import javax.json.stream.JsonGenerator;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
@@ -33,6 +37,8 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 // TODO: this should really only need authentication to UPDATE machine info...
 public class Communication implements Closeable
 {
+	private JsonGenerator logFile = Json.createGenerator(Files.newOutputStream(Paths.get("log." + System.currentTimeMillis() + "." + Math.random() + ".txt")));
+	{ logFile.writeStartArray(); }
 	// The streams
 	private Socket socket;
 	
@@ -96,6 +102,9 @@ public class Communication implements Closeable
 	
 	public synchronized void send(Message m) throws IOException
 	{
+		m.generate(logFile);
+		logFile.flush();
+		
 		if (socket.isOutputShutdown())
 		{
 			LogWrapper.getLogger().info("Connection closed. cant send " + m);
@@ -195,6 +204,8 @@ public class Communication implements Closeable
 		{
 			e1.printStackTrace();
 		}
+		logFile.writeEnd();
+		logFile.close();
 		try
 		{
 			socket.shutdownOutput();

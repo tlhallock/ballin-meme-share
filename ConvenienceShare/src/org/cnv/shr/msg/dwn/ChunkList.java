@@ -84,21 +84,109 @@ public class ChunkList extends DownloadMessage
 	
 
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	protected void generate(JsonGenerator generator) {
+	@Override
+	public void generate(JsonGenerator generator) {
+		generator.write(getJsonName());
 		generator.writeStartObject();
+		generator.writeStartArray("chunks");
+		for (org.cnv.shr.dmn.dwn.Chunk elem : chunks)
+		{
+		elem.generate(generator);
+		}
+		generator.writeEnd();
+		descriptor.generate(generator);
 		generator.writeEnd();
 	}
-
+	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needschunks = true;
+		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needschunks)
+				{
+					throw new RuntimeException("Message needs chunks");
+				}
+				if (needsdescriptor)
+				{
+					throw new RuntimeException("Message needs descriptor");
+				}
 				return;                                
-			}                                      
-		}                                        
-	}                                          
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case START_ARRAY:
+			if (key==null) break;
+			if (key.equals("chunks")) {
+				needschunks = false;
+				chunks = new LinkedList<>();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				while (parser.hasNext())                    
+				{                                           
+					e = parser.next();                        
+					switch (e)                                
+					{                                         
+					case START_ARRAY:                         
+					case START_OBJECT:                        
+					case VALUE_TRUE:                          
+					case VALUE_NUMBER:                        
+					case VALUE_STRING:                        
+						if (key == null)                        
+								break;                              
+					case END_ARRAY:                           
+						break;                                  
+					default:                                  
+						break;                                  
+					}                                         
+				}                                           
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
+			}
+			break;
+			default: break;
+			}
+		}
+	}
+	public String getJsonName() { return "ChunkList"; }
+	public ChunkList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }
