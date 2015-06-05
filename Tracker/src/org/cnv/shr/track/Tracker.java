@@ -138,7 +138,8 @@ public class Tracker implements Runnable
 		byte[] decrypted = getDecryptedNaunce(input, generator);
 		if (!Arrays.equals(createNaunce, decrypted))
 		{
-			fail("Authentication failed.", input, generator);
+			LogWrapper.getLogger().info("Client not authenticated.");
+			return null;
 		}
 
 		LogWrapper.getLogger().info("Client authenticated.");
@@ -201,10 +202,23 @@ public class Tracker implements Runnable
 		CommentEntry comment;
 		switch (action)
 		{
+		case GET_MACHINE:
+			other = store.getMachine(request.getParam("other"));
+			output.writeStartArray();
+			if (other != null)
+			{
+				other.print(output);
+			}
+			output.writeEnd();
+			break;
 		case CLAIM_FILE:
 			// this should be a stream...
 			file = new FileEntry();
 			TrackObjectUtils.openArray(input);
+			if (entry == null)
+			{
+				fail("Need to authenticate before you can add a file.", input, output);
+			}
 			while (TrackObjectUtils.next(input, file))
 			{
 				LogWrapper.getLogger().info("Adding " + file.toString());
@@ -215,7 +229,8 @@ public class Tracker implements Runnable
 			store.listMachines(output);
 			break;
 		case LIST_MY_FILES:
-			store.listFiles(entry, output);
+			other = store.getMachine(request.getParam("other"));
+			store.listFiles(other, output);
 			break;
 		case LIST_RATINGS:
 			other = new MachineEntry();
@@ -251,6 +266,10 @@ public class Tracker implements Runnable
 		case LOSE_FILE:
 			file = new FileEntry();
 			TrackObjectUtils.openArray(input);
+			if (entry == null)
+			{
+				fail("Need to authenticate before you can remove a file.", input, output);
+			}
 			while (TrackObjectUtils.next(input, file))
 			{
 				LogWrapper.getLogger().info("Removing " + file.toString());
@@ -258,6 +277,10 @@ public class Tracker implements Runnable
 			}
 			break;
 		case POST_COMMENT:
+			if (entry == null)
+			{
+				fail("Need to authenticate before you can post a comment", input, output);
+			}
 			comment = new CommentEntry();
 			if (!TrackObjectUtils.read(input, comment))
 			{
@@ -268,6 +291,10 @@ public class Tracker implements Runnable
 			store.postComment(comment);
 			break;
 		case POST_MACHINE:
+			if (entry == null)
+			{
+				fail("Need to authenticate before add yourself to the tracker.", input, output);
+			}
 			// already done...
 			break;
 		default:

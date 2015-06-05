@@ -65,16 +65,18 @@ public class DbMachines
 				StatementWrapper stmt = c.prepareStatement(SELECT2))
 		{
 			stmt.setString(1, identifier);
-			ResultSet executeQuery = stmt.executeQuery();
-			if (executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				Machine machine = (Machine) DbObjects.RMACHINE.allocate(executeQuery);
-				machine.fill(c, executeQuery, new DbLocals());
-				return machine;
-			}
-			else
-			{
-				return null;
+				if (executeQuery.next())
+				{
+					Machine machine = (Machine) DbObjects.RMACHINE.allocate(executeQuery);
+					machine.fill(c, executeQuery, new DbLocals());
+					return machine;
+				}
+				else
+				{
+					return null;
+				}
 			}
 		}
 		catch (SQLException e)
@@ -90,14 +92,16 @@ public class DbMachines
 				StatementWrapper stmt = c.prepareStatement(SELECT3))
 		{
 			stmt.setString(1, identifier);
-			ResultSet executeQuery = stmt.executeQuery();
-			if (executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				return executeQuery.getInt(1);
-			}
-			else
-			{
-				return null;
+				if (executeQuery.next())
+				{
+					return executeQuery.getInt(1);
+				}
+				else
+				{
+					return null;
+				}
 			}
 		}
 		catch (SQLException e)
@@ -125,7 +129,7 @@ public class DbMachines
 	public static void updateMachineInfo(
 			String ident,
 			String name,
-			PublicKey[] publicKeys,
+			PublicKey key,
 			String ip,
 			int port,
 			int nports)
@@ -147,7 +151,7 @@ public class DbMachines
 		// Is the first of these two really necessary?
 		Services.notifications.remoteChanged(machine);
 		Services.notifications.remotesChanged();
-		for (PublicKey key : publicKeys)
+		if (key != null)
 		{
 			DbKeys.addKey(machine, key);
 		}

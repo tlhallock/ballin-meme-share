@@ -17,30 +17,6 @@ public class Main
 
 	public static void main(String[] args) throws Exception
 	{
-		// What happens with two locals by the same name...
-		// remove all caching of db objects...
-		
-        // Need to break up chunkList
-        // Need to break up PathList
-
-        // start on startup
-        
-		// IOUtils.copy
-        
-        // make sure sockets close
-        // add way to change download priority
-        // figure out why sort on file size doesn't work
-        
-        // compress data
-        
-        // black list
-        // keep full keys (including date/expire)
-        // able to require password to log in.
-        
-		// look into ExtendedWatchEventModifier
-		// monitor free space
-		// Need to check versions when messaging.
-
 		Arguments a = new Arguments();
 		a.parseArgs(args);
 		

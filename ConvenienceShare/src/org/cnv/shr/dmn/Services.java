@@ -32,7 +32,7 @@ import org.cnv.shr.dmn.mn.Arguments;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.mn.Quiter;
 import org.cnv.shr.dmn.not.Notifications;
-import org.cnv.shr.dmn.trk.BrowserFrame;
+import org.cnv.shr.dmn.trk.TrackerFrame;
 import org.cnv.shr.dmn.trk.Trackers;
 import org.cnv.shr.gui.TaskMenu;
 import org.cnv.shr.gui.UserActions;
@@ -223,7 +223,7 @@ public class Services
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				new BrowserFrame().setVisible(true);
+				new TrackerFrame().setVisible(true);
 			}});
 		menu.add(item);
 		item = new MenuItem("Quit");
@@ -311,7 +311,7 @@ public class Services
 		initializeLogging();
 		
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
-		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
+//		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
 		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
 		
 		try (Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(), settings.servePortBeginI.get());)

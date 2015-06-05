@@ -38,10 +38,11 @@ public class TrackerStore implements Closeable
 	private PreparedStatement fileFoundStatement;
 	private PreparedStatement cleanFilesStatement;
 	private PreparedStatement getMachineIdStatement;
+	private PreparedStatement removeTrackerStatement;
 //	private PreparedStatement fileRemovedStatement;
 	
 	
-	TrackerStore() throws SQLException
+	public TrackerStore() throws SQLException
 	{
 		c = createConnection();
 		
@@ -60,6 +61,7 @@ public class TrackerStore implements Closeable
 		removeMachineStatement     = c.prepareStatement("delete from MACHINE where IDENT=?;");
 		fileFoundStatement         = c.prepareStatement("merge into SFILE key (CHKSUM) values ((select F_ID from SFILE where CHKSUM=?), ?, ?)");
 		cleanFilesStatement        = c.prepareStatement("delete from SFILE where not exists (select FID from MACHINE_CONTAINS where FID=SFILE.F_ID);");
+		removeTrackerStatement     = c.prepareStatement("delete from TRACKER where TRACKER.IP=? and TRACKER.PORT=?;");
 //		fileRemovedStatement       = c.prepareStatement("delete from MACHINE_CONTAINS where FID=(select F_ID from SFILE where CHKSUM=?);");
 	}
 
@@ -117,9 +119,39 @@ public class TrackerStore implements Closeable
 		}
 	}
 	
+	public void removeTracker(TrackerEntry entry)
+	{
+		try
+		{
+			int ndx = 1;
+			removeTrackerStatement.setString(ndx++, entry.getIp());
+			removeTrackerStatement.setInt(ndx++, entry.getBeginPort());
+
+			addTrackerStatement.execute();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+		}
+	}
+
+  public interface TrackerListener { public void receiveTracker(TrackerEntry entry); }
 	public void listTrackers(JsonGenerator output)
 	{
 		output.writeStartArray();
+		listTrackers(new TrackerListener()
+		{
+			@Override
+			public void receiveTracker(TrackerEntry entry)
+			{
+				entry.print(output);
+			}
+		});
+		output.writeEnd();
+	}
+	
+	public void listTrackers(TrackerListener listener)
+	{
 		try (ResultSet results = listTrackersStatement.executeQuery())
 		{
 			TrackerEntry tracker = new TrackerEntry();
@@ -132,16 +164,12 @@ public class TrackerStore implements Closeable
 				long lastActive = results.getLong(ndx++);
 				
 				tracker.set(ip, port, port + nports);
-				tracker.print(output);
+				listener.receiveTracker(tracker);
 			}
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
-		}
-		finally
-		{
-			output.writeEnd();
 		}
 	}
 	
@@ -448,6 +476,7 @@ public class TrackerStore implements Closeable
 		Misc.debugTable(tableName, c);
 	}
 
+	@Override
 	public void close()
 	{
 		try { getMachineIdStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }

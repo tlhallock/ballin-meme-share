@@ -7,8 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.swing.JOptionPane;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;
@@ -42,6 +43,7 @@ public class PortMapperFrame extends javax.swing.JFrame {
             }
         });
         refresh();
+        Services.notifications.registerWindow(this);
     }
 
     public final void refresh()
@@ -54,24 +56,21 @@ public class PortMapperFrame extends javax.swing.JFrame {
              + Services.settings.numThreads.get()));
     }
     
-    private boolean checkForMapper() {
-        
-        
-                if (PortMapper.ip == null)
-                {
-                    IpTester tester = new IpTester();
-                    PortMapper.ip = tester.getIpFromCanYouSeeMeDotOrg();
-                    logStream.println("Found ip to be " + PortMapper.ip);
-                }
-        if (!Files.exists(Paths.get(PortMapper.portMapperJar))) {
-            JOptionPane.showConfirmDialog(this, 
-                    "Portmapper was not found!\nExpected to be at " + Paths.get(PortMapper.portMapperJar).toAbsolutePath(), 
-                    "Unable to map ports.",
-                    JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-        return true;
-    }
+	private boolean checkForMapper()
+	{
+		if (PortMapper.ip == null)
+		{
+			IpTester tester = new IpTester();
+			PortMapper.ip = tester.getIpFromCanYouSeeMeDotOrg();
+			logStream.println("Found ip to be " + PortMapper.ip);
+		}
+		if (!Files.exists(Paths.get(PortMapper.portMapperJar)))
+		{
+			JOptionPane.showConfirmDialog(this, "Portmapper was not found!\nExpected to be at " + Paths.get(PortMapper.portMapperJar).toAbsolutePath(), "Unable to map ports.", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		return true;
+	}
     
     private void updateTextArea() {
         jTextArea1.setText(builder.toString());
@@ -113,21 +112,24 @@ public class PortMapperFrame extends javax.swing.JFrame {
 
         jButton1.setText("Remove");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
         jButton2.setText("Map");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
 
         jButton3.setText("Test");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -152,21 +154,24 @@ public class PortMapperFrame extends javax.swing.JFrame {
 
         jButton4.setText("Clear");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
             }
         });
 
         jButton5.setText("Refresh Ports");
         jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton5ActionPerformed(evt);
             }
         });
 
         jButton6.setText("Just launch portmapper");
         jButton6.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton6ActionPerformed(evt);
             }
         });

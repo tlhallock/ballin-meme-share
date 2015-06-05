@@ -1,29 +1,21 @@
 package org.cnv.shr.dmn.trk;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.dwn.Seeder;
-import org.cnv.shr.gui.tbl.DbJTable.CloseableIt;
-import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.trck.CommentEntry;
-import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerAction;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.trck.TrackerRequest;
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 
-public class TrackerClient
+public abstract class TrackerClient
 {
-	private TrackerEntry trackerEntry;
+	protected TrackerEntry trackerEntry;
 	
 	public TrackerClient(TrackerEntry entry)
 	{
@@ -34,10 +26,11 @@ public class TrackerClient
   {
   	return connect(new TrackerRequest(action));
   }
+  
 	/**
 	 * Throw exception. Json throws runtime exceptions. (Maybe only json exceptions?)
 	 */
-	private TrackerConnection connect(TrackerRequest request) throws Exception
+	TrackerConnection connect(TrackerRequest request) throws Exception
 	{
 		Exception lastException = null;
 		TrackerConnection connection = null;
@@ -45,7 +38,7 @@ public class TrackerClient
 		{
 			try
 			{
-				connection = new TrackerConnection(trackerEntry.getIp(), port);
+				connection = createConnection(port);
 				break;
 			}
 			catch (IOException ex)
@@ -66,17 +59,7 @@ public class TrackerClient
 		}
 	}
 
-	public void keyChanged()
-	{
-		try (TrackerConnection connection = connect(TrackerAction.POST_MACHINE))
-		{
-			connection.generator.writeEnd();
-		}
-		catch (Exception ex)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to connect", ex);
-		}
-	}
+	protected abstract TrackerConnection createConnection(int port) throws IOException;
 
 	public TrackerEntry getEntry()
 	{
@@ -88,13 +71,13 @@ public class TrackerClient
 		return trackerEntry.getAddress();
 	}
 
-	CloseableIt<MachineEntry> list(int start) throws Exception
+	CloseableIterator<MachineEntry> list(int start) throws Exception
 	{
 		TrackerRequest trackerRequest = new TrackerRequest(TrackerAction.LIST_ALL_MACHINES);
 		trackerRequest.setParameter("offset", String.valueOf(start));
 		TrackerConnection connection = connect(trackerRequest);
 		TrackObjectUtils.openArray(connection.parser);
-		CloseableIt<MachineEntry> iterator = new CloseableIt<MachineEntry>()
+		CloseableIterator<MachineEntry> iterator = new CloseableIterator<MachineEntry>()
 		{
 			private MachineEntry next;
 
@@ -166,14 +149,14 @@ public class TrackerClient
 	}
 	
 
-	CloseableIt<CommentEntry> listComments(MachineEntry machine) throws Exception
+	CloseableIterator<CommentEntry> listComments(MachineEntry machine) throws Exception
 	{
 		TrackerConnection connection = connect(TrackerAction.LIST_RATINGS);
 		machine.print(connection.generator);
 		connection.generator.flush();
 		
 		TrackObjectUtils.openArray(connection.parser);
-		CloseableIt<CommentEntry> iterator = new CloseableIt<CommentEntry>()
+		CloseableIterator<CommentEntry> iterator = new CloseableIterator<CommentEntry>()
 		{
 			private CommentEntry next;
 
@@ -271,7 +254,6 @@ public class TrackerClient
 			TrackObjectUtils.openArray(connection.parser);
 			while (TrackObjectUtils.next(connection.parser, entry))
 			{
-				Services.trackers.add(entry);
 			}
 			connection.generator.writeEnd();
 			connection.generator.flush();
@@ -285,89 +267,7 @@ public class TrackerClient
 		}
 	}
 
-	void sync()
-	{
-		trackerEntry.setSync(true);
-		Services.trackers.save(Services.settings.trackerFile.getPath());
-		Services.trackers.kickSyncers(this);
-	}
-	
-	
-	
-	
-	
-	
-	
-
-	
-	public void requestSeeders(FileEntry remoteFile, Collection<Seeder> seeders)
-	{
-		try (TrackerConnection connection = connect(TrackerAction.LIST_SEEDERS))
-		{
-			MachineEntry entry = new MachineEntry();
-			TrackObjectUtils.openArray(connection.parser);
-
-			while (TrackObjectUtils.next(connection.parser, entry))
-			{
-				// TODO: should add or connect when this doesn't exist...
-				final Machine remote = DbMachines.getMachine(entry.getIdentifer());
-
-				if (remote != null && alreadyHasSeeder(seeders, remote))
-				{
-					continue;
-				}
-
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						addSeeder(remoteFile, entry);
-					}
-				});
-			}
-			connection.generator.writeEnd();
-			connection.generator.flush();
-			connection.parser.next();
-		}
-		catch (Exception ex)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to list seeders", ex);
-		}
-	}
-
-	private void addSeeder(FileEntry remoteFile, MachineEntry entry)
-	{
-		LogWrapper.getLogger().info("Found seeder " + entry);
-		
-		try
-		{
-			Communication openConnection = Services.networkManager.openConnection(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false);
-			if (openConnection == null)
-			{
-				return;
-			}
-			openConnection.send(new LookingFor(remoteFile));
-			openConnection.finish();
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to request seeder.", e);
-		}
-	}
-
-	private boolean alreadyHasSeeder(Collection<Seeder> seeders, final Machine remote)
-	{
-		synchronized (seeders)
-		{
-			for (Seeder seeder : seeders)
-			{
-				if (seeder.is(remote))
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-	}
+	public abstract void sync();
+	protected abstract void foundTracker(TrackerEntry entry);
+  protected abstract void runLater(Runnable runnable);
 }

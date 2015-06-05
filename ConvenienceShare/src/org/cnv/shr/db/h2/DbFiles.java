@@ -61,13 +61,13 @@ public class DbFiles
 		{
 			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-			if (!executeQuery.next())
-			{
-				return null;
-			}
-			DbObject allocate = DbTables.DbObjects.LFILE.allocate(executeQuery);
-			allocate.fill(c, executeQuery, new DbLocals());
-			return (LocalFile) allocate;
+				if (!executeQuery.next())
+				{
+					return null;
+				}
+				DbObject allocate = DbTables.DbObjects.LFILE.allocate(executeQuery);
+				allocate.fill(c, executeQuery, new DbLocals());
+				return (LocalFile) allocate;
 			}
 		}
 		catch (SQLException e)
@@ -138,14 +138,16 @@ public class DbFiles
 				StatementWrapper stmt = c.prepareStatement(SELECT3);)
 		{
 			stmt.setString(1, checksum);
-			ResultSet executeQuery = stmt.executeQuery();
-			if (!executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				return null;
+				if (!executeQuery.next())
+				{
+					return null;
+				}
+				DbObject allocated = DbTables.DbObjects.LFILE.allocate(executeQuery);
+				allocated.fill(c, executeQuery, new DbLocals());
+				return (LocalFile) allocated;
 			}
-			DbObject allocated = DbTables.DbObjects.LFILE.allocate(executeQuery);
-			allocated.fill(c, executeQuery, new DbLocals());
-			return (LocalFile) allocated;
 		}
 		catch (SQLException e)
 		{

@@ -7,6 +7,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Date;
 import java.util.Scanner;
 
 import de.flexiprovider.common.math.FlexiBigInt;
@@ -51,6 +52,14 @@ public class KeyPairObject
 		return Misc.format(publicKey.getEncoded());
 	}
 
+    public String getTime() {
+        return new Date(timeStamp).toString();
+    }
+
+
+    public RSAPublicKey getPublicKey() {
+        return publicKey;
+    }
 	
 	
 	
@@ -133,7 +142,10 @@ public class KeyPairObject
 	
 	public static RSAPublicKey deSerializePublicKey(String str)
 	{
-		return deSerializePublicKey(new Scanner(str));
+		try (Scanner s = new Scanner(str))
+		{
+			return deSerializePublicKey(s);
+		}
 	}
 
 	public static String serialize(RSAPrivateCrtKey privateKey)
@@ -148,6 +160,9 @@ public class KeyPairObject
 	
 	public static RSAPrivateCrtKey deSerializePrivateKey(String str)
 	{
-		return deSerializePrivateKey(new Scanner(str));
+		try (Scanner s = new Scanner(str))
+		{
+			return deSerializePrivateKey(s);
+		}
 	}
 }

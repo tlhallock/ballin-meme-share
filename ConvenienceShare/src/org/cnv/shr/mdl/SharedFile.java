@@ -128,14 +128,16 @@ public abstract class SharedFile extends DbObject<Integer>
 			stmt.setLong(ndx++, lastModified);
 			stmt.setInt(ndx++, 0 /*error*/);
 			stmt.executeUpdate();
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				id = generatedKeys.getInt(1);
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getInt(1);
+					return true;
+				}
+				// maybe no key was generated...
 				return true;
 			}
-			// maybe no key was generated...
-			return true;
 		}
 	}
 

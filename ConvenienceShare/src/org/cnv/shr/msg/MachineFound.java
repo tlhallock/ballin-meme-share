@@ -2,7 +2,6 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.PublicKey;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbMachines;
@@ -50,7 +49,7 @@ public class MachineFound extends Message
 		DbMachines.updateMachineInfo(
 				ident,
 				name,
-				new PublicKey[0],
+				null,
 				ip,
 				port,
 				nports);
@@ -79,12 +78,14 @@ public class MachineFound extends Message
 	}
 
 	public static int TYPE = 18;
+	@Override
 	protected int getType()
 	{
 		return TYPE;
 	}
 
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder builder = new StringBuilder();

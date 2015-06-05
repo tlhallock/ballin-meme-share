@@ -79,13 +79,15 @@ public class UserMessage extends DbObject<Integer>
 			stmt.setInt(ndx++, type.dbValue);
 			stmt.setString(ndx++, message);
 			stmt.executeUpdate();
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				id = generatedKeys.getInt(1);
-				return true;
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getInt(1);
+					return true;
+				}
+				return false;
 			}
-			return false;
 		}
 	}
 

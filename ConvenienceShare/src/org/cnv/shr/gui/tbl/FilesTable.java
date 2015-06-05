@@ -53,7 +53,7 @@ public class FilesTable extends DbJTable<SharedFile>
 			{
 				if (t.isLocal())
 				{
-					Misc.nativeOpen(((LocalFile) t).getFsFile());
+					Misc.nativeOpen(((LocalFile) t).getFsFile(), false);
 				}
 				else
 				{
@@ -67,6 +67,29 @@ public class FilesTable extends DbJTable<SharedFile>
 			String getName()
 			{
 				return "Open";
+			}
+		});
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(SharedFile t)
+			{
+				if (t.isLocal())
+				{
+					Misc.nativeOpen(((LocalFile) t).getFsFile(), true);
+				}
+				else
+				{
+					JOptionPane.showMessageDialog(origin,
+							"Unable to open remote file, download it first.",
+							"Unable to open remote file.",
+							JOptionPane.ERROR_MESSAGE);
+				}
+			}
+			@Override
+			String getName()
+			{
+				return "Show in folder";
 			}
 		});
 	}

@@ -107,13 +107,15 @@ public class PathElement extends DbObject<Long>
 			stmt.setString(ndx++, value);
 			stmt.executeUpdate();
 			
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				id = generatedKeys.getLong(1);
-				return true;
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getLong(1);
+					return true;
+				}
+				return false;
 			}
-			return false;
 		}
 	}
 

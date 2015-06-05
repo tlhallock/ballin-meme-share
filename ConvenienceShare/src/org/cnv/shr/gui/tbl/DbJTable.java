@@ -4,9 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.Closeable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 
@@ -18,6 +16,7 @@ import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 
 public abstract class DbJTable<T extends DbObject<? extends Number>> extends MouseAdapter
@@ -352,6 +351,5 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 	}
 	
 	
-	public interface MyIt<T extends DbObject> extends CloseableIt<T> {}
-	public interface CloseableIt<T> extends Iterator<T>, Closeable {}
+	public interface MyIt<T extends DbObject> extends CloseableIterator<T> {}
 }

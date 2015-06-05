@@ -9,8 +9,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Timer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
+import org.cnv.shr.dmn.TrackerGui;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.KeysService;
@@ -21,17 +24,23 @@ public class Track
 {
 	static KeysService keys;
 	static Timer timer;
+	public static ExecutorService threads;
+	static TrackerGui gui;
 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException, UnknownHostException
 	{
 		LogWrapper.logToFile(Paths.get("..", "instances", "tracker", "tracker_log.txt"), 1024 * 1024);
 		LogWrapper.getLogger().info("Address: " + InetAddress.getLocalHost().getHostAddress());
 		
+		threads = Executors.newCachedThreadPool();
 		timer = new Timer();
 		
 		Class.forName("org.h2.Driver");
 		createDb();
 		keys = new KeysService();
+		
+		gui = new TrackerGui();
+		gui.setVisible(true);
 		
 		for (int port = TrackerEntry.TRACKER_PORT_BEGIN; port < TrackerEntry.TRACKER_PORT_END; port++)
 		{

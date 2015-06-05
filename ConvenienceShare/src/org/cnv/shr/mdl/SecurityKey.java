@@ -36,13 +36,15 @@ public class SecurityKey extends DbObject
 		try (StatementWrapper stmt = c.prepareStatement(string);)
 		{
 			stmt.executeUpdate();
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				id = generatedKeys.getInt(1);
-				return true;
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getInt(1);
+					return true;
+				}
+				return false;
 			}
-			return false;
 		}
 	}
 }

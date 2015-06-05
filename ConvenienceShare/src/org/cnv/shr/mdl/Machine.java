@@ -72,10 +72,12 @@ public class Machine extends DbObject<Integer>
 			stmt.setString( ndx++, getIdentifier());
 			writeMachine(stmt, ndx);
 			stmt.executeUpdate();
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				id = generatedKeys.getInt(1);
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getInt(1);
+				}
 			}
 		}
 		if (id == null)
@@ -229,10 +231,7 @@ public class Machine extends DbObject<Integer>
 	
 	public static class LocalMachine extends Machine
 	{
-		public LocalMachine()
-		{
-			Services.keyManager.getKeys();
-		}
+		public LocalMachine() {}
 
 		@Override
 		public String toString()

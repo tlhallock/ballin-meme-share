@@ -38,7 +38,6 @@ public class RequestHandler extends Thread
 	{
 		while (!quit)
 		{
-			Socket accept;
 			try
 			{
 				if (socket.isClosed())
@@ -47,16 +46,21 @@ public class RequestHandler extends Thread
 				}
 				socket.setReuseAddress(true);
 				// socket.setSoTimeout(5000);
-				accept = socket.accept();
 			}
 			catch (IOException e)
 			{
 				LogWrapper.getLogger().log(Level.INFO, "Unable to connect on " + port + ": " + e.getMessage(), e);
 				continue;
 			}
-			try
+
+			try (Socket accept = socket.accept();)
 			{
 				Services.networkManager.handleConnection(accept);
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to connect on " + port + ": " + e.getMessage(), e);
+				continue;
 			}
 			catch (Exception t)
 			{

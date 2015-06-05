@@ -6,7 +6,6 @@
 
 package org.cnv.shr.dmn.trk;
 
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.Misc;
 
@@ -14,7 +13,7 @@ import org.cnv.shr.util.Misc;
  *
  * @author thallock
  */
-public class AddTracker extends javax.swing.JFrame {
+public abstract class AddTracker extends javax.swing.JFrame {
 
     BrowserFrame frame;
     /**
@@ -27,6 +26,8 @@ public class AddTracker extends javax.swing.JFrame {
         jSpinner2.setValue(TrackerEntry.TRACKER_PORT_END);
     }
 
+		protected abstract void addTracker(TrackerEntry entry);
+		
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -127,22 +128,22 @@ public class AddTracker extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-		Services.userThreads.execute(new Runnable()
+		frame.runLater(new Runnable()
 		{
 			@Override
 			public void run()
 			{
 				int negom = Math.min(Misc.MAX_PORT - 1, (Integer) jSpinner1.getValue());
 				int end = Math.max(negom + 1, (Integer) jSpinner2.getValue());
-				Services.trackers.add(jTextField1.getText(), negom, end);
-				Services.trackers.save(Services.settings.trackerFile.getPath());
+				TrackerEntry entry = new TrackerEntry(jTextField1.getText(), negom, end);
+				addTracker(entry);
 				frame.refreshTrackers();
 			}
 		});
 		dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
-
-
+    
+		
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;

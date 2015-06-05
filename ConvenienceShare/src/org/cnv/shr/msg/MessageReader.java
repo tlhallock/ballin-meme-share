@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.logging.Level;
 
@@ -43,8 +44,6 @@ public class MessageReader
 	
 	public MessageReader()
 	{
-		Message m;
-		
 		add(new MessageIdentifier(ChunkList.class                  ));
 		add(new MessageIdentifier(DownloadDone.class               ));
 		add(new MessageIdentifier(CompletionStatus.class           ));
@@ -88,6 +87,11 @@ public class MessageReader
 		add(new MessageIdentifier(ShowApplication.class            ));
 
 		LogWrapper.getLogger().info("Message map:\n" + this);
+	}
+	
+	public Collection<MessageIdentifier> getIdentifiers()
+	{
+		return identifiers.values();
 	}
 	
 	private void add(MessageIdentifier identifier)
@@ -143,7 +147,7 @@ public class MessageReader
 	}
 	
 	
-	private class MessageIdentifier
+	public class MessageIdentifier
 	{
 		String name;
 		int type;
@@ -166,6 +170,11 @@ public class MessageReader
 				LogWrapper.getLogger().log(Level.INFO, "Unable to read fields for class " + name, e);
 				Services.quiter.quit();
 			}
+		}
+		
+		public Constructor<? extends Message> getConstructor()
+		{
+			return constructor;
 		}
 		
 		int getType()

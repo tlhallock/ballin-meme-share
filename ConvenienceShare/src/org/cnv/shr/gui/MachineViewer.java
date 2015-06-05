@@ -29,8 +29,8 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.gui.tbl.FilesTable;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
@@ -241,7 +241,26 @@ public class MachineViewer extends javax.swing.JFrame
                 	return;
                 }
                 
-                Misc.nativeOpen(((LocalFile) file).getFsFile());
+                Misc.nativeOpen(((LocalFile) file).getFsFile(), false);
+            }
+        });
+        menu.add(item);
+        item = new JMenuItem("Show in folder");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
+                final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+                n.ensureExpanded();
+                LogWrapper.getLogger().info("Opening " + n);
+                SharedFile file = n.getFile();
+                if (!file.isLocal())
+                {
+                	// Should show message...
+                	return;
+                }
+                
+                Misc.nativeOpen(((LocalFile) file).getFsFile(), true);
             }
         });
         menu.add(item);
@@ -317,6 +336,7 @@ public class MachineViewer extends javax.swing.JFrame
             sharingWithRemoteMachine.setEnabled(false);
             isMessaging.setSelected(true); isMessaging.setEnabled(false);
             jButton3.setEnabled(false); // cannot sync roots to local
+            jButton6.setEnabled(false); jButton5.setEnabled(false);
         }
         else
         {
@@ -324,6 +344,7 @@ public class MachineViewer extends javax.swing.JFrame
             sharingWithRemoteMachine.setEnabled(true);
             isMessaging.setSelected(machine.getAllowsMessages()); isMessaging.setEnabled(true);
             jButton3.setEnabled(true);
+            jButton6.setEnabled(true); jButton5.setEnabled(true);
         }
     }
 
@@ -447,6 +468,8 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel14 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
         jButton4 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
+        jButton6 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -454,7 +477,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton1.setText("Request");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
@@ -465,7 +489,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton3.setText("Synchronize Roots");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -487,11 +512,13 @@ public class MachineViewer extends javax.swing.JFrame
                 false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+						public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+						public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -504,7 +531,8 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel5.setText("Filter:");
 
         jTextField1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextField1ActionPerformed(evt);
             }
         });
@@ -524,11 +552,13 @@ public class MachineViewer extends javax.swing.JFrame
                 false, false, false, false, false, false, false
             };
 
-            public Class getColumnClass(int columnIndex) {
+            @Override
+						public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            @Override
+						public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -544,7 +574,7 @@ public class MachineViewer extends javax.swing.JFrame
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextField1)
                 .addContainerGap())
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 549, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -554,7 +584,7 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 320, Short.MAX_VALUE))
         );
 
         jSplitPane2.setRightComponent(jPanel3);
@@ -562,7 +592,8 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel6.setText("Filter:");
 
         jTextField2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextField2ActionPerformed(evt);
             }
         });
@@ -590,7 +621,7 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel6))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 320, Short.MAX_VALUE))
         );
 
         jSplitPane2.setLeftComponent(jPanel4);
@@ -627,7 +658,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         requestShareButton.setText("Request");
         requestShareButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 requestShareButtonActionPerformed(evt);
             }
         });
@@ -637,7 +669,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         requestDownloadButton.setText("Request");
         requestDownloadButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 requestDownloadButtonActionPerformed(evt);
             }
         });
@@ -647,14 +680,16 @@ public class MachineViewer extends javax.swing.JFrame
 
         changePathButton.setText("Change");
         changePathButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 changePathButtonActionPerformed(evt);
             }
         });
 
         jButton7.setText("Synchronize");
         jButton7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton7ActionPerformed(evt);
             }
         });
@@ -677,7 +712,7 @@ public class MachineViewer extends javax.swing.JFrame
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                        .addGap(0, 317, Short.MAX_VALUE)
+                        .addGap(0, 428, Short.MAX_VALUE)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                                 .addComponent(rootIsVisibleCheckBox)
@@ -749,7 +784,7 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(requestDownloadButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton7)
-                .addContainerGap(145, Short.MAX_VALUE))
+                .addContainerGap(155, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Settings", jPanel2);
@@ -758,7 +793,8 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton2.setText("Send Message");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -780,80 +816,97 @@ public class MachineViewer extends javax.swing.JFrame
         jButton4.setText("Clear Browsing data");
         jButton4.setEnabled(false);
 
+        jButton5.setText("Find Trackers");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+
+        jButton6.setText("Find Machines");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 876, Short.MAX_VALUE)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jButton4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(isMessaging)
-                        .addGap(18, 18, 18)
-                        .addComponent(pin))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel14))
-                        .addGap(18, 18, 18)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addGap(24, 24, 24))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(jLabel14)
+                                .addGap(18, 18, 18)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(sharingWithRemoteMachine, 0, 107, Short.MAX_VALUE)
+                            .addComponent(sharingWithRemoteMachine, 0, 163, Short.MAX_VALUE)
                             .addComponent(remoteSharingWithUs, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jButton6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(isMessaging)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(pin)
+                        .addGap(0, 121, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel1)
-                        .addComponent(machineLabel))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton1)
-                            .addComponent(jLabel3)
-                            .addComponent(remoteSharingWithUs))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton2)
-                            .addComponent(sharingWithRemoteMachine, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel15)
-                            .addComponent(jLabel14))))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton1)
+                    .addComponent(jLabel3)
+                    .addComponent(remoteSharingWithUs)
+                    .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton2)
+                    .addComponent(sharingWithRemoteMachine, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4)
+                    .addComponent(jLabel15)
+                    .addComponent(jLabel14))
                 .addGap(12, 12, 12)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton3)
                     .addComponent(pin)
                     .addComponent(isMessaging)
-                    .addComponent(jButton4))
+                    .addComponent(jButton4)
+                    .addComponent(jButton5)
+                    .addComponent(jButton6))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 378, Short.MAX_VALUE))
+                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-    	Services.userThreads.execute(new Runnable() { public void run() { try {
+    	Services.userThreads.execute(new Runnable() { @Override
+			public void run() { try {
         	Machine machine = getMachine();
             Communication connection = Services.networkManager.openConnection(machine, false);
             if (connection != null) {
@@ -897,7 +950,8 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void requestDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestDownloadButtonActionPerformed
-    	Services.userThreads.execute(new Runnable() { public void run() { try {
+    	Services.userThreads.execute(new Runnable() { @Override
+			public void run() { try {
             Communication connection = Services.networkManager.openConnection(getMachine(), false);
             if (connection != null) {
 				RootDirectory directory = getRootDirectory();
@@ -915,7 +969,8 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_requestDownloadButtonActionPerformed
 
     private void requestShareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestShareButtonActionPerformed
-        Services.userThreads.execute(new Runnable() { public void run() { try {
+        Services.userThreads.execute(new Runnable() { @Override
+				public void run() { try {
             Communication connection = Services.networkManager.openConnection(getMachine(), false);
             if (connection != null) {
 				RootDirectory directory = getRootDirectory();
@@ -932,6 +987,10 @@ public class MachineViewer extends javax.swing.JFrame
         }}});
     }//GEN-LAST:event_requestShareButtonActionPerformed
 
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        
+    }//GEN-LAST:event_jButton5ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton changePathButton;
     private javax.swing.JLabel descriptionLabel;
@@ -943,6 +1002,8 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
+    private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;

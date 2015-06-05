@@ -27,7 +27,7 @@ import org.cnv.shr.util.Misc;
 public class LocalDirectory extends RootDirectory
 {
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update ROOT set "
-			+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=?, SHARING=? "
+			+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=?, SHARING=?, MIN_SIZE=?, MAX_SIZE=? "
 			+ "where ROOT.R_ID = ?;");
 	
 	
@@ -140,18 +140,21 @@ public class LocalDirectory extends RootDirectory
 			stmt.setLong(ndx++, totalNumFiles);
 			stmt.setString(ndx++, getName());
 			stmt.setInt(ndx++, getDefaultSharingState().getDbValue());
-			
+			stmt.setLong(ndx++, minFSize);
+			stmt.setLong(ndx++, maxFSize);
 			
 			stmt.setInt(ndx++, id);
 			
 			stmt.executeUpdate();
-			final ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (final ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				id = generatedKeys.getInt(1);
-				return true;
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getInt(1);
+					return true;
+				}
+				return false;
 			}
-			return false;
 		}
 	}
 

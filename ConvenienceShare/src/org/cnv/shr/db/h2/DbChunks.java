@@ -1,5 +1,6 @@
 package org.cnv.shr.db.h2;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -24,6 +25,9 @@ public class DbChunks
 	private static final QueryWrapper SELECT5 = new QueryWrapper("select count(C_ID) from CHUNK where DID=? and END_OFFSET=? and BEGIN_OFFSET=?;");
 //	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=?;");
+	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into CHUNK key(DID, BEGIN_OFFSET, END_OFFSET) values "
+			 + "((select C_ID from CHUNK where DID=?, BEGIN_OFFSET=?, END_OFFSET=?),"
+			 + " ?, ?, ?, ?, ?);");
 
 	public static final class DbChunk extends DbObject<Integer>
 	{
@@ -61,37 +65,36 @@ public class DbChunks
 
 	public static void addChunk(Download d, Chunk c)
 	{
-		throw new RuntimeException("Implement me!");
-//		@Override
-//		public boolean save(Connection c) throws SQLException
-//		{
-//			try (PreparedStatement stmt = c.prepareStatement(
-//					 "merge into CHUNK key(DID, BEGIN_OFFSET, END_OFFSET) values "
-//					 + "((select C_ID from CHUNK where DID=?, BEGIN_OFFSET=?, END_OFFSET=?),"
-//					 + " ?, ?, ?, ?, ?);"
-//					, Statement.RETURN_GENERATED_KEYS);)
-//			{
-//				int ndx = 1;
-//				// the query
-//				stmt.setInt(ndx++, x); // ths file
-//				stmt.setLong(ndx++, begin);
-//				stmt.setLong(ndx++, end);
-//				
-//				// the actual values...
-//				stmt.setInt(ndx++, x); // the file
-//				stmt.setLong(ndx++, begin);
-//				stmt.setLong(ndx++, end);
-//				stmt.setString(ndx++, checksum);
-//              stmt.setBoolean(ndx++, false);		
-//				stmt.executeUpdate();
-//				ResultSet generatedKeys = stmt.getGeneratedKeys();
-//				if (generatedKeys.next())
-//				{
-//					id = generatedKeys.getInt(1);
-//				}
-//			}
-//			return true;
-//		}		
+		try (ConnectionWrapper con = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = con.prepareStatement(SELECT5, PreparedStatement.RETURN_GENERATED_KEYS);)
+		{
+			int ndx = 1;
+			// the query
+			stmt.setInt(ndx++, d.getId());
+			stmt.setLong(ndx++, c.getBegin());
+			stmt.setLong(ndx++, c.getEnd());
+
+			// the actual values...
+			stmt.setInt(ndx++, d.getId());
+			stmt.setLong(ndx++, c.getBegin());
+			stmt.setLong(ndx++, c.getEnd());
+			stmt.setString(ndx++, c.getChecksum());
+			stmt.setBoolean(ndx++, false);
+			
+			stmt.executeUpdate();
+			
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
+			{
+				if (generatedKeys.next())
+				{
+					int id = generatedKeys.getInt(1);
+				}
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to add chunk " + c + " to " + d, e);
+		}
 	}
 
 	public static boolean hasAllChunks(Download d, long chunkSize)
@@ -101,7 +104,7 @@ public class DbChunks
 				StatementWrapper stmt = c.prepareStatement(SELECT5))
 		{
 			long fileSize = d.getFile().getFileSize();
-			long end = fileSize - (fileSize % chunkSize);
+			long end = fileSize - fileSize % chunkSize;
 			while (end > 0)
 			{
 				stmt.setInt(1, d.getId());
@@ -174,7 +177,6 @@ public class DbChunks
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(DELETE1);)
 		{
-			
 			stmt.setInt(1, d.getId());
 			stmt.execute();
 		}

@@ -1,0 +1,370 @@
+\documentclass{article}
+
+\author{Trever Hallock}
+\title{Convenience Share User Manual}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{About}
+
+This is a distributed file sharing program.
+It is intended to be more convenient to share several files (like say a usb harddrive) than other protocols like bittorrent.
+This is because the torrent doesn't need to be manually checksummed and uploaded to a tracker, and individual files can be browsed and downloaded.
+It also does not depend on a central tracker location, because anyone can run a tracker and find remotes.
+It has much finer ability to control permissions of files that are shared.
+It uses encryption.
+It is buggy.
+It is about to support compression.
+It is simple, while providing important features.
+It looks ugly.
+It requires java, but runs will run on several systems.
+
+
+
+
+
+
+
+\section{Quick Start}
+How to...
+
+
+\subsection{Open the Main Application window}
+If the Main Application Window is not visible, you may open it (provided Convenience Share is running) by right clicking on the copyleft icon in the System Tray and selecting ``Show Application". If your system does not support the System tray, it will be a small icon in the lower right hand part of your screen.
+
+\subsection{Find a friend}
+There are two ways to add a friend.
+If you know your friend's ip address, you can do this:
+\begin{itemize}
+  \item Open the Machines tab in the application
+  \item Click Add to open the Add Machine frame
+  \item In the Add machine frame type in the ip, then a colon, then a port like ``192.168.0.1:8990" without quotes
+  \item Select the permissions you want for your friend
+  \item Hit Add
+  \item Under the Machines Panel double click the machine, and select the proper permissions for this machine.
+\end{itemize}
+
+If you do not know the IP Address, you can still try to find your friend:
+\begin{itemize}
+  \item Open the Home panel in the main application
+  \item Select Browse Trackers
+  \item Double click a tracker from the far left (If there are no trackers, you can add one if you know it's IP.)
+  \item If you see the friends Machine under the machines list, double click it
+  \item Hit the Open button to open the Add Machine Frame
+  \item Select the permissions you want for your friend
+  \item Hit Add
+  \item Under the Machines Panel double click the machine, and select the proper permissions for this machine.
+\end{itemize}
+
+\subsection{Share with a friend}
+If you have already added a local directory, and a friend wants to download from it, you can make sure permissions are set properly by doing the following:
+\begin{itemize}
+  \item Open the Machines panel in the main application
+  \item Double click on your friend's machine to open the Machine viewer
+  \item Under ``Our Sharing status with them" select DOWNLOADABLE from the drop down.
+  \item Close the Machine Viewer Frame
+  \item Open the Local Directories panel in the main application
+  \item Double click on the root directory containing the file that you want to share to open the Local Directory View frame
+  \item Under Global Permission select DOWNLOADABLE from the drop down
+  \item Find your friend in the Machine permission, and select DOWNLOADABLE as well
+  \item Click save
+\end{itemize}
+
+Alternatively, if your friend has requested access, you can do the following:
+\begin{itemize}
+  \item Open the Messages panel in the main application
+  \item Find a message from your friend that has type Request Access
+  \item Double click on the message
+  \item Select Yes
+\end{itemize}
+
+\subsection{Request access to a remote directory}
+In order to send a request for access to a remote directory, you can do the following
+\begin{itemize}
+  \item Open the Machines panel in the main application
+  \item Double click on your friend's machine to open the Machine viewer
+  \item Next to the They Share With Us label, click the ``Request" button
+\end{itemize}
+
+\subsection{Share a directory}
+This is how you can share a directory:
+\begin{itemize}
+  \item Make sure you are already sharing the directory with the remote machine
+  \item Open the Local Directories tab in the application
+  \item Hit the Add button
+  \item Browser to your directory and hit Open
+  \item Hit the Synchronize All button or right lick on the newly added directory and select Synchronize
+  \item Double click the directory and give the directory a name, tag, description, and permissions that you want. (See permissions)
+\end{itemize}
+
+\subsection{Stop sharing a directory}
+This is how to remove the directory you just added:
+\begin{itemize}
+  \item Open the Local Directories tab in the application
+  \item Right click on the directory you want to remove, and select Delete
+\end{itemize}
+
+\subsection{Download a file}
+This is how you can download a file from a remote machine:
+\begin{itemize}
+  \item Open the Machines tab in the application
+  \item Double click on the machine containing the file you want to download or Right click and select open. This will open the machine viewer.
+  \item On the machine viewer, hit Synchronize Roots to make sure you are viewing the most recent list of roots on the other machine.
+  \item In the paths table (on the far left), double click the root directory that contains the file you want to download
+  \item In the files tree (to the right of the paths table), navigate to the path of the file you want to download by expanding its parent directories
+  \item Either in the files tree right click the file and select download, or double click the file so that it appears in the files table to the right of the files tree.
+  \item If the file appears in the files table, you can either the file itself or right click the file and select Download
+  \item Close the Machine Viewer and go back to the main application
+  \item Monitor the download status in the Downloads panel in the application
+  \item Once it is done, double click on the download to open it
+\end{itemize}
+
+\subsection{Map ports}
+
+The best way to map the ports is to launch ``Just launch PortMapper", hit ``Connect"...
+
+\section{General Info}
+
+\subsection{Permissions}
+
+\subsubsection{Permission Meanings}
+There are three different permissions Convenience Share uses:
+
+\begin{itemize}
+  \item DO\_NOT\_SHARE   This means that no information is sent to the remote aside from your address.
+  \item SHARE\_PATHS     This means that a remote can view your shared files, but cannot download them.
+  \item DOWNLOADABLE     This means that a remote can view and download your shared files.
+\end{itemize}
+
+There are four different places that are in affect.
+In order to view or download a file, Convenience Share uses the most restrictive permission between the Machine permission, Default Directory permission, and the Directory per Machine permission.
+
+\subsubsection{Default Permission}
+This is a default permission for new machines/local directories.
+Whenever you connect to a new machine, or make a new directory, this permission will be saved.
+This is set on the Home panel or under the settings panel.
+
+\subsubsection{Machine permission}
+Each machine has a permission.
+This permission is used to determine if a remove can view your root directories.
+If this permission is more strict than a directory permission, this permission will be used.
+
+\subsubsection{Default Directory permission}
+Each directory has a permission.
+This permission is set in the local directory view under global permission.
+You can use this permission to quickly stop sharing a directory to all other machines, without setting the permission for each one.
+
+\subsubsection{Directory per Machine permission}
+For each directory, for each machine there is also a permission.
+This is in the local directory view under machine permissions.
+This allows you to share a directory with all machines except one, or to share a directory with only one machine.
+
+\paragraph{}
+
+For example, suppose machine 1 has a directory ``a", and machine 2 wants to download a file in ``a".
+He will not be able to unless machine 1 has permission DOWNLOADABLE for machine 1, directory ``a" has permission DOWNLOADABLE, and directory ``a" is has permission DOWNLOADABLE for machine 2. Another other combination of these three would not let machine 2 download a file in ``a".
+
+
+\subsubsection{Messages}
+Finally one last permission is the permission for a remote machine to send messages from you.
+If this is enabled, a remote machine can send you a text message, or a request for permission to view or download your shared files.
+Your messages are viewable under the Messages panel.
+
+
+\subsection{Trackers}
+Convenience Share is a distributed file sharing program, so it doesn't need to connect to a main tracker.
+However, there is a tracker feature to make it more convenient to find other machines and peers sharing the same file.
+Anyone can run the tracker by running the Tracker.jar in the application directory.
+The more trackers that are available means there are more ways to find other machines when a tracker is down.
+
+Trackers just maintain a few lists to make certain tasks quicker.
+They keep:
+\begin{itemize}
+  \item A list of machines and checksums that the machine has so that peers can quickly find seeders.
+  \item A list of other trackers, so that it is easy to start your own tracker.
+  \item A list of comments (only one for each machine per other machine), so that people can trust their downloads.
+\end{itemize}
+
+
+\subsection{Ports}
+In order for other machines to be able to connect to your machine, your firewall has to let other machines connect to yours.
+Generally, router do not allow incoming connections, so that you must forward ports (parts if a internet address) from your router to the machine running Convenience Share.
+Unless you have enabled port forwarding manually by logging in to your router, the best way to forward ports is through UPnP if your router supports it.
+Convenience Share uses software called PortMapper to do this.
+(It can be found under the libs/ directory where you installed Convenience Share.)
+
+You can change which (and how many) ports Convenience Share listens on in the settings panel or by editing app/settings.props in the application directory.
+From the home panel you can click the Map Ports button to launch Convenience Share's port mapper.
+This will display what ports Convenience Share is currently telling other machines to use when connecting to your machine.
+(These are the ports in the external port range.) These external ports are the ports your router has open.
+It will also display what ports it uses to listen on your private lan (internal ports).
+These internal ports are the ports your computer has open.
+
+To see the best way to map ports, go to !ref here!
+
+\section{Frames}
+
+\subsection{Application}
+
+\subsubsection{Home}
+
+\subsubsection{Machines}
+
+Each machine has a unique identifier.
+
+\subsubsection{Local Directories}
+
+some local directories are added that contain files downloaded from other machines
+Convenience Share will not delete your files from the filesystem, but it will replace files while it downloads them.
+
+
+\subsubsection{Downloads}
+
+downloads are added to a local directory
+
+
+\subsubsection{Connections}
+This panel shows all connections that are currently open with other machines.
+If another machine is hung up and has not closed the connection, you can click the ``Close" button on a given connection to make sure it is closed.
+All the statistics related to the connection do not represent bandwidth usage with your ISP, they represent the amount of unecrtyped and uncompressed data Convenience Share is using.
+Connections to the Code Updater and to trackers are not represented here right now.
+
+\subsubsection{Messages}
+how to send
+
+
+\subsubsection{Logs}
+This shows what Convenience Share is doing.
+It can be helpful if it is acting odd or you are not sure what just happened.
+You can set the number of lines to log, and the current logging level.
+You can tell it to log to a file under settings.
+The log level here affects all the logging (including to file/sysout).
+Right now, almost all logging is at info level.
+
+
+\subsubsection{Public Keys}
+In order to make sure that you can trust the source of a download, each machine has an RSA public/private key pair.
+For strong security you can update the key by hitting the ``Use a new key" button.
+However, if you replace all your keys, then the people have shared with you will have to accept the new keys from you.
+These RSA keys are used for the initial handshake whenever a connection to a remote machine is opened, and then the stream is encrypted with AES.
+Under settings you can change the naunce size you use to authenticate others, and the length of the key used.
+The highlighted key is the key used for connections, and the other keys are used to authenticate yourself to a remote machine who has one of your previous keys but does not know your newest key.
+
+The updater also has a key that your machine uses to make sure the code you download is from the original provider.
+When you connect to a tracker, the tracker will also remember your key to verify who you are the next time you connect.
+
+\subsection{Port mapper}
+\subsection{Machine viewer}
+\subsubsection{Machine options}
+\subsubsection{Paths table}
+\subsubsection{Files tree}
+\subsubsection{Files table}
+\subsubsection{Directory Options}
+
+\subsection{Local directory view}
+
+\subsubsection{Directory options}
+
+there is a maximum length on the name...
+link to permissions
+\subsubsection{Directory ignores}
+\paragraph{Ignore patterns}
+
+\paragraph{Minimum file size}
+you may not need to store empty files
+
+\subsubsection{Machine permissions}
+
+\subsection{Tracker Browser}
+
+how to upload your file meta data so that other can use you as a seeders
+
+how to post a comment
+
+comments are local to a tracker
+
+\subsection{Add Machine Frame}
+
+\subsection{Icon Tray}
+
+It is the copy left symbol.
+(That would also be the icon, if java didn't crash on me when I tried to set the icon of a frame.)
+
+Some systems do not support this (KDE), so Convenience Share creates a small JFrame that looks like a system tray.
+
+Closing the application does not shut down Convenience Share.
+This is intended to be online often so that others can download your shared files even if you are not using the application.
+To shut it down fully, select Quit from the Icon Tray.
+
+\section{How it works}
+
+checksums are sha1 and in the background/before download
+
+chunks
+
+for security no symbolic links are added, and all files should remain inside the root directory
+
+
+\section {Todos}
+search by filename across trackers?
+
+
+
+
+		// What happens with two locals by the same name...
+		// remove all caching of db objects...
+		
+        // Need to break up chunkList
+        // Need to break up PathList
+
+        // start on startup
+        
+		// use IOUtils.copy
+        
+        // make sure sockets close
+ see about putting communications in try() {} blocks
+ 
+dbl check connection caching
+ 
+        // add way to change download priority
+        // figure out why sort on file size doesn't work
+        
+        // compress data
+        
+        // black list
+        // able to require password to log in for keys file.
+        
+		// look into ExtendedWatchEventModifier
+		// monitor free space
+		// Need to check versions when messaging.
+		// check full path vs fsPath
+
+
+ // use nio
+ set a better number of ports
+ run it for a long time
+
+
+use json for messages
+
+
+
+
+
+write TONS more tests
+
+
+
+
+
+
+
+\section{terms}
+remote, machine, root directory, 
+
+need to add some pics when is more stable
+
+\end{document}

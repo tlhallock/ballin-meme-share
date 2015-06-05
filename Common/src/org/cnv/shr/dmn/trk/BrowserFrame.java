@@ -21,15 +21,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
-import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.gui.AddMachine;
-import org.cnv.shr.gui.MachineViewer;
-import org.cnv.shr.gui.tbl.DbJTable.CloseableIt;
-import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackerEntry;
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 
 
@@ -37,29 +32,34 @@ import org.cnv.shr.util.LogWrapper;
  *
  * @author thallock
  */
-public class BrowserFrame extends javax.swing.JFrame implements ListSelectionListener {
+public abstract class BrowserFrame extends javax.swing.JFrame implements ListSelectionListener {
 
     private Map<String, TrackerClient> clients = new Hashtable<>();
     private ArrayList<MachineEntry> machines = new ArrayList<>();
     private List<CommentEntry> comments = new LinkedList<>();
     
-    private TrackerClient currentClient;
-    private MachineEntry currentMachine;
+    protected TrackerClient currentClient;
+    protected MachineEntry currentMachine;
     
     int listStart = 0;
     boolean hasMore;
     private final Object sync = new Object();
+    
     /**
      * Creates new form BrowserFrame
      */
     public BrowserFrame() {
         initComponents();
-        Services.notifications.registerWindow(this);
         commentPanel.setLayout(new GridLayout(0, 1));
         jTable1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         refreshTrackers();
         pack();
         jList1.getSelectionModel().addListSelectionListener(this);
+        
+        jButton5.setText(getMachineText1());
+        jButton3.setText(getMachineText2());
+        
+        jButton2.setText(getTrackerText1());
     }
 
 	public final void refreshTrackers()
@@ -76,12 +76,16 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 					model.clear();
 
 					clients.clear();
-					for (TrackerClient client : Services.trackers.getClients())
+					listClients(new TrackerListener()
 					{
-						String key = client.getAddress();
-						model.addElement(key);
-						clients.put(key, client);
-					}
+						@Override
+						public void receiveTracker(TrackerClient client)
+						{
+							String key = client.getAddress();
+							model.addElement(key);
+							clients.put(key, client);
+						}
+					});
 				}
 			}
 		});
@@ -90,7 +94,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 	private void show(TrackerClient client, boolean fromStart)
 	{
 		BrowserFrame b = this;
-		Services.userThreads.execute(new Runnable()
+		runLater(new Runnable()
 		{
 			@Override
 			public void run()
@@ -124,7 +128,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 		DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
 		while (model.getRowCount() > 0) model.removeRow(0);
 		machines.clear();
-		try (CloseableIt<MachineEntry> iterator = client.list(listStart);)
+		try (CloseableIterator<MachineEntry> iterator = client.list(listStart);)
 		{
 			while (iterator.hasNext())
 			{
@@ -165,8 +169,6 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jMenuItem1 = new javax.swing.JMenuItem();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
         jSplitPane2 = new javax.swing.JSplitPane();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
@@ -175,17 +177,21 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jLabel2 = new javax.swing.JLabel();
         ratingLabel = new javax.swing.JLabel();
         filesLabl = new javax.swing.JLabel();
-        jButton3 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         commentPanel = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        jButton6 = new javax.swing.JButton();
+        jPanel5 = new javax.swing.JPanel();
+        jButton3 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
         jButton9 = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
+        jPanel4 = new javax.swing.JPanel();
+        jButton6 = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jList1 = new javax.swing.JList();
@@ -215,25 +221,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 
         jSplitPane1.setDividerLocation(201);
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Tracker Options:"));
-
-        jButton1.setText("Add known trackers");
-        jButton1.setEnabled(false);
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-
-        jButton2.setText("Upload file metadata");
-        jButton2.setEnabled(false);
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
-            }
-        });
+        jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         jSplitPane2.setDividerLocation(200);
 
@@ -274,6 +262,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jSplitPane2.setLeftComponent(jScrollPane2);
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Machine Options:"));
+        jPanel2.setPreferredSize(new java.awt.Dimension(200, 200));
 
         jLabel1.setText("Average rating:");
 
@@ -282,6 +271,27 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         ratingLabel.setText("No machine selected");
 
         filesLabl.setText("No machine selected");
+
+        commentPanel.setPreferredSize(new java.awt.Dimension(200, 200));
+
+        javax.swing.GroupLayout commentPanelLayout = new javax.swing.GroupLayout(commentPanel);
+        commentPanel.setLayout(commentPanelLayout);
+        commentPanelLayout.setHorizontalGroup(
+            commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 448, Short.MAX_VALUE)
+        );
+        commentPanelLayout.setVerticalGroup(
+            commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 266, Short.MAX_VALUE)
+        );
+
+        jScrollPane3.setViewportView(commentPanel);
+
+        jLabel3.setText("Name:");
+
+        jLabel4.setText("No machine selected");
+
+        jPanel5.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         jButton3.setText("Open");
         jButton3.setEnabled(false);
@@ -301,48 +311,46 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
             }
         });
 
-        javax.swing.GroupLayout commentPanelLayout = new javax.swing.GroupLayout(commentPanel);
-        commentPanel.setLayout(commentPanelLayout);
-        commentPanelLayout.setHorizontalGroup(
-            commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 530, Short.MAX_VALUE)
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButton5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButton3)
+                .addContainerGap())
         );
-        commentPanelLayout.setVerticalGroup(
-            commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 314, Short.MAX_VALUE)
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton3)
+                    .addComponent(jButton5))
+                .addContainerGap())
         );
-
-        jScrollPane3.setViewportView(commentPanel);
-
-        jLabel3.setText("Name:");
-
-        jLabel4.setText("No machine selected");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+            .addComponent(jScrollPane3)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jButton5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton3))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addComponent(jLabel3))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(ratingLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 236, Short.MAX_VALUE)
-                            .addComponent(filesLabl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jLabel3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(filesLabl, javax.swing.GroupLayout.DEFAULT_SIZE, 270, Short.MAX_VALUE)
+                    .addComponent(ratingLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -360,23 +368,12 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
                     .addComponent(jLabel3)
                     .addComponent(jLabel4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton3)
-                    .addComponent(jButton5))
+                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE))
         );
 
         jSplitPane2.setRightComponent(jPanel2);
-
-        jButton6.setText("Refresh");
-        jButton6.setEnabled(false);
-        jButton6.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton6ActionPerformed(evt);
-            }
-        });
 
         jButton8.setText("Next");
         jButton8.setEnabled(false);
@@ -400,12 +397,66 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 
         jLabel6.setText("0");
 
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Tracker actions"));
+
+        jButton6.setText("Refresh");
+        jButton6.setEnabled(false);
+        jButton6.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton6ActionPerformed(evt);
+            }
+        });
+
+        jButton1.setText("Add known trackers");
+        jButton1.setEnabled(false);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jButton2.setText("Upload file metadata");
+        jButton2.setEnabled(false);
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+						public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButton2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButton6)
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton6)
+                    .addComponent(jButton1)
+                    .addComponent(jButton2))
+                .addContainerGap(15, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSplitPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jButton9)
@@ -414,34 +465,27 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)))
+                        .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton6)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jButton1)
-                        .addComponent(jButton2)
-                        .addComponent(jButton6))
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel5))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel6))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jButton9)
-                            .addComponent(jButton8))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE))
+                            .addComponent(jButton8)))
+                    .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jSplitPane2))
         );
 
         jSplitPane1.setRightComponent(jPanel1);
@@ -487,7 +531,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jButton7)
@@ -498,7 +542,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 449, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton4)
@@ -516,7 +560,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 495, Short.MAX_VALUE)
+            .addComponent(jSplitPane1)
         );
 
         pack();
@@ -555,7 +599,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 			jPopupMenu1.show(evt.getComponent(), evt.getX(), evt.getY());
     }
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-    	AddTracker addTracker = new AddTracker(this);
+    	AddTracker addTracker = createAddTracker();
     	addTracker.setAlwaysOnTop(true);
     	addTracker.setLocation(getLocation());
     	addTracker.setVisible(true);
@@ -574,10 +618,10 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
             return;
         }
 				LogWrapper.getLogger().info("Removing " + client);
-        Services.trackers.remove(client);
-        Services.trackers.save(Services.settings.trackerFile.getPath());
+        remoceClient(client);
         refreshTrackers();
     }
+		protected abstract void remoceClient(TrackerClient client);
     
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
 
@@ -602,7 +646,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
       if (evt.getClickCount() < 2) return;  
-    	Services.userThreads.execute(new Runnable() {
+    	runLater(new Runnable() {
 					@Override
 					public void run()
 					{
@@ -610,41 +654,9 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 					}});
     }//GEN-LAST:event_jTable1MouseClicked
 
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        if (currentClient == null || currentMachine == null) return;
-        MakeComment makeComment = new MakeComment(currentClient, currentMachine.getIdentifer(), this);
-//        Services.notification.registerWindow(makeComment);
-        makeComment.setAlwaysOnTop(true);
-        makeComment.setVisible(true);
-    }//GEN-LAST:event_jButton5ActionPerformed
-
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        if (currentMachine == null) return;
-        
-        Machine machine = DbMachines.getMachine(currentMachine.getIdentifer());
-        if (machine != null)
-        {
-				final MachineViewer viewer = new MachineViewer(machine);
-				Services.notifications.registerWindow(viewer);
-				viewer.setTitle("Machine " + machine.getName());
-				viewer.setVisible(true);
-				LogWrapper.getLogger().info("Showing remote " + machine.getName());
-                                
-        }
-        else if (JOptionPane.showConfirmDialog(this, "This machine is not currently in the database, would you like to add it?",
-                    "Not currently in database", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
-            {
-                        AddMachine addMachine = new AddMachine(currentMachine.getIp() + ":" + currentMachine.getPortBegin());
-                        addMachine.setAlwaysOnTop(true);
-                        Services.notifications.registerWindow(addMachine);
-                        addMachine.setVisible(true);
-            }
-        
-        
-    }//GEN-LAST:event_jButton3ActionPerformed
-
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        Services.userThreads.execute(new Runnable() {
+      // tracker actions 3
+       runLater(new Runnable() {
             @Override
             public void run() {
                 refreshAll();
@@ -667,34 +679,31 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 	}
     
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
+			runLater(new Runnable()
 			{
-				if (currentClient == null)
+				@Override
+				public void run()
 				{
-					return;
+					if (currentClient == null)
+					{
+						return;
+					}
+					currentClient.addOthers();
+	
+					if (isVisible())
+					{
+						refreshAll();
+					}
 				}
-				currentClient.addOthers();
-
-				if (isVisible())
-				{
-					refreshAll();
-				}
-			}
-		});
+			});
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        Services.userThreads.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (currentClient == null) return;
-                currentClient.sync();
-            }
-        });
+        // tracker actions 1
+    	trackerAction1();
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    protected abstract void trackerAction1();
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
         deleteTheRow();
@@ -715,6 +724,21 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 				show(currentClient, false);
 			}
     }//GEN-LAST:event_jButton9ActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        // machine actions 1
+        machineAction1();
+    }//GEN-LAST:event_jButton5ActionPerformed
+		
+    
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        // machine actions 2
+        machineAction2();
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+		protected abstract void machineAction2();
+    protected abstract void machineAction1();
     
     void refreshComments()
     {
@@ -738,7 +762,7 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
 
 		ratingLabel.setText("0");
 		
-		try (CloseableIt<CommentEntry> listComments = currentClient.listComments(currentMachine);)
+		try (CloseableIterator<CommentEntry> listComments = currentClient.listComments(currentMachine);)
 		{
 			int count = 0;
 			double sum = 0;
@@ -795,6 +819,8 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JPopupMenu jPopupMenu1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
@@ -809,4 +835,14 @@ public class BrowserFrame extends javax.swing.JFrame implements ListSelectionLis
     public void valueChanged(ListSelectionEvent e) {
         jButton7.setEnabled(jList1.getSelectedIndex() >= 0);
     }
+
+    public interface TrackerListener { public void receiveTracker(TrackerClient client); }
+  	protected abstract void listClients(TrackerListener listener);
+  	
+    protected abstract void runLater(Runnable runnable);
+    protected abstract AddTracker createAddTracker();
+    
+    protected abstract String getMachineText1();
+    protected abstract String getMachineText2();
+    protected abstract String getTrackerText1();
 }

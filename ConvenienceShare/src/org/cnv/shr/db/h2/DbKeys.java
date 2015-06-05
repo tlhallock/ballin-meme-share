@@ -84,13 +84,15 @@ public class DbKeys
 			int ndx = 1;
 			stmt.setInt(ndx++, machine.getId());
 
-			ResultSet results = stmt.executeQuery();
-			while (results.next())
+			try (ResultSet results = stmt.executeQuery();)
 			{
-				PublicKey pKey = getKey(results.getString(1));
-				if (pKey != null)
+				while (results.next())
 				{
-					returnValue.add(pKey);
+					PublicKey pKey = getKey(results.getString(1));
+					if (pKey != null)
+					{
+						returnValue.add(pKey);
+					}
 				}
 			}
 		}
@@ -117,10 +119,12 @@ public class DbKeys
 			stmt.setInt(ndx++, machine.getId());
 
 			stmt.executeUpdate();
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				int keyId = generatedKeys.getInt(1);
+				if (generatedKeys.next())
+				{
+					int keyId = generatedKeys.getInt(1);
+				}
 			}
 		}
 		catch (SQLException e)
@@ -154,10 +158,12 @@ public class DbKeys
 		{
 			int ndx = 1;
 			stmt.setInt(ndx++, m.getId());
-			ResultSet results = stmt.executeQuery();
-			if (results.next())
+			try (ResultSet results = stmt.executeQuery();)
 			{
-				return getKey(results.getString(1));
+				if (results.next())
+				{
+					return getKey(results.getString(1));
+				}
 			}
 		}
 		catch (SQLException e)
@@ -175,7 +181,10 @@ public class DbKeys
 			int ndx = 1;
 			stmt.setInt(ndx++, machine.getId());
 			stmt.setString(ndx++, getKeyString(oldKey));
-			return stmt.executeQuery().next();
+			try (ResultSet executeQuery = stmt.executeQuery();)
+			{
+				return executeQuery.next();
+			}
 		}
 		catch (SQLException e)
 		{

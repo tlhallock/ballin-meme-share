@@ -5,8 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,8 +61,8 @@ public class Settings implements SettingListener
 	public BooleanSetting    shareWithEveryone        = new BooleanSetting   ("shareWithEveryone   ".trim(), false                                                                        , false,  true, "True you would like to let anyone download from this machine.                   ".trim()); { settings.add(shareWithEveryone   );  }
 	public DirectorySetting  downloadsDirectory       = new DirectorySetting ("downloadsDirectory  ".trim(), new File("."                                  + File.separator + "downloads"), false,  true, "Directory to put downloaded files.                                              ".trim()); { settings.add(downloadsDirectory  );  }
 	public DirectorySetting  applicationDirectory     = new DirectorySetting ("applicationDirectory".trim(), new File("."                                  + File.separator + "app"      ), false,  true, "Directory to put application files.                                             ".trim()); { settings.add(applicationDirectory);  }
-	public DirectorySetting  stagingDirectory         = new DirectorySetting ("stagingDirectory    ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "tmpD"     ), false,  true, "Directory to put files currently being served.                                  ".trim()); { settings.add(stagingDirectory    );  }
-	public DirectorySetting  servingDirectory         = new DirectorySetting ("servingDirectory    ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "stage"    ), false,  true, "Directory to put files currently being downloaded.                              ".trim()); { settings.add(servingDirectory    );  }
+//	public DirectorySetting  stagingDirectory         = new DirectorySetting ("stagingDirectory    ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "tmpD"     ), false,  true, "Directory to put files currently being served.                                  ".trim()); { settings.add(stagingDirectory    );  }
+//	public DirectorySetting  servingDirectory         = new DirectorySetting ("servingDirectory    ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "stage"    ), false,  true, "Directory to put files currently being downloaded.                              ".trim()); { settings.add(servingDirectory    );  }
 	public FileSetting       keysFile                 = new FileSetting      ("keysFile            ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "keys.json"), false,  true, "File to put public/private key information.                                     ".trim()); { settings.add(keysFile            );  }
 	public FileSetting       logFile                  = new FileSetting      ("logFile             ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "log.txt"  ),  true,  true, "File to put log messages if logging to file.                                    ".trim()); { settings.add(logFile             );  }
 	public FileSetting       dbFile                   = new FileSetting      ("dbFile              ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "files"    ), false,  true, "File to put database.                                                           ".trim()); { settings.add(dbFile              );  }
@@ -74,23 +72,21 @@ public class Settings implements SettingListener
 	public Settings(Path settingsFile)
 	{
 		this.settingsFile = settingsFile;
-		try
+		
+		for (String ip : Misc.collectIps())
 		{
-			localAddress = InetAddress.getLocalHost().getHostAddress();
-		}
-		catch (UnknownHostException e)
-		{
-			localAddress = "127.0.0.1";
-			e.printStackTrace();
-//			LogWrapper.getLogger().log(Level.INFO, , e);
+			if (localAddress == null || ip.contains("192"))
+			{
+				localAddress = ip;
+			}
 		}
 		System.out.println("Local host is " + localAddress);
 	}
 	
 	public void setDefaultApplicationDirectoryStructure()
 	{
-		stagingDirectory.set(Paths.get(applicationDirectory.get().getPath(), "tempD"    ));
-		servingDirectory.set(Paths.get(applicationDirectory.get().getPath(), "stage"    ));
+//		stagingDirectory.set(Paths.get(applicationDirectory.get().getPath(), "tempD"    ));
+//		servingDirectory.set(Paths.get(applicationDirectory.get().getPath(), "stage"    ));
 		keysFile        .set(Paths.get(applicationDirectory.get().getPath(), "keys.json"));
 		logFile         .set(Paths.get(applicationDirectory.get().getPath(), "log.txt"  ));
 		dbFile          .set(Paths.get(applicationDirectory.get().getPath(), "files"    ));
@@ -221,5 +217,11 @@ public class Settings implements SettingListener
 				version = "0";
 		}
 		return version;
+	}
+
+	public void setLocalAddress(String ip)
+	{
+		localAddress = ip;
+    LogWrapper.getLogger().info("Changed ip to " + ip);
 	}
 }

@@ -13,4 +13,7 @@ public enum TrackerAction
 	LIST_MY_FILES,
 	CLAIM_FILE,
 	LOSE_FILE,
+	
+	
+	GET_MACHINE,
 }

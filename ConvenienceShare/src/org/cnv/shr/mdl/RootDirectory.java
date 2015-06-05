@@ -29,7 +29,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	
 	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into ROOT key(R_ID) VALUES ("
 			+ "(select R_ID from ROOT where MID=? and RNAME=?)"
-			+ ", ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			+ ", ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	
 	protected Machine machine;
 	protected String name;
@@ -37,6 +37,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 	protected long totalNumFiles = -1;
 	protected String description;
 	protected String tags;
+	protected long minFSize = -1;
+	protected long maxFSize = -1;
 
 	protected RootDirectory(final Integer id)
 	{
@@ -65,6 +67,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 		totalFileSize                    = row.getLong  ("TSPACE"         );
 		totalNumFiles                    = row.getLong  ("NFILES"         );
 		name                             = row.getString("RNAME");
+		minFSize                         = row.getLong  ("MIN_SIZE");
+		maxFSize                         = row.getLong  ("MAX_SIZE");
 		setDefaultSharingState(       SharingState.get(row.getInt(   "SHARING")));
 		
 		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.RMACHINE, row.getInt("MID"));
@@ -96,15 +100,19 @@ public abstract class RootDirectory extends DbObject<Integer>
 			stmt.setLong(ndx++, totalNumFiles);
 			stmt.setString(ndx++, getName());
 			stmt.setInt(ndx++, getDbSharing().getDbValue());
+			stmt.setLong(ndx++, minFSize);
+			stmt.setLong(ndx++, maxFSize);
 			
 			stmt.executeUpdate();
-			final ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (final ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				id = generatedKeys.getInt(1);
-				return true;
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getInt(1);
+					return true;
+				}
+				return false;
 			}
-			return false;
 		}
 	}
 	
@@ -264,6 +272,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 		}
 		return false;
 	}
+	
 	private static synchronized void stopSynchronizing(final RootDirectory d)
 	{
 		final RootSynchronizer remove = synchronizing.remove(d.getPathElement().getFullPath());
@@ -271,5 +280,20 @@ public abstract class RootDirectory extends DbObject<Integer>
 		{
 			remove.quit();
 		}
+	}
+
+	public long getMinFileSize()
+	{
+		return minFSize;
+	}
+
+	public long getMaxFileSize()
+	{
+		return maxFSize;
+	}
+
+	public void setMinimumSize(long minimumSize)
+	{
+		minFSize = minimumSize;
 	}
 }

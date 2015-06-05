@@ -14,7 +14,7 @@ public class WhoIAm extends MachineFound
 {
 	public static int TYPE = 29;
 	
-	protected java.security.PublicKey[] keys;
+	protected PublicKey key;
 	protected String versionString;
 	
 	public WhoIAm(InputStream input) throws IOException
@@ -25,7 +25,7 @@ public class WhoIAm extends MachineFound
 	public WhoIAm()
 	{
 		super();
-		keys       = new PublicKey[] {Services.keyManager.getPublicKey()};
+		key       = Services.keyManager.getPublicKey();
 		versionString = "0.0.1";
 	}
 	
@@ -40,12 +40,7 @@ public class WhoIAm extends MachineFound
 	{
 		super.parse(reader);
 		versionString = reader.readString();
-		int numKeys = reader.readInt();
-		keys = new PublicKey[numKeys];
-		for (int i = 0; i < numKeys; i++)
-		{
-			keys[i] = reader.readPublicKey();
-		}
+		key = reader.readPublicKey();
 	}
 
 	@Override
@@ -53,11 +48,7 @@ public class WhoIAm extends MachineFound
 	{
 		super.print(connection, buffer);
 		buffer.append(versionString);
-		buffer.append(keys.length);
-		for (PublicKey key : keys)
-		{
-			buffer.append(key);
-		}
+		buffer.append(key);
 	}
 
 	@Override
@@ -65,7 +56,7 @@ public class WhoIAm extends MachineFound
 	{
 		connection.setRemoteIdentifier(ident);
 		connection.getAuthentication().setMachineInfo(name, port, nports);
-		connection.getAuthentication().offerRemote(ident, connection.getIp(), keys);
+		connection.getAuthentication().offerRemote(ident, connection.getIp(), key);
 	}
 
 	@Override

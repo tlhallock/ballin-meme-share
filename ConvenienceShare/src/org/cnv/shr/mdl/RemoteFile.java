@@ -36,7 +36,7 @@ public class RemoteFile extends SharedFile
 	public Path getTargetFile()
 	{
 		return Paths.get(
-					getRootDirectory().getLocalRoot().getAbsolutePath(),
+					getRootDirectory().getLocalRoot().toAbsolutePath().toString(),
 					getPath().getFullPath());
 	}
 

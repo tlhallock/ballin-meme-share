@@ -3,6 +3,7 @@ package org.cnv.shr.mdl;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbPermissions.SharingState;
@@ -28,9 +29,7 @@ public class RemoteDirectory extends RootDirectory
 	{
 		super(machine, name, tags, description);
 		path = DbPaths.getPathElement(
-				Services.settings.downloadsDirectory.get().getAbsolutePath() + File.separator
-				+ PathSecurity.getFsName(machine.getName()) + File.separator
-				+ PathSecurity.getFsName(getName()) + File.separator);
+				Services.settings.downloadsDirectory.get().getAbsolutePath() + File.separator + getLocalMirrorName());
 		sharesWithUs = defaultShare;
 	}
 
@@ -59,14 +58,14 @@ public class RemoteDirectory extends RootDirectory
 		this.path = object;
 	}
 
-	public File getLocalRoot()
+	public Path getLocalRoot()
 	{
-		return new File(path.getFsPath());
+		return Paths.get(path.getFsPath());
 	}
 	
 	public String getLocalMirrorName()
 	{
-		String string = "mirror" + "." + PathSecurity.getFsName(getName()) + "." + getMachine().getIdentifier();
+		String string = "mirror" + "." + PathSecurity.getFsName(getName()) + "." + PathSecurity.getFsName(getMachine().getIdentifier());
 		if (string.length() > MAX_DIRECTORY_NAME_LENGTH)
 		{
 			string = string.substring(0, MAX_DIRECTORY_NAME_LENGTH);

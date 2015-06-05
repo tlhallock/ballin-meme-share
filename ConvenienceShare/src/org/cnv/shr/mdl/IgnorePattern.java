@@ -31,13 +31,15 @@ public class IgnorePattern extends DbObject<Integer>
 		try (StatementWrapper stmt = c.prepareStatement(STRING);)
 		{
 			stmt.executeUpdate();
-			ResultSet generatedKeys = stmt.getGeneratedKeys();
-			if (generatedKeys.next())
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
-				id = generatedKeys.getInt(1);
-				return true;
+				if (generatedKeys.next())
+				{
+					id = generatedKeys.getInt(1);
+					return true;
+				}
+				return false;
 			}
-			return false;
 		}
 	}
 }

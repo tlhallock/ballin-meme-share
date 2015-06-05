@@ -49,7 +49,7 @@ public class DownloadTable extends DbJTable<Download>
 							 JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				Misc.nativeOpen(download.getTargetFile());
+				Misc.nativeOpen(download.getTargetFile(), false);
 			}
 			
 			@Override
@@ -58,6 +58,36 @@ public class DownloadTable extends DbJTable<Download>
 				return "Open";
 			}
 		}, true);
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(Download download)
+			{
+				DownloadState state = download.getState();
+				if (state == null)
+				{
+					// why would this happen?
+					LogWrapper.getLogger().warning("The download has no state.");
+					return;
+				}
+				if (!state.equals(DownloadState.ALL_DONE))
+				{
+
+					JOptionPane.showMessageDialog(app, 
+							"Opening unfinished downloads is not supported yet.",
+							"This download is not done!",
+							 JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				Misc.nativeOpen(download.getTargetFile(), true);
+			}
+			
+			@Override
+			String getName()
+			{
+				return "Open";
+			}
+		});
 		addListener(new TableRightClickListener()
 		{
 			@Override

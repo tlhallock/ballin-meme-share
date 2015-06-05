@@ -68,9 +68,11 @@ public class DbPaths
 			do
 			{
 				stmt.setInt(1, pid);
-				ResultSet executeQuery = stmt.executeQuery();
-				values.add(executeQuery.getString(1));
-				ids.add(pid = executeQuery.getInt(2));
+				try (ResultSet executeQuery = stmt.executeQuery();)
+				{
+					values.add(executeQuery.getString(1));
+					ids.add(pid = executeQuery.getInt(2));
+				}
 			}
 			while (pid != ROOT.getId());
 		}
@@ -104,15 +106,17 @@ public class DbPaths
 				{
 					existsStmt.setLong(1, pid);
 					existsStmt.setString(2, pathElems[elemsIdx].getName());
-					ResultSet results = existsStmt.executeQuery();
-					if (!results.next())
+					try (ResultSet results = existsStmt.executeQuery();)
 					{
-						exists = false;
-						continue;
-					}
+						if (!results.next())
+						{
+							exists = false;
+							continue;
+						}
 
-					pathElems[elemsIdx].setId(pid = results.getInt(1));
-					elemsIdx++;
+						pathElems[elemsIdx].setId(pid = results.getInt(1));
+						elemsIdx++;
+					}
 				}
 				else
 				{
@@ -120,18 +124,20 @@ public class DbPaths
 					createStmt.setBoolean(2, pathElems[elemsIdx].isBroken());
 					createStmt.setString(3, pathElems[elemsIdx].getName());
 					createStmt.executeUpdate();
-					ResultSet generatedKeys = createStmt.getGeneratedKeys();
-					if (generatedKeys.next())
+					try (ResultSet generatedKeys = createStmt.getGeneratedKeys();)
 					{
-						pathElems[elemsIdx].setId(pid = generatedKeys.getInt(1));
-					}
-					else
-					{
-						if (pathElems[elemsIdx].getId() == null)
+						if (generatedKeys.next())
 						{
-							throw new RuntimeException("Unable to create path: " 
-									+ PathBreaker.join(pathElems) 
-									+ "[" + pathElems[elemsIdx].getName() + "]");
+							pathElems[elemsIdx].setId(pid = generatedKeys.getInt(1));
+						}
+						else
+						{
+							if (pathElems[elemsIdx].getId() == null)
+							{
+								throw new RuntimeException("Unable to create path: " 
+										+ PathBreaker.join(pathElems) 
+										+ "[" + pathElems[elemsIdx].getName() + "]");
+							}
 						}
 					}
 					elemsIdx++;

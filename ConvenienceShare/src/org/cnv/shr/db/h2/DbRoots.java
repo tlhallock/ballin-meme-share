@@ -1,5 +1,8 @@
 package org.cnv.shr.db.h2;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -39,14 +42,16 @@ public class DbRoots
 				StatementWrapper stmt = c.prepareStatement(SELECT1))
 		{
 			stmt.setInt(1, d.getId());
-			ResultSet executeQuery = stmt.executeQuery();
-			if (executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				return executeQuery.getLong("totalsize");
-			}
-			else
-			{
-				return -1;
+				if (executeQuery.next())
+				{
+					return executeQuery.getLong("totalsize");
+				}
+				else
+				{
+					return -1;
+				}
 			}
 		}
 		catch (SQLException e)
@@ -62,14 +67,16 @@ public class DbRoots
 				StatementWrapper stmt = c.prepareStatement(SELECT2))
 		{
 			stmt.setInt(1, d.getId());
-			ResultSet executeQuery = stmt.executeQuery();
-			if (executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				return executeQuery.getLong("number");
-			}
-			else
-			{
-				return -1;
+				if (executeQuery.next())
+				{
+					return executeQuery.getLong("number");
+				}
+				else
+				{
+					return -1;
+				}
 			}
 		}
 		catch (SQLException e)
@@ -122,12 +129,14 @@ public class DbRoots
 				StatementWrapper prepareStatement = c.prepareStatement(SELECT5);)
 		{
 			prepareStatement.setLong(1, pathElement.getId());
-			ResultSet executeQuery = prepareStatement.executeQuery();
-			if (executeQuery.next())
+			try (ResultSet executeQuery = prepareStatement.executeQuery();)
 			{
-				LocalDirectory local = (LocalDirectory) DbTables.DbObjects.LROOT.allocate(executeQuery);
-				local.fill(c, executeQuery, new DbLocals().setObject(Services.localMachine).setObject(pathElement));
-				return local;
+				if (executeQuery.next())
+				{
+					LocalDirectory local = (LocalDirectory) DbTables.DbObjects.LROOT.allocate(executeQuery);
+					local.fill(c, executeQuery, new DbLocals().setObject(Services.localMachine).setObject(pathElement));
+					return local;
+				}
 			}
 			return null;
 		}
@@ -150,17 +159,18 @@ public class DbRoots
 		{
 			prepareStatement.setString(1, name);
 			prepareStatement.setInt(2, machine.getId());
-			ResultSet executeQuery = prepareStatement.executeQuery();
-
-			DbObjects o = machine.isLocal() ? DbTables.DbObjects.LROOT : DbTables.DbObjects.RROOT;
-			
-			if (!executeQuery.next())
+			try (ResultSet executeQuery = prepareStatement.executeQuery();)
 			{
-				return null;
+				DbObjects o = machine.isLocal() ? DbTables.DbObjects.LROOT : DbTables.DbObjects.RROOT;
+				
+				if (!executeQuery.next())
+				{
+					return null;
+				}
+				DbObject allocate = o.allocate(executeQuery);
+				allocate.fill(c, executeQuery, new DbLocals().setObject(machine));
+				return (RootDirectory) allocate;
 			}
-			DbObject allocate = o.allocate(executeQuery);
-			allocate.fill(c, executeQuery, new DbLocals().setObject(machine));
-			return (RootDirectory) allocate;
 		}
 		catch (SQLException e)
 		{
@@ -196,10 +206,14 @@ public class DbRoots
 	public static class IgnorePatterns
 	{
 		private final String[] patterns;
+		long minFileSize = -1;
+		long maxFileSize = -1;
 		
-		IgnorePatterns(String[] patterns)
+		IgnorePatterns(String[] patterns, long min, long max)
 		{
 			this.patterns = patterns;
+			minFileSize = min;
+			maxFileSize = max;
 		}
 		
 		public String[] getPatterns()
@@ -216,6 +230,22 @@ public class DbRoots
 					return true;
 				}
 			}
+			try
+			{
+				if (minFileSize >= 0 && Files.size(Paths.get(path)) < minFileSize)
+				{
+					return true;
+				}
+				if (maxFileSize >= 0 && Files.size(Paths.get(path)) > maxFileSize)
+				{
+					return true;
+				}
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to get file size.", e);
+				return true;
+			}
 			return false;
 		}
 	}
@@ -228,49 +258,65 @@ public class DbRoots
 				StatementWrapper s1 = c.prepareStatement(SELECT7);)
 		{
 			s1.setInt(1, local.getId());
-			ResultSet results = s1.executeQuery();
-			while (results.next())
+			try (ResultSet results = s1.executeQuery();)
 			{
-				returnValue.add(results.getString(1));
+				while (results.next())
+				{
+					String string = results.getString(1);
+					if (string.length() == 0)
+					{
+						continue;
+					}
+					returnValue.add(string);
+				}
 			}
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get ignores.", e);
 		}
-		return new IgnorePatterns(returnValue.toArray(DUMMY));
+		return new IgnorePatterns(returnValue.toArray(DUMMY), local.getMinFileSize(), local.getMaxFileSize());
 	}
 
-        public static void setIgnores(LocalDirectory local, String[] ignores)
-        {
-            try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-            		StatementWrapper s1 = c.prepareStatement(DELETE4);) {
-                s1.setInt(1, local.getId());
-                s1.execute();
-            } catch (SQLException ex) {
-            	LogWrapper.getLogger().log(Level.INFO, "Unable to delete old ignores.", ex);
-            }
-            HashSet<String> ignoresAdded = new HashSet<>();
-            try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-            		StatementWrapper s1 = c.prepareStatement(INSERT1);) {
-                for (String ignore : ignores)
-                {
-                    ignore = ignore.trim();
-                    if (ignore.length() > 1024)
-                    {
-                        LogWrapper.getLogger().info("Unable to add ignore because it is bigger than the maximum ignore pattern: " + ignore);
-                        continue;
-                    }
-                    if (!ignoresAdded.add(ignore))
-                    {
-                        continue;
-                    }
-                    s1.setInt(1, local.getId());
-                    s1.setString(2, ignore);
-                    s1.execute();
-                }
-            } catch (SQLException ex) {
-            	LogWrapper.getLogger().log(Level.INFO, "Unable to set new ignores.", ex);
-            }
-        }
+	public static void setIgnores(LocalDirectory local, String[] ignores)
+	{
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); StatementWrapper s1 = c.prepareStatement(DELETE4);)
+		{
+			s1.setInt(1, local.getId());
+			s1.execute();
+		}
+		catch (SQLException ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete old ignores.", ex);
+		}
+		HashSet<String> ignoresAdded = new HashSet<>();
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); StatementWrapper s1 = c.prepareStatement(INSERT1);)
+		{
+			for (String ignore : ignores)
+			{
+				ignore = ignore.trim();
+				if (ignore.length() > 1024)
+				{
+					LogWrapper.getLogger().info("Unable to add ignore because it is bigger than the maximum ignore pattern: " + ignore);
+					continue;
+				}
+				if (ignore.length() <= 0)
+				{
+					LogWrapper.getLogger().info("Unable to add ignore because it is the emptry string.");
+					continue;
+				}
+				if (!ignoresAdded.add(ignore))
+				{
+					continue;
+				}
+				s1.setInt(1, local.getId());
+				s1.setString(2, ignore);
+				s1.execute();
+			}
+		}
+		catch (SQLException ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to set new ignores.", ex);
+		}
+	}
 }

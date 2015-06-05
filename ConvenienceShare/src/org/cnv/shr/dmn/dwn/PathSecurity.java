@@ -3,14 +3,10 @@ package org.cnv.shr.dmn.dwn;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -136,14 +132,5 @@ public class PathSecurity
 		}
 		
 		return builder.toString();
-	}
-	
-	public static Path getMirrorDirectory(RemoteFile remoteFile)
-	{
-		RootDirectory rootDirectory = remoteFile.getRootDirectory();
-		return Paths.get(
-				  Services.settings.stagingDirectory.get().getAbsolutePath(),
-				  getFsName(rootDirectory.getMachine().getName()) + "_" + getFsName(rootDirectory.getMachine().getIdentifier()),
-				  getFsName(rootDirectory.getName()));
 	}
 }

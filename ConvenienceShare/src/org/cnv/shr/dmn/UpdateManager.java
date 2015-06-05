@@ -99,35 +99,37 @@ public class UpdateManager extends TimerTask
 				InputStream inputStream = socket.getInputStream();
 				OutputStream outputStream = socket.getOutputStream();)
 		{
-			OutputByteWriter writer = new OutputByteWriter(outputStream);
-			ByteReader byteReader = new ByteReader(inputStream);
-
-			writer.append(authenticate);
-			if (authenticate)
+			try (OutputByteWriter writer = new OutputByteWriter(outputStream);)
 			{
-				byte[] naunce = Misc.createNaunce(Services.settings.minNaunce.get());
-				byte[] encrypted = Services.keyManager.encrypt(pKey, naunce);
+				ByteReader byteReader = new ByteReader(inputStream);
 
-				writer.appendVarByteArray(encrypted);
-				byte[] decrypted = byteReader.readVarByteArray();
-				if (!Arrays.equals(naunce, decrypted))
+				writer.append(authenticate);
+				if (authenticate)
 				{
-					LogWrapper.getLogger().info("Update server failed authentication.");
+					byte[] naunce = Misc.createNaunce(Services.settings.minNaunce.get());
+					byte[] encrypted = Services.keyManager.encrypt(pKey, naunce);
+
+					writer.appendVarByteArray(encrypted);
+					byte[] decrypted = byteReader.readVarByteArray();
+					if (!Arrays.equals(naunce, decrypted))
+					{
+						LogWrapper.getLogger().info("Update server failed authentication.");
+						return;
+					}
+				}
+
+				String serverVersionString = byteReader.readString();
+				if (!versionIsNewer(serverVersionString, currentVersion))
+				{
+					LogWrapper.getLogger().info("We already have the latest version.");
+					writer.append(false);
+
+					// here we could also check the version on file...
 					return;
 				}
-			}
 
-			String serverVersionString = byteReader.readString();
-			if (!versionIsNewer(serverVersionString, currentVersion))
-			{
-				LogWrapper.getLogger().info("We already have the latest version.");
-				writer.append(false);
-				
-				// here we could also check the version on file...
-				return;
+				update(inputStream, writer, serverVersionString, origin);
 			}
-
-			update(inputStream, writer, serverVersionString, origin);
 		}
 		catch (IOException e)
 		{

@@ -19,17 +19,17 @@ import org.cnv.shr.util.Misc;
 
 public class Trackers
 {
-	private HashMap<String, TrackerClient> trackers = new HashMap<>();
+	private HashMap<String, ClientTrackerClient> trackers = new HashMap<>();
 
 	public void add(String url, int portBegin, int portEnd)
 	{
-		TrackerClient client = new TrackerClient(new TrackerEntry(url, portBegin, portEnd));
+		ClientTrackerClient client = new ClientTrackerClient(new TrackerEntry(url, portBegin, portEnd));
 		trackers.put(client.getAddress(), client);
 	}
 
 	public void add(TrackerEntry entry)
 	{
-		TrackerClient client = new TrackerClient(entry);
+		ClientTrackerClient client = new ClientTrackerClient(entry);
 		trackers.put(client.getAddress(), client);
 	}
 	
@@ -58,7 +58,7 @@ public class Trackers
 		{
 			while (TrackObjectUtils.next(openArray, entry))
 			{
-				TrackerClient loadedClient = new TrackerClient(entry);
+				ClientTrackerClient loadedClient = new ClientTrackerClient(entry);
 				trackers.put(loadedClient.getAddress(), loadedClient);
 			}
 		}
@@ -77,7 +77,7 @@ public class Trackers
 		trackers.save(Paths.get("foobar.json"));
 	}
 
-    public Iterable<TrackerClient> getClients()
+    public Iterable<ClientTrackerClient> getClients()
     {
         return trackers.values();
     }

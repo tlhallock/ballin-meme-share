@@ -45,17 +45,19 @@ public class DbPermissions
 			int ndx = 1;
 			stmt.setInt(ndx++, root.getId());
 			stmt.setInt(ndx++, machine.getId());
-			ResultSet executeQuery = stmt.executeQuery();
-			if (!executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				return null;
-			}
-			int dbValue = executeQuery.getInt(1);
-			for (SharingState state : SharingState.values())
-			{
-				if (state.state == dbValue)
+				if (!executeQuery.next())
 				{
-					return state;
+					return null;
+				}
+				int dbValue = executeQuery.getInt(1);
+				for (SharingState state : SharingState.values())
+				{
+					if (state.state == dbValue)
+					{
+						return state;
+					}
 				}
 			}
 		}

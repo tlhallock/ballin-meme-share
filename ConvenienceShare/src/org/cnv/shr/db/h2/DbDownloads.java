@@ -26,12 +26,14 @@ public class DbDownloads
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(SELECTID);)
 		{
-			
+
 			stmt.setInt(1, remoteFile.getId());
-			ResultSet executeQuery = stmt.executeQuery();
-			if (executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				return executeQuery.getInt(1);
+				if (executeQuery.next())
+				{
+					return executeQuery.getInt(1);
+				}
 			}
 		}
 		catch (SQLException e)
@@ -72,9 +74,12 @@ public class DbDownloads
 				StatementWrapper stmt = c.prepareStatement(SELECT2))
 		{
 			stmt.setInt(1, parseInt);
-			ResultSet executeQuery = stmt.executeQuery();
-			if (executeQuery.next())
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
+				if (!executeQuery.next())
+				{
+					return null;
+				}
 				DbObject allocate = DbObjects.PENDING_DOWNLOAD.allocate(executeQuery);
 				allocate.fill(c, executeQuery, new DbLocals());
 				return (Download) allocate;

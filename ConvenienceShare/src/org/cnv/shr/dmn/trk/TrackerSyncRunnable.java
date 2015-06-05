@@ -11,6 +11,7 @@ import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerAction;
+import org.cnv.shr.trck.TrackerRequest;
 import org.cnv.shr.util.LogWrapper;
 
 public class TrackerSyncRunnable implements Runnable
@@ -79,7 +80,9 @@ public class TrackerSyncRunnable implements Runnable
 	public void run()
 	{
 		// should track which files already exist, or make sync action, should compress these...
-		try (TrackerConnection connection = client.connect(TrackerAction.LIST_MY_FILES))
+		TrackerRequest request = new TrackerRequest(TrackerAction.LIST_MY_FILES);
+		request.setParameter("other", Services.settings.machineIdentifier.get());
+		try (TrackerConnection connection = client.connect(request))
 		{
 			FileEntry entry = new FileEntry();
 			TrackObjectUtils.openArray(connection.parser);

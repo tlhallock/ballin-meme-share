@@ -58,7 +58,7 @@ public class Authenticator
 		this.claimedNumPorts = nports;
 	}
 	
-	public void offerRemote(String id, String ip, PublicKey[] keys)
+	public void offerRemote(String id, String ip, PublicKey key)
 	{
 		// If we have no record of this machine, then it can be authenticated. (We will not share with it anyway.)
 		// Otherwise, it must prove that it who it said it was in case we are sharing with it.
@@ -69,9 +69,9 @@ public class Authenticator
 			return;
 		}
 
-		if (remotePublicKey == null && keys.length > 0)
+		if (remotePublicKey == null && key != null)
 		{
-			remotePublicKey = keys[0];
+			remotePublicKey = key;
 		}
 
 		if (DbMachines.getMachine(id) != null)
@@ -80,12 +80,12 @@ public class Authenticator
 		}
 		
 		LogWrapper.getLogger().info("Found new machine!");
-		updateMachineInfo(id, ip, keys);
+		updateMachineInfo(id, ip, key);
 	}
 	
-	void updateMachineInfo(String ident, String ip, PublicKey[] keys)
+	void updateMachineInfo(String ident, String ip, PublicKey key)
 	{
-		DbMachines.updateMachineInfo(ident, claimedName, keys, ip, claimedPort, claimedNumPorts);
+		DbMachines.updateMachineInfo(ident, claimedName, key, ip, claimedPort, claimedNumPorts);
 	}
 	
 	void notifyAuthentication(String id, String ip, boolean authenticated)
@@ -98,7 +98,7 @@ public class Authenticator
 			{
 				LogWrapper.getLogger().info("Remote is authenticated.");
 
-				updateMachineInfo(id, ip, new PublicKey[] { remotePublicKey });
+				updateMachineInfo(id, ip, remotePublicKey);
 				this.authenticated = true;
 			}
 			else
@@ -145,7 +145,7 @@ public class Authenticator
 	public boolean authenticate(Message m)
 	{
 		// Double check identifier and keys...
-		return !m.requiresAthentication() || (authenticated != null && authenticated);
+		return !m.requiresAthentication() || authenticated != null && authenticated;
 	}
 	
 	public void setLocalKey(PublicKey localKey)

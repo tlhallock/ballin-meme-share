@@ -50,9 +50,12 @@ public class DbMessages
 				StatementWrapper stmt = c.prepareStatement(SELECT1))
 		{
 			stmt.setInt(1, id);
-			ResultSet results = stmt.executeQuery();
-			if (results.next())
+			try (ResultSet results = stmt.executeQuery();)
 			{
+				if (!results.next())
+				{
+					return null;
+				}
 				DbObject allocate = DbObjects.MESSAGES.allocate(results);
 				allocate.fill(c, results, new DbLocals());
 				return (UserMessage) allocate;

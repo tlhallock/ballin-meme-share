@@ -21,7 +21,7 @@ import org.cnv.shr.util.LogWrapper;
 public class FileFileSource implements FileSource
 {
 	private Path f;
-	IgnorePatterns patterns;
+	private IgnorePatterns patterns;
 	
 	public FileFileSource(File f, IgnorePatterns ignores)
 	{
@@ -88,10 +88,15 @@ public class FileFileSource implements FileSource
 				while (it.hasNext())
 				{
 					Path maybeNext = it.next();
-					if (!patterns.blocks(maybeNext.toFile().getAbsolutePath()))
+					if (patterns.blocks(maybeNext.toFile().getAbsolutePath()))
 					{
-						return maybeNext;
+						continue;
 					}
+					if (Files.isSymbolicLink(maybeNext))
+					{
+						continue;
+					}
+					return maybeNext;
 				}
 				return null;
 			}

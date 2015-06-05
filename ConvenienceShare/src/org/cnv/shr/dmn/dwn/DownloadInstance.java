@@ -1,6 +1,5 @@
 package org.cnv.shr.dmn.dwn;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
@@ -24,7 +23,7 @@ import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.trk.TrackerClient;
+import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
@@ -109,7 +108,7 @@ public class DownloadInstance
 			public void run()
 			{
 				FileEntry fileEntry = remoteFile.getFileEntry();
-				for (TrackerClient client : Services.trackers.getClients())
+				for (ClientTrackerClient client : Services.trackers.getClients())
 				{
 					client.requestSeeders(fileEntry, seeders.values());
 				}
@@ -309,29 +308,25 @@ public class DownloadInstance
 
 	public void setDestinationFile()
 	{
-		File localRootF = remoteFile.getRootDirectory().getLocalRoot();
-		Path localRoot = Paths.get(localRootF.getAbsolutePath());
-		destination = Paths.get(localRoot.toString(), remoteFile.getPath().getFullPath());
-		destination = PathSecurity.secureMakeDirs(localRoot, destination);
+		Path localRoot = remoteFile.getRootDirectory().getLocalRoot();
+		destination = PathSecurity.secureMakeDirs(localRoot, Paths.get(remoteFile.getPath().getFullPath()));
 		if (destination == null)
 		{
 			fail("Unable to get destination file " + destination);
 		}
 		download.setDestination(destination);
-
-		Path file = PathSecurity.getMirrorDirectory(remoteFile);
 		
 		String localMirrorName = remoteFile.getRootDirectory().getLocalMirrorName();
 		LocalDirectory local = DbRoots.getLocalByName(localMirrorName);
 		if (local == null)
 		{
-			local = UserActions.addLocalImmediately(file, localMirrorName);
+			local = UserActions.addLocalImmediately(localRoot, localMirrorName);
 			if (local == null)
 			{
 				fail("Unable to create local mirror");
 			}
 		}
-		Misc.ensureDirectory(file, true);
+		Misc.ensureDirectory(localRoot, true);
 		LogWrapper.getLogger().info("Downloading \"" + remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" + destination + "\"");
 	}
 

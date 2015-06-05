@@ -8,7 +8,6 @@ import java.util.logging.Level;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerRequest;
@@ -18,13 +17,13 @@ import org.cnv.shr.util.Misc;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
-public class TrackerConnection implements Closeable
+public abstract class TrackerConnection implements Closeable
 {
 	Socket socket;
 	JsonParser parser;
 	JsonGenerator generator;
 
-	TrackerConnection(String url, int port) throws IOException
+	protected TrackerConnection(String url, int port) throws IOException
 	{
 		socket = new Socket(url, port);
 	}
@@ -33,14 +32,10 @@ public class TrackerConnection implements Closeable
 	{
 		generator = TrackObjectUtils.generatorFactory.createGenerator(socket.getOutputStream());
 		generator.writeStartArray();
-		RSAPublicKey publicKey = Services.keyManager.getPublicKey();
-		MachineEntry local = new MachineEntry(
-				Services.settings.machineIdentifier.get(),
-				publicKey,
-				"not used.",
-				Services.settings.servePortBeginE.get(),
-				Services.settings.servePortBeginE.get() + Services.settings.numThreads.get(),
-				Services.settings.machineName.get());
+		
+		
+		
+		MachineEntry local = getLocalMachine();
 		local.print(generator);
 		generator.flush();
 
@@ -52,13 +47,13 @@ public class TrackerConnection implements Closeable
 			return;
 		}
 		
-		authenticate(publicKey);
+		authenticate();
 		
 		request.print(generator);
 		generator.flush();
 	}
 
-	private void authenticate(RSAPublicKey publicKey) throws IOException
+	private void authenticate() throws IOException
 	{
 		if (!getNeedsAuthentication())
 		{
@@ -71,6 +66,7 @@ public class TrackerConnection implements Closeable
 			throw new IOException("Expected a decrypted naunce.");
 		}
 		String key = null;
+		RSAPublicKey publicKey = null;
 		outer:
 		while (parser.hasNext())
 		{
@@ -95,10 +91,12 @@ public class TrackerConnection implements Closeable
 			}
 		}
 		
-		generator.write("decrypted", Misc.format(Services.keyManager.decrypt(publicKey, naunceRequest)));
+		sendDecryptedNaunce(naunceRequest, publicKey);
 		generator.writeEnd();
 		generator.flush();
 	}
+
+	protected abstract void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey);
 
 	private boolean getNeedsAuthentication() throws IOException
 	{
@@ -153,4 +151,6 @@ public class TrackerConnection implements Closeable
 //			LogWrapper.getLogger().log(Level.INFO, "Unable to close reader", e);
 //		}
 	}
+
+	protected abstract MachineEntry getLocalMachine();
 }

@@ -14,6 +14,7 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -43,7 +44,7 @@ public class KeysService
 		Security.addProvider(new FlexiCoreProvider());
 	}
 	
-	public void writeKeys(Path f) throws IOException
+	public synchronized void writeKeys(Path f) throws IOException
 	{
 		Misc.ensureDirectory(f, true);
 		try (PrintStream ps = new PrintStream(Files.newOutputStream(f)))
@@ -62,7 +63,7 @@ public class KeysService
 		}
 	}
 	
-	public void readKeys(Path f, int keyLength) throws IOException
+	public synchronized void readKeys(Path f, int keyLength) throws IOException
 	{
 		try (Scanner scanner = new Scanner(f))
 		{
@@ -90,7 +91,7 @@ public class KeysService
 		generateNecessaryKeys(f, keyLength);
 	}
 	
-	public void generateNecessaryKeys(Path f, int length) throws IOException
+	public synchronized void generateNecessaryKeys(Path f, int length) throws IOException
 	{
 		if (!keys.isEmpty() || length < 0)
 		{
@@ -108,7 +109,7 @@ public class KeysService
 		}
 	}
 
-	public void createAnotherKey(Path f, int length) throws NoSuchAlgorithmException, NoSuchProviderException, IOException
+	public synchronized void createAnotherKey(Path f, int length) throws NoSuchAlgorithmException, NoSuchProviderException, IOException
 	{
 		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "FlexiCore");
 		kpg.initialize(length);
@@ -116,11 +117,6 @@ public class KeysService
 		keys.put(keyPairObject.hash(), keyPairObject);
 		primaryKey = keyPairObject;
 		writeKeys(f);
-	}
-
-	public String[] getKeys()
-	{
-		return new String[0];
 	}
 
 	public RSAPublicKey getPublicKey()
@@ -314,4 +310,28 @@ public class KeysService
 	{
 		return pendingAuthenticationRequests;
 	}
+
+    public Collection<KeyPairObject> getPairs() {
+        return keys.values();
+    }
+
+    public synchronized void revoke(KeyPairObject key, Path f, int length) {
+        keys.remove(KeyPairObject.hashObject(key.getPublicKey()));
+        try
+				{
+					generateNecessaryKeys(f,  length);
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.SEVERE, "Unable to save keys.", e);
+				}
+        primaryKey = null;
+        for (KeyPairObject object : keys.values())
+        {
+        	if (primaryKey == null || primaryKey.timeStamp < object.timeStamp)
+        	{
+        		primaryKey = object;
+        	}
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package org.cnv.shr.gui.tbl;
 
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -14,6 +15,7 @@ import org.cnv.shr.gui.NumberOfFiles;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class LocalTable extends DbJTable<LocalDirectory>
 {
@@ -52,6 +54,20 @@ public class LocalTable extends DbJTable<LocalDirectory>
 			public String getName()
 			{
 				return "Delete";
+			}
+		});
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(LocalDirectory root)
+			{
+				Misc.nativeOpen(Paths.get(root.getPathElement().getFsPath()), false);
+			}
+
+			@Override
+			public String getName()
+			{
+				return "Open";
 			}
 		});
 		addListener(new TableRightClickListener()

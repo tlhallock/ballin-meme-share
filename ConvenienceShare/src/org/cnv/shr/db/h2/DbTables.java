@@ -167,15 +167,17 @@ public class DbTables
 			}
 			try (StatementWrapper stmt = c.prepareNewStatement("select * from " + getTableName() + " where " + pKey + " = ?;"))
 			{
-				stmt.setInt(1,  id);
-				ResultSet executeQuery = stmt.executeQuery();
-				if (!executeQuery.next())
+				stmt.setInt(1, id);
+				try (ResultSet executeQuery = stmt.executeQuery();)
 				{
-					return null;
+					if (!executeQuery.next())
+					{
+						return null;
+					}
+					DbObject object = allocate(executeQuery);
+					object.fill(c, executeQuery, locals);
+					return object;
 				}
-				DbObject object = allocate(executeQuery);
-				object.fill(c, executeQuery, locals);
-				return object;
 			}
 			catch (SQLException ex)
 			{

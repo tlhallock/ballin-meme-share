@@ -15,9 +15,11 @@ import java.net.UnknownHostException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -192,12 +194,14 @@ public class Misc
 		}
 		else if (Files.isDirectory(path))
 		{
-			DirectoryStream<Path> stream = Files.newDirectoryStream(path);
-			for (Path child : stream)
+			try (DirectoryStream<Path> stream = Files.newDirectoryStream(path);)
 			{
-				rm(child);
+				for (Path child : stream)
+				{
+					rm(child);
+				}
+				Files.delete(path);
 			}
-			Files.delete(path);
 		}
 	}
 
@@ -318,7 +322,7 @@ public class Misc
 	{
 		Linux  (new String[] {"Linux",           }),
 		Windows(new String[] {"Windows"     ,    }),
-		Apple  (new String[] {"Fill this in",    }),
+		Mac  (new String[] {"Fill this in",    }),
 		
 		;
 		
@@ -357,8 +361,8 @@ public class Misc
 			return null;
 		}
 	}
-	
-	private static final List<String> getList(String... args)
+
+	private static final List<String> getList(boolean showInDirectory, String... args)
 	{
 		LinkedList<String> returnValue = new LinkedList<>();
 		for (String str : args)
@@ -368,7 +372,7 @@ public class Misc
 		return returnValue;
 	}
 	
-	public static void nativeOpen(Path f)
+	public static void nativeOpen(Path f, boolean showInDirectory)
 	{
 		if (f == null)
 		{
@@ -393,9 +397,18 @@ public class Misc
 			}
 			break;
 		case Linux:
-			throw new RuntimeException("Implement me!");
-		case Apple:
-			throw new RuntimeException("Implement me!");
+		case Mac:
+			Path findUnixOpenPath = findUnixOpenPath();
+			if (findUnixOpenPath == null)
+			{
+				throw new RuntimeException("Implement me!");
+			}
+			returnValue.add(findUnixOpenPath.toString());
+			if (showInDirectory)
+			{
+				f = f.getParent();
+			}
+			returnValue.add(f.toString());
 		}
 		
 		
@@ -409,6 +422,39 @@ public class Misc
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to start open process", e);
 		}
+	}
+	
+	private static Path findUnixOpenPath()
+	{
+		String[] someGoodFiles = new String[] {"kde-open", "gnome-open", "open"};
+		String path = System.getenv("PATH");
+		List<String> pathElems = new LinkedList<>();
+		if (path == null)
+		{
+			LogWrapper.getLogger().info("No path set!");
+		}
+		else
+		{
+			pathElems.addAll(Arrays.asList(path.split(":")));
+		}
+		pathElems.add("/usr/local/bin");
+		pathElems.add("/usr/bin");
+		pathElems.add("/bin");
+		
+		for (String pathElem : pathElems)
+		{
+			for (String exec : someGoodFiles)
+			{
+				Path path2 = Paths.get(pathElem, exec);
+				if (!Files.exists(path2))
+				{
+					continue;
+				}
+				return path2;
+			}
+		}
+		LogWrapper.getLogger().info("Unable to find native open!");
+		return null;
 	}
 	
 	

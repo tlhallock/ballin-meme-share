@@ -18,7 +18,7 @@ public class ProcessInfo
 		String path = c.getProtectionDomain().getCodeSource().getLocation().getPath();
 		switch (Misc.getOperatingSystem())
 		{
-		case Apple:   return Paths.get(path);
+		case Mac:   return Paths.get(path);
 		case Linux:   return Paths.get(path);
 		case Windows: 
 			if (path.startsWith("/"))
