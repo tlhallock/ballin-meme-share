@@ -152,9 +152,13 @@ public class MachineEntry implements TrackObject
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (ident!=null)
 		generator.write("ident", ident);
+		if (keyStr!=null)
 		generator.write("keyStr", keyStr);
+		if (name!=null)
 		generator.write("name", name);
+		if (ip!=null)
 		generator.write("ip", ip);
 		generator.write("beginPort", beginPort);
 		generator.write("endPort", endPort);

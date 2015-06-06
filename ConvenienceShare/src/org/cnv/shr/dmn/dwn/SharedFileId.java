@@ -97,8 +97,11 @@ public class SharedFileId implements Jsonable
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (machineIdent!=null)
 		generator.write("machineIdent", machineIdent);
+		if (rootName!=null)
 		generator.write("rootName", rootName);
+		if (path!=null)
 		generator.write("path", path);
 		generator.writeEnd();
 	}

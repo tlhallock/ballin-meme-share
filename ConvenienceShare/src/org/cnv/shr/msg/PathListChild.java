@@ -71,9 +71,12 @@ public class PathListChild implements Jsonable
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (name!=null)
 		generator.write("name", name);
 		generator.write("size", size);
+		if (checksum!=null)
 		generator.write("checksum", checksum);
+		if (tags!=null)
 		generator.write("tags", tags);
 		generator.write("lastModified", lastModified);
 		generator.writeEnd();

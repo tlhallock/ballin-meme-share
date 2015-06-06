@@ -12,13 +12,15 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.IdkWhereToPutThis;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.json.JsonList;
+import org.cnv.shr.json.JsonMap;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Misc;
 
 public class KeyNotFound extends KeyMessage
 {
-	private MsgMap tests = new MsgMap();
+	private JsonMap tests = new JsonMap();
 
 	public KeyNotFound(InputStream stream) throws IOException
 	{
@@ -111,6 +113,7 @@ public class KeyNotFound extends KeyMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (tests!=null)
 		tests.generate(generator);
 		generator.writeEnd();
 	}
@@ -135,7 +138,7 @@ public class KeyNotFound extends KeyMessage
 			if (key==null) break;
 			if (key.equals("tests")) {
 				needstests = false;
-				tests = new MsgMap(parser);
+				tests.parse(parser);
 			}
 			break;
 			default: break;

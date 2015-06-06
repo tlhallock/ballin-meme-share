@@ -26,8 +26,11 @@ public class DbConnectionCache extends TimerTask
 				LogWrapper.getLogger().info("Deleting database.");
 				DbTables.deleteDb(c);
 			}
-			LogWrapper.getLogger().info("Creating database.");
-			DbTables.createDb(c);
+			else
+			{
+				LogWrapper.getLogger().info("Creating database.");
+				DbTables.createDb(c);
+			}
 		}
 
 		String file = getDbFile();

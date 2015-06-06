@@ -88,7 +88,9 @@ public class NewKey extends KeyMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (newKey!=null)
 		generator.write("newKey", KeyPairObject.serialize(newKey));
+		if (naunceRequest!=null)
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}

@@ -169,8 +169,11 @@ public class PermissionFailure extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (rootName!=null)
 		generator.write("rootName", rootName);
+		if (currentPermission!=null)
 		generator.write("currentPermission",currentPermission.name());
+		if (action!=null)
 		generator.write("action", action);
 		generator.writeEnd();
 	}

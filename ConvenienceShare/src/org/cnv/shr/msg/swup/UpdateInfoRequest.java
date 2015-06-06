@@ -71,7 +71,9 @@ public class UpdateInfoRequest extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (publicKey!=null)
 		generator.write("publicKey", KeyPairObject.serialize(publicKey));
+		if (naunceRequest!=null)
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}

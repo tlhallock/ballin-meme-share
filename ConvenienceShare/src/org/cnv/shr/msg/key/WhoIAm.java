@@ -83,11 +83,15 @@ public class WhoIAm extends MachineFound
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (pKey!=null)
 		generator.write("pKey", KeyPairObject.serialize(pKey));
+		if (versionString!=null)
 		generator.write("versionString", versionString);
 		generator.write("port", port);
 		generator.write("nports", nports);
+		if (name!=null)
 		generator.write("name", name);
+		if (ident!=null)
 		generator.write("ident", ident);
 		generator.writeEnd();
 	}

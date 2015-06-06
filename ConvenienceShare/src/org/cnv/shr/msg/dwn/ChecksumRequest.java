@@ -73,6 +73,7 @@ public class ChecksumRequest extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (descriptor!=null)
 		descriptor.generate(generator);
 		generator.writeEnd();
 	}

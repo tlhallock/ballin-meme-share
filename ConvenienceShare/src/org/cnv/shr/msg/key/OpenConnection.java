@@ -89,8 +89,11 @@ public class OpenConnection extends KeyMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (sourcePublicKey!=null)
 		generator.write("sourcePublicKey", KeyPairObject.serialize(sourcePublicKey));
+		if (destinationPublicKey!=null)
 		generator.write("destinationPublicKey", KeyPairObject.serialize(destinationPublicKey));
+		if (requestedNaunce!=null)
 		generator.write("requestedNaunce", Misc.format(requestedNaunce));
 		generator.writeEnd();
 	}

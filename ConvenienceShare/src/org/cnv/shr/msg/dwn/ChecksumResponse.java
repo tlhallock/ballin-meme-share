@@ -85,44 +85,46 @@ public class ChecksumResponse extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (descriptor!=null)
 		descriptor.generate(generator);
+		if (checksum!=null)
 		generator.write("checksum", checksum);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdescriptor = true;
 		boolean needschecksum = true;
+		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdescriptor)
-				{
-					throw new RuntimeException("Message needs descriptor");
-				}
 				if (needschecksum)
 				{
 					throw new RuntimeException("Message needs checksum");
+				}
+				if (needsdescriptor)
+				{
+					throw new RuntimeException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = JsonThing.readFileId(parser);
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("checksum")) {
 				needschecksum = false;
 				checksum = parser.getString();
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = JsonThing.readFileId(parser);
 			}
 			break;
 			default: break;

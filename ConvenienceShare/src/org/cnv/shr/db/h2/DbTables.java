@@ -220,16 +220,18 @@ public class DbTables
 
 	public static void deleteDb(ConnectionWrapper c)
 	{
-		for (DbObjects table : ALL_TABLES)
+		try
 		{
-			try
+			for (DbObjects table : ALL_TABLES)
 			{
 				table.delete(c);
 			}
-			catch (SQLException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to delete table " + table + ".", e);
-			}
+			createDb(c);
+			Services.localMachine.save(c);
+		}
+		catch (SQLException |IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete database:", e);
 		}
 
 		// addMachine(Services.localMachine);

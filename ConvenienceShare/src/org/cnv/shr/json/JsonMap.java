@@ -1,4 +1,4 @@
-package org.cnv.shr.msg.key;
+package org.cnv.shr.json;
 
 import java.security.PublicKey;
 import java.util.HashMap;
@@ -10,11 +10,11 @@ import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.Misc;
 
-public class MsgMap extends HashMap<PublicKey, byte[]> implements Jsonable
+public class JsonMap extends HashMap<PublicKey, byte[]> implements Jsonable
 {
-	public MsgMap() {}
+	public JsonMap() {}
 	
-	public MsgMap(JsonParser parser)
+	public JsonMap(JsonParser parser)
 	{
 		parse(parser);
 	}
@@ -31,6 +31,7 @@ public class MsgMap extends HashMap<PublicKey, byte[]> implements Jsonable
 
 	public void parse(JsonParser parser)
 	{
+		clear();
 		String key = null;
 		while (parser.hasNext())
 		{

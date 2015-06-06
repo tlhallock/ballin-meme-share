@@ -131,8 +131,11 @@ public class CommentEntry implements TrackObject
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (originIdent!=null)
 		generator.write("originIdent", originIdent);
+		if (destIdent!=null)
 		generator.write("destIdent", destIdent);
+		if (text!=null)
 		generator.write("text", text);
 		generator.write("rating", rating);
 		generator.write("date", date);

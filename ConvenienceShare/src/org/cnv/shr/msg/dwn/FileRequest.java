@@ -76,6 +76,7 @@ public class FileRequest extends DownloadMessage
 		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("chunkSize", chunkSize);
+		if (descriptor!=null)
 		descriptor.generate(generator);
 		generator.writeEnd();
 	}

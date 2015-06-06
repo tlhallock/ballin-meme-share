@@ -57,6 +57,7 @@ public class RevokeKey extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (revoke!=null)
 		generator.write("revoke", KeyPairObject.serialize(revoke));
 		generator.writeEnd();
 	}

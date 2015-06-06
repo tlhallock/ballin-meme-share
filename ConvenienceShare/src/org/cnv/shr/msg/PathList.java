@@ -13,6 +13,8 @@ import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.json.JsonList;
+import org.cnv.shr.json.JsonStringList;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
@@ -29,8 +31,8 @@ public class PathList extends Message
 	
 	private String name;
 	private String currentPath;
-	private LinkedList<String> subDirs = new LinkedList<>();
-	private LinkedList<PathListChild> children = new LinkedList<>();
+	private JsonStringList subDirs = new JsonStringList();
+	private JsonList<PathListChild> children = new JsonList<>(PathListChild.class.getName());
 
 	public PathList(final InputStream input) throws IOException
 	{
@@ -182,42 +184,28 @@ public class PathList extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (name!=null)
 		generator.write("name", name);
+		if (currentPath!=null)
 		generator.write("currentPath", currentPath);
-		generator.writeStartArray("subDirs");
-		for (java.lang.String elem : subDirs)
-		{
-		generator.write("elem", elem);
-		}
-		generator.writeEnd();
-		generator.writeStartArray("children");
-		for (org.cnv.shr.msg.PathListChild elem : children)
-		{
-		elem.generate(generator);
-		}
-		generator.writeEnd();
+		if (subDirs!=null)
+		subDirs.generate(generator);
+		if (children!=null)
+		children.generate(generator);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssubDirs = true;
-		boolean needschildren = true;
 		boolean needsname = true;
 		boolean needscurrentPath = true;
+		boolean needssubDirs = true;
+		boolean needschildren = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssubDirs)
-				{
-					throw new RuntimeException("Message needs subDirs");
-				}
-				if (needschildren)
-				{
-					throw new RuntimeException("Message needs children");
-				}
 				if (needsname)
 				{
 					throw new RuntimeException("Message needs name");
@@ -226,121 +214,18 @@ public class PathList extends Message
 				{
 					throw new RuntimeException("Message needs currentPath");
 				}
+				if (needssubDirs)
+				{
+					throw new RuntimeException("Message needs subDirs");
+				}
+				if (needschildren)
+				{
+					throw new RuntimeException("Message needs children");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_ARRAY:
-			if (key==null) break;
-			switch(key) {
-			case "subDirs":
-				needssubDirs = false;
-				subDirs = new LinkedList<>();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				while (parser.hasNext())                    
-				{                                           
-					e = parser.next();                        
-					switch (e)                                
-					{                                         
-					case START_ARRAY:                         
-					case START_OBJECT:                        
-					case VALUE_TRUE:                          
-					case VALUE_NUMBER:                        
-					case VALUE_STRING:                        
-						if (key == null)                        
-								break;                              
-					case END_ARRAY:                           
-						break;                                  
-					default:                                  
-						break;                                  
-					}                                         
-				}                                           
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;
-				break;
-			case "children":
-				needschildren = false;
-				children = new LinkedList<>();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				while (parser.hasNext())                    
-				{                                           
-					e = parser.next();                        
-					switch (e)                                
-					{                                         
-					case START_ARRAY:                         
-					case START_OBJECT:                        
-					case VALUE_TRUE:                          
-					case VALUE_NUMBER:                        
-					case VALUE_STRING:                        
-						if (key == null)                        
-								break;                              
-					case END_ARRAY:                           
-						break;                                  
-					default:                                  
-						break;                                  
-					}                                         
-				}                                           
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;
-				break;
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -351,6 +236,19 @@ public class PathList extends Message
 			case "currentPath":
 				needscurrentPath = false;
 				currentPath = parser.getString();
+				break;
+			}
+			break;
+		case START_ARRAY:
+			if (key==null) break;
+			switch(key) {
+			case "subDirs":
+				needssubDirs = false;
+				subDirs.parse(parser);
+				break;
+			case "children":
+				needschildren = false;
+				children.parse(parser);
 				break;
 			}
 			break;

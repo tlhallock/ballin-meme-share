@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
-import org.cnv.shr.util.Misc;
+import org.cnv.shr.db.h2.MyParserNullable;
 
 public class TrackerEntry implements TrackObject
 {
@@ -16,6 +16,7 @@ public class TrackerEntry implements TrackObject
 	public static int TRACKER_PORT_BEGIN = 9001;
   public static int MACHINE_PAGE_SIZE  = 50;
 	
+  @MyParserNullable
 	private Boolean sync;
 	
 	public TrackerEntry(String url, int portB, int portE)
@@ -143,6 +144,7 @@ public class TrackerEntry implements TrackObject
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (url!=null)
 		generator.write("url", url);
 		generator.write("begin", begin);
 		generator.write("end", end);
@@ -154,8 +156,6 @@ public class TrackerEntry implements TrackObject
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsurl = true;
-		boolean needssync = true;
-		boolean needssync = true;
 		boolean needsbegin = true;
 		boolean needsend = true;
 		while (parser.hasNext()) {                 
@@ -166,14 +166,6 @@ public class TrackerEntry implements TrackObject
 				if (needsurl)
 				{
 					throw new RuntimeException("Message needs url");
-				}
-				if (needssync)
-				{
-					throw new RuntimeException("Message needs sync");
-				}
-				if (needssync)
-				{
-					throw new RuntimeException("Message needs sync");
 				}
 				if (needsbegin)
 				{
@@ -194,20 +186,6 @@ public class TrackerEntry implements TrackObject
 				url = parser.getString();
 			}
 			break;
-		case VALUE_FALSE:
-			if (key==null) break;
-			if (key.equals("sync")) {
-				needssync = false;
-				sync = false;
-			}
-			break;
-		case VALUE_TRUE:
-			if (key==null) break;
-			if (key.equals("sync")) {
-				needssync = false;
-				sync = true;
-			}
-			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -219,6 +197,18 @@ public class TrackerEntry implements TrackObject
 				needsend = false;
 				end = Integer.parseInt(parser.getString());
 				break;
+			}
+			break;
+		case VALUE_FALSE:
+			if (key==null) break;
+			if (key.equals("sync")) {
+				sync = false;
+			}
+			break;
+		case VALUE_TRUE:
+			if (key==null) break;
+			if (key.equals("sync")) {
+				sync = true;
 			}
 			break;
 			default: break;

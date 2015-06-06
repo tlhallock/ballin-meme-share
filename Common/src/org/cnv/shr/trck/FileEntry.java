@@ -116,6 +116,7 @@ public class FileEntry implements TrackObject
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (checksum!=null)
 		generator.write("checksum", checksum);
 		generator.write("fileSize", fileSize);
 		generator.writeEnd();

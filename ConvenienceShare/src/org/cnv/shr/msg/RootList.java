@@ -13,6 +13,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.json.JsonList;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
@@ -24,7 +25,7 @@ public class RootList extends Message
 {
 	public static int TYPE = 3;
 	
-	private LinkedList<RootListChild> sharedDirectories = new LinkedList<>();
+	private JsonList<RootListChild> sharedDirectories = new JsonList<>(RootListChild.class.getName());
 
 	public RootList()
 	{
@@ -135,12 +136,8 @@ public class RootList extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
-		generator.writeStartArray("sharedDirectories");
-		for (org.cnv.shr.msg.RootListChild elem : sharedDirectories)
-		{
-		elem.generate(generator);
-		}
-		generator.writeEnd();
+		if (sharedDirectories!=null)
+		sharedDirectories.generate(generator);
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -164,56 +161,7 @@ public class RootList extends Message
 			if (key==null) break;
 			if (key.equals("sharedDirectories")) {
 				needssharedDirectories = false;
-				sharedDirectories = new LinkedList<>();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				while (parser.hasNext())                    
-				{                                           
-					e = parser.next();                        
-					switch (e)                                
-					{                                         
-					case START_ARRAY:                         
-					case START_OBJECT:                        
-					case VALUE_TRUE:                          
-					case VALUE_NUMBER:                        
-					case VALUE_STRING:                        
-						if (key == null)                        
-								break;                              
-					case END_ARRAY:                           
-						break;                                  
-					default:                                  
-						break;                                  
-					}                                         
-				}                                           
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;
+				sharedDirectories.parse(parser);
 			}
 			break;
 			default: break;

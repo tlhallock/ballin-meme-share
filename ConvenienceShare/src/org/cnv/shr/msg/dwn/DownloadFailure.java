@@ -59,44 +59,46 @@ public class DownloadFailure extends DownloadMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (message!=null)
 		generator.write("message", message);
+		if (descriptor!=null)
 		descriptor.generate(generator);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdescriptor = true;
 		boolean needsmessage = true;
+		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdescriptor)
-				{
-					throw new RuntimeException("Message needs descriptor");
-				}
 				if (needsmessage)
 				{
 					throw new RuntimeException("Message needs message");
+				}
+				if (needsdescriptor)
+				{
+					throw new RuntimeException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("message")) {
 				needsmessage = false;
 				message = parser.getString();
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
 			}
 			break;
 			default: break;

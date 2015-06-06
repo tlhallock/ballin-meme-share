@@ -23,6 +23,18 @@ public class LocalFile extends SharedFile
 	{
 		super(int1);
 	}
+
+	public LocalFile(LocalDirectory local, PathElement element, String tags, long fileSize, long lastModified, String checksum)
+	{
+		super(null);
+
+		this.path = element;
+		this.rootDirectory = local;
+		this.tags = tags;
+		this.fileSize = fileSize;
+		this.lastModified = lastModified;
+		this.checksum = checksum;
+	}
 	
 	public LocalFile(LocalDirectory local, PathElement element) throws IOException
 	{

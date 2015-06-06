@@ -66,9 +66,13 @@ public class RootListChild implements Jsonable
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (name!=null)
 		generator.write("name", name);
+		if (tags!=null)
 		generator.write("tags", tags);
+		if (description!=null)
 		generator.write("description", description);
+		if (state!=null)
 		generator.write("state",state.name());
 		generator.writeEnd();
 	}

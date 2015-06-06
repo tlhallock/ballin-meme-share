@@ -84,6 +84,7 @@ public class GetPermission extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (rootName!=null)
 		generator.write("rootName", rootName);
 		generator.writeEnd();
 	}

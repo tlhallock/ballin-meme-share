@@ -26,6 +26,7 @@ public class DbFiles
 	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE where CHKSUM=? join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL;");
 	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NULL limit 1;");
 	private static final QueryWrapper CHECKED   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NOT NULL;");
+	private static final QueryWrapper ALL       = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL;");
 
 	public static SharedFile getFile(RootDirectory root, PathElement element)
 	{
@@ -50,29 +51,6 @@ public class DbFiles
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get file " + element, e);
-			return null;
-		}
-	}
-
-	public static LocalFile getUnChecksummedFile()
-	{
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(UNCHECKED);)
-		{
-			try (ResultSet executeQuery = stmt.executeQuery();)
-			{
-				if (!executeQuery.next())
-				{
-					return null;
-				}
-				DbObject allocate = DbTables.DbObjects.LFILE.allocate(executeQuery);
-				allocate.fill(c, executeQuery, new DbLocals());
-				return (LocalFile) allocate;
-			}
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to list files without a checksum", e);
 			return null;
 		}
 	}
@@ -155,6 +133,31 @@ public class DbFiles
 			return null;
 		}
 	}
+	
+
+
+	public static LocalFile getUnChecksummedFile()
+	{
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(UNCHECKED);)
+		{
+			try (ResultSet executeQuery = stmt.executeQuery();)
+			{
+				if (!executeQuery.next())
+				{
+					return null;
+				}
+				DbObject allocate = DbTables.DbObjects.LFILE.allocate(executeQuery);
+				allocate.fill(c, executeQuery, new DbLocals());
+				return (LocalFile) allocate;
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list files without a checksum", e);
+			return null;
+		}
+	}
 
 	public static DbIterator<LocalFile> getChecksummedFiles()
 	{
@@ -168,5 +171,19 @@ public class DbFiles
 			LogWrapper.getLogger().log(Level.INFO, "Unable to list files without a checksum", e);
 			return new NullIterator<>();
 		}
+	}
+
+		public static DbIterator<LocalFile> listAllLocalFiles()
+		{
+			try 
+			{
+				ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				return new DbIterator<LocalFile>(c, c.prepareStatement(ALL).executeQuery(), DbTables.DbObjects.LFILE);
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to list all local files", e);
+				return new NullIterator<>();
+			}
 	}
 }

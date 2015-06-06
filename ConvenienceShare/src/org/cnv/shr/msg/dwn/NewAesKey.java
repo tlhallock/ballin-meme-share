@@ -85,6 +85,7 @@ public class NewAesKey extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (encryptedAesKey!=null)
 		generator.write("encryptedAesKey", Misc.format(encryptedAesKey));
 		generator.writeEnd();
 	}

@@ -81,9 +81,12 @@ public class UpdateInfoMessage extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (ip!=null)
 		generator.write("ip", ip);
 		generator.write("port", port);
+		if (pKey!=null)
 		generator.write("pKey", KeyPairObject.serialize(pKey));
+		if (decryptedNaunce!=null)
 		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
 		generator.writeEnd();
 	}

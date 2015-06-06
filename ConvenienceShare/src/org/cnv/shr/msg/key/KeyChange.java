@@ -81,9 +81,13 @@ public class KeyChange extends KeyMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (oldKey!=null)
 		generator.write("oldKey", KeyPairObject.serialize(oldKey));
+		if (newKey!=null)
 		generator.write("newKey", KeyPairObject.serialize(newKey));
+		if (decryptedProof!=null)
 		generator.write("decryptedProof", Misc.format(decryptedProof));
+		if (naunceRequest!=null)
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}

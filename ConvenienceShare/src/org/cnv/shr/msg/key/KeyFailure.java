@@ -55,6 +55,7 @@ public class KeyFailure extends KeyMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (reason!=null)
 		generator.write("reason", reason);
 		generator.writeEnd();
 	}

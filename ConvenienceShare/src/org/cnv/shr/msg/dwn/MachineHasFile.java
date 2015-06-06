@@ -90,6 +90,7 @@ public class MachineHasFile extends DownloadMessage
 		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("hasFile", hasFile);
+		if (descriptor!=null)
 		descriptor.generate(generator);
 		generator.writeEnd();
 	}
@@ -97,7 +98,6 @@ public class MachineHasFile extends DownloadMessage
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsdescriptor = true;
-		boolean needshasFile = true;
 		boolean needshasFile = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      

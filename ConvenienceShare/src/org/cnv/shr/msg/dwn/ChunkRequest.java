@@ -74,7 +74,9 @@ public class ChunkRequest extends DownloadMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (chunk!=null)
 		chunk.generate(generator);
+		if (descriptor!=null)
 		descriptor.generate(generator);
 		generator.writeEnd();
 	}

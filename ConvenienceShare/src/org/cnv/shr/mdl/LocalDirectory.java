@@ -34,6 +34,35 @@ public class LocalDirectory extends RootDirectory
 	private PathElement path;
 	private SharingState defaultShare;
 	
+	public LocalDirectory(String name,
+			String description, 
+			String tags, 
+			long minFSize,
+			long maxFSize, 
+			String path2, 
+			SharingState defaultSharingState,
+			Long totalFileSize,
+			Long totalNumFiles)
+	{
+		super(null);
+		this.machine = Services.localMachine;
+		this.name = name;
+		this.description = description;
+		this.tags = tags;
+		this.minFSize = minFSize;
+		this.maxFSize = maxFSize;
+		this.path = DbPaths.getPathElement(path2);
+		this.defaultShare = defaultSharingState;
+		if (defaultShare == null)
+		{
+			defaultShare = SharingState.valueOf(Services.settings.defaultPermission.get());
+		}
+		if (totalFileSize != null)
+		this.totalFileSize = totalFileSize;
+		if (totalNumFiles != null)
+		this.totalNumFiles = totalNumFiles;
+	}
+	
 	public LocalDirectory(PathElement path, String name) throws IOException
 	{
 		super(null);
@@ -60,7 +89,7 @@ public class LocalDirectory extends RootDirectory
 	{
 		super(id);
 	}
-	
+
 	public void ensureExistsInDb()
 	{
 		throw new RuntimeException("Implement me!");

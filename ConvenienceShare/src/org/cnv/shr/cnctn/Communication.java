@@ -12,6 +12,8 @@ import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
@@ -37,8 +39,13 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 // TODO: this should really only need authentication to UPDATE machine info...
 public class Communication implements Closeable
 {
-	private JsonGenerator logFile = Json.createGenerator(Files.newOutputStream(Paths.get("log." + System.currentTimeMillis() + "." + Math.random() + ".txt")));
-	{ logFile.writeStartArray(); }
+	private JsonGenerator logFile; 
+	{ 
+    Map<String, Object> properties = new HashMap<>(1);
+    properties.put(JsonGenerator.PRETTY_PRINTING, true);
+		logFile = Json.createGeneratorFactory(properties).createGenerator(Files.newOutputStream(Paths.get("log." + System.currentTimeMillis() + "." + Math.random() + ".txt")));
+		logFile.writeStartArray();
+	}
 	// The streams
 	private Socket socket;
 	

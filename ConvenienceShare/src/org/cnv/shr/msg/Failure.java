@@ -61,6 +61,7 @@ public class Failure extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (message!=null)
 		generator.write("message", message);
 		generator.writeEnd();
 	}

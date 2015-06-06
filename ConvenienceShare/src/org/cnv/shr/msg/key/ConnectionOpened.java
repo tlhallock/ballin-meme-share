@@ -67,6 +67,7 @@ public class ConnectionOpened extends KeyMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (decryptedNaunce!=null)
 		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
 		generator.writeEnd();
 	}

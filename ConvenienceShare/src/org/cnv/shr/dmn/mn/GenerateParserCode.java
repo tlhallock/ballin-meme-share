@@ -2,13 +2,13 @@ package org.cnv.shr.dmn.mn;
 
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +23,7 @@ import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 
 import org.cnv.shr.db.h2.MyParserIgnore;
+import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.SharedFileId;
@@ -176,6 +177,11 @@ public class GenerateParserCode
 				UpdateInfoRequest.class          ,
 				UpdateInfoRequestRequest.class   ,
 				ShowApplication.class            ,
+				
+				org.cnv.shr.db.h2.bak.LocalBackup.class,
+				org.cnv.shr.db.h2.bak.MachineBackup.class,
+				org.cnv.shr.db.h2.bak.FileBackup.class,
+				org.cnv.shr.db.h2.bak.RootPermissionBackup.class,
 			})
 		{
 			try
@@ -188,6 +194,13 @@ public class GenerateParserCode
 				e.printStackTrace();
 				return;
 			}
+			
+//			String n = c.getName();
+//			System.out.println("ALLOCATORS.put(\"" + n + "\", new JsonAllocator<" + n + ">()          ");
+//			System.out.println("{                                                                     ");
+//			System.out.println("\tpublic " + n + " create(JsonParser p) { return new " + n + "(p); }  ");
+////			System.out.println("\tString getName() { return \"" + n + "\"; }                          ");
+//			System.out.println("});                                                                   ");
 		}
 	}
 
@@ -261,10 +274,7 @@ public class GenerateParserCode
 		ps.println("\t\tString key = null;                         ");
 		for (Entry<JsonParser.Event, List<Parser>> entry : parsers.entrySet())
 		{
-			for (Parser p : entry.getValue())
-			{
-				p.printDecls(ps);
-			}
+			entry.getValue().get(0).printDecls(ps);
 		}
 		ps.println("\t\twhile (parser.hasNext()) {                 ");
 		ps.println("\t\t\tJsonParser.Event e = parser.next();      ");
@@ -327,13 +337,22 @@ public class GenerateParserCode
 		{
 			for (Field f : fields)
 			{
+				if (f.isAnnotationPresent(MyParserNullable.class))
+				{
+					continue;
+				}
 				ps.println("\t\tboolean needs" + f.getName() + " = true;");
 			}
 		}
 		public void printValidator(PrintStream ps)
 		{
+			HashSet<String> printed = new HashSet<>();
 			for (Field f : fields)
 			{
+				if (!printed.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))
+				{
+					continue;
+				}
 				ps.println("\t\t\t\tif (needs" + f.getName() + ")");
 				ps.println("\t\t\t\t{");
 				ps.println("\t\t\t\t\tthrow new RuntimeException(\"Message needs " + f.getName() + "\");");
@@ -351,8 +370,11 @@ public class GenerateParserCode
 				for (Field f : fields)
 				{
 					ps.println("\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
-					ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
-					ps.println("\t\t\t\t" + f.getName() + " = " + getAssignment(jsonType, f) + ";");
+					if (!f.isAnnotationPresent(MyParserNullable.class))
+					{
+						ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
+					}
+					ps.println("\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
 				}
 			}
 			else
@@ -361,8 +383,11 @@ public class GenerateParserCode
 				for (Field f : fields)
 				{
 					ps.println("\t\t\tcase \"" + f.getName() + "\":");
-					ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
-					ps.println("\t\t\t\t" + f.getName() + " = " + getAssignment(jsonType, f) + ";");
+					if (!f.isAnnotationPresent(MyParserNullable.class))
+					{
+						ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
+					}
+					ps.println("\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
 					ps.println("\t\t\t\tbreak;");
 				}
 			}
@@ -370,93 +395,74 @@ public class GenerateParserCode
 			// ps.println("\t\t\tkey=null;");
 			ps.println("\t\t\tbreak;");
 		}
+		
+		public void print(StringBuilder builder)
+		{
+			ByteArrayOutputStream writer = new ByteArrayOutputStream();
+			try (PrintStream stream = new PrintStream(writer))
+			{
+				print(stream);
+			}
+			builder.append(writer.toString());
+		}
 	}
 	
 	private static String getAssignment(Event jsonType, Field f)
 	{
 		switch (f.getType().getName())
 		{
-		case "org.cnv.shr.msg.key.MsgMap": return "new MsgMap(parser)";
+		case "org.cnv.shr.json.JsonMap":
+		case "org.cnv.shr.json.JsonList":
+		case "org.cnv.shr.json.JsonStringList": return ".parse(parser)";
 		case "class org.cnv.shr.msg.PathList":
-			return "(new PathList(parser)).setParent(this)";
+			return " = (new PathList(parser)).setParent(this)";
 		case "org.cnv.shr.trck.FileEntry":
-			return "new FileEntry(parser)";
+			return " = new FileEntry(parser)";
 		case "org.cnv.shr.db.h2.SharingState":
-			return "SharingState.valueOf(parser.getString());";
+			return " = SharingState.valueOf(parser.getString());";
 		case "org.cnv.shr.dmn.dwn.SharedFileId":
-			return "JsonThing.readFileId(parser)";
+			return " = JsonThing.readFileId(parser)";
 		case "org.cnv.shr.dmn.dwn.Chunk":
-			return "JsonThing.readChunk(parser)";
+			return " = JsonThing.readChunk(parser)";
 		case "java.security.PublicKey":
-			return "KeyPairObject.deSerializePublicKey(parser.getString())";
+			return " = KeyPairObject.deSerializePublicKey(parser.getString())";
 
 		case "java.lang.Boolean":
 		case "boolean":
 			switch (jsonType)
 			{
-			case VALUE_TRUE:  return "true";
-			case VALUE_FALSE: return "false";
+			case VALUE_TRUE:  return " = true";
+			case VALUE_FALSE: return " = false";
 			default:
 				return null;
 			}
 //		case "int":              return "new BigDecimal(parser.getString()).intValue()";
 //		case "long":             return "new BigDecimal(parser.getString()).longValue()";
 //		case "double":           return "new BigDecimal(parser.getString()).doubleValue()";
-		case "int":              return "Integer.parseInt("   + "parser.getString())";
-		case "long":             return "Long.parseLong("     + "parser.getString())";
-		case "double":           return "Double.parseDouble(" + "parser.getString())";
+		case "int":              return " = Integer.parseInt("   + "parser.getString())";
+		case "long":             return " = Long.parseLong("     + "parser.getString())";
+		case "double":           return " = Double.parseDouble(" + "parser.getString())";
 		
 		
 		
 		
-		case "[B":               return "Misc.format(parser.getString())";
-		case "java.lang.String": return "parser.getString()";
-		case "java.util.List":
-		case "java.util.LinkedList":
-				return "new LinkedList<>();\n" + parseList(f);
+		case "[B":               return " = Misc.format(parser.getString())";
+		case "java.lang.String": return " = parser.getString()";
+//		case "java.util.List":
+//		case "java.util.LinkedList":
+//				return "new LinkedList<>();\n" + parseList(f);
 		default:
 		}
 		return null;
-	}
-
-	private static String parseList(Field f)
-	{
-		Type ptype = ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
-		getParsersFor(ptype);
-		Event jsonType = getJsonType(ptype.getTypeName());
-//		new Parser(jsonType);
-		
-		StringBuilder builder = new StringBuilder();
-		builder.append("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-		builder.append("\t\t\t\twhile (parser.hasNext())                    ").append('\n');
-		builder.append("\t\t\t\t{                                           ").append('\n');
-		builder.append("\t\t\t\t\te = parser.next();                        ").append('\n');
-		builder.append("\t\t\t\t\tswitch (e)                                ").append('\n');
-		builder.append("\t\t\t\t\t{                                         ").append('\n');
-		builder.append("\t\t\t\t\tcase START_ARRAY:                         ").append('\n');
-		builder.append("\t\t\t\t\tcase START_OBJECT:                        ").append('\n');
-		builder.append("\t\t\t\t\tcase VALUE_TRUE:                          ").append('\n');
-		builder.append("\t\t\t\t\tcase VALUE_NUMBER:                        ").append('\n');
-		builder.append("\t\t\t\t\tcase VALUE_STRING:                        ").append('\n');
-		builder.append("\t\t\t\t\t\tif (key == null)                        ").append('\n');
-		builder.append("\t\t\t\t\t\t\t\tbreak;                              ").append('\n');
-		builder.append("\t\t\t\t\tcase END_ARRAY:                           ").append('\n');
-		builder.append("\t\t\t\t\t\tbreak;                                  ").append('\n');
-		builder.append("\t\t\t\t\tdefault:                                  ").append('\n');
-		builder.append("\t\t\t\t\t\tbreak;                                  ").append('\n');
-		builder.append("\t\t\t\t\t}                                         ").append('\n');
-		builder.append("\t\t\t\t}                                           ").append('\n');
-		builder.append("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-		return builder.toString();
 	}
 
 	private static Event getJsonType(String fieldName)
 	{
 		switch (fieldName)
 		{
-		case "org.cnv.shr.msg.key.MsgMap":
-		case "java.util.List":
-		case "java.util.LinkedList":
+		case "org.cnv.shr.json.JsonMap":
+		case "org.cnv.shr.json.JsonList":
+		case "org.cnv.shr.json.JsonStringList":
 			return JsonParser.Event.START_ARRAY;
 
 		case "org.cnv.shr.msg.PathListChild":
@@ -515,51 +521,48 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 {
 	switch (typeName.getName())
 	{
+	case "java.util.List":
+	case "java.util.LinkedList":
 	case "java.util.HashMap":
 	case "org.cnv.shr.mdl.PathElement":
 	case "org.cnv.shr.mdl.RemoteDirectory":
 		output.println("fix me");
 		break;
+	case "org.cnv.shr.json.JsonList":
+	case "org.cnv.shr.json.JsonStringList":
+	case "org.cnv.shr.json.JsonMap":
+		
 	case "org.cnv.shr.msg.RootListChild":
-	case "org.cnv.shr.msg.key.MsgMap":
 	case "org.cnv.shr.dmn.dwn.Chunk":
 	case "org.cnv.shr.dmn.dwn.SharedFileId":
 	case "org.cnv.shr.trck.FileEntry":
 	case "org.cnv.shr.msg.PathListChild":
+		output.println("\t\tif (" + fieldName + "!=null)");
 		output.println("\t\t" + fieldName + ".generate(generator);");
 		break;
 	case "org.cnv.shr.db.h2.SharingState":
+		output.println("\t\tif (" + fieldName + "!=null)");
 		output.println("\t\tgenerator.write(\"" + fieldName + "\"," + fieldName + ".name());");
 		break;
 	case "java.security.PublicKey":
+		output.println("\t\tif (" + fieldName + "!=null)");
 		output.println("\t\tgenerator.write(\"" + fieldName + "\", KeyPairObject.serialize(" + fieldName + "));");
 		break;
 	case "[B":
+		output.println("\t\tif (" + fieldName + "!=null)");
 		output.println("\t\tgenerator.write(\"" + fieldName + "\", Misc.format(" + fieldName + "));");
 		break;
 
+	case "java.lang.String":
 	case "java.lang.Integer":
 	case "java.lang.Long":
 	case "java.lang.Boolean":
 		output.println("\t\tif (" + fieldName + "!=null)");
 	case "int":
-	case "java.lang.String":
 	case "long":
 	case "boolean":
 	case "double":
 		output.println("\t\tgenerator.write(\"" + fieldName + "\", " + fieldName + ");");
-		break;
-	case "java.util.List":
-	case "java.util.LinkedList":
-		ParameterizedType ptype = (ParameterizedType) genericType;
-		Type type = ptype.getActualTypeArguments()[0];
-		
-		output.println("\t\tgenerator.writeStartArray(\"" + fieldName + "\");");
-		output.println("\t\tfor (" + type.getTypeName() + " elem : " + fieldName + ")");
-		output.println("\t\t{");
-		printField(output, (Class<?>) type, "elem", type);
-		output.println("\t\t}");
-		output.println("\t\tgenerator.writeEnd();");
 		break;
 	default:
 		throw new RuntimeException("Nothing for " + typeName + " " + fieldName);
@@ -629,23 +632,6 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 			Files_move(backup, original);
 		}
 	}
-	
-//	private static void printValidator(PrintStream output, Class c)
-//	{
-//		output.println("\tpublic void validate() {");
-//
-//		while (shouldContinue(c))
-//		{
-//			for (Field field : c.getDeclaredFields())
-//			{
-//				if (shouldIgnore(field))
-//					continue;
-//				output.println("\t\tjava.util.Objects.requireNonNull(" + field.getName() + ");");
-//			}
-//			c = c.getSuperclass();
-//		}
-//		output.println("\t}");
-//	}
 
 	private static void printConstructor(PrintStream ps, Class c)
 	{
@@ -691,6 +677,122 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 	{
 		return c != null && c.getName().startsWith("org.cnv.shr");
 	}
+
+//private static String parseList(Field f)
+//{
+//	Type ptype = ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
+//	HashMap<Event, List<Parser>> parsersFor = getParsersFor((Class<?>) ptype);
+//	
+//	Event jsonType = getJsonType(ptype.getTypeName());
+//	new Parser(jsonType);
+//	
+//	StringBuilder builder = new StringBuilder();
+//	builder.append("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+//	builder.append("\t\t\t\twhile (parser.hasNext())                    ").append('\n');
+//	builder.append("\t\t\t\t{                                           ").append('\n');
+//	builder.append("\t\t\t\t\te = parser.next();                        ").append('\n');
+//	builder.append("\t\t\t\t\tswitch (e)                                ").append('\n');
+//	builder.append("\t\t\t\t\t{                                         ").append('\n');
+//	builder.append("\t\t\t\t\tcase START_OBJECT:                        ").append('\n');
+//	
+//	for (List<Parser> entry : parsersFor.values())
+//	{
+//		for (Parser p : entry)
+//		{
+//			p.print(builder);
+//		}
+//	}
+//	
+//	builder.append("\t\t\t\t\tcase END_OBJECT:                          ").append('\n');
+////	builder.append("\t\t\t\t\t\t" + f.getName().add())
+//	builder.append("\t\t\t\t\tcase END_OBJECT:                          ").append('\n');
+//	builder.append("\t\t\t\t\t\t\t\tbreak;                              ").append('\n');
+//	
+//	builder.append("\t\t\t\t\tcase END_ARRAY:                           ").append('\n');
+//	builder.append("\t\t\t\t\t\tbreak;                                  ").append('\n');
+//	builder.append("\t\t\t\t\tdefault:                                  ").append('\n');
+//	builder.append("\t\t\t\t\t\tbreak;                                  ").append('\n');
+//	builder.append("\t\t\t\t\t}                                         ").append('\n');
+//	builder.append("\t\t\t\t}                                           ").append('\n');
+//	builder.append("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+//	return builder.toString();
+//}
+	
+//private static void printValidator(PrintStream output, Class c)
+//{
+//	output.println("\tpublic void validate() {");
+//
+//	while (shouldContinue(c))
+//	{
+//		for (Field field : c.getDeclaredFields())
+//		{
+//			if (shouldIgnore(field))
+//				continue;
+//			output.println("\t\tjava.util.Objects.requireNonNull(" + field.getName() + ");");
+//		}
+//		c = c.getSuperclass();
+//	}
+//	output.println("\t}");
+//}
+//private static void printFieldArray(PrintStream output, Class typeName, String fieldName, Type genericType)
+//{
+//	switch (typeName.getName())
+//	{
+//	case "org.cnv.shr.msg.RootListChild":
+//	case "org.cnv.shr.msg.key.MsgMap":
+//	case "org.cnv.shr.dmn.dwn.Chunk":
+//	case "org.cnv.shr.dmn.dwn.SharedFileId":
+//	case "org.cnv.shr.trck.FileEntry":
+//	case "org.cnv.shr.msg.PathListChild":
+//		output.println("\t\t" + fieldName + ".generate(generator);");
+//		break;
+//	case "org.cnv.shr.db.h2.SharingState":
+//		output.println("\t\tgenerator.write(" + fieldName + ".name());");
+//		break;
+//	case "java.security.PublicKey":
+//		output.println("\t\tgenerator.write(KeyPairObject.serialize(" + fieldName + "));");
+//		break;
+//	case "[B":
+//		output.println("\t\tgenerator.write(Misc.format(" + fieldName + "));");
+//		break;
+//
+//	case "java.lang.Integer":
+//	case "java.lang.Long":
+//	case "java.lang.Boolean":
+//		output.println("\t\tif (" + fieldName + "!=null)");
+//	case "int":
+//	case "java.lang.String":
+//	case "long":
+//	case "boolean":
+//	case "double":
+//		output.println("\t\tgenerator.write(" + fieldName + ");");
+//		break;
+//	case "java.util.List":
+//	case "java.util.LinkedList":
+//		ParameterizedType ptype = (ParameterizedType) genericType;
+//		Type type = ptype.getActualTypeArguments()[0];
+//		
+//		output.println("\t\tgenerator.writeStartArray(\"" + fieldName + "\");");
+//		output.println("\t\tfor (" + type.getTypeName() + " elem : " + fieldName + ")");
+//		output.println("\t\t{");
+//		printFieldArray(output, (Class<?>) type, "elem", type);
+//		output.println("\t\t}");
+//		output.println("\t\tgenerator.writeEnd();");
+//		break;
+//	default:
+//		throw new RuntimeException("Nothing for " + typeName + " " + fieldName);
+//	}
+//}
+//ParameterizedType ptype = (ParameterizedType) genericType;
+//Type type = ptype.getActualTypeArguments()[0];
+//
+//output.println("\t\tgenerator.writeStartArray(\"" + fieldName + "\");");
+//output.println("\t\tfor (" + type.getTypeName() + " elem : " + fieldName + ")");
+//output.println("\t\t{");
+//printFieldArray(output, (Class<?>) type, "elem", type);
+//output.println("\t\t}");
+//output.println("\t\tgenerator.writeEnd();");
+//break;
 	
 	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK

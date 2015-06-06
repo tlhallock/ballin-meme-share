@@ -74,6 +74,7 @@ public class CompletionStatus extends DownloadMessage
 		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("percentComplete", percentComplete);
+		if (descriptor!=null)
 		descriptor.generate(generator);
 		generator.writeEnd();
 	}

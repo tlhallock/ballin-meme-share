@@ -108,7 +108,9 @@ public class MachineFound extends Message
 		generator.writeStartObject();
 		generator.write("port", port);
 		generator.write("nports", nports);
+		if (name!=null)
 		generator.write("name", name);
+		if (ident!=null)
 		generator.write("ident", ident);
 		generator.writeEnd();
 	}

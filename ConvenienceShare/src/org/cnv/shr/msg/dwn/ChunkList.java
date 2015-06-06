@@ -12,13 +12,14 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
+import org.cnv.shr.json.JsonList;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
 public class ChunkList extends DownloadMessage
 {
-	private List<Chunk> chunks = new LinkedList<>();
+	private JsonList<Chunk> chunks = new JsonList<>(Chunk.class.getName());
 
 	public static int TYPE = 11;
 	
@@ -30,7 +31,6 @@ public class ChunkList extends DownloadMessage
 	public ChunkList(List<Chunk> chunks2, FileEntry descriptor)
 	{
 		super(descriptor);
-		chunks = chunks2;
 	}
 
 	@Override
@@ -88,98 +88,46 @@ public class ChunkList extends DownloadMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
-		generator.writeStartArray("chunks");
-		for (org.cnv.shr.dmn.dwn.Chunk elem : chunks)
-		{
-		elem.generate(generator);
-		}
-		generator.writeEnd();
+		if (chunks!=null)
+		chunks.generate(generator);
+		if (descriptor!=null)
 		descriptor.generate(generator);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needschunks = true;
 		boolean needsdescriptor = true;
+		boolean needschunks = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needschunks)
-				{
-					throw new RuntimeException("Message needs chunks");
-				}
 				if (needsdescriptor)
 				{
 					throw new RuntimeException("Message needs descriptor");
+				}
+				if (needschunks)
+				{
+					throw new RuntimeException("Message needs chunks");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("chunks")) {
-				needschunks = false;
-				chunks = new LinkedList<>();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				while (parser.hasNext())                    
-				{                                           
-					e = parser.next();                        
-					switch (e)                                
-					{                                         
-					case START_ARRAY:                         
-					case START_OBJECT:                        
-					case VALUE_TRUE:                          
-					case VALUE_NUMBER:                        
-					case VALUE_STRING:                        
-						if (key == null)                        
-								break;                              
-					case END_ARRAY:                           
-						break;                                  
-					default:                                  
-						break;                                  
-					}                                         
-				}                                           
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;
-			}
-			break;
 		case START_OBJECT:
 			if (key==null) break;
 			if (key.equals("descriptor")) {
 				needsdescriptor = false;
 				descriptor = new FileEntry(parser);
+			}
+			break;
+		case START_ARRAY:
+			if (key==null) break;
+			if (key.equals("chunks")) {
+				needschunks = false;
+				chunks.parse(parser);
 			}
 			break;
 			default: break;

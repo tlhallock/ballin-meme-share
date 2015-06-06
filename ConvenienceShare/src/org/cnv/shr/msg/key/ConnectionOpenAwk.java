@@ -75,7 +75,9 @@ public class ConnectionOpenAwk extends KeyMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (decryptedNaunce!=null)
 		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
+		if (naunceRequest!=null)
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}

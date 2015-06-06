@@ -15,8 +15,8 @@ import org.cnv.shr.util.LogWrapper;
 
 public class DbPermissions
 {
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select IS_SHARING from SHARE_ROOT where RID=? and MID=?;");
-	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into SHARE_ROOT key(RID, MID) values (?, ?, ?);");
+	private static final QueryWrapper SELECT1    = new QueryWrapper("select IS_SHARING from SHARE_ROOT where RID=? and MID=?;");
+	private static final QueryWrapper MERGE1     = new QueryWrapper("merge into SHARE_ROOT key(RID, MID) values (?, ?, ?);");
 
 	// Needs to work for remote roots too: ie add a listener...
 

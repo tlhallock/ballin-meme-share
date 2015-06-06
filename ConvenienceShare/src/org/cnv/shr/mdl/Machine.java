@@ -39,6 +39,20 @@ public class Machine extends DbObject<Integer>
 		this.identifier = identifier;
 		weShareToThem = SharingState.valueOf(Services.settings.defaultPermission.get());
 	}
+
+	public Machine(String ip2, int port2, int nports2, String name2, String identifier2, boolean allowsMessages2, SharingState weShareToThem2, SharingState sharesWithUs2)
+	{
+		super(null);
+		
+		this.ip = ip2;
+		this.port = port2;
+		this.nports = nports2;
+		this.name = name2;
+		this.identifier = identifier2;
+		this.allowsMessages = allowsMessages2;
+		this.weShareToThem = weShareToThem2;
+		this.sharesWithUs = sharesWithUs2;
+	}
 	
 	protected Machine() { super(null); }
 

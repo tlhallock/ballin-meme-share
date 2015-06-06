@@ -81,7 +81,9 @@ public class ListPath extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
+		if (rootName!=null)
 		generator.write("rootName", rootName);
+		if (path!=null)
 		generator.write("path", path);
 		generator.writeEnd();
 	}

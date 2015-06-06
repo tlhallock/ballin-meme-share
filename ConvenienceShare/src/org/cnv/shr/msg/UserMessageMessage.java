@@ -98,6 +98,7 @@ public class UserMessageMessage extends Message
 		generator.write(getJsonName());
 		generator.writeStartObject();
 		generator.write("type", type);
+		if (messageStr!=null)
 		generator.write("messageStr", messageStr);
 		generator.writeEnd();
 	}
