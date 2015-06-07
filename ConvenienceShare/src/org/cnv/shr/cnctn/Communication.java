@@ -96,7 +96,7 @@ public class Communication implements Closeable
 		generator.writeStartArray();
 	}
 	
-	void listen()
+	void initParser()
 	{
 		parser = TrackObjectUtils.createParser(inputOrig);
 		if (!parser.next().equals(JsonParser.Event.START_ARRAY))

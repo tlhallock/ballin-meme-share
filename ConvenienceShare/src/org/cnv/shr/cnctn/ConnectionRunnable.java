@@ -27,6 +27,7 @@ public class ConnectionRunnable implements Runnable
 	{
 		try
 		{
+			connection.initParser();
 			while (connection.needsMore())
 			{
 				Message request = Services.msgReader.readMsg(connection.getParser());

@@ -147,7 +147,7 @@ public abstract class RootSynchronizer implements Runnable
 		if (name == null 
 				|| accountedFor.contains(name)
 				|| !local.pathIsSecure(
-						Paths.get(local.getPathElement().getFsPath(), 
+						Paths.get(/*local.getPathElement().getFsPath(), */
 								f.getCanonicalPath()).normalize()))
 		{
 			return;

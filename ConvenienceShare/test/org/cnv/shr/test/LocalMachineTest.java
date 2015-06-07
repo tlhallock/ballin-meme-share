@@ -41,7 +41,9 @@ public class LocalMachineTest
 			{
 				quit = true;
 			}};
+			args.showGui = true;
 		
+			Services.isAlreadyRunning(args);
 		Services.initialize(args);
 
 		return new Closeable() {

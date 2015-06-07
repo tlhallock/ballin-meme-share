@@ -51,7 +51,6 @@ public class ConnectionManager
 		}
 		connection.send(new WhoIAm());
 		connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
-		connection.listen();
 		Services.notifications.connectionOpened(connection);
 		ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
 		synchronized (runnables) { runnables.add(connectionRunnable); }
@@ -86,7 +85,6 @@ public class ConnectionManager
 		Authenticator authentication = new Authenticator();
 		Communication connection = new Communication(authentication, accepted);
 		connection.send(new WhoIAm());
-		connection.listen();
 		Services.notifications.connectionOpened(connection);
 		try
 		{

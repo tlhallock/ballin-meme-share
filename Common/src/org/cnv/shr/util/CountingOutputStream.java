@@ -29,4 +29,10 @@ public final class CountingOutputStream extends OutputStream
 	{
 		delegate.flush();
 	}
+	
+	@Override
+	public void close() throws IOException
+	{
+		delegate.close();
+	}
 }

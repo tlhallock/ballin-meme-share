@@ -79,7 +79,7 @@ public class MachineInfo
 		
 		LinkedList<String> args = new LinkedList<>();
 		
-		args.add(ProcessInfo.getJavaPath());
+		args.add("java");
 		args.add("-cp");
 		args.add(ProcessInfo.getClassPath());
 		// Should be in TestUtils
@@ -87,6 +87,7 @@ public class MachineInfo
 		args.add(deleteDb ? "-d" : "pass");
 		args.add("-k");
 		args.add(String.valueOf(10000L));
+		args.add("-g");
 		args.add("-f");
 		args.add(processSettings.getSettingsFile());
 		args.add("-t");

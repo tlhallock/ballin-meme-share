@@ -227,7 +227,8 @@ public class DbTables
 				table.delete(c);
 			}
 			createDb(c);
-			Services.localMachine.save(c);
+			if (Services.localMachine != null)
+				Services.localMachine.save(c);
 		}
 		catch (SQLException |IOException e)
 		{
