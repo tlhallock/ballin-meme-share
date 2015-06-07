@@ -87,25 +87,18 @@ public class Authenticator
 	{
 		DbMachines.updateMachineInfo(ident, claimedName, key, ip, claimedPort, claimedNumPorts);
 	}
+
+	public void setAuthenticated(boolean isAuthenticated)
+	{
+		this.authenticated = isAuthenticated;
+	}
 	
-	void notifyAuthentication(String id, String ip, boolean authenticated)
+	void notifyAuthentication()
 	{
 		lock.lock();
 		try
 		{
 			condition.signalAll();
-			if (authenticated)
-			{
-				LogWrapper.getLogger().info("Remote is authenticated.");
-
-				updateMachineInfo(id, ip, remotePublicKey);
-				this.authenticated = true;
-			}
-			else
-			{
-				this.authenticated = false;
-				LogWrapper.getLogger().info("Remote failed authentication.");
-			}
 		}
 		finally
 		{
@@ -261,5 +254,10 @@ public class Authenticator
 			throw new RuntimeException("Trying to send message on connection not yet authenticated.\n"
 					+ "type = " + m.getClass().getName() + "\nmsg=\"" + m + "\"");
 		}
+	}
+
+	public void updateMachineInfo(String remoteIdentifier, String ip)
+	{
+		updateMachineInfo(remoteIdentifier, ip, remotePublicKey);
 	}
 }

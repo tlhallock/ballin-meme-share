@@ -53,10 +53,10 @@ public class FlushableEncryptionStreams
 			{
 				return;
 			}
-			output.write((index >> 24) & 0xff);
-			output.write((index >> 16) & 0xff);
-			output.write((index >>  8) & 0xff);
-			output.write((index >>  0) & 0xff);
+			output.write(index >> 24 & 0xff);
+			output.write(index >> 16 & 0xff);
+			output.write(index >>  8 & 0xff);
+			output.write(index >>  0 & 0xff);
 
 			for (int i = 0; i < index; i++)
 			{
@@ -188,6 +188,11 @@ public class FlushableEncryptionStreams
 				cipherStream.close();
 			}
 			delegate.close();
+		}
+		
+		public int available()
+		{
+			return 100;
 		}
 	}
 

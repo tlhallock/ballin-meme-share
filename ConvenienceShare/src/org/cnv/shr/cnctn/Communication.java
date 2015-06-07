@@ -190,11 +190,20 @@ public class Communication implements Closeable
 	// make this a method...
 	public synchronized void setAuthenticated(boolean isAuthenticated) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, IOException
 	{
-		authentication.notifyAuthentication(remoteIdentifier, getIp(), isAuthenticated);
 		if (isAuthenticated)
 		{
+			LogWrapper.getLogger().info("Remote is authenticated.");
+
+			authentication.setAuthenticated(isAuthenticated);
+			authentication.updateMachineInfo(remoteIdentifier, getIp());
+			
 			encrypt();
 		}
+		else
+		{
+			LogWrapper.getLogger().info("Remote failed authentication.");
+		}
+		authentication.notifyAuthentication();
 	}
 
 	boolean needsMore()
@@ -287,6 +296,7 @@ public class Communication implements Closeable
 		oldGen = generator;
 		generator = TrackObjectUtils.createGenerator(outputOrig = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
 		generator.writeStartArray();
+		generator.flush();
 	}
 
 	public synchronized void decrypt(RijndaelKey key) throws InvalidKeyException

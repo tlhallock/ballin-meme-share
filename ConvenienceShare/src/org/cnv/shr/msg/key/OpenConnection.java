@@ -102,7 +102,6 @@ public class OpenConnection extends KeyMessage
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needssourcePublicKey = true;
-		boolean needsdestinationPublicKey = true;
 		boolean needsrequestedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
@@ -112,10 +111,6 @@ public class OpenConnection extends KeyMessage
 				if (needssourcePublicKey)
 				{
 					throw new RuntimeException("Message needs sourcePublicKey");
-				}
-				if (needsdestinationPublicKey)
-				{
-					throw new RuntimeException("Message needs destinationPublicKey");
 				}
 				if (needsrequestedNaunce)
 				{
@@ -133,7 +128,6 @@ public class OpenConnection extends KeyMessage
 				sourcePublicKey = KeyPairObject.deSerializePublicKey(parser.getString());
 				break;
 			case "destinationPublicKey":
-				needsdestinationPublicKey = false;
 				destinationPublicKey = KeyPairObject.deSerializePublicKey(parser.getString());
 				break;
 			case "requestedNaunce":
