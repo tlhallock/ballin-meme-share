@@ -77,7 +77,7 @@ public class DoneMessage extends Message
 			}                                      
 		}                                        
 	}                                          
-	public String getJsonName() { return "DoneMessage"; }
+	public static String getJsonName() { return "DoneMessage"; }
 	public DoneMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -70,7 +70,7 @@ public class Wait extends Message
 			}                                      
 		}                                        
 	}                                          
-	public String getJsonName() { return "Wait"; }
+	public static String getJsonName() { return "Wait"; }
 	public Wait(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

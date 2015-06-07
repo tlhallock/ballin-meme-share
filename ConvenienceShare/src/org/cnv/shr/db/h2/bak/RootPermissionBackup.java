@@ -94,7 +94,7 @@ public class RootPermissionBackup implements Jsonable
 			}
 		}
 	}
-	public String getJsonName() { return "RootPermissionBackup"; }
+	public static String getJsonName() { return "RootPermissionBackup"; }
 	public RootPermissionBackup(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

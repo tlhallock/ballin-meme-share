@@ -150,7 +150,7 @@ public class UpdateInfoMessage extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "UpdateInfoMessage"; }
+	public static String getJsonName() { return "UpdateInfoMessage"; }
 	public UpdateInfoMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

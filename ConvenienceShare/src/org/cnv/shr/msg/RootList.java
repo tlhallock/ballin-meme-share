@@ -168,7 +168,7 @@ public class RootList extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "RootList"; }
+	public static String getJsonName() { return "RootList"; }
 	public RootList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

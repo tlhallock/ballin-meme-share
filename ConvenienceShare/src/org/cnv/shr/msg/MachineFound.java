@@ -176,7 +176,7 @@ public class MachineFound extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "MachineFound"; }
+	public static String getJsonName() { return "MachineFound"; }
 	public MachineFound(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

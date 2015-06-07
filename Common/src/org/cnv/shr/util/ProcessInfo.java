@@ -64,9 +64,9 @@ public class ProcessInfo
 	{
 		return "/usr/bin/java";
 	}
-	public static String getClassPath()
+	public static String getTestClassPath()
 	{
-		return "../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:.";
+		return "../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:../../Common/bin:.";
 	}
 	
 	public static String getJarVersion(Path jar)

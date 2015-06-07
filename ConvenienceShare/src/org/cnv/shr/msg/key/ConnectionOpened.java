@@ -99,7 +99,7 @@ public class ConnectionOpened extends KeyMessage
 			}
 		}
 	}
-	public String getJsonName() { return "ConnectionOpened"; }
+	public static String getJsonName() { return "ConnectionOpened"; }
 	public ConnectionOpened(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

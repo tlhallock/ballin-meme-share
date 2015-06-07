@@ -145,7 +145,7 @@ public class MachineHasFile extends DownloadMessage
 			}
 		}
 	}
-	public String getJsonName() { return "MachineHasFile"; }
+	public static String getJsonName() { return "MachineHasFile"; }
 	public MachineHasFile(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

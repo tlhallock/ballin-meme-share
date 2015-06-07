@@ -116,7 +116,7 @@ public class GetPermission extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "GetPermission"; }
+	public static String getJsonName() { return "GetPermission"; }
 	public GetPermission(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

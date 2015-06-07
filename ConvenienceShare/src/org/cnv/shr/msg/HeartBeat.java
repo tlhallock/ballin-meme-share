@@ -78,7 +78,7 @@ public class HeartBeat extends Message
 			}                                      
 		}                                        
 	}                                          
-	public String getJsonName() { return "HeartBeat"; }
+	public static String getJsonName() { return "HeartBeat"; }
 	public HeartBeat(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

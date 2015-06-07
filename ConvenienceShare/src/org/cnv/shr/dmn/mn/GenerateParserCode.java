@@ -195,12 +195,12 @@ public class GenerateParserCode
 				return;
 			}
 			
-//			String n = c.getName();
-//			System.out.println("ALLOCATORS.put(\"" + n + "\", new JsonAllocator<" + n + ">()          ");
-//			System.out.println("{                                                                     ");
-//			System.out.println("\tpublic " + n + " create(JsonParser p) { return new " + n + "(p); }  ");
-////			System.out.println("\tString getName() { return \"" + n + "\"; }                          ");
-//			System.out.println("});                                                                   ");
+			String n = c.getName();
+			System.out.println("ALLOCATORS.put(" + n + ".getJsonName(), new JsonAllocator<" + n + ">()          ");
+			System.out.println("{                                                                     ");
+			System.out.println("\tpublic " + n + " create(JsonParser p) { return new " + n + "(p); }  ");
+//			System.out.println("\tString getName() { return \"" + n + "\"; }                          ");
+			System.out.println("});                                                                   ");
 		}
 	}
 
@@ -439,8 +439,11 @@ public class GenerateParserCode
 //		case "int":              return "new BigDecimal(parser.getString()).intValue()";
 //		case "long":             return "new BigDecimal(parser.getString()).longValue()";
 //		case "double":           return "new BigDecimal(parser.getString()).doubleValue()";
+		case "java.lang.Integer":
 		case "int":              return " = Integer.parseInt("   + "parser.getString())";
+		case "java.lang.Long":  
 		case "long":             return " = Long.parseLong("     + "parser.getString())";
+		case "java.lang.Double":
 		case "double":           return " = Double.parseDouble(" + "parser.getString())";
 		
 		
@@ -478,6 +481,7 @@ public class GenerateParserCode
 		case "boolean":
 			return JsonParser.Event.VALUE_TRUE;
 
+		case "java.lang.Long":
 		case "int":
 		case "long":
 		case "double":
@@ -650,7 +654,7 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 		{
 			throw new RuntimeException("Two classes by the same name: " + c.getName());
 		}
-		ps.println("\tpublic String getJsonName() { return \"" + substring + "\"; }");
+		ps.println("\tpublic static String getJsonName() { return \"" + substring + "\"; }");
 	}
 
 	public static void Files_move(Path origin, Path dest) throws IOException

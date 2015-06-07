@@ -89,7 +89,7 @@ public class RevokeKey extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "RevokeKey"; }
+	public static String getJsonName() { return "RevokeKey"; }
 	public RevokeKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

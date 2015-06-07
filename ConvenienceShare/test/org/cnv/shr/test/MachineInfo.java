@@ -81,7 +81,7 @@ public class MachineInfo
 		
 		args.add("java");
 		args.add("-cp");
-		args.add(ProcessInfo.getClassPath());
+		args.add(ProcessInfo.getTestClassPath());
 		// Should be in TestUtils
 		args.add("org.cnv.shr.dmn.mn.MainTest");
 		args.add(deleteDb ? "-d" : "pass");

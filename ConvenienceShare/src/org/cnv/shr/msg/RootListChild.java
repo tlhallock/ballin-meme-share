@@ -133,7 +133,7 @@ public class RootListChild implements Jsonable
 			}
 		}
 	}
-	public String getJsonName() { return "RootListChild"; }
+	public static String getJsonName() { return "RootListChild"; }
 	public RootListChild(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

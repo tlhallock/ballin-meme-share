@@ -244,7 +244,7 @@ public class MachineEntry implements TrackObject
 			}
 		}
 	}
-	public String getJsonName() { return "MachineEntry"; }
+	public static String getJsonName() { return "MachineEntry"; }
 	public MachineEntry(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -120,7 +120,7 @@ public class FileRequest extends DownloadMessage
 			}
 		}
 	}
-	public String getJsonName() { return "FileRequest"; }
+	public static String getJsonName() { return "FileRequest"; }
 	public FileRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

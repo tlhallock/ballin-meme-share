@@ -93,7 +93,7 @@ public class Failure extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "Failure"; }
+	public static String getJsonName() { return "Failure"; }
 	public Failure(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -118,7 +118,7 @@ public class CompletionStatus extends DownloadMessage
 			}
 		}
 	}
-	public String getJsonName() { return "CompletionStatus"; }
+	public static String getJsonName() { return "CompletionStatus"; }
 	public CompletionStatus(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

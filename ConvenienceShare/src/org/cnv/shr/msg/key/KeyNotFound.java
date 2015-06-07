@@ -145,7 +145,7 @@ public class KeyNotFound extends KeyMessage
 			}
 		}
 	}
-	public String getJsonName() { return "KeyNotFound"; }
+	public static String getJsonName() { return "KeyNotFound"; }
 	public KeyNotFound(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -105,7 +105,7 @@ public class ChecksumRequest extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "ChecksumRequest"; }
+	public static String getJsonName() { return "ChecksumRequest"; }
 	public ChecksumRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

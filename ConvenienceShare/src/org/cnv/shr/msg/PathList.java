@@ -256,7 +256,7 @@ public class PathList extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "PathList"; }
+	public static String getJsonName() { return "PathList"; }
 	public PathList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

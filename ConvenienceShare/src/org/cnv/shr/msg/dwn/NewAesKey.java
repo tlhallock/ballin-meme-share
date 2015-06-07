@@ -117,7 +117,7 @@ public class NewAesKey extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "NewAesKey"; }
+	public static String getJsonName() { return "NewAesKey"; }
 	public NewAesKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

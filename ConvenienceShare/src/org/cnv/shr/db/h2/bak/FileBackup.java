@@ -138,7 +138,7 @@ public class FileBackup implements Jsonable
 			}
 		}
 	}
-	public String getJsonName() { return "FileBackup"; }
+	public static String getJsonName() { return "FileBackup"; }
 	public FileBackup(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

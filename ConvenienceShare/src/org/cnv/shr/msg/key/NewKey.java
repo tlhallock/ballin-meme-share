@@ -133,7 +133,7 @@ public class NewKey extends KeyMessage
 			}
 		}
 	}
-	public String getJsonName() { return "NewKey"; }
+	public static String getJsonName() { return "NewKey"; }
 	public NewKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

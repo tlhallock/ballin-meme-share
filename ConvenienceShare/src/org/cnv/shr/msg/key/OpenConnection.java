@@ -9,8 +9,8 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
@@ -22,6 +22,7 @@ public class OpenConnection extends KeyMessage
 	public static int TYPE = 0;
 	
 	private PublicKey sourcePublicKey;
+	@MyParserNullable
 	private PublicKey destinationPublicKey;
 	private byte[] requestedNaunce;
 
@@ -145,7 +146,7 @@ public class OpenConnection extends KeyMessage
 			}
 		}
 	}
-	public String getJsonName() { return "OpenConnection"; }
+	public static String getJsonName() { return "OpenConnection"; }
 	public OpenConnection(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -48,7 +48,7 @@ public class Done implements TrackObject
 			}                                      
 		}                                        
 	}                                          
-	public String getJsonName() { return "Done"; }
+	public static String getJsonName() { return "Done"; }
 	public Done(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

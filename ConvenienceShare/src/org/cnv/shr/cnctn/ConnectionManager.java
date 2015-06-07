@@ -37,7 +37,7 @@ public class ConnectionManager
 		return openConnection(m.getIp(), m.getPort(), m.getNumberOfPorts(), DbKeys.getKey(m), acceptKeys);
 	}
 	
-	private synchronized Communication openConnection(String ip, 
+	private Communication openConnection(String ip, 
 			int portBegin,
 			int numPorts,
 			final PublicKey remoteKey, 

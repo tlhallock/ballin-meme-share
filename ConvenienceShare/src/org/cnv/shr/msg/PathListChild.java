@@ -152,7 +152,7 @@ public class PathListChild implements Jsonable
 			}
 		}
 	}
-	public String getJsonName() { return "PathListChild"; }
+	public static String getJsonName() { return "PathListChild"; }
 	public PathListChild(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

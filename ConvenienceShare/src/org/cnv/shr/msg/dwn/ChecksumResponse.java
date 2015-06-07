@@ -94,32 +94,25 @@ public class ChecksumResponse extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needschecksum = true;
 		boolean needsdescriptor = true;
+		boolean needschecksum = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needschecksum)
-				{
-					throw new RuntimeException("Message needs checksum");
-				}
 				if (needsdescriptor)
 				{
 					throw new RuntimeException("Message needs descriptor");
+				}
+				if (needschecksum)
+				{
+					throw new RuntimeException("Message needs checksum");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				needschecksum = false;
-				checksum = parser.getString();
-			}
-			break;
 		case START_OBJECT:
 			if (key==null) break;
 			if (key.equals("descriptor")) {
@@ -127,11 +120,18 @@ public class ChecksumResponse extends Message
 				descriptor = JsonThing.readFileId(parser);
 			}
 			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("checksum")) {
+				needschecksum = false;
+				checksum = parser.getString();
+			}
+			break;
 			default: break;
 			}
 		}
 	}
-	public String getJsonName() { return "ChecksumResponse"; }
+	public static String getJsonName() { return "ChecksumResponse"; }
 	public ChecksumResponse(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

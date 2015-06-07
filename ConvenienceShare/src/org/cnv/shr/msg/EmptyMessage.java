@@ -101,7 +101,7 @@ public class EmptyMessage extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "EmptyMessage"; }
+	public static String getJsonName() { return "EmptyMessage"; }
 	public EmptyMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

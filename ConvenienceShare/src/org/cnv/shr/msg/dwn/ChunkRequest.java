@@ -119,7 +119,7 @@ public class ChunkRequest extends DownloadMessage
 			}
 		}
 	}
-	public String getJsonName() { return "ChunkRequest"; }
+	public static String getJsonName() { return "ChunkRequest"; }
 	public ChunkRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

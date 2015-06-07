@@ -186,6 +186,18 @@ public class TrackerEntry implements TrackObject
 				url = parser.getString();
 			}
 			break;
+		case VALUE_FALSE:
+			if (key==null) break;
+			if (key.equals("sync")) {
+				sync = false;
+			}
+			break;
+		case VALUE_TRUE:
+			if (key==null) break;
+			if (key.equals("sync")) {
+				sync = true;
+			}
+			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -199,23 +211,11 @@ public class TrackerEntry implements TrackObject
 				break;
 			}
 			break;
-		case VALUE_FALSE:
-			if (key==null) break;
-			if (key.equals("sync")) {
-				sync = false;
-			}
-			break;
-		case VALUE_TRUE:
-			if (key==null) break;
-			if (key.equals("sync")) {
-				sync = true;
-			}
-			break;
 			default: break;
 			}
 		}
 	}
-	public String getJsonName() { return "TrackerEntry"; }
+	public static String getJsonName() { return "TrackerEntry"; }
 	public TrackerEntry(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -37,13 +37,6 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 // TODO: this should really only need authentication to UPDATE machine info...
 public class Communication implements Closeable
 {
-//	private JsonGenerator logFile; 
-//	{ 
-//    Map<String, Object> properties = new HashMap<>(1);
-//    properties.put(JsonGenerator.PRETTY_PRINTING, true);
-//		logFile = Json.createGeneratorFactory(properties).createGenerator(Files.newOutputStream(Paths.get("log." + System.currentTimeMillis() + "." + Math.random() + ".txt")));
-//		logFile.writeStartArray();
-//	}
 	// The streams
 	private Socket socket;
 	
@@ -60,7 +53,7 @@ public class Communication implements Closeable
 	
 	private Authenticator authentication;
 	
-	ConnectionStatistics stats;
+	private ConnectionStatistics stats;
 	
 	/** Initiator **/
 	public Communication(Authenticator authentication, String ip, int port) throws UnknownHostException, IOException
@@ -94,6 +87,7 @@ public class Communication implements Closeable
 
 		generator = TrackObjectUtils.createGenerator(outputOrig);
 		generator.writeStartArray();
+		generator.flush();
 	}
 	
 	void initParser()

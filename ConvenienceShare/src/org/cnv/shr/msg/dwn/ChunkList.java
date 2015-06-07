@@ -134,7 +134,7 @@ public class ChunkList extends DownloadMessage
 			}
 		}
 	}
-	public String getJsonName() { return "ChunkList"; }
+	public static String getJsonName() { return "ChunkList"; }
 	public ChunkList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

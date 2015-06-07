@@ -9,7 +9,7 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.JsonThing;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -31,7 +31,7 @@ public class WhoIAm extends MachineFound
 	{
 		super();
 		pKey       = Services.keyManager.getPublicKey();
-		versionString = "0.0.1";
+		versionString = Services.settings.getVersion(Main.class);
 	}
 	
 	@Override
@@ -175,7 +175,7 @@ public class WhoIAm extends MachineFound
 			}
 		}
 	}
-	public String getJsonName() { return "WhoIAm"; }
+	public static String getJsonName() { return "WhoIAm"; }
 	public WhoIAm(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

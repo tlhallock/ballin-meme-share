@@ -153,7 +153,7 @@ public class SharedFileId implements Jsonable
 			}
 		}
 	}
-	public String getJsonName() { return "SharedFileId"; }
+	public static String getJsonName() { return "SharedFileId"; }
 	public SharedFileId(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

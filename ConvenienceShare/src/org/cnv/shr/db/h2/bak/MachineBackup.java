@@ -88,9 +88,9 @@ public class MachineBackup implements Jsonable
 		boolean needsidentifier = true;
 		boolean needsweShareToThem = true;
 		boolean needssharesWithUs = true;
+		boolean needsallowsMessages = true;
 		boolean needsport = true;
 		boolean needsnports = true;
-		boolean needsallowsMessages = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -116,6 +116,14 @@ public class MachineBackup implements Jsonable
 				{
 					throw new RuntimeException("Message needs sharesWithUs");
 				}
+				if (needsallowsMessages)
+				{
+					throw new RuntimeException("Message needs allowsMessages");
+				}
+				if (needsallowsMessages)
+				{
+					throw new RuntimeException("Message needs allowsMessages");
+				}
 				if (needsport)
 				{
 					throw new RuntimeException("Message needs port");
@@ -123,14 +131,6 @@ public class MachineBackup implements Jsonable
 				if (needsnports)
 				{
 					throw new RuntimeException("Message needs nports");
-				}
-				if (needsallowsMessages)
-				{
-					throw new RuntimeException("Message needs allowsMessages");
-				}
-				if (needsallowsMessages)
-				{
-					throw new RuntimeException("Message needs allowsMessages");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -161,19 +161,6 @@ public class MachineBackup implements Jsonable
 				break;
 			}
 			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
-				break;
-			}
-			break;
 		case VALUE_FALSE:
 			if (key==null) break;
 			if (key.equals("allowsMessages")) {
@@ -188,11 +175,24 @@ public class MachineBackup implements Jsonable
 				allowsMessages = true;
 			}
 			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+				break;
+			case "nports":
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
+				break;
+			}
+			break;
 			default: break;
 			}
 		}
 	}
-	public String getJsonName() { return "MachineBackup"; }
+	public static String getJsonName() { return "MachineBackup"; }
 	public MachineBackup(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -66,7 +66,7 @@ public class ListRoots extends Message
 			}                                      
 		}                                        
 	}                                          
-	public String getJsonName() { return "ListRoots"; }
+	public static String getJsonName() { return "ListRoots"; }
 	public ListRoots(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -115,6 +115,6 @@ public enum SharingState implements Jsonable
 			}
 		}
 	}
-	public String getJsonName() { return "SharingState"; }
+	public static String getJsonName() { return "SharingState"; }
 		// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	}

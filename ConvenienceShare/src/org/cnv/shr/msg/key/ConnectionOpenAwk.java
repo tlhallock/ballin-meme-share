@@ -120,7 +120,7 @@ public class ConnectionOpenAwk extends KeyMessage
 			}
 		}
 	}
-	public String getJsonName() { return "ConnectionOpenAwk"; }
+	public static String getJsonName() { return "ConnectionOpenAwk"; }
 	public ConnectionOpenAwk(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

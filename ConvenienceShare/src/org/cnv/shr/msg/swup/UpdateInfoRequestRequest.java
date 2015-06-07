@@ -66,7 +66,7 @@ public class UpdateInfoRequestRequest extends Message
 			}                                      
 		}                                        
 	}                                          
-	public String getJsonName() { return "UpdateInfoRequestRequest"; }
+	public static String getJsonName() { return "UpdateInfoRequestRequest"; }
 	public UpdateInfoRequestRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

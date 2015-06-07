@@ -152,7 +152,7 @@ public class Chunk implements Jsonable
 			}
 		}
 	}
-	public String getJsonName() { return "Chunk"; }
+	public static String getJsonName() { return "Chunk"; }
 	public Chunk(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

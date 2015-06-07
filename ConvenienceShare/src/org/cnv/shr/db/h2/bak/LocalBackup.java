@@ -157,13 +157,19 @@ public class LocalBackup implements Jsonable
 				needsmaxFSize = false;
 				maxFSize = Long.parseLong(parser.getString());
 				break;
+			case "totalFileSize":
+				totalFileSize = Long.parseLong(parser.getString());
+				break;
+			case "totalNumFiles":
+				totalNumFiles = Long.parseLong(parser.getString());
+				break;
 			}
 			break;
 			default: break;
 			}
 		}
 	}
-	public String getJsonName() { return "LocalBackup"; }
+	public static String getJsonName() { return "LocalBackup"; }
 	public LocalBackup(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

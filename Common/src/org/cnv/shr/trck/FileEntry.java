@@ -161,7 +161,7 @@ public class FileEntry implements TrackObject
 			}
 		}
 	}
-	public String getJsonName() { return "FileEntry"; }
+	public static String getJsonName() { return "FileEntry"; }
 	public FileEntry(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -79,7 +79,7 @@ public class ShowApplication extends Message
 			}                                      
 		}                                        
 	}                                          
-	public String getJsonName() { return "ShowApplication"; }
+	public static String getJsonName() { return "ShowApplication"; }
 	public ShowApplication(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

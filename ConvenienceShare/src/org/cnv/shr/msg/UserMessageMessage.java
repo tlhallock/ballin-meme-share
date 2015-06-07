@@ -142,7 +142,7 @@ public class UserMessageMessage extends Message
 			}
 		}
 	}
-	public String getJsonName() { return "UserMessageMessage"; }
+	public static String getJsonName() { return "UserMessageMessage"; }
 	public UserMessageMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }
