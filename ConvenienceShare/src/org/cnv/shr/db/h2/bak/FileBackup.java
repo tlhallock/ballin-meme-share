@@ -30,7 +30,7 @@ public class FileBackup implements Jsonable
 	
 	public FileBackup(LocalFile file)
 	{
-		this.path = file.getFullPath();
+		this.path = file.getPath().getFullPath();
 		this.fileSize = file.getFileSize();
 		this.rootName = file.getRootDirectory().getName();
 		this.checksum = file.getChecksum();

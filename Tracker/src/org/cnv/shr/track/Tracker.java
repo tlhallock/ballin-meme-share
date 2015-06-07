@@ -43,8 +43,8 @@ public class Tracker implements Runnable
 			LogWrapper.getLogger().info("Waiting on " + serverSocket.getLocalPort());
 			
 			try (Socket socket       = serverSocket.accept();
-					JsonParser input     = TrackObjectUtils.parserFactory.createParser(socket.getInputStream());
-					JsonGenerator output = TrackObjectUtils.generatorFactory.createGenerator(socket.getOutputStream());)
+					JsonParser input     = TrackObjectUtils.createParser(socket.getInputStream());
+					JsonGenerator output = TrackObjectUtils.createGenerator(socket.getOutputStream());)
 			{
 				EnsureClosed ensureClosed = new EnsureClosed(output);
 				Track.timer.schedule(ensureClosed, 10 * 60 * 1000);

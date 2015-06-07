@@ -7,8 +7,8 @@
 package org.cnv.shr.gui;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.util.ConnectionStatistics;
 
 /**
  *
@@ -18,13 +18,11 @@ public class ConnectionStatus extends javax.swing.JPanel {
 
     
     private Communication connection;
-    private ConnectionStatistics stats;
     /**
      * Creates new form ConnectionStatus
      */
     public ConnectionStatus(Communication connection) {
         this.connection = connection;
-        this.stats = connection.getStatistics();
         initComponents();
         refresh();
     }
@@ -35,25 +33,25 @@ public class ConnectionStatus extends javax.swing.JPanel {
     }
     
     void refresh()
-    {
-        long now = System.currentTimeMillis();
-        this.ipLabel.setText(connection.getUrl());
-        this.lastActivityLabel.setText(stats.isActive() ? "is active" : "not active");
-        this.sentLabel.setText("Not supported yet.");
-        this.receivedLabel.setText("Not supported yet.");
-        this.downLabel.setText(stats.getBitsDown(now));
-        this.upLabel.setText(stats.getBitsUp(now));
-        Machine machine = connection.getMachine();
-        if (machine == null)
-        {
-        	this.machineNameLabel.setText("Unknown");
-        }
-        else
-        {
-        	this.machineNameLabel.setText(machine.getName());
-        }
-        stats.setLastRefresh(now);
-    }
+	{
+		ConnectionStatistics statistics = connection.getStatistics();
+		long now = System.currentTimeMillis();
+		this.ipLabel.setText(connection.getUrl());
+		this.lastActivityLabel.setText(statistics.isActive() ? "is active" : "not active");
+		this.sentLabel.setText("Not supported yet.");
+		this.receivedLabel.setText("Not supported yet.");
+		this.downLabel.setText(statistics.getBitsDown(now));
+		this.upLabel.setText(statistics.getBitsUp(now));
+		Machine machine = connection.getMachine();
+		if (machine == null)
+		{
+			this.machineNameLabel.setText("Unknown");
+		}
+		else
+		{
+			this.machineNameLabel.setText(machine.getName());
+		}
+	}
 
     /**
      * This method is called from within the constructor to initialize the form.

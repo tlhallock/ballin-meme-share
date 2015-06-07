@@ -51,7 +51,7 @@ public class TestStore
 	{
 		store.machineFound(entry1, System.currentTimeMillis());
 		StringBuilder builder = new StringBuilder();
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(new OutputStream() {
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(new OutputStream() {
 			@Override
 			public void write(int b) throws IOException
 			{
@@ -89,7 +89,7 @@ public class TestStore
 			@Override
 			public void close() {}
 		};
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(out);)
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
 			store.listComments(entry2, createGenerator);
 		}
@@ -98,7 +98,7 @@ public class TestStore
 		store.removeMachine(entry1);
 
 		builder.setLength(0);
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(out);)
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
 			store.listComments(entry2, createGenerator);
 		}
@@ -125,14 +125,14 @@ public class TestStore
 			@Override
 			public void close() {}
 		};
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(out);)
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
 			store.listMachines(sfile, createGenerator, 0);
 		}
 		Assert.assertTrue(builder.toString().contains(entry1.getIdentifer()));
 
 		builder.setLength(0);
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(out);)
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
 			store.listFiles(entry1, createGenerator);
 		}
@@ -143,7 +143,7 @@ public class TestStore
 		
 		store.machineLost(entry1, sfile);
 		builder.setLength(0);
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(out);)
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
 			store.listMachines(sfile, createGenerator, 0);
 		}
@@ -151,7 +151,7 @@ public class TestStore
 		
 
 		builder.setLength(0);
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(out);)
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
 			store.listFiles(entry1, createGenerator);
 		}
@@ -173,7 +173,7 @@ public class TestStore
 		};
 		
 		builder.setLength(0);
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(out);)
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
 			store.listTrackers(createGenerator);
 		}
@@ -182,7 +182,7 @@ public class TestStore
 		store.addTracker(tracker);
 
 		builder.setLength(0);
-		try (JsonGenerator createGenerator = TrackObjectUtils.generatorFactory.createGenerator(out);)
+		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
 			store.listTrackers(createGenerator);
 		}

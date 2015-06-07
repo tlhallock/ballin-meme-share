@@ -2,18 +2,13 @@ package org.cnv.shr.db.h2.bak;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 
-import javax.json.Json;
 import javax.json.stream.JsonGenerator;
-import javax.json.stream.JsonGeneratorFactory;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 
@@ -31,6 +26,8 @@ import org.cnv.shr.gui.DbRestoreProgress;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.trck.TrackObjectUtils;
+import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.LogWrapper;
 
 public class DbBackupRestore
@@ -43,10 +40,7 @@ public class DbBackupRestore
 	
 	public static void backupDatabase(File f) throws IOException
 	{
-    Map<String, Object> properties = new HashMap<>(1);
-    properties.put(JsonGenerator.PRETTY_PRINTING, true);
-    JsonGeneratorFactory jf = Json.createGeneratorFactory(properties);
-		try (JsonGenerator generator = jf.createGenerator(Files.newOutputStream(Paths.get(f.getAbsolutePath())));)
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(Files.newOutputStream(Paths.get(f.getAbsolutePath())));)
 		{
 			generator.writeStartObject();
 			generator.writeStartArray("machines");
@@ -128,17 +122,18 @@ public class DbBackupRestore
 		});
 	}
 	
-	public static void restoreDatabaseInternal(File f) throws IOException, SQLException
+	private synchronized static void restoreDatabaseInternal(File f) throws IOException, SQLException
 	{
 		try (ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();)
 		{
 			DbTables.deleteDb(wrapper);
 		}
 		DbRestoreProgress dbRestoreProgress = new DbRestoreProgress(f.length());
+		dbRestoreProgress.setVisible(true);
 		
 		try (
 				CountingInputStream newInputStream = new CountingInputStream(Files.newInputStream(Paths.get(f.getAbsolutePath())));
-				JsonParser parser = Json.createParser(newInputStream);
+				JsonParser parser = TrackObjectUtils.createParser(newInputStream);
 				ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();)
 		{
 			String key = null;
@@ -175,7 +170,7 @@ public class DbBackupRestore
 		}
 		finally
 		{
-			dbRestoreProgress.dispose();
+			dbRestoreProgress.done();
 		}
 	}
 
@@ -193,15 +188,7 @@ public class DbBackupRestore
 			case END_ARRAY:
 				return;
 			case START_OBJECT:
-				try
-				{
-					new FileBackup(parser).save(wrapper);
-				}
-				catch (ArrayIndexOutOfBoundsException e)
-				{
-					// There is a bug in JsonParser in version 1.0.1. :(
-					e.printStackTrace();
-				}
+				new FileBackup(parser).save(wrapper);
 				p.setProgress(newInputStream.getSoFar());
 			}
 		}
@@ -246,6 +233,44 @@ public class DbBackupRestore
 		}
 	}
 
+	private static void readDownloads(JsonParser parser,
+			ConnectionWrapper wrapper, 
+			DbRestoreProgress p, CountingInputStream newInputStream)
+	{
+		Event next;
+		while (parser.hasNext())
+		{
+			next = parser.next();
+			switch (next)
+			{
+			case END_ARRAY:
+				return;
+			case START_OBJECT:
+				new LocalBackup(parser).save(wrapper);
+				p.setProgress(newInputStream.getSoFar());
+			}
+		}
+	}
+
+	private static void readMessages(JsonParser parser,
+			ConnectionWrapper wrapper, 
+			DbRestoreProgress p, CountingInputStream newInputStream)
+	{
+		Event next;
+		while (parser.hasNext())
+		{
+			next = parser.next();
+			switch (next)
+			{
+			case END_ARRAY:
+				return;
+			case START_OBJECT:
+				new LocalBackup(parser).save(wrapper);
+				p.setProgress(newInputStream.getSoFar());
+			}
+		}
+	}
+
 	private static void readPermissions(JsonParser parser, 
 			ConnectionWrapper wrapper,
 			DbRestoreProgress p,
@@ -263,29 +288,6 @@ public class DbBackupRestore
 				new RootPermissionBackup(parser).save(wrapper);
 				p.setProgress(newInputStream.getSoFar());
 			}
-		}
-	}
-
-	private static final class CountingInputStream extends InputStream
-	{
-		private InputStream delegate;
-		private long soFar;
-		
-		public CountingInputStream(InputStream newInputStream)
-		{
-			this.delegate = newInputStream;
-		}
-
-		@Override
-		public int read() throws IOException
-		{
-			soFar++;
-			return delegate.read();
-		}
-		
-		public long getSoFar()
-		{
-			return soFar;
 		}
 	}
 }

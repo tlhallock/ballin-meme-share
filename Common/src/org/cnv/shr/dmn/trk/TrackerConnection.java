@@ -30,7 +30,7 @@ public abstract class TrackerConnection implements Closeable
 
 	void connect(TrackerRequest request) throws IOException
 	{
-		generator = TrackObjectUtils.generatorFactory.createGenerator(socket.getOutputStream());
+		generator = TrackObjectUtils.createGenerator(socket.getOutputStream());
 		generator.writeStartArray();
 		
 		
@@ -39,7 +39,7 @@ public abstract class TrackerConnection implements Closeable
 		local.print(generator);
 		generator.flush();
 
-		parser = TrackObjectUtils.parserFactory.createParser(socket.getInputStream());
+		parser = TrackObjectUtils.createParser(socket.getInputStream());
 		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
 		{
 			LogWrapper.getLogger().info("Tracker connection did not start with an array.");

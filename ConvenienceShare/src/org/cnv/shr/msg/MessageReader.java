@@ -1,222 +1,48 @@
 package org.cnv.shr.msg;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.logging.Level;
 
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.dwn.ChecksumRequest;
-import org.cnv.shr.msg.dwn.ChecksumResponse;
-import org.cnv.shr.msg.dwn.ChunkList;
-import org.cnv.shr.msg.dwn.ChunkRequest;
-import org.cnv.shr.msg.dwn.ChunkResponse;
-import org.cnv.shr.msg.dwn.CompletionStatus;
-import org.cnv.shr.msg.dwn.DownloadDone;
-import org.cnv.shr.msg.dwn.DownloadFailure;
-import org.cnv.shr.msg.dwn.FileRequest;
-import org.cnv.shr.msg.dwn.MachineHasFile;
-import org.cnv.shr.msg.dwn.NewAesKey;
-import org.cnv.shr.msg.dwn.RequestCompletionStatus;
-import org.cnv.shr.msg.key.ConnectionOpenAwk;
-import org.cnv.shr.msg.key.ConnectionOpened;
-import org.cnv.shr.msg.key.KeyChange;
-import org.cnv.shr.msg.key.KeyFailure;
-import org.cnv.shr.msg.key.KeyNotFound;
-import org.cnv.shr.msg.key.NewKey;
-import org.cnv.shr.msg.key.OpenConnection;
-import org.cnv.shr.msg.key.PermissionFailure;
-import org.cnv.shr.msg.key.RevokeKey;
-import org.cnv.shr.msg.key.WhoIAm;
-import org.cnv.shr.msg.swup.UpdateInfoMessage;
-import org.cnv.shr.msg.swup.UpdateInfoRequest;
-import org.cnv.shr.msg.swup.UpdateInfoRequestRequest;
-import org.cnv.shr.util.ByteReader;
+import javax.json.stream.JsonParser;
+
+import org.cnv.shr.json.JsonAllocators;
+import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.LogWrapper;
 
 
 
 public class MessageReader
 {
-	private HashMap<Integer, MessageIdentifier> identifiers = new HashMap<>();
-	
-	public MessageReader()
+	public Message readMsg(JsonParser input) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
-		add(new MessageIdentifier(ChunkList.class                  ));
-		add(new MessageIdentifier(DownloadDone.class               ));
-		add(new MessageIdentifier(CompletionStatus.class           ));
-		add(new MessageIdentifier(FileRequest.class                ));
-		add(new MessageIdentifier(ChunkResponse.class              ));
-		add(new MessageIdentifier(RequestCompletionStatus.class    ));
-		add(new MessageIdentifier(ChunkRequest.class               ));
-		add(new MessageIdentifier(MachineHasFile.class             ));
-		add(new MessageIdentifier(ListRoots.class                  ));
-		add(new MessageIdentifier(ListPath.class                   ));
-		add(new MessageIdentifier(MachineFound.class               ));
-		add(new MessageIdentifier(DoneMessage.class                ));
-		add(new MessageIdentifier(PathList.class                   ));
-		add(new MessageIdentifier(RootList.class                   ));
-		add(new MessageIdentifier(FindMachines.class               ));
-		add(new MessageIdentifier(UserMessageMessage.class         ));
-		add(new MessageIdentifier(Failure.class                    ));
-		add(new MessageIdentifier(Wait.class                       ));
-		add(new MessageIdentifier(HeartBeat.class                  ));
-		add(new MessageIdentifier(LookingFor.class                 ));
-		add(new MessageIdentifier(ConnectionOpenAwk.class          ));
-		add(new MessageIdentifier(NewKey.class                     ));
-		add(new MessageIdentifier(RevokeKey.class                  ));
-		add(new MessageIdentifier(ConnectionOpened.class           ));
-		add(new MessageIdentifier(KeyNotFound.class                ));
-		add(new MessageIdentifier(KeyFailure.class                 ));
-		add(new MessageIdentifier(OpenConnection.class             ));
-		add(new MessageIdentifier(KeyChange.class                  ));
-		add(new MessageIdentifier(WhoIAm.class                     ));
-		add(new MessageIdentifier(EmptyMessage.class               ));
-		add(new MessageIdentifier(DoneResponse.class               ));
-		add(new MessageIdentifier(ChecksumRequest.class            ));
-		add(new MessageIdentifier(ChecksumResponse.class           ));
-		add(new MessageIdentifier(NewAesKey.class                  ));
-		add(new MessageIdentifier(PermissionFailure.class          ));
-		add(new MessageIdentifier(GetPermission.class              ));
-		add(new MessageIdentifier(GotPermission.class              ));
-		add(new MessageIdentifier(UpdateInfoMessage.class          ));
-		add(new MessageIdentifier(UpdateInfoRequest.class          ));
-		add(new MessageIdentifier(UpdateInfoRequestRequest.class   ));
-		add(new MessageIdentifier(ShowApplication.class            ));
-		add(new MessageIdentifier(DownloadFailure.class            ));
-
-		LogWrapper.getLogger().info("Message map:\n" + this);
-	}
-	
-	public Collection<MessageIdentifier> getIdentifiers()
-	{
-		return identifiers.values();
-	}
-	
-	private void add(MessageIdentifier identifier)
-	{
-		int type = identifier.getType();
-		if (type > Byte.MAX_VALUE || type < Byte.MIN_VALUE)
+		String className = null;
+		wh:
+		while (input.hasNext())
 		{
-			LogWrapper.getLogger().severe("Message type " + type + " for " + identifier.name + " is not in range.");
-			LogWrapper.getLogger().severe(this.toString());
-			Services.quiter.quit();
-			return;
-		}
-		MessageIdentifier messageIdentifier = identifiers.get(type);
-		if (messageIdentifier != null)
-		{
-			LogWrapper.getLogger().severe("Type " + type + " is already used by " + messageIdentifier.name 
-					+ " so " + identifier.name + " cannot also use it.");
-			LogWrapper.getLogger().severe(this.toString());
-			Services.quiter.quit();
-			return;
-		}
-		identifiers.put(type, identifier);
-	}
-	
-	public Message readMsg(ByteReader input) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-	{
-		long msgTypeL = input.tryToReadInt();
-		if (msgTypeL < 0)
-		{
-			return null;
-		}
-		int msgType = (int) msgTypeL;
-
-		MessageIdentifier messageIdentifier = identifiers.get(msgType);
-		if (messageIdentifier == null)
-		{
-			LogWrapper.getLogger().info("Ignoring unknown message type: " + msgType + " from ");
-			return null;
-		}
-		
-		return messageIdentifier.create(input);
-	}
-	
-	@Override
-	public String toString()
-	{
-		StringBuilder builder = new StringBuilder();
-		for (MessageIdentifier identifier : identifiers.values())
-		{
-			builder.append(identifier).append('\n');
-		}
-		return builder.toString();
-	}
-	
-	
-	public class MessageIdentifier
-	{
-		String name;
-		int type;
-		Constructor<? extends Message> constructor;
-		
-		MessageIdentifier(Class<? extends Message> c)
-		{
-			try
+			JsonParser.Event e = input.next();
+			switch (e)
 			{
-				name = c.getName();
-				type = c.getField("TYPE").getInt(null);
-				constructor = c.getConstructor(InputStream.class);
-				if (constructor == null)
-				{
-					throw new Exception("Missing constructor in class " + name);
-				}
-			}
-			catch (Exception e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to read fields for class " + name, e);
-				Services.quiter.quit();
+			case KEY_NAME:
+				className = input.getString();
+				break;
+			case START_OBJECT:
+				break wh;
 			}
 		}
-		
-		public Constructor<? extends Message> getConstructor()
+
+		LogWrapper.getLogger().info("Received message of type " + className);
+		Jsonable create = JsonAllocators.create(className, input);
+		if (create == null)
 		{
-			return constructor;
+			LogWrapper.getLogger().info("Ignoring unknown message type: " + className + " from ");
+			return null;
 		}
-		
-		int getType()
+		if (!(create instanceof Message))
 		{
-			return type;
+			LogWrapper.getLogger().info("Received something that is not a message: " + className);
+			return null;
 		}
-		
-		Message create(ByteReader stream) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException
-		{
-				LogWrapper.getLogger().info("Received message of type " + name);
-				Message newInstance = constructor.newInstance(DUMMY_STREAM);
-				newInstance.parse(stream);
-				LogWrapper.getLogger().info("Read " + newInstance);
-				return newInstance;
-//			catch (Exception e)
-//			{
-//				LogWrapper.getLogger().info("Unable to create message type "  + name);
-//				LogWrapper.getLogger().log(Level.INFO, , e);
-//				
-////				Throwable t = e;
-////				while (t != null)
-////				{
-////					t.printStackTrace(Services.logger.;
-////					t = t.getCause();
-////				}
-//				
-//				Main.quit();
-//			}
-		}
-		
-		@Override
-		public String toString()
-		{
-			return type + "->" + name;
-		}
+		LogWrapper.getLogger().info("Read " + create);
+		return (Message) create;
 	}
-	private static final InputStream DUMMY_STREAM = new InputStream() {
-		@Override
-		public int read() throws IOException
-		{
-			return -1;
-		}};
 }

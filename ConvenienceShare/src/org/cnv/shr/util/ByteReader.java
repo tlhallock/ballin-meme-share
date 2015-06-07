@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
 
-import org.cnv.shr.cnctn.ConnectionStatistics;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.SharedFileId;
@@ -15,23 +14,15 @@ import de.flexiprovider.common.math.FlexiBigInt;
 public class ByteReader
 {
 	private InputStream in;
-	private ConnectionStatistics stats;
 	
 	public ByteReader(InputStream in, ConnectionStatistics stats)
 	{
 		this.in = in;
-		this.stats = stats;
 	}
 
 	public ByteReader(InputStream is)
 	{
 		this.in = is;
-		stats = new ConnectionStatistics();
-	}
-
-	public ConnectionStatistics getStatistics()
-	{
-		return stats;
 	}
 	
 	public int readByte() throws IOException
@@ -41,7 +32,6 @@ public class ByteReader
 		{
 			throw new IOException("Hit end of stream.");
 		}
-		stats.bytesRead(1);
 		return read & 0xff;
 	}
 
@@ -64,7 +54,6 @@ public class ByteReader
 		{
 			return -1;
 		}
-		stats.bytesRead(1);
 
 		i |=      firstByte << 24L;
 		i |= readByte() << 16L;
@@ -118,7 +107,6 @@ public class ByteReader
 		while (readSoFar < size && readSoFar >= 0)
 		{
 			readSoFar += in.read(returnValue, readSoFar, size - readSoFar);
-			stats.bytesRead(readSoFar);
 		}
 		if (readSoFar < size)
 		{

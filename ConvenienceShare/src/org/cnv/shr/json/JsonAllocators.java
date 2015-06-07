@@ -5,25 +5,6 @@ import java.util.HashMap;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.SharingState;
-import org.cnv.shr.msg.DoneMessage;
-import org.cnv.shr.msg.DoneResponse;
-import org.cnv.shr.msg.EmptyMessage;
-import org.cnv.shr.msg.Failure;
-import org.cnv.shr.msg.FindMachines;
-import org.cnv.shr.msg.GetPermission;
-import org.cnv.shr.msg.GotPermission;
-import org.cnv.shr.msg.HeartBeat;
-import org.cnv.shr.msg.ListPath;
-import org.cnv.shr.msg.ListRoots;
-import org.cnv.shr.msg.LookingFor;
-import org.cnv.shr.msg.MachineFound;
-import org.cnv.shr.msg.PathList;
-import org.cnv.shr.msg.PathListChild;
-import org.cnv.shr.msg.RootList;
-import org.cnv.shr.msg.RootListChild;
-import org.cnv.shr.msg.ShowApplication;
-import org.cnv.shr.msg.UserMessageMessage;
-import org.cnv.shr.msg.Wait;
 import org.cnv.shr.util.Jsonable;
 
 public class JsonAllocators
@@ -34,13 +15,14 @@ public class JsonAllocators
 	}
 	
 	
-	public static <T extends Jsonable> T create(Class<T> clazz, JsonParser p)
-	{
-		return (T) ALLOCATORS.get(clazz.getName()).create(p);
-	}
 	public static Jsonable create(String className, JsonParser p)
 	{
-		return ALLOCATORS.get(className).create(p);
+		JsonAllocator<?> jsonAllocator = ALLOCATORS.get(className);
+		if (jsonAllocator == null)
+		{
+			return null;
+		}
+		return jsonAllocator.create(p);
 	}
 	
 	

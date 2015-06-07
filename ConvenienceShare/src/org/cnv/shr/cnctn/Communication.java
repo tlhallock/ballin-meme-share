@@ -7,19 +7,15 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
 import javax.crypto.NoSuchPaddingException;
-import javax.json.Json;
 import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
@@ -27,11 +23,13 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.dwn.NewAesKey;
-import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.trck.TrackObjectUtils;
+import org.cnv.shr.util.ConnectionStatistics;
+import org.cnv.shr.util.CountingInputStream;
+import org.cnv.shr.util.CountingOutputStream;
 import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.OutputByteWriter;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
@@ -39,23 +37,20 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 // TODO: this should really only need authentication to UPDATE machine info...
 public class Communication implements Closeable
 {
-	private JsonGenerator logFile; 
-	{ 
-    Map<String, Object> properties = new HashMap<>(1);
-    properties.put(JsonGenerator.PRETTY_PRINTING, true);
-		logFile = Json.createGeneratorFactory(properties).createGenerator(Files.newOutputStream(Paths.get("log." + System.currentTimeMillis() + "." + Math.random() + ".txt")));
-		logFile.writeStartArray();
-	}
+//	private JsonGenerator logFile; 
+//	{ 
+//    Map<String, Object> properties = new HashMap<>(1);
+//    properties.put(JsonGenerator.PRETTY_PRINTING, true);
+//		logFile = Json.createGeneratorFactory(properties).createGenerator(Files.newOutputStream(Paths.get("log." + System.currentTimeMillis() + "." + Math.random() + ".txt")));
+//		logFile.writeStartArray();
+//	}
 	// The streams
 	private Socket socket;
 	
 	private InputStream inputOrig;
 	private OutputStream outputOrig;
-	private InputStream input;
-	private OutputStream output;
-	
-	private ByteReader reader;
-	private OutputByteWriter writer;
+	private JsonParser parser;
+	private JsonGenerator generator;
 	
 	// true if this connection was initiated by the remote.
 	private boolean receivedConnection;
@@ -65,37 +60,54 @@ public class Communication implements Closeable
 	
 	private Authenticator authentication;
 	
+	ConnectionStatistics stats;
+	
 	/** Initiator **/
 	public Communication(Authenticator authentication, String ip, int port) throws UnknownHostException, IOException
 	{
-		socket = new Socket();
-		socket.connect(new InetSocketAddress(ip, port), 2000);
-		outputOrig = output = socket.getOutputStream();
-		inputOrig  = input =  socket.getInputStream();
-		
-		ConnectionStatistics stats = new ConnectionStatistics();
-		reader = new ByteReader(input, stats);
-		writer = new OutputByteWriter(output, stats);
-		
+		this (createSocket(ip, port), authentication);
 		receivedConnection = false;
-		needsMore = true;
-		this.authentication = authentication;
+	}
+	private static Socket createSocket(String ip, int port) throws IOException { 
+		Socket socket = new Socket();
+		socket.connect(new InetSocketAddress(ip, port), 2000);
+		return socket;
 	}
 	
 	/** Receiver **/
 	public Communication(Authenticator authentication, Socket socket) throws IOException
 	{
-		this.socket = socket;
-		inputOrig  = input =  socket.getInputStream();
-		outputOrig = output = socket.getOutputStream();
-		
-		ConnectionStatistics stats = new ConnectionStatistics();
-		reader = new ByteReader(input, stats);
-		writer = new OutputByteWriter(output, stats);
-		
+		this (socket, authentication);
 		receivedConnection = true;
+	}
+	
+	private Communication(Socket socket, Authenticator authentication) throws IOException
+	{
+		this.socket = socket;
+		inputOrig  = new CountingInputStream(socket.getInputStream());
+		outputOrig = new CountingOutputStream(socket.getOutputStream());
+
+		stats = new ConnectionStatistics((CountingInputStream) inputOrig, (CountingOutputStream) outputOrig);
+		
 		needsMore = true;
 		this.authentication = authentication;
+
+		generator = TrackObjectUtils.createGenerator(outputOrig);
+		generator.writeStartArray();
+	}
+	
+	void listen()
+	{
+		parser = TrackObjectUtils.createParser(inputOrig);
+		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+		{
+			System.out.println("This is bad...");
+		}
+	}
+	
+	public JsonParser getParser()
+	{
+		return parser;
 	}
 
 	public String getIp()
@@ -109,9 +121,6 @@ public class Communication implements Closeable
 	
 	public synchronized void send(Message m) throws IOException
 	{
-		m.generate(logFile);
-		logFile.flush();
-		
 		if (socket.isOutputShutdown())
 		{
 			LogWrapper.getLogger().info("Connection closed. cant send " + m);
@@ -122,22 +131,25 @@ public class Communication implements Closeable
 		
 		LogWrapper.getLogger().info("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
 
-		synchronized (output)
+		synchronized (generator)
 		{
 			// Should re-encrypt every so often...
-			m.write(this, writer);
-			output.flush();
+			m.generate(generator);
+			generator.flush();
+			outputOrig.flush();
 		}
 	}
 
 	public void flush() throws IOException
 	{
-		output.flush();
+		generator.flush();
+		outputOrig.flush();
 	}
 
 	public ConnectionStatistics getStatistics()
 	{
-		return this.getReader().getStatistics();
+		stats.refresh();
+		return stats;
 	}
 
 	public boolean isClosed()
@@ -145,18 +157,13 @@ public class Communication implements Closeable
 		return socket.isClosed();
 	}
 
-	public ByteReader getReader()
-	{
-		return reader;
-	}
-	
 	public OutputStream getOut()
 	{
-		return output;
+		return outputOrig;
 	}
 	public InputStream getIn()
 	{
-		return input;
+		return inputOrig;
 	}
 
 	public void setRemoteIdentifier(String remoteIdentifier)
@@ -211,8 +218,6 @@ public class Communication implements Closeable
 		{
 			e1.printStackTrace();
 		}
-		logFile.writeEnd();
-		logFile.close();
 		try
 		{
 			socket.shutdownOutput();
@@ -276,19 +281,31 @@ public class Communication implements Closeable
 		}
 	}
 	
-	
+	/** Don't let these be finalized. **/
+	private static JsonGenerator oldGen;
+	private static JsonParser oldParser;
 	public synchronized void encrypt() throws InvalidKeyException, IOException
 	{
 		RijndaelKey key = KeysService.createAesKey();
 		send(new NewAesKey(key, authentication.getRemoteKey()));
-		output.flush();
-		output = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key);
-		writer = new OutputByteWriter(output);
+		generator.writeEnd();
+		generator.flush();
+		oldGen = generator;
+		generator = TrackObjectUtils.createGenerator(outputOrig = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
+		generator.writeStartArray();
 	}
-	
+
 	public synchronized void decrypt(RijndaelKey key) throws InvalidKeyException
 	{
-		input = FlushableEncryptionStreams.createEncryptedInputStream(input, key);
-		reader = new ByteReader(input, reader.getStatistics());
+		if (!parser.next().equals(JsonParser.Event.END_ARRAY))
+		{
+			System.out.println("This is bad...");
+		}
+		oldParser = parser;
+		parser = TrackObjectUtils.createParser(inputOrig = FlushableEncryptionStreams.createEncryptedInputStream(inputOrig, key));
+		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+		{
+			System.out.println("This is bad...");
+		}
 	}
 }

@@ -1,7 +1,11 @@
 package org.cnv.shr.trck;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonException;
@@ -15,8 +19,49 @@ import org.cnv.shr.util.LogWrapper;
 
 public class TrackObjectUtils
 {
-	public static final JsonGeneratorFactory generatorFactory = Json.createGeneratorFactory(null);
-	public static final JsonParserFactory parserFactory = Json.createParserFactory(null);
+  private static final Charset UTF_8 = Charset.forName("UTF-8");
+	private static final JsonGeneratorFactory generatorFactory = createGeneratorFactory();
+	private static JsonGeneratorFactory createGeneratorFactory()
+	{
+    Map<String, Object> properties = new HashMap<>(1);
+//    properties.put(JsonGenerator.PRETTY_PRINTING, true);
+		return Json.createGeneratorFactory(properties);
+	}
+	private static final JsonParserFactory parserFactory = Json.createParserFactory(null);
+	
+	public static JsonGenerator createGenerator(OutputStream output)
+	{
+		return generatorFactory.createGenerator(output, UTF_8);
+		
+	}
+	public static JsonParser createParser(InputStream input)
+	{
+		return parserFactory.createParser(input, UTF_8);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	static String toString(TrackObject machineEntry)
 	{

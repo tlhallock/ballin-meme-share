@@ -30,10 +30,7 @@ public class ConnectionManager
 			// Should try all other ports too...
 			return openConnection(url, Services.settings.servePortBeginE.get(), 1, null, acceptKeys);
 		}
-		else
-		{
-			return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), 1, null, acceptKeys);
-		}
+		return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), 1, null, acceptKeys);
 	}
 	public Communication openConnection(Machine m, boolean acceptKeys) throws UnknownHostException, IOException
 	{
@@ -54,6 +51,7 @@ public class ConnectionManager
 		}
 		connection.send(new WhoIAm());
 		connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
+		connection.listen();
 		Services.notifications.connectionOpened(connection);
 		ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
 		synchronized (runnables) { runnables.add(connectionRunnable); }
@@ -88,6 +86,7 @@ public class ConnectionManager
 		Authenticator authentication = new Authenticator();
 		Communication connection = new Communication(authentication, accepted);
 		connection.send(new WhoIAm());
+		connection.listen();
 		Services.notifications.connectionOpened(connection);
 		try
 		{

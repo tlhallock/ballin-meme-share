@@ -10,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.util.logging.Level;
@@ -87,6 +89,15 @@ public class MachineViewer extends javax.swing.JFrame
         pack();
 		
 		addPermissionListeners();
+		
+			addWindowListener(new WindowAdapter()
+			{
+				@Override
+				public void windowClosing(WindowEvent e)
+				{
+					model.closeConnections();
+				}
+			});
     }
 
     private void addPermissionListeners()
@@ -98,6 +109,7 @@ public class MachineViewer extends javax.swing.JFrame
 			public void stateChanged(ChangeEvent arg0)
 			{
 				Machine machine = getMachine();
+				if (machine == null) return;
 				if (machine.isLocal())
 				{
 					return;
@@ -122,6 +134,7 @@ public class MachineViewer extends javax.swing.JFrame
 			protected void setPermission(SharingState state)
 			{
 				Machine machine = getMachine();
+				if (machine == null) return;
 				machine.setWeShare(state);
 				machine.tryToSave();
 			}
@@ -135,12 +148,19 @@ public class MachineViewer extends javax.swing.JFrame
     		return null;
     	}
     	
-    	return DbRoots.getRoot(getMachine(), rootDirectoryName);
+    	Machine machine = getMachine();
+			if (machine == null) return null;
+			return DbRoots.getRoot(machine, rootDirectoryName);
     }
     
 	public Machine getMachine()
 	{
-        return DbMachines.getMachine(machineIdent);
+        Machine machine = DbMachines.getMachine(machineIdent);
+        if (machine == null)
+        {
+        	dispose();
+        }
+				return machine;
     }
 
     public void refreshRoot(final RemoteDirectory remote) {
@@ -177,6 +197,7 @@ public class MachineViewer extends javax.swing.JFrame
                         public void run() {
                             try {
                             	Machine machine = getMachine();
+                      				if (machine == null) return;
                                 final RootDirectory root = DbRoots.getRoot(machine, mId);
                                 if (root == null) {
                                     LogWrapper.getLogger().info("Unable to find root mid=" + machine + " name=" + mId);
@@ -908,6 +929,7 @@ public class MachineViewer extends javax.swing.JFrame
     	Services.userThreads.execute(new Runnable() { @Override
 			public void run() { try {
         	Machine machine = getMachine();
+  				if (machine == null) return;
             Communication connection = Services.networkManager.openConnection(machine, false);
             if (connection != null) {
                 connection.send(new UserMessageMessage(UserMessage.createShareRequest()));
@@ -936,7 +958,9 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        UserActions.syncRoots(getMachine());
+        Machine machine = getMachine();
+				if (machine == null) return;
+				UserActions.syncRoots(machine);
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void changePathButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changePathButtonActionPerformed
@@ -944,7 +968,9 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_changePathButtonActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-    	CreateMessage createMessage = new CreateMessage(getMachine());
+    	Machine machine = getMachine();
+			if (machine == null) return;
+			CreateMessage createMessage = new CreateMessage(machine);
         Services.notifications.registerWindow(createMessage);
 		createMessage.setVisible(true);
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -952,9 +978,11 @@ public class MachineViewer extends javax.swing.JFrame
     private void requestDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestDownloadButtonActionPerformed
     	Services.userThreads.execute(new Runnable() { @Override
 			public void run() { try {
-            Communication connection = Services.networkManager.openConnection(getMachine(), false);
+            Machine machine = getMachine();
+    				if (machine == null) return;
+						Communication connection = Services.networkManager.openConnection(machine, false);
             if (connection != null) {
-				RootDirectory directory = getRootDirectory();
+            		RootDirectory directory = getRootDirectory();
                 connection.send(new UserMessageMessage(UserMessage.createShareRootRequest(directory)));
                 connection.finish();
                 
@@ -971,7 +999,9 @@ public class MachineViewer extends javax.swing.JFrame
     private void requestShareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestShareButtonActionPerformed
         Services.userThreads.execute(new Runnable() { @Override
 				public void run() { try {
-            Communication connection = Services.networkManager.openConnection(getMachine(), false);
+            Machine machine = getMachine();
+    				if (machine == null) return;
+						Communication connection = Services.networkManager.openConnection(machine, false);
             if (connection != null) {
 				RootDirectory directory = getRootDirectory();
                 connection.send(new UserMessageMessage(UserMessage.createListRequest(directory)));

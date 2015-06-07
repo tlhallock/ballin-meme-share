@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.PermissionException;
+import org.cnv.shr.util.ConnectionStatistics;
 import org.cnv.shr.util.LogWrapper;
 
 public class ConnectionRunnable implements Runnable
@@ -28,7 +29,7 @@ public class ConnectionRunnable implements Runnable
 		{
 			while (connection.needsMore())
 			{
-				Message request = Services.msgReader.readMsg(connection.getReader());
+				Message request = Services.msgReader.readMsg(connection.getParser());
 				
 				if (request == null || !authentication.authenticate(request))
 				{

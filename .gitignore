@@ -25,7 +25,6 @@ instances/
 Installer/manifest.mf
 *keys.txt
 *~
-Common/json/
 Common/.classpath
 ConvenienceShare/.classpath
 *settings.props

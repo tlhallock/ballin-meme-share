@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
@@ -23,9 +22,9 @@ public class Main
 		a.parseArgs(args);
 		Settings settings;
 		
-		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
-		a.settings.servePortBeginE.set(9990);
-		a.settings.servePortBeginI.set(9990);
+//		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
+//		a.settings.servePortBeginE.set(9990);
+//		a.settings.servePortBeginI.set(9990);
 		a.showGui = true;
 
 		System.out.println("Settings file: " + a.settings.getSettingsFile());

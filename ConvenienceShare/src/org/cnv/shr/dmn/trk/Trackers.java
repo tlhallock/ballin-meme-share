@@ -36,7 +36,7 @@ public class Trackers
 	public void save(Path trackersFile)
 	{
 		Misc.ensureDirectory(trackersFile, true);
-		try (JsonGenerator generator = TrackObjectUtils.generatorFactory.createGenerator(Files.newOutputStream(trackersFile));)
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(Files.newOutputStream(trackersFile));)
 		{
 			generator.writeStartArray();
 			for (TrackerClient client : trackers.values())
