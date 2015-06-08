@@ -535,7 +535,11 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 	case "org.cnv.shr.json.JsonList":
 	case "org.cnv.shr.json.JsonStringList":
 	case "org.cnv.shr.json.JsonMap":
-		
+		output.println("\t\tif (" + fieldName + "!=null){");
+		output.println("\t\t\tgenerator.writeStartArray(\"" + fieldName + "\");");
+		output.println("\t\t\t" + fieldName + ".generate(generator);");
+		output.println("\t\t}");
+		return;
 	case "org.cnv.shr.msg.RootListChild":
 	case "org.cnv.shr.dmn.dwn.Chunk":
 	case "org.cnv.shr.dmn.dwn.SharedFileId":

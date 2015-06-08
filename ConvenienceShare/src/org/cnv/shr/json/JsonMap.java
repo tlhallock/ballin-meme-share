@@ -21,7 +21,7 @@ public class JsonMap extends HashMap<PublicKey, byte[]> implements Jsonable
 
 	public void generate(JsonGenerator generator)
 	{
-		generator.writeStartArray();
+//		generator.writeStartArray();
 		for (java.util.Map.Entry<PublicKey, byte[]> entry : entrySet())
 		{
 			generator.write(KeyPairObject.serialize(entry.getKey()), Misc.format(entry.getValue()));

@@ -25,7 +25,7 @@ public class RootList extends Message
 {
 	public static int TYPE = 3;
 	
-	private JsonList<RootListChild> sharedDirectories = new JsonList<>(RootListChild.class.getName());
+	private JsonList<RootListChild> sharedDirectories = new JsonList<>(RootListChild.getJsonName());
 
 	public RootList()
 	{
@@ -136,8 +136,10 @@ public class RootList extends Message
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
-		if (sharedDirectories!=null)
-		sharedDirectories.generate(generator);
+		if (sharedDirectories!=null){
+			generator.writeStartArray("sharedDirectories");
+			sharedDirectories.generate(generator);
+		}
 		generator.writeEnd();
 	}
 	@Override                                    

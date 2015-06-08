@@ -19,7 +19,7 @@ public class JsonList<T extends Jsonable> extends LinkedList<T>
 
 	public void generate(JsonGenerator generator)
 	{
-		generator.writeStartArray();
+//		generator.writeStartArray();
 		
 		for (T t : this)
 		{

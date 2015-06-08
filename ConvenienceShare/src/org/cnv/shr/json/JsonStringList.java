@@ -14,7 +14,7 @@ public class JsonStringList extends LinkedList<String>
 
 	public void generate(JsonGenerator generator)
 	{
-		generator.writeStartArray();
+//		generator.writeStartArray();
 		
 		for (String t : this)
 		{

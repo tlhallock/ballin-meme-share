@@ -2,7 +2,6 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.json.stream.JsonGenerator;
@@ -19,7 +18,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class ChunkList extends DownloadMessage
 {
-	private JsonList<Chunk> chunks = new JsonList<>(Chunk.class.getName());
+	private JsonList<Chunk> chunks = new JsonList<>(Chunk.getJsonName());
 
 	public static int TYPE = 11;
 	
@@ -88,8 +87,10 @@ public class ChunkList extends DownloadMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
-		if (chunks!=null)
-		chunks.generate(generator);
+		if (chunks!=null){
+			generator.writeStartArray("chunks");
+			chunks.generate(generator);
+		}
 		if (descriptor!=null)
 		descriptor.generate(generator);
 		generator.writeEnd();

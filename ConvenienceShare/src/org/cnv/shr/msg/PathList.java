@@ -32,7 +32,7 @@ public class PathList extends Message
 	private String name;
 	private String currentPath;
 	private JsonStringList subDirs = new JsonStringList();
-	private JsonList<PathListChild> children = new JsonList<>(PathListChild.class.getName());
+	private JsonList<PathListChild> children = new JsonList<>(PathListChild.getJsonName());
 
 	public PathList(final InputStream input) throws IOException
 	{
@@ -188,10 +188,14 @@ public class PathList extends Message
 		generator.write("name", name);
 		if (currentPath!=null)
 		generator.write("currentPath", currentPath);
-		if (subDirs!=null)
-		subDirs.generate(generator);
-		if (children!=null)
-		children.generate(generator);
+		if (subDirs!=null){
+			generator.writeStartArray("subDirs");
+			subDirs.generate(generator);
+		}
+		if (children!=null){
+			generator.writeStartArray("children");
+			children.generate(generator);
+		}
 		generator.writeEnd();
 	}
 	@Override                                    

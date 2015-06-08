@@ -27,7 +27,6 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.ConnectionStatistics;
 import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.CountingOutputStream;
-import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 
@@ -202,8 +201,8 @@ public class Communication implements Closeable
 		else
 		{
 			LogWrapper.getLogger().info("Remote failed authentication.");
+			authentication.notifyAuthentication();
 		}
-		authentication.notifyAuthentication();
 	}
 
 	boolean needsMore()
@@ -221,14 +220,14 @@ public class Communication implements Closeable
 		{
 			e1.printStackTrace();
 		}
-		try
-		{
-			socket.shutdownOutput();
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to close output.", e);
-		}
+//		try
+//		{
+//			socket.shutdownOutput();
+//		}
+//		catch (IOException e)
+//		{
+//			LogWrapper.getLogger().log(Level.INFO, "Unable to close output.", e);
+//		}
 		Services.timer.schedule(new TimerTask() {
 			@Override
 			public void run()
@@ -294,22 +293,26 @@ public class Communication implements Closeable
 		generator.writeEnd();
 		generator.flush();
 		oldGen = generator;
-		generator = TrackObjectUtils.createGenerator(outputOrig = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
+		((CountingOutputStream) outputOrig).stopOtherSide();
+		generator = TrackObjectUtils.createGenerator(outputOrig);// = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
 		generator.writeStartArray();
+		generator.write("this is a long string.");
 		generator.flush();
 	}
 
-	public synchronized void decrypt(RijndaelKey key) throws InvalidKeyException
+	public synchronized void decrypt(RijndaelKey key) throws InvalidKeyException, IOException
 	{
 		if (!parser.next().equals(JsonParser.Event.END_ARRAY))
 		{
 			System.out.println("This is bad...");
 		}
 		oldParser = parser;
-		parser = TrackObjectUtils.createParser(inputOrig = FlushableEncryptionStreams.createEncryptedInputStream(inputOrig, key));
+		((CountingInputStream) inputOrig).startAgain();
+		parser = TrackObjectUtils.createParser(inputOrig);// = FlushableEncryptionStreams.createEncryptedInputStream(inputOrig, key));
 		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
 		{
 			System.out.println("This is bad...");
 		}
+		authentication.notifyAuthentication();
 	}
 }

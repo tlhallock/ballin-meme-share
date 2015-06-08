@@ -113,8 +113,10 @@ public class KeyNotFound extends KeyMessage
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
 		generator.writeStartObject();
-		if (tests!=null)
-		tests.generate(generator);
+		if (tests!=null){
+			generator.writeStartArray("tests");
+			tests.generate(generator);
+		}
 		generator.writeEnd();
 	}
 	@Override                                    
