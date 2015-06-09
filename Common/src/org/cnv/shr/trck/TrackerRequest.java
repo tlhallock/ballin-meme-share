@@ -81,7 +81,7 @@ public class TrackerRequest implements TrackObject
 		return params.get(string);
 	}
 
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 
 	@Override
 	public void generate(JsonGenerator generator)
@@ -96,5 +96,5 @@ public class TrackerRequest implements TrackObject
 		// TODO Auto-generated method stub
 		
 	}
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

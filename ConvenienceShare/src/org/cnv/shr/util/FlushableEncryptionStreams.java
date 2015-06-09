@@ -190,9 +190,30 @@ public class FlushableEncryptionStreams
 			delegate.close();
 		}
 		
-		public int available()
+		public int available() throws IOException
 		{
-			return 100;
+			// rough guess
+			int retVal1 = cipherStream.available();
+			if (retVal1 != 0)
+			{
+				return retVal1;
+			}
+			return delegate.available();
+		}
+
+		public int read(byte b[], int off, int len) throws IOException
+		{
+			if (b == null || b.length < 1)
+			{
+				throw new NullPointerException();
+			}
+			int read =  read();
+			if (read < 0)
+			{
+				return -1;
+			}
+			b[0] = (byte) read;
+			return 1;
 		}
 	}
 
@@ -232,9 +253,9 @@ public class FlushableEncryptionStreams
 		@Override
 		public void flush() throws IOException
 		{
-			cipherStream.close();
 			buffer.flush(delegate);
 			delegate.flush();
+			cipherStream.close();
 
 			cipher = createCipher();
 			try

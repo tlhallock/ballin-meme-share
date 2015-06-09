@@ -56,7 +56,7 @@ public class Failure extends Message
 		return TYPE;
 	}
 
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
@@ -95,5 +95,5 @@ public class Failure extends Message
 	}
 	public static String getJsonName() { return "Failure"; }
 	public Failure(JsonParser parser) { parse(parser); }
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -61,10 +61,9 @@ public class RootListChild implements Jsonable
 		return name;
 	}
 
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
 		generator.writeStartObject();
 		if (name!=null)
 		generator.write("name", name);
@@ -135,5 +134,5 @@ public class RootListChild implements Jsonable
 	}
 	public static String getJsonName() { return "RootListChild"; }
 	public RootListChild(JsonParser parser) { parse(parser); }
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

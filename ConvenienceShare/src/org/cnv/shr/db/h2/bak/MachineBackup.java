@@ -60,10 +60,9 @@ public class MachineBackup implements Jsonable
 	
 	
 
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
 		generator.writeStartObject();
 		if (ip!=null)
 		generator.write("ip", ip);
@@ -194,5 +193,5 @@ public class MachineBackup implements Jsonable
 	}
 	public static String getJsonName() { return "MachineBackup"; }
 	public MachineBackup(JsonParser parser) { parse(parser); }
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

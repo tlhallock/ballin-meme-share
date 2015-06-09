@@ -25,6 +25,9 @@ public abstract class SharedFile extends DbObject<Integer>
 	protected String tags;
 	protected long lastModified;
 	
+	
+	public static final int CHECKSUM_LENGTH = 40;
+	
 
 	public SharedFile(Integer int1) {
 		super(int1);

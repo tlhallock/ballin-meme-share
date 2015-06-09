@@ -111,10 +111,9 @@ public class FileEntry implements TrackObject
 	}
 
 	
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
 		generator.writeStartObject();
 		if (checksum!=null)
 		generator.write("checksum", checksum);
@@ -163,5 +162,5 @@ public class FileEntry implements TrackObject
 	}
 	public static String getJsonName() { return "FileEntry"; }
 	public FileEntry(JsonParser parser) { parse(parser); }
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

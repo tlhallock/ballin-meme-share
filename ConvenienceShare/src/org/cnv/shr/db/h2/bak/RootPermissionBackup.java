@@ -33,10 +33,9 @@ public class RootPermissionBackup implements Jsonable
 	}
 	
 	
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
 		generator.writeStartObject();
 		if (machineIdent!=null)
 		generator.write("machineIdent", machineIdent);
@@ -96,5 +95,5 @@ public class RootPermissionBackup implements Jsonable
 	}
 	public static String getJsonName() { return "RootPermissionBackup"; }
 	public RootPermissionBackup(JsonParser parser) { parse(parser); }
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

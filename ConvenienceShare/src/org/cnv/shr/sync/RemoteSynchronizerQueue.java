@@ -106,6 +106,7 @@ public class RemoteSynchronizerQueue implements Closeable
 		lock.lock();
 		try
 		{
+			LogWrapper.getLogger().info("Received \"" + list.getCurrentPath() + "\"");
 			directories.put(list.getCurrentPath(), list);
 			queue.remove(list.getCurrentPath());
 			lastCommunication = System.currentTimeMillis();
@@ -128,6 +129,8 @@ public class RemoteSynchronizerQueue implements Closeable
 		{
 			return;
 		}
+
+		LogWrapper.getLogger().info("Queuing \"" + path.getFullPath() + "\"");
 		lastCommunication = System.currentTimeMillis();
 		communication.send(new ListPath(root, path));
 		queue.add(path.getFullPath());

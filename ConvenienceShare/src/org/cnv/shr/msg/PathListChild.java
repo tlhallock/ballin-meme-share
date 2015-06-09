@@ -7,6 +7,7 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.MyParserIgnore;
+import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
@@ -18,7 +19,9 @@ public class PathListChild implements Jsonable
 {
 	String name;
 	private long size;
+	@MyParserNullable
 	private String checksum;
+	@MyParserNullable
 	private String tags;
 	private long lastModified;
 
@@ -29,7 +32,7 @@ public class PathListChild implements Jsonable
 	{
 		this.name = l.getPath().getUnbrokenName();
 		this.size = l.getFileSize();
-		this.checksum = l.getChecksum() == null ? "" : l.getChecksum();
+		this.checksum = l.getChecksum();
 		this.tags = l.getTags();
 		this.lastModified = l.getLastUpdated();
 		this.pl = pathList;
@@ -66,10 +69,9 @@ public class PathListChild implements Jsonable
 	}
 
 
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
 		generator.writeStartObject();
 		if (name!=null)
 		generator.write("name", name);
@@ -85,8 +87,6 @@ public class PathListChild implements Jsonable
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsname = true;
-		boolean needschecksum = true;
-		boolean needstags = true;
 		boolean needssize = true;
 		boolean needslastModified = true;
 		while (parser.hasNext()) {                 
@@ -97,14 +97,6 @@ public class PathListChild implements Jsonable
 				if (needsname)
 				{
 					throw new RuntimeException("Message needs name");
-				}
-				if (needschecksum)
-				{
-					throw new RuntimeException("Message needs checksum");
-				}
-				if (needstags)
-				{
-					throw new RuntimeException("Message needs tags");
 				}
 				if (needssize)
 				{
@@ -126,11 +118,9 @@ public class PathListChild implements Jsonable
 				name = parser.getString();
 				break;
 			case "checksum":
-				needschecksum = false;
 				checksum = parser.getString();
 				break;
 			case "tags":
-				needstags = false;
 				tags = parser.getString();
 				break;
 			}
@@ -154,5 +144,5 @@ public class PathListChild implements Jsonable
 	}
 	public static String getJsonName() { return "PathListChild"; }
 	public PathListChild(JsonParser parser) { parse(parser); }
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

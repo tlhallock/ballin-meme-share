@@ -63,7 +63,7 @@ public class DownloadManager
 		}
 
 		String checksum = d.getFile().getChecksum();
-		if (checksum == null)
+		if (checksum == null || checksum.length() != SharedFile.CHECKSUM_LENGTH)
 		{
 			LogWrapper.getLogger().info("File is not checksummed.");
 			initiator.requestChecksum(d.getFile());

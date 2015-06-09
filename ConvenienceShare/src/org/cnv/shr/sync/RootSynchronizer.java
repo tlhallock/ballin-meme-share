@@ -2,7 +2,6 @@
 package org.cnv.shr.sync;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -145,10 +144,7 @@ public abstract class RootSynchronizer implements Runnable
 	{
 		final String name = PathElement.sanitizeFilename(f);
 		if (name == null 
-				|| accountedFor.contains(name)
-				|| !local.pathIsSecure(
-						Paths.get(/*local.getPathElement().getFsPath(), */
-								f.getCanonicalPath()).normalize()))
+				|| accountedFor.contains(name))
 		{
 			return;
 		}
@@ -189,14 +185,7 @@ public abstract class RootSynchronizer implements Runnable
 			
 			return;
 		}
-		
-		if (!local.pathIsSecure(
-				Paths.get(local.getPathElement().getFsPath(), 
-						fsCopy.getCanonicalPath()).normalize()))
-		{
-			return;
-		}
-		
+
 		if (fsCopy.isDirectory())
 		{
 			// nothing to be done

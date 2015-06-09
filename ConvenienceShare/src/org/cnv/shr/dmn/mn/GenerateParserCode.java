@@ -39,6 +39,7 @@ import org.cnv.shr.msg.ListPath;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.msg.MachineFound;
+import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.PathList;
 import org.cnv.shr.msg.PathListChild;
 import org.cnv.shr.msg.RootList;
@@ -109,7 +110,7 @@ public class GenerateParserCode
 
 	public static void main(String[] args) throws IOException
 	{
-		for (Class c : new Class[]
+		for (Class<?> c : new Class[]
 			{
 				TrackerEntry.class               ,
 				MachineEntry.class               ,
@@ -204,13 +205,13 @@ public class GenerateParserCode
 		}
 	}
 
-	private static void printParser(PrintStream output, Class c)
+	private static void printParser(PrintStream output, Class<?> c)
 	{
 		HashMap<Event, List<Parser>> parsers = getParsersFor(c);
 		printParsers(parsers, output);
 	}
 
-	private static HashMap<Event, List<Parser>> getParsersFor(Class c)
+	private static HashMap<Event, List<Parser>> getParsersFor(Class<?> c)
 	{
 		HashMap<Event, List<Parser>> parsers = new HashMap<>();
 		while (shouldContinue(c))
@@ -498,11 +499,14 @@ public class GenerateParserCode
 		}
 	}
 
-	private static void printGenerator(PrintStream output, Class c)
+	private static void printGenerator(PrintStream output, Class<?> c)
 	{
 		output.println("\t@Override");
 		output.println("\tpublic void generate(JsonGenerator generator) {");
-		output.println("\t\tgenerator.write(getJsonName());");
+		if (Message.class.isAssignableFrom(c))
+		{
+			output.println("\t\tgenerator.write(getJsonName());");
+		}
 		output.println("\t\tgenerator.writeStartObject();");
 
 		while (shouldContinue(c))
@@ -521,7 +525,7 @@ public class GenerateParserCode
 		output.println("\t}");
 	}
 
-private static void printField(PrintStream output, Class typeName, String fieldName, Type genericType)
+private static void printField(PrintStream output, Class<?> typeName, String fieldName, Type genericType)
 {
 	switch (typeName.getName())
 	{
@@ -577,7 +581,7 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 	}
 }
 	
-	private static Path getPathForFile(Class c)
+	private static Path getPathForFile(Class<?> c)
 	{
 		String other = c.getName().replace(".", "/") + ".java";
 		for (Path p : rootDirs)
@@ -591,7 +595,7 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 		return null;
 	}
 	
-	private static void replaceFile(Class c) throws IOException 
+	private static void replaceFile(Class<?> c) throws IOException 
 	{
 		Path original = getPathForFile(c);
 		Path backup   = Paths.get(original.toString() + ".new");
@@ -641,7 +645,7 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 		}
 	}
 
-	private static void printConstructor(PrintStream ps, Class c)
+	private static void printConstructor(PrintStream ps, Class<?> c)
 	{
 		if (c.getName().equals(org.cnv.shr.db.h2.SharingState.class.getName()))
 		{
@@ -651,7 +655,7 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 		ps.println("\tpublic " + substring + "(JsonParser parser) { parse(parser); }");
 	}
 
-	private static void printType(PrintStream ps, Class c)
+	private static void printType(PrintStream ps, Class<?> c)
 	{
 		String substring = c.getName().substring(c.getName().lastIndexOf('.') + 1);
 		if (!keys.add(substring))
@@ -681,7 +685,7 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 		Files.delete(origin);
 	}
 	
-	private static boolean shouldContinue(Class c)
+	private static boolean shouldContinue(Class<?> c)
 	{
 		return c != null && c.getName().startsWith("org.cnv.shr");
 	}
@@ -802,6 +806,6 @@ private static void printField(PrintStream output, Class typeName, String fieldN
 //output.println("\t\tgenerator.writeEnd();");
 //break;
 	
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

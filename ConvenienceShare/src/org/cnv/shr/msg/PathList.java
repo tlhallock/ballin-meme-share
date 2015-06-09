@@ -120,6 +120,10 @@ public class PathList extends Message
 	@Override
 	public void perform(final Communication connection) throws Exception
 	{
+		for (PathListChild child : children)
+		{
+			child.setParent(this);
+		}
 		getRoot(connection.getMachine());
 		final RemoteSynchronizerQueue sync = Services.syncs.getSynchronizer(connection, getRoot());
 		if (sync == null)
@@ -179,7 +183,7 @@ public class PathList extends Message
 	}
 	
 
-	// GENERATED CODE: DO NET EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator) {
 		generator.write(getJsonName());
@@ -262,5 +266,5 @@ public class PathList extends Message
 	}
 	public static String getJsonName() { return "PathList"; }
 	public PathList(JsonParser parser) { parse(parser); }
-	// GENERATED CODE: DO NET EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

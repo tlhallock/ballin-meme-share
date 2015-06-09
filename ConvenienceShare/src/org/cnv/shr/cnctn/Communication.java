@@ -296,7 +296,6 @@ public class Communication implements Closeable
 		((CountingOutputStream) outputOrig).stopOtherSide();
 		generator = TrackObjectUtils.createGenerator(outputOrig);// = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
 		generator.writeStartArray();
-		generator.write("this is a long string.");
 		generator.flush();
 	}
 

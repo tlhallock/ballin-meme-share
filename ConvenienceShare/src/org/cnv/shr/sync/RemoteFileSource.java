@@ -74,7 +74,7 @@ public class RemoteFileSource implements FileSource
 		final Iterator<PathListChild> children = directoryList.getChildren().iterator();
 		return new FileSourceIterator()
 		{
-			boolean onFiles;
+			boolean onFiles; // really means off files...
 			
 			@Override
 			public boolean hasNext()

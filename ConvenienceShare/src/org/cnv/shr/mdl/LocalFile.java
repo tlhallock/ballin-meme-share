@@ -68,6 +68,17 @@ public class LocalFile extends SharedFile
 			LogWrapper.getLogger().log(Level.INFO, "Unable to checksum " + this, ex);
 		}
 	}
+	
+	
+	@Override
+	public boolean save(ConnectionWrapper c) throws SQLException
+	{
+		if (!getRootDirectory().contains(getFsFile()))
+		{
+			return false;
+		}
+		return super.save(c);
+	}
 
 	private boolean shouldChecksum()
 	{
@@ -80,11 +91,6 @@ public class LocalFile extends SharedFile
 		return (LocalDirectory) rootDirectory;
 	}
 	
-	public String getFullPath()
-	{
-		return rootDirectory.getPathElement().getFullPath() + File.separatorChar + path.getFullPath();
-	}
-
 	/**
 	 * @return true if something has changed.
 	 * @throws SQLException 
@@ -99,7 +105,7 @@ public class LocalFile extends SharedFile
 			return true;
 		}
 
-		Path fsCopy = Paths.get(getFullPath());
+		Path fsCopy = getFsFile();
 		long fsLastModified = Files.getLastModifiedTime(fsCopy).toMillis();
 		if (fsLastModified <= lastModified)
 		{
@@ -156,7 +162,7 @@ public class LocalFile extends SharedFile
 	
 	public boolean exists()
 	{
-		return new File(getFullPath()).exists();
+		return Files.exists(getFsFile());
 	}
 
 	public Path getFsFile()

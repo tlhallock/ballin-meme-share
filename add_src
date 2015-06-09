@@ -1,0 +1,5 @@
+git add Common/src/org/cnv/shr/
+git add Updater/src/org/cnv/shr/
+git add Tracker/src/org/cnv/shr/
+git add ConvenienceShare/src/org/cnv/shr/
+git add scripts/build.xml

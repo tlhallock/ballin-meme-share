@@ -15,6 +15,7 @@ public final class CountingOutputStream extends OutputStream
 	private long soFar;
 	
 	
+	
 
 private OutputStream logFile; 
 { 
@@ -22,7 +23,7 @@ private OutputStream logFile;
   properties.put(JsonGenerator.PRETTY_PRINTING, true);
 	try
 	{
-		logFile = Files.newOutputStream(Paths.get("log." + System.currentTimeMillis() + "." + Math.random() + ".txt"));
+		logFile = Files.newOutputStream(Paths.get("log.out." + System.currentTimeMillis() + "." + Math.random() + ".txt"));
 	}
 	catch (IOException e)
 	{
@@ -54,6 +55,12 @@ private OutputStream logFile;
 	{
 		this.delegate = newInputStream;
 	}
+	
+	public void stopOtherSide() throws IOException
+	{
+		delegate.write(13);
+		delegate.write(0);
+	}
 
 	public long getSoFar()
 	{
@@ -65,6 +72,10 @@ private OutputStream logFile;
 	{
 		soFar++;
 		delegate.write(b);
+		if (b == 13)
+		{
+			delegate.write(b);
+		}
 		logFile.write(b);
 	}
 
