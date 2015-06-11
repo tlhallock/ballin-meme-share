@@ -41,12 +41,14 @@ import org.cnv.shr.util.ByteReader;
 public class ChunkRequest extends DownloadMessage
 {
 	private Chunk chunk;
+	private boolean pleaseCompress;
 
 	public static int TYPE = 16;
-	public ChunkRequest(FileEntry descriptor, Chunk removeFirst)
+	public ChunkRequest(FileEntry descriptor, Chunk removeFirst, boolean compress)
 	{
 		super(descriptor);
 		this.chunk = removeFirst;
+		pleaseCompress = compress;
 	}
 	
 	public ChunkRequest(InputStream stream) throws IOException
@@ -80,7 +82,7 @@ public class ChunkRequest extends DownloadMessage
 			// lost the file...
 		}
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Sending chunk.");
-		Services.server.getServeInstance(connection).serve(chunk);
+		Services.server.getServeInstance(connection).serve(chunk, pleaseCompress);
 	}
 
 	public Chunk getChunk()

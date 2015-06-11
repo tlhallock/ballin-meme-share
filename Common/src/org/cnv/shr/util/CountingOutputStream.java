@@ -37,6 +37,8 @@ public final class CountingOutputStream extends OutputStream
 {
 	private OutputStream delegate;
 	private long soFar;
+
+	boolean rawMode;
 	
 	
 	
@@ -74,10 +76,14 @@ private OutputStream logFile;
 	
 	
 	
-	
 	public CountingOutputStream(OutputStream newInputStream)
 	{
 		this.delegate = newInputStream;
+	}
+	
+	public void setRawMode(boolean rawMode)
+	{
+		this.rawMode = rawMode;
 	}
 	
 	public void stopOtherSide() throws IOException
@@ -96,7 +102,7 @@ private OutputStream logFile;
 	{
 		soFar++;
 		delegate.write(b);
-		if (b == 13)
+		if (b == 13 && !rawMode)
 		{
 			delegate.write(b);
 		}
@@ -119,5 +125,18 @@ private OutputStream logFile;
 	{
 		delegate.close();
 		logFile.close();
+	}
+	
+	@Override
+	public void write(byte[] b, int off, int len) throws IOException
+	{
+		if (rawMode)
+		{
+			delegate.write(b, off, len);
+		}
+		else
+		{
+			super.write(b, off, len);
+		}
 	}
 }

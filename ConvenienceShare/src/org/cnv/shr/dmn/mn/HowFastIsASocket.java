@@ -26,6 +26,55 @@
 
 package org.cnv.shr.dmn.mn;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class HowFastIsASocket {
 
+	public static void main(String[] args) throws IOException
+	{
+		Path p = Paths.get("/media/thallock/OS_Install/Users/thallock/Downloads/kubuntu-15.04-desktop-amd64.iso");
+		new Thread(new Runnable() {
+			@Override
+			public void run()
+			{
+				try
+				{
+					otherThread();
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}).start();
+
+		
+		try (SeekableByteChannel newByteChannel = Files.newByteChannel(p);
+			 ServerSocketChannel server = ServerSocketChannel.open();)
+		{
+			server.socket().bind(new InetSocketAddress(9999));
+			try (SocketChannel accept = server.accept();)
+			{
+				// copy
+			}
+		}
+	}
+
+	private static void otherThread() throws UnknownHostException, IOException
+	{
+			try (SocketChannel socket = SocketChannel.open();)
+			{
+				socket.bind(new InetSocketAddress("127.0.0.1", 9999));
+				
+				// read....
+			}
+	}
 }

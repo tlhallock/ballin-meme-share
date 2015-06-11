@@ -67,6 +67,12 @@ public class Tracker implements Runnable
 			LogWrapper.getLogger().info("Waiting on " + serverSocket.getLocalPort());
 			
 			try (Socket socket       = serverSocket.accept();
+
+					
+					
+					
+					
+					// Should be compressed streams...
 					JsonParser input     = TrackObjectUtils.createParser(socket.getInputStream());
 					JsonGenerator output = TrackObjectUtils.createGenerator(socket.getOutputStream());)
 			{

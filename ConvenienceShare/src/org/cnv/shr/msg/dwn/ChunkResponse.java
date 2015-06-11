@@ -42,12 +42,15 @@ public class ChunkResponse extends DownloadMessage
 {
 	private Chunk chunk;
 	
+	private boolean isCompressed;
+	
 	public static int TYPE = 14;
 	
-	public ChunkResponse(FileEntry descriptor, Chunk c)
+	public ChunkResponse(FileEntry descriptor, Chunk c, boolean compressed)
 	{
 		super(descriptor);
 		chunk = c;
+		this.isCompressed = compressed;
 	}
 	
 	public ChunkResponse(InputStream stream) throws IOException
@@ -80,7 +83,7 @@ public class ChunkResponse extends DownloadMessage
 		{
 			// download not found...
 		}
-		downloadInstance.download(chunk, connection);
+		downloadInstance.download(chunk, connection, isCompressed);
 	}
 	
 	@Override

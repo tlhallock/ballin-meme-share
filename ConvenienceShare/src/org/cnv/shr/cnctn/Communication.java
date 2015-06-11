@@ -347,9 +347,11 @@ public class Communication implements Closeable
 	{
 		generator.writeEnd();
 		generator.close();
+		outputOrig.setRawMode(true);
 	}
 	public void endWriteRaw() throws IOException
 	{
+		outputOrig.setRawMode(false);
 		generator = TrackObjectUtils.createGenerator(outputOrig);
 		generator.writeStartObject();
 		generator.flush();
@@ -362,9 +364,11 @@ public class Communication implements Closeable
 		}
 		parser.close();
 		inputOrig.startAgain();
+		inputOrig.setRawMode(true);
 	}
 	public void endReadRaw() throws IOException
 	{
+		inputOrig.setRawMode(false);
 		parser = TrackObjectUtils.createParser(inputOrig);
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{

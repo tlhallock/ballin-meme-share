@@ -40,7 +40,7 @@ public final class CountingInputStream extends InputStream
 	private long soFar;
 	private boolean paused;
 	
-	
+	boolean rawMode;
 	
 	
 	
@@ -100,6 +100,11 @@ private OutputStream logFile;
 	{
 		this.delegate = newInputStream;
 	}
+
+	public void setRawMode(boolean rawMode)
+	{
+		this.rawMode = rawMode;
+	}
 	
 	@Override
 	public int read() throws IOException
@@ -111,7 +116,7 @@ private OutputStream logFile;
 		soFar++;
 		int read = delegate.read();
 		logFile.write(read);
-		if (read == 13 && delegate.read() != 13)
+		if (!rawMode && read == 13 && delegate.read() != 13)
 		{
 			paused = true;
 			return -1;
@@ -161,6 +166,10 @@ private OutputStream logFile;
 	
 	public int read(byte b[], int off, int len) throws IOException
 	{
+		if (rawMode)
+		{
+			return delegate.read(b, off, len);
+		}
 		if (b == null || b.length < 1)
 		{
 			throw new NullPointerException();
@@ -170,7 +179,7 @@ private OutputStream logFile;
 		{
 			return -1;
 		}
-		b[0] = (byte) read;
+		b[off] = (byte) read;
 		return 1;
 	}
 }

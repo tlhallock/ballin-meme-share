@@ -269,7 +269,9 @@ public class DownloadInstance
 			Seeder removeFirst = freeSeeders.removeFirst();
 			try
 			{
-				removeFirst.request(remoteFile.getFileEntry(), c);
+				boolean shouldCompress = c.getSize() > 50 && remoteFile.getPath().getUnbrokenName().endsWith(".txt");
+				shouldCompress = true;
+				removeFirst.request(remoteFile.getFileEntry(), c, shouldCompress);
 				pendingSeeders.put(c, removeFirst);
 				LogWrapper.getLogger().info("Requested chunk " + c + " from " + removeFirst);
 			}
@@ -302,19 +304,19 @@ public class DownloadInstance
 		return;
 	}
 
-	public synchronized void download(Chunk chunk, Communication connection) throws IOException, NoSuchAlgorithmException
+	public synchronized void download(Chunk chunk, Communication connection, boolean compressed) throws IOException, NoSuchAlgorithmException
 	{
-		Seeder chunkRequest = pendingSeeders.remove(chunk);
-		if (chunkRequest == null)
+		Seeder resquestedSeeder = pendingSeeders.remove(chunk);
+		if (resquestedSeeder == null)
 		{
 			LogWrapper.getLogger().info("Some seeder gave an unknown chunk.");
 			return;
 		}
-		freeSeeders.addLast(chunkRequest);
+		freeSeeders.addLast(resquestedSeeder);
 		
-		chunkRequest.requestCompleted(null, chunk);
+		resquestedSeeder.requestCompleted(null, chunk);
 		connection.beginReadRaw();
-		ChunkData.read(chunk, destination.toFile(), connection.getIn());
+		ChunkData.read(chunk, destination.toFile(), connection.getIn(), compressed);
 		connection.endReadRaw();
 		
 		DbChunks.chunkDone(download, chunk, true);

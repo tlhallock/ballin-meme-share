@@ -51,9 +51,9 @@ public class Seeder
 		this.connection = openConnection;
 	}
 	
-	public ChunkRequest request(FileEntry descriptor, Chunk removeFirst) throws IOException
+	public ChunkRequest request(FileEntry descriptor, Chunk removeFirst, boolean compress) throws IOException
 	{
-		ChunkRequest msg = new ChunkRequest(descriptor, removeFirst);
+		ChunkRequest msg = new ChunkRequest(descriptor, removeFirst, compress);
 		lastRequest = System.currentTimeMillis();
 		connection.send(msg);
 		return msg;

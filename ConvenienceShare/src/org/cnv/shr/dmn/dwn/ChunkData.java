@@ -35,6 +35,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.cnv.shr.dmn.ChecksumManager;
 import org.cnv.shr.stng.Settings;
@@ -43,29 +45,30 @@ import org.cnv.shr.stng.Settings;
 // TODO: java nio
 public class ChunkData
 {
-	public static void read(Chunk chunk, File f, InputStream input) throws IOException, NoSuchAlgorithmException
+	public static void read(Chunk chunk, File f, InputStream input, boolean compressed) throws IOException, NoSuchAlgorithmException
 	{
-		final InputStream oInput = input;
-//		input = new GZIPInputStream(new InputStream() {
-//			@Override
-//			public int read() throws IOException
-//			{
-//				return oInput.read();
-//			}} );
+		if (compressed)
+			input = new GZIPInputStream(input);
 		MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 		
 		try (RandomAccessFile toWrite = new RandomAccessFile(f, "rw"))
 		{
-			toWrite.seek(chunk.getBegin());
-			int numberOfBytes = (int) chunk.getSize();
+			long end    = chunk.getEnd();
+			long offset = chunk.getBegin();
+			toWrite.seek(offset);
 
 			byte[] buffer = new byte[1024];
-			int offset = 0;
 
-			while (offset < numberOfBytes)
+			while (offset < end)
 			{
-				int nread = input.read(buffer, 0, Math.min(numberOfBytes - offset, buffer.length));
-				if (nread < 0 && offset < numberOfBytes)
+				int numToRead = buffer.length;
+				long nRem = end - offset;
+				if (nRem < numToRead)
+				{
+					numToRead = (int) nRem;
+				}
+				int nread = input.read(buffer, 0, numToRead);
+				if (nread < 0 && offset < end)
 				{
 					throw new IOException("Hit end of file too early!");
 				}
@@ -80,20 +83,20 @@ public class ChunkData
 		{
 			throw new IOException("The checksum did not match!");
 		}
+		
+		if (compressed)
+		{
+			// uh oh!
+			// real problem here...
+			// what if the input stream reads past the end of its stream?
+			// maybe zip magic prevents that...
+		}
 	}
 
-	public static void write(Chunk chunk, Path f, OutputStream output) throws IOException
+	public static void write(Chunk chunk, Path f, OutputStream output, boolean compress) throws IOException
 	{
-//		final OutputStream oOutput = output;
-//		output = new GZIPOutputStream(new OutputStream() {
-//			@Override
-//			public void close() {}
-//			@Override
-//			public void write(int arg0) throws IOException
-//			{
-//				output.write(arg0);
-//			}});
-		
+		if (compress)
+			output = new GZIPOutputStream(output);
 		
 		// TODO: Native IO
 		try (RandomAccessFile toRead = new RandomAccessFile(f.toFile(), "r"))
@@ -114,6 +117,13 @@ public class ChunkData
 				output.write(buffer, 0, nread);
 				offset += nread;
 			}
+		}
+		
+		if (compress)
+		{
+			// uh oh, flush!!!
+			// this will stop the other side?? No, its in raw mode.
+			output.close();
 		}
 	}
 	

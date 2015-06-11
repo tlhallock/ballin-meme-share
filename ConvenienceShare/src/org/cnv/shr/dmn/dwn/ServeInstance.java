@@ -184,18 +184,19 @@ public class ServeInstance extends TimerTask
 		}
 	}
 	
-	public void serve(Chunk chunk)
+	public void serve(Chunk chunk, boolean compress)
 	{
 		synchronized (connection.getOutput())
 		{
 			try
 			{
+				boolean compressed = compress && false;
 				LogWrapper.getLogger().info("Sending chunk " + chunk);
-				connection.send(new ChunkResponse(local.getFileEntry(), chunk));
+				connection.send(new ChunkResponse(local.getFileEntry(), chunk, compressed));
 				// Right here I could check that the checksum matches...
 				
 				connection.beginWriteRaw();
-				ChunkData.write(chunk, local.getFsFile(), connection.getOutput());
+				ChunkData.write(chunk, local.getFsFile(), connection.getOutput(), compressed);
 				connection.endWriteRaw();
 			}
 			catch (IOException e)

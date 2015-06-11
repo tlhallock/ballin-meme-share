@@ -48,9 +48,9 @@ public class Main
 		
 //		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
 //		a.settings.applicationDirectory.set(Paths.get("another\\apps"));
-		
+
 		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
-	  a.settings.setDefaultApplicationDirectoryStructure();
+		a.settings.setDefaultApplicationDirectoryStructure();
 		a.settings.servePortBeginE.set(9990);
 		a.settings.servePortBeginI.set(9990);
 		a.showGui = true;
