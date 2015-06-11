@@ -6,6 +6,8 @@
 package org.cnv.shr.gui;
 
 import java.awt.Component;
+import java.awt.ComponentOrientation;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ComponentAdapter;
@@ -13,6 +15,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -136,7 +140,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 
                 refreshKeys();
                 
-		jPanel14.setLayout(new GridLayout(0, 1));
+		jPanel14.setLayout(new FlowLayout());
+        jPanel14.setComponentOrientation(
+                ComponentOrientation.LEFT_TO_RIGHT);
+
     for (String ip : Misc.collectIps())
     {
         JRadioButton button = new JRadioButton(ip);
@@ -310,27 +317,16 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private void initComponents() {
 
         buttonGroup1 = new javax.swing.ButtonGroup();
+        jMenuItem1 = new javax.swing.JMenuItem();
         jTabbedPane2 = new javax.swing.JTabbedPane();
         jPanel11 = new javax.swing.JPanel();
         jComboBox1 = new javax.swing.JComboBox();
-        jCheckBox1 = new javax.swing.JCheckBox();
-        jCheckBox2 = new javax.swing.JCheckBox();
-        jButton3 = new javax.swing.JButton();
-        jButton14 = new javax.swing.JButton();
-        jButton15 = new javax.swing.JButton();
-        jButton13 = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         jButton8 = new javax.swing.JButton();
         addressLabel = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         jPanel14 = new javax.swing.JPanel();
-        Debug = new javax.swing.JButton();
-        jButton16 = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
-        jCheckBox3 = new javax.swing.JCheckBox();
-        jButton19 = new javax.swing.JButton();
-        jButton20 = new javax.swing.JButton();
-        jButton21 = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         jButton2 = new javax.swing.JButton();
         jScrollPane4 = new javax.swing.JScrollPane();
@@ -368,58 +364,48 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jScrollPane8 = new javax.swing.JScrollPane();
         connectionsPanel = new javax.swing.JPanel();
         refreshConnections = new javax.swing.JButton();
-        jPanel8 = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        logTextArea = new javax.swing.JTextArea();
-        logLines = new javax.swing.JSpinner();
-        jLabel3 = new javax.swing.JLabel();
         jPanel12 = new javax.swing.JPanel();
         jButton6 = new javax.swing.JButton();
         jButton18 = new javax.swing.JButton();
         jScrollPane6 = new javax.swing.JScrollPane();
         jPanel13 = new javax.swing.JPanel();
+        jPanel8 = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        logTextArea = new javax.swing.JTextArea();
+        logLines = new javax.swing.JSpinner();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jComboBox2 = new javax.swing.JComboBox();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu6 = new javax.swing.JMenu();
+        jMenuItem12 = new javax.swing.JMenuItem();
+        jCheckBoxMenuItem3 = new javax.swing.JCheckBoxMenuItem();
+        jMenuItem14 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuItem13 = new javax.swing.JMenuItem();
+        jMenu1 = new javax.swing.JMenu();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        jMenu4 = new javax.swing.JMenu();
+        jMenuItem11 = new javax.swing.JMenuItem();
+        jCheckBoxMenuItem1 = new javax.swing.JCheckBoxMenuItem();
+        jMenu5 = new javax.swing.JMenu();
+        jMenuItem4 = new javax.swing.JMenuItem();
+        jCheckBoxMenuItem2 = new javax.swing.JCheckBoxMenuItem();
+        jMenu2 = new javax.swing.JMenu();
+        jMenuItem5 = new javax.swing.JMenuItem();
+        jMenuItem6 = new javax.swing.JMenuItem();
+        jMenuItem7 = new javax.swing.JMenuItem();
+        jMenuItem8 = new javax.swing.JMenuItem();
+        jMenu3 = new javax.swing.JMenu();
+        jMenuItem9 = new javax.swing.JMenuItem();
+        jMenuItem10 = new javax.swing.JMenuItem();
+
+        jMenuItem1.setText("jMenuItem1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Convenience Share");
 
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        jCheckBox1.setText("Map ports on launch");
-
-        jCheckBox2.setText("Launch tracker on start");
-        jCheckBox2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBox2ActionPerformed(evt);
-            }
-        });
-
-        jButton3.setText("Delete Database!");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
-            }
-        });
-
-        jButton14.setText("Map Ports");
-        jButton14.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton14ActionPerformed(evt);
-            }
-        });
-
-        jButton15.setText("Show Trackers");
-        jButton15.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton15ActionPerformed(evt);
-            }
-        });
-
-        jButton13.setText("Update Code");
-        jButton13.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton13ActionPerformed(evt);
-            }
-        });
 
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("My IP"));
 
@@ -443,7 +429,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         );
         jPanel14Layout.setVerticalGroup(
             jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 129, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
@@ -453,11 +439,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel7Layout.createSequentialGroup()
+                        .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(addressLabel)
+                        .addComponent(addressLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 682, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton8)))
                 .addContainerGap())
@@ -471,38 +459,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(addressLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton8))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(14, Short.MAX_VALUE))
         );
 
-        Debug.setText("Print Database to logs");
-        Debug.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                DebugActionPerformed(evt);
-            }
-        });
-
-        jButton16.setText("Show Help");
-
         jLabel4.setText("Default permissions for new Machines/Directories:");
-
-        jCheckBox3.setText("Launch on startup");
-
-        jButton19.setText("Launch Personal Tracker");
-
-        jButton20.setText("Backup database...");
-        jButton20.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton20ActionPerformed(evt);
-            }
-        });
-
-        jButton21.setText("Restore Database...");
-        jButton21.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton21ActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
         jPanel11.setLayout(jPanel11Layout);
@@ -511,34 +472,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jCheckBox3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel11Layout.createSequentialGroup()
-                        .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel11Layout.createSequentialGroup()
-                                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(jButton14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jButton15, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 209, Short.MAX_VALUE)
-                                    .addComponent(jButton13, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addGap(18, 18, 18)
-                                .addComponent(jCheckBox1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(jPanel11Layout.createSequentialGroup()
-                                .addComponent(jButton19)
-                                .addGap(18, 18, 18)
-                                .addComponent(jCheckBox2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                        .addGap(8, 8, 8)
-                        .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, 209, Short.MAX_VALUE)
-                            .addComponent(jButton20, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton21, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton16, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel11Layout.createSequentialGroup()
-                        .addGap(0, 712, Short.MAX_VALUE)
-                        .addComponent(Debug, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel11Layout.createSequentialGroup()
+                    .addGroup(jPanel11Layout.createSequentialGroup()
                         .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 364, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jComboBox1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jComboBox1, 0, 539, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel11Layout.setVerticalGroup(
@@ -546,33 +484,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton13)
-                    .addComponent(jButton16))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton15)
-                    .addComponent(jButton3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton14)
-                    .addComponent(jCheckBox1)
-                    .addComponent(jButton20))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton21)
-                    .addComponent(jButton19)
-                    .addComponent(jCheckBox2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(Debug)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jCheckBox3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(324, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Home", jPanel11);
@@ -618,27 +534,36 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         });
 
         jButton17.setText("Find Trackers");
+        jButton17.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton17ActionPerformed(evt);
+            }
+        });
 
         jToggleButton1.setText("Find Machines");
+        jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jToggleButton1ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jScrollPane4))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(129, 468, Short.MAX_VALUE)
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jToggleButton1)
-                        .addGap(12, 12, 12)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton17)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton10)
+                        .addComponent(jButton2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton2)))
+                        .addComponent(jButton10)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -651,13 +576,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton17)
                     .addComponent(jToggleButton1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 416, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 395, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane2.addTab("Machines", null, jPanel1, "");
-
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Currently Shared Directories/Files"));
 
         jButton1.setText("Add...");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -708,7 +631,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(0, 681, Short.MAX_VALUE)
+                        .addGap(0, 691, Short.MAX_VALUE)
                         .addComponent(jButton4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton1))
@@ -727,7 +650,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 .addContainerGap())
         );
 
-        jTabbedPane2.addTab("Local Directories", jPanel2);
+        jTabbedPane2.addTab("Local Shared Directories", jPanel2);
 
         jSplitPane1.setDividerLocation(150);
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
@@ -797,7 +720,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 246, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
         );
 
         jSplitPane1.setRightComponent(jPanel6);
@@ -839,10 +762,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 .addComponent(maxPending, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton12)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton11)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButton11)
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -910,9 +833,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
                     .addGroup(jPanel9Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jButton9)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton5)))
+                        .addComponent(jButton5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton9)))
                 .addContainerGap())
         );
         jPanel9Layout.setVerticalGroup(
@@ -923,7 +846,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton5)
                     .addComponent(jButton9))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 416, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 395, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -967,7 +890,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 447, Short.MAX_VALUE)
+                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1009,48 +932,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 .addContainerGap()
                 .addComponent(refreshConnections)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 428, Short.MAX_VALUE))
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 407, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Open connections", jPanel10);
-
-        logTextArea.setEditable(false);
-        logTextArea.setColumns(20);
-        logTextArea.setRows(5);
-        jScrollPane3.setViewportView(logTextArea);
-
-        logLines.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(500), Integer.valueOf(0), null, Integer.valueOf(1)));
-
-        jLabel3.setText("Number of Lines:");
-
-        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
-        jPanel8.setLayout(jPanel8Layout);
-        jPanel8Layout.setHorizontalGroup(
-            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel8Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
-                    .addGroup(jPanel8Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(logLines, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-        );
-        jPanel8Layout.setVerticalGroup(
-            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(logLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 415, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-
-        jTabbedPane2.addTab("Logs", jPanel8);
 
         jButton6.setText("Use a new key");
         jButton6.addActionListener(new java.awt.event.ActionListener() {
@@ -1085,11 +970,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton18)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton6)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButton18)
                 .addContainerGap())
-            .addComponent(jScrollPane6)
+            .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 945, Short.MAX_VALUE)
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1099,10 +984,219 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton6)
                     .addComponent(jButton18))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 428, Short.MAX_VALUE))
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 407, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Keys", jPanel12);
+
+        logTextArea.setEditable(false);
+        logTextArea.setColumns(20);
+        logTextArea.setRows(5);
+        jScrollPane3.setViewportView(logTextArea);
+
+        logLines.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(500), Integer.valueOf(0), null, Integer.valueOf(1)));
+
+        jLabel3.setText("Number of Lines:");
+
+        jLabel5.setText("Log Level:");
+
+        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "All", "Fine", "Info", "Warning", "Severe", "None" }));
+        jComboBox2.setSelectedIndex(2);
+        jComboBox2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox2ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(logLines, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(logLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel5)
+                    .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPane2.addTab("Logs", jPanel8);
+
+        jMenu6.setText("App");
+
+        jMenuItem12.setText("Check for updates");
+        jMenuItem12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem12ActionPerformed(evt);
+            }
+        });
+        jMenu6.add(jMenuItem12);
+
+        jCheckBoxMenuItem3.setSelected(true);
+        jCheckBoxMenuItem3.setText("Run on startup");
+        jCheckBoxMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItem3ActionPerformed(evt);
+            }
+        });
+        jMenu6.add(jCheckBoxMenuItem3);
+
+        jMenuItem14.setText("Hide");
+        jMenuItem14.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem14ActionPerformed(evt);
+            }
+        });
+        jMenu6.add(jMenuItem14);
+
+        jMenuItem2.setText("Restart");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        jMenu6.add(jMenuItem2);
+
+        jMenuItem13.setText("Quit");
+        jMenuItem13.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem13ActionPerformed(evt);
+            }
+        });
+        jMenu6.add(jMenuItem13);
+
+        jMenuBar1.add(jMenu6);
+
+        jMenu1.setText("Util");
+
+        jMenuItem3.setText("Show Trackers");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem3);
+
+        jMenu4.setText("Port mappings");
+
+        jMenuItem11.setText("Launch port mapper");
+        jMenuItem11.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem11ActionPerformed(evt);
+            }
+        });
+        jMenu4.add(jMenuItem11);
+
+        jCheckBoxMenuItem1.setText("Map ports on start up");
+        jCheckBoxMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItem1ActionPerformed(evt);
+            }
+        });
+        jMenu4.add(jCheckBoxMenuItem1);
+
+        jMenu1.add(jMenu4);
+
+        jMenu5.setText("Personal Tracker");
+
+        jMenuItem4.setText("Launch now");
+        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem4ActionPerformed(evt);
+            }
+        });
+        jMenu5.add(jMenuItem4);
+
+        jCheckBoxMenuItem2.setText("Launch on start up");
+        jCheckBoxMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItem2ActionPerformed(evt);
+            }
+        });
+        jMenu5.add(jCheckBoxMenuItem2);
+
+        jMenu1.add(jMenu5);
+
+        jMenuBar1.add(jMenu1);
+
+        jMenu2.setText("Database");
+
+        jMenuItem5.setText("Backup");
+        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem5ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem5);
+
+        jMenuItem6.setText("Restore");
+        jMenuItem6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem6ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem6);
+
+        jMenuItem7.setText("Debug to Logs");
+        jMenuItem7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem7ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem7);
+
+        jMenuItem8.setText("Delete");
+        jMenuItem8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem8ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem8);
+
+        jMenuBar1.add(jMenu2);
+
+        jMenu3.setText("Info");
+
+        jMenuItem9.setText("About");
+        jMenuItem9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem9ActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jMenuItem9);
+
+        jMenuItem10.setText("Show help");
+        jMenuItem10.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem10ActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jMenuItem10);
+
+        jMenuBar1.add(jMenu3);
+
+        setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -1142,10 +1236,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         addMachine.setVisible(true);
     }//GEN-LAST:event_jButton2ActionPerformed
 
-    private void DebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DebugActionPerformed
-    	UserActions.debug();
-    }//GEN-LAST:event_DebugActionPerformed
-
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
 		
         final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
@@ -1166,13 +1256,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		}
 		Services.notifications.localsChanged();
     }//GEN-LAST:event_jButton4ActionPerformed
-
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Are you sure you want to delete the database? This cannot be undone.", "Are you sure?", JOptionPane.YES_NO_OPTION))
-        {
-        UserActions.deleteDb();
-        }
-    }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
         Services.downloads.initiatePendingDownloads();
@@ -1210,25 +1293,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
        DbDownloads.clearCompleted(); // should be moved to user actions and be run on a different thread.
     }//GEN-LAST:event_jButton12ActionPerformed
 
-    private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
-       UpdateFrame u = new UpdateFrame(this);
-       Services.notifications.registerWindow(u);
-       u.setAlwaysOnTop(true);
-       u.setVisible(true);
-    }//GEN-LAST:event_jButton13ActionPerformed
-
-    private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
-        new PortMapperFrame().setVisible(true);
-    }//GEN-LAST:event_jButton14ActionPerformed
-
-    private void jButton15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton15ActionPerformed
-        new TrackerFrame().setVisible(true);
-    }//GEN-LAST:event_jButton15ActionPerformed
-
-    private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jCheckBox2ActionPerformed
-
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
         Services.userThreads.execute(new Runnable() { @Override
 				public void run()
@@ -1254,33 +1318,139 @@ public class Application extends javax.swing.JFrame implements NotificationListe
        refreshKeys();
     }//GEN-LAST:event_jButton18ActionPerformed
 
-    private void jButton20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton20ActionPerformed
-        final JFileChooser fc = new JFileChooser();
-        fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-        if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
-        {
-        	try
-					{
-						DbBackupRestore.backupDatabase(fc.getSelectedFile());
-					}
-					catch (IOException e)
-					{
-            LogWrapper.getLogger().log(Level.WARNING, "Unable to backup database.", e);
-					}
-        }
-    }//GEN-LAST:event_jButton20ActionPerformed
+    private void jMenuItem12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem12ActionPerformed
+      UpdateFrame u = new UpdateFrame(this);
+      Services.notifications.registerWindow(u);
+      u.setAlwaysOnTop(true);
+      u.setVisible(true);
+    }//GEN-LAST:event_jMenuItem12ActionPerformed
 
-    private void jButton21ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton21ActionPerformed
-                final JFileChooser fc = new JFileChooser();
-        fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+    private void jCheckBoxMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem3ActionPerformed
+    	LogWrapper.getLogger().info("Implement run on startup!");
+        
+    }//GEN-LAST:event_jCheckBoxMenuItem3ActionPerformed
+
+    private void jMenuItem13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem13ActionPerformed
+    	Services.quiter.quit();
+    }//GEN-LAST:event_jMenuItem13ActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+    	new TrackerFrame().setVisible(true);
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
+
+    private void jMenuItem11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem11ActionPerformed
+    	new PortMapperFrame().setVisible(true);
+    }//GEN-LAST:event_jMenuItem11ActionPerformed
+
+    private void jCheckBoxMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem1ActionPerformed
+        LogWrapper.getLogger().info("Implement me.");
+    }//GEN-LAST:event_jCheckBoxMenuItem1ActionPerformed
+
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+        // launch tracker
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
+
+    private void jCheckBoxMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem2ActionPerformed
+    	LogWrapper.getLogger().info("Implement launch tracker on startup!");
+    }//GEN-LAST:event_jCheckBoxMenuItem2ActionPerformed
+
+    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+      final JFileChooser fc = new JFileChooser();
+      fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+      if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+      {
+      	try
+				{
+					DbBackupRestore.backupDatabase(fc.getSelectedFile());
+				}
+				catch (IOException e)
+				{
+          LogWrapper.getLogger().log(Level.WARNING, "Unable to backup database.", e);
+				}
+      }
+    }//GEN-LAST:event_jMenuItem5ActionPerformed
+
+    private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed
+		final JFileChooser fc = new JFileChooser();
+		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+		{
+			DbBackupRestore.restoreDatabase(fc.getSelectedFile());
+		}
+    }//GEN-LAST:event_jMenuItem6ActionPerformed
+
+    private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+        // debug database
+    	UserActions.debug();
+    }//GEN-LAST:event_jMenuItem7ActionPerformed
+
+    private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem8ActionPerformed
+       // delete database
+      if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Are you sure you want to delete the database? This cannot be undone.", "Are you sure?", JOptionPane.YES_NO_OPTION))
+      {
+      	UserActions.deleteDb();
+      }
+    }//GEN-LAST:event_jMenuItem8ActionPerformed
+
+    private void jMenuItem9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem9ActionPerformed
+       // show about
+      LogWrapper.getLogger().info("Implement about.");
+    }//GEN-LAST:event_jMenuItem9ActionPerformed
+
+    private void jMenuItem10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem10ActionPerformed
+        // show help
+        Path userManual = Services.settings.applicationDirectory.getPath().resolve(Paths.get("UserManual.pdf"));
+        if (!Files.exists(userManual))
         {
-						DbBackupRestore.restoreDatabase(fc.getSelectedFile());
+            JOptionPane.showMessageDialog(this, "Unable to find user manual at " + userManual, "User Manual not found.", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-    }//GEN-LAST:event_jButton21ActionPerformed
+        Misc.nativeOpen(userManual, false);
+    }//GEN-LAST:event_jMenuItem10ActionPerformed
+
+    private void jButton17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton17ActionPerformed
+      LogWrapper.getLogger().info("Implement find trackers.");
+    }//GEN-LAST:event_jButton17ActionPerformed
+
+    private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
+       LogWrapper.getLogger().info("Implement find trackers.");
+    }//GEN-LAST:event_jToggleButton1ActionPerformed
+
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+        Main.restart();
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
+
+    private void jMenuItem14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem14ActionPerformed
+        dispose();
+    }//GEN-LAST:event_jMenuItem14ActionPerformed
+
+    private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox2ActionPerformed
+        switch ((String) jComboBox2.getSelectedItem())
+        {
+            case "All":
+                LogWrapper.getLogger().setLevel(Level.ALL);
+                break;
+            case "Fine":
+                LogWrapper.getLogger().setLevel(Level.FINE);
+                break;
+            case "Info":
+                LogWrapper.getLogger().setLevel(Level.INFO);
+                break;
+            case "Warning":
+                LogWrapper.getLogger().setLevel(Level.WARNING);
+                break;
+            case "Severe":
+                LogWrapper.getLogger().setLevel(Level.SEVERE);
+                break;
+            case "None":
+                LogWrapper.getLogger().setLevel(Level.OFF);
+                break;
+            default:
+                LogWrapper.getLogger().info("Unknown log level: " + jComboBox2.getSelectedItem());
+        }
+    }//GEN-LAST:event_jComboBox2ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton Debug;
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JPanel connectionsPanel;
@@ -1288,31 +1458,46 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JButton jButton10;
     private javax.swing.JButton jButton11;
     private javax.swing.JButton jButton12;
-    private javax.swing.JButton jButton13;
-    private javax.swing.JButton jButton14;
-    private javax.swing.JButton jButton15;
-    private javax.swing.JButton jButton16;
     private javax.swing.JButton jButton17;
     private javax.swing.JButton jButton18;
-    private javax.swing.JButton jButton19;
     private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton20;
-    private javax.swing.JButton jButton21;
-    private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
     private javax.swing.JButton jButton9;
-    private javax.swing.JCheckBox jCheckBox1;
-    private javax.swing.JCheckBox jCheckBox2;
-    private javax.swing.JCheckBox jCheckBox3;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem2;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem3;
     private javax.swing.JComboBox jComboBox1;
+    private javax.swing.JComboBox jComboBox2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenu4;
+    private javax.swing.JMenu jMenu5;
+    private javax.swing.JMenu jMenu6;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem10;
+    private javax.swing.JMenuItem jMenuItem11;
+    private javax.swing.JMenuItem jMenuItem12;
+    private javax.swing.JMenuItem jMenuItem13;
+    private javax.swing.JMenuItem jMenuItem14;
+    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JMenuItem jMenuItem4;
+    private javax.swing.JMenuItem jMenuItem5;
+    private javax.swing.JMenuItem jMenuItem6;
+    private javax.swing.JMenuItem jMenuItem7;
+    private javax.swing.JMenuItem jMenuItem8;
+    private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
@@ -1521,6 +1706,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			@Override
 			public void dbException(Exception ex)
 			{
+				// TODO Auto-generated method stub
 			}
 
 			@Override

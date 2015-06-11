@@ -2,7 +2,6 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -64,10 +63,11 @@ public class LookingFor extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (checksum!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("checksum", checksum);
 		generator.write("fileSize", fileSize);
 		generator.writeEnd();
@@ -75,32 +75,25 @@ public class LookingFor extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needschecksum = true;
 		boolean needsfileSize = true;
+		boolean needschecksum = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needschecksum)
-				{
-					throw new RuntimeException("Message needs checksum");
-				}
 				if (needsfileSize)
 				{
-					throw new RuntimeException("Message needs fileSize");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+				}
+				if (needschecksum)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				needschecksum = false;
-				checksum = parser.getString();
-			}
-			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("fileSize")) {
@@ -108,11 +101,19 @@ public class LookingFor extends Message
 				fileSize = Long.parseLong(parser.getString());
 			}
 			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("checksum")) {
+				needschecksum = false;
+				checksum = parser.getString();
+			}
+			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "LookingFor"; }
+	public String getJsonKey() { return getJsonName(); }
 	public LookingFor(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

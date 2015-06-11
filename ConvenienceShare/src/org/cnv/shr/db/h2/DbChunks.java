@@ -18,16 +18,14 @@ import org.cnv.shr.util.LogWrapper;
 public class DbChunks
 {
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK where DID=?;");
-	private static final QueryWrapper SELECT4 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, END_OFFSET-BEGIN_OFFSET from CHUNK where DID=? and IS_DOWNLOADED=true;");
+	private static final QueryWrapper SELECT4 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET from CHUNK where DID=? and IS_DOWNLOADED=true;");
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=? and IS_DOWNLOADED=false limit ?;");
 //	private static final QueryWrapper SELECT2 = new QueryWrapper("select count(C_ID) from CHUNK where DID=?;");
 	private static final QueryWrapper SELECT5 = new QueryWrapper("select count(C_ID) from CHUNK where DID=? and END_OFFSET=? and BEGIN_OFFSET=?;");
 //	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=?;");
-	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into CHUNK key(DID, BEGIN_OFFSET, END_OFFSET) values "
-			 + "((select C_ID from CHUNK where DID=?, BEGIN_OFFSET=?, END_OFFSET=?),"
-			 + " ?, ?, ?, ?, ?);");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from CHUNK where DID=?;");
+	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into CHUNK key(DID, BEGIN_OFFSET, END_OFFSET) values (DEFAULT, ?, ?, ?, ?, ?);");
 
 	public static final class DbChunk extends DbObject<Integer>
 	{
@@ -66,14 +64,9 @@ public class DbChunks
 	public static void addChunk(Download d, Chunk c)
 	{
 		try (ConnectionWrapper con = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = con.prepareStatement(SELECT5, PreparedStatement.RETURN_GENERATED_KEYS);)
+				StatementWrapper stmt = con.prepareStatement(MERGE1, PreparedStatement.RETURN_GENERATED_KEYS);)
 		{
 			int ndx = 1;
-			// the query
-			stmt.setInt(ndx++, d.getId());
-			stmt.setLong(ndx++, c.getBegin());
-			stmt.setLong(ndx++, c.getEnd());
-
 			// the actual values...
 			stmt.setInt(ndx++, d.getId());
 			stmt.setLong(ndx++, c.getBegin());
@@ -104,12 +97,13 @@ public class DbChunks
 				StatementWrapper stmt = c.prepareStatement(SELECT5))
 		{
 			long fileSize = d.getFile().getFileSize();
-			long end = fileSize - fileSize % chunkSize;
+			long end   = fileSize; 
+			long start = fileSize - fileSize % chunkSize;
 			while (end > 0)
 			{
 				stmt.setInt(1, d.getId());
 				stmt.setLong(2, end);
-				stmt.setLong(3, end - chunkSize);
+				stmt.setLong(3, start);
 				try (ResultSet results = stmt.executeQuery();)
 				{
 					if (!results.next() || results.getInt(1) <= 0)
@@ -117,6 +111,9 @@ public class DbChunks
 						return false;
 					}
 				}
+				
+				end = start;
+				start = start - chunkSize;
 			}
 		}
 		catch (SQLException e)
@@ -161,8 +158,8 @@ public class DbChunks
 			int ndx = 1;
 			stmt.setBoolean(ndx++, done);
 			stmt.setInt(ndx++, d.getId());
-			stmt.setLong(ndx++, chunk.getBegin());
 			stmt.setLong(ndx++, chunk.getEnd());
+			stmt.setLong(ndx++, chunk.getBegin());
 			stmt.setString(ndx++, chunk.getChecksum());
 			stmt.execute();
 		}
@@ -211,3 +208,28 @@ public class DbChunks
 		return done / (double) d.getFile().getFileSize();
 	}
 }
+
+//public static double getDownloadPercentage(Download d)
+//{
+//try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+//		StatementWrapper stmt = c.prepareStatement(SELECT4);)
+//{
+//	int ndx = 1;
+//	// the query
+//	stmt.setInt(ndx++, d.getId()); // this file
+//
+//	try (ResultSet results = stmt.executeQuery();)
+//	{
+//		if (results.next())
+//		{
+//			return results.getLong(1) / (double) d.getFile().getFileSize();
+//		}
+//	}
+//}
+//catch (SQLException e)
+//{
+//	LogWrapper.getLogger().log(Level.INFO, "Unable to get download percentage", e);
+//}
+//return 0.0;
+//}
+//private static final QueryWrapper SELECT4 = new QueryWrapper("select SUM(END_OFFSET-BEGIN_OFFSET) from CHUNK where DID=? and IS_DOWNLOADED=true;");

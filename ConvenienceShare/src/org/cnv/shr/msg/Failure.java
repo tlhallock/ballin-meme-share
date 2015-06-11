@@ -58,10 +58,11 @@ public class Failure extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (message!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("message", message);
 		generator.writeEnd();
 	}
@@ -76,7 +77,7 @@ public class Failure extends Message
 			case END_OBJECT:                         
 				if (needsmessage)
 				{
-					throw new RuntimeException("Message needs message");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -94,6 +95,7 @@ public class Failure extends Message
 		}
 	}
 	public static String getJsonName() { return "Failure"; }
+	public String getJsonKey() { return getJsonName(); }
 	public Failure(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

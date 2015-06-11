@@ -1,7 +1,6 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.mdl.Machine;
@@ -15,8 +14,12 @@ public class Seeder
 	int numRequests;
 	int numSuccess;
 	double bps;
-	HashMap<Long, ChunkRequest> pending = new HashMap<>();
+	// Right now, only one download per peer...
 	Communication connection;
+	
+
+	long lastRequest;
+	
 	
 	Seeder(Machine machine, Communication openConnection)
 	{
@@ -27,11 +30,15 @@ public class Seeder
 	public ChunkRequest request(FileEntry descriptor, Chunk removeFirst) throws IOException
 	{
 		ChunkRequest msg = new ChunkRequest(descriptor, removeFirst);
-		pending.put(System.currentTimeMillis(), msg);
+		lastRequest = System.currentTimeMillis();
 		connection.send(msg);
 		return msg;
 	}
 
+	public void requestCompleted(FileEntry descriptor, Chunk requested)
+	{
+	}
+	
 	public void send(Message message) throws IOException
 	{
 		connection.send(message);
@@ -50,5 +57,10 @@ public class Seeder
 	public boolean is(Machine remote)
 	{
 		return remote.getId() == machine.getId();
+	}
+
+	public boolean is(Communication c)
+	{
+		return connection.equals(c);
 	}
 }

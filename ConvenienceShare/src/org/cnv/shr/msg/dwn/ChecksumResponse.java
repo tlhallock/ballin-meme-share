@@ -12,7 +12,6 @@ import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -82,12 +81,12 @@ public class ChecksumResponse extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (descriptor!=null)
-		descriptor.generate(generator);
-		if (checksum!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
+		descriptor.generate(generator, "descriptor");
 		generator.write("checksum", checksum);
 		generator.writeEnd();
 	}
@@ -103,11 +102,11 @@ public class ChecksumResponse extends Message
 			case END_OBJECT:                         
 				if (needsdescriptor)
 				{
-					throw new RuntimeException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				if (needschecksum)
 				{
-					throw new RuntimeException("Message needs checksum");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -117,7 +116,7 @@ public class ChecksumResponse extends Message
 			if (key==null) break;
 			if (key.equals("descriptor")) {
 				needsdescriptor = false;
-				descriptor = JsonThing.readFileId(parser);
+				descriptor = new SharedFileId(parser);
 			}
 			break;
 		case VALUE_STRING:
@@ -132,6 +131,7 @@ public class ChecksumResponse extends Message
 		}
 	}
 	public static String getJsonName() { return "ChecksumResponse"; }
+	public String getJsonKey() { return getJsonName(); }
 	public ChecksumResponse(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

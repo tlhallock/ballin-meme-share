@@ -63,14 +63,25 @@ public class ServeInstance extends TimerTask
 
 		MessageDigest totalDigest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 		
-		byte[] buffer = new byte[1024];
+		int buffSize = 8192;
+		if (chunkSize < buffSize)
+		{
+			buffSize = chunkSize;
+		}
+		long fsize = Files.size(toShare);
+		if (fsize < buffSize)
+		{
+			buffSize = (int) Files.size(toShare);
+		}
+		
+		byte[] buffer = new byte[buffSize];
 		long offsetInFile = 0;
 
 		try (InputStream inputStream = Files.newInputStream(toShare);)
 		{
-			boolean atEndOfFile = false;
-			while (!atEndOfFile)
+			while (true)
 			{
+				boolean atEndOfFile = false;
 				long chunkStart = offsetInFile;
 				long chunkEnd = offsetInFile + chunkSize;
 
@@ -98,11 +109,17 @@ public class ServeInstance extends TimerTask
 				Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest));
 				chunks.add(chunk);
 				
-				if (chunks.size() > 50)
+				if (chunks.size() < 50 && !atEndOfFile)
 				{
-					connection.send(new ChunkList(chunks, local.getFileEntry()));
-					chunks = new ArrayList<>(50);
+					continue;
 				}
+
+				connection.send(new ChunkList(chunks, local.getFileEntry()));
+				if (atEndOfFile)
+				{
+					break;
+				}
+				chunks.clear();
 			}
 		}
 
@@ -128,7 +145,7 @@ public class ServeInstance extends TimerTask
 		try
 		{
 			LogWrapper.getLogger().info("Sending chunks of size " + chunkSize);
-			serverChunks(chunkSize);
+				serverChunks(chunkSize);
 		}
 		catch (NoSuchAlgorithmException e)
 		{
@@ -145,14 +162,17 @@ public class ServeInstance extends TimerTask
 	
 	public void serve(Chunk chunk)
 	{
-		synchronized (connection.getOut())
+		synchronized (connection.getOutput())
 		{
 			try
 			{
 				LogWrapper.getLogger().info("Sending chunk " + chunk);
 				connection.send(new ChunkResponse(local.getFileEntry(), chunk));
 				// Right here I could check that the checksum matches...
-				ChunkData.write(chunk, local.getFsFile(), connection.getOut());
+				
+				connection.beginWriteRaw();
+				ChunkData.write(chunk, local.getFsFile(), connection.getOutput());
+				connection.endWriteRaw();
 			}
 			catch (IOException e)
 			{

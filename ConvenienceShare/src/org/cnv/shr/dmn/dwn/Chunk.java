@@ -6,13 +6,17 @@ import java.util.Scanner;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
+import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
 
 public class Chunk implements Jsonable
 {
+	// Should this be nullable?
+	@MyParserNullable
 	private String checksum;
+	
 	private long begin;
 	private long end;
 	
@@ -83,17 +87,31 @@ public class Chunk implements Jsonable
 		return end - getBegin();
 	}
 	
-	public boolean equals(Chunk other)
+	public boolean equals(Object o)
 	{
+		if (!(o instanceof Chunk))
+		{
+			return false;
+		}
+		
+		Chunk other = (Chunk) o;
 		return checksum.equals(other.checksum)
 				&& getBegin() == other.getBegin() 
 				&& end == other.end;
 	}
+	
+	public int hashCode()
+	{
+		return toString().hashCode();
+	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		if (checksum!=null)
 		generator.write("checksum", checksum);
 		generator.write("begin", begin);
@@ -103,7 +121,6 @@ public class Chunk implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needschecksum = true;
 		boolean needsbegin = true;
 		boolean needsend = true;
 		while (parser.hasNext()) {                 
@@ -111,29 +128,18 @@ public class Chunk implements Jsonable
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needschecksum)
-				{
-					throw new RuntimeException("Message needs checksum");
-				}
 				if (needsbegin)
 				{
-					throw new RuntimeException("Message needs begin");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs begin");
 				}
 				if (needsend)
 				{
-					throw new RuntimeException("Message needs end");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs end");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				needschecksum = false;
-				checksum = parser.getString();
-			}
-			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -147,11 +153,18 @@ public class Chunk implements Jsonable
 				break;
 			}
 			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("checksum")) {
+				checksum = parser.getString();
+			}
+			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "Chunk"; }
+	public String getJsonKey() { return getJsonName(); }
 	public Chunk(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

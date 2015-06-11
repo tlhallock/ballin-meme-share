@@ -2,7 +2,6 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -67,9 +66,11 @@ public class EmptyMessage extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("size", size);
 		generator.writeEnd();
 	}
@@ -84,7 +85,7 @@ public class EmptyMessage extends Message
 			case END_OBJECT:                         
 				if (needssize)
 				{
-					throw new RuntimeException("Message needs size");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs size");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -102,6 +103,7 @@ public class EmptyMessage extends Message
 		}
 	}
 	public static String getJsonName() { return "EmptyMessage"; }
+	public String getJsonKey() { return getJsonName(); }
 	public EmptyMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

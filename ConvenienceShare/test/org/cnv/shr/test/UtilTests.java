@@ -1,6 +1,5 @@
 package org.cnv.shr.test;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -89,7 +88,7 @@ public class UtilTests
 
 	public void testCircular() throws IOException
 	{
-		File file = new File("something.txt");
+		Path file = Paths.get("something.txt");
 		try (PrintStream ps = new PrintStream(new CircularOutputStream(file, 100));)
 		{
 //			for (int i = 0; i < 15; i++)
@@ -101,7 +100,7 @@ public class UtilTests
 		}
 		
 		// TODO: asserts...
-		file.delete();
+		Files.delete(file);
 	}
 	
 	@Test

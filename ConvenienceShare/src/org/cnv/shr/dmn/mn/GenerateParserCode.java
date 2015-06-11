@@ -39,7 +39,6 @@ import org.cnv.shr.msg.ListPath;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.msg.LookingFor;
 import org.cnv.shr.msg.MachineFound;
-import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.PathList;
 import org.cnv.shr.msg.PathListChild;
 import org.cnv.shr.msg.RootList;
@@ -131,6 +130,8 @@ public class GenerateParserCode
 				SharingState.class               ,
 				PathListChild.class              ,
 				RootListChild.class              ,
+				
+//				TrackerRequest.class             ,
 				
 				
 				
@@ -356,7 +357,7 @@ public class GenerateParserCode
 				}
 				ps.println("\t\t\t\tif (needs" + f.getName() + ")");
 				ps.println("\t\t\t\t{");
-				ps.println("\t\t\t\t\tthrow new RuntimeException(\"Message needs " + f.getName() + "\");");
+				ps.println("\t\t\t\t\tthrow new org.cnv.shr.util.IncompleteMessageException(\"Message needs " + f.getName() + "\");");
 				ps.println("\t\t\t\t}");
 			}
 		}
@@ -422,9 +423,9 @@ public class GenerateParserCode
 		case "org.cnv.shr.db.h2.SharingState":
 			return " = SharingState.valueOf(parser.getString());";
 		case "org.cnv.shr.dmn.dwn.SharedFileId":
-			return " = JsonThing.readFileId(parser)";
+			return " = new SharedFileId(parser)";
 		case "org.cnv.shr.dmn.dwn.Chunk":
-			return " = JsonThing.readChunk(parser)";
+			return " = new Chunk(parser)";
 		case "java.security.PublicKey":
 			return " = KeyPairObject.deSerializePublicKey(parser.getString())";
 
@@ -502,12 +503,11 @@ public class GenerateParserCode
 	private static void printGenerator(PrintStream output, Class<?> c)
 	{
 		output.println("\t@Override");
-		output.println("\tpublic void generate(JsonGenerator generator) {");
-		if (Message.class.isAssignableFrom(c))
-		{
-			output.println("\t\tgenerator.write(getJsonName());");
-		}
-		output.println("\t\tgenerator.writeStartObject();");
+		output.println("\tpublic void generate(JsonGenerator generator, String key) {");
+		output.println("\t\tif (key!=null)");
+		output.println("\t\t\tgenerator.writeStartObject(key);");
+		output.println("\t\telse");
+		output.println("\t\t\tgenerator.writeStartObject();");
 
 		while (shouldContinue(c))
 		{
@@ -516,7 +516,7 @@ public class GenerateParserCode
 				if (shouldIgnore(field))
 					continue;
 				
-				printField(output, field.getType(), field.getName(), field.getGenericType());
+				printField(output, field.getType(), field.getName(), field.getGenericType(), field.isAnnotationPresent(MyParserNullable.class));
 			}
 			c = c.getSuperclass();
 		}
@@ -525,7 +525,7 @@ public class GenerateParserCode
 		output.println("\t}");
 	}
 
-private static void printField(PrintStream output, Class<?> typeName, String fieldName, Type genericType)
+private static void printField(PrintStream output, Class<?> typeName, String fieldName, Type genericType, boolean nullable)
 {
 	switch (typeName.getName())
 	{
@@ -549,19 +549,23 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 	case "org.cnv.shr.dmn.dwn.SharedFileId":
 	case "org.cnv.shr.trck.FileEntry":
 	case "org.cnv.shr.msg.PathListChild":
-		output.println("\t\tif (" + fieldName + "!=null)");
-		output.println("\t\t" + fieldName + ".generate(generator);");
+		if (nullable)
+			output.println("\t\tif (" + fieldName + "!=null)");
+		output.println("\t\t" + fieldName + ".generate(generator, \"" + fieldName + "\");");
 		break;
 	case "org.cnv.shr.db.h2.SharingState":
-		output.println("\t\tif (" + fieldName + "!=null)");
+		if (nullable)
+			output.println("\t\tif (" + fieldName + "!=null)");
 		output.println("\t\tgenerator.write(\"" + fieldName + "\"," + fieldName + ".name());");
 		break;
 	case "java.security.PublicKey":
-		output.println("\t\tif (" + fieldName + "!=null)");
+		if (nullable)
+			output.println("\t\tif (" + fieldName + "!=null)");
 		output.println("\t\tgenerator.write(\"" + fieldName + "\", KeyPairObject.serialize(" + fieldName + "));");
 		break;
 	case "[B":
-		output.println("\t\tif (" + fieldName + "!=null)");
+		if (nullable)
+			output.println("\t\tif (" + fieldName + "!=null)");
 		output.println("\t\tgenerator.write(\"" + fieldName + "\", Misc.format(" + fieldName + "));");
 		break;
 
@@ -569,7 +573,8 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 	case "java.lang.Integer":
 	case "java.lang.Long":
 	case "java.lang.Boolean":
-		output.println("\t\tif (" + fieldName + "!=null)");
+		if (nullable)
+			output.println("\t\tif (" + fieldName + "!=null)");
 	case "int":
 	case "long":
 	case "boolean":
@@ -663,6 +668,7 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 			throw new RuntimeException("Two classes by the same name: " + c.getName());
 		}
 		ps.println("\tpublic static String getJsonName() { return \"" + substring + "\"; }");
+		ps.println("\tpublic String getJsonKey() { return getJsonName(); }");
 	}
 
 	public static void Files_move(Path origin, Path dest) throws IOException

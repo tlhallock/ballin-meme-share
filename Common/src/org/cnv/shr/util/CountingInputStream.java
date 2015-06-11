@@ -117,7 +117,7 @@ private OutputStream logFile;
 
 	public void close() throws IOException
 	{
-		delegate.close();
+//		delegate.close();
 	}
 
 	public synchronized void mark(int readlimit)

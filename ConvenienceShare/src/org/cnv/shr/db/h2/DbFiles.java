@@ -23,8 +23,8 @@ public class DbFiles
 	private static final QueryWrapper SELECT2   = new QueryWrapper("select * from SFILE where F_ID=?;");
 	private static final QueryWrapper DELETE1   = new QueryWrapper("delete from SFILE where F_ID=?;");
 	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from SFILE where PELEM=? and ROOT=?;");
-	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE where CHKSUM=? join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL;");
-	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NULL limit 1;");
+	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where CHKSUM=? and FSIZE=? and ROOT.IS_LOCAL LIMIT 1;");
+	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NULL and SFILE.MODIFIED < ? LIMIT 200;");
 	private static final QueryWrapper CHECKED   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NOT NULL;");
 	private static final QueryWrapper ALL       = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL;");
 
@@ -79,11 +79,6 @@ public class DbFiles
 		return (LocalFile) getFile((RootDirectory) root, element);
 	}
 
-	public static LocalFile getFile(String checksum, long fileSize)
-	{
-		return getFile(checksum);
-	}
-
 	public static SharedFile getFile(int int1)
 	{
 		// Delete from pending too...
@@ -109,13 +104,18 @@ public class DbFiles
 		}
 	}
 
-	public static LocalFile getFile(String checksum)
+//	public static LocalFile getFile(String checksum, long fileSize)
+//	{
+//		return getFile(checksum);
+//	}
+	public static LocalFile getFile(String checksum, long fileSize)
 	{
 		// Delete from pending too...
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(SELECT3);)
 		{
 			stmt.setString(1, checksum);
+			stmt.setLong(2, fileSize);
 			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
 				if (!executeQuery.next())
@@ -136,26 +136,19 @@ public class DbFiles
 	
 
 
-	public static LocalFile getUnChecksummedFile()
+	public static DbIterator<LocalFile> getSomeUnchecksummedFiles()
 	{
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(UNCHECKED);)
+		ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+		try
 		{
-			try (ResultSet executeQuery = stmt.executeQuery();)
-			{
-				if (!executeQuery.next())
-				{
-					return null;
-				}
-				DbObject allocate = DbTables.DbObjects.LFILE.allocate(executeQuery);
-				allocate.fill(c, executeQuery, new DbLocals());
-				return (LocalFile) allocate;
-			}
+			StatementWrapper prepareStatement = c.prepareStatement(UNCHECKED);
+			prepareStatement.setLong(1, System.currentTimeMillis() - 5 * 60 * 1000);
+			return new DbIterator<LocalFile>(c, prepareStatement.executeQuery(), DbTables.DbObjects.LFILE);
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to list files without a checksum", e);
-			return null;
+			return new NullIterator<LocalFile>();
 		}
 	}
 

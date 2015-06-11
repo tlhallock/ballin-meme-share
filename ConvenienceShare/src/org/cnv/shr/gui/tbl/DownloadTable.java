@@ -70,11 +70,10 @@ public class DownloadTable extends DbJTable<Download>
 					LogWrapper.getLogger().warning("The download has no state.");
 					return;
 				}
-				if (!state.equals(DownloadState.ALL_DONE))
+				if (state.hasYetTo(DownloadState.ALLOCATING))
 				{
-
 					JOptionPane.showMessageDialog(app, 
-							"Opening unfinished downloads is not supported yet.",
+							"Opening queued downloads is not supported yet.",
 							"This download is not done!",
 							 JOptionPane.ERROR_MESSAGE);
 					return;
@@ -85,7 +84,7 @@ public class DownloadTable extends DbJTable<Download>
 			@Override
 			String getName()
 			{
-				return "Open";
+				return "Open containing folder";
 			}
 		});
 		addListener(new TableRightClickListener()
@@ -106,6 +105,20 @@ public class DownloadTable extends DbJTable<Download>
 			String getName()
 			{
 				return "Delete";
+			}
+		});
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(Download download)
+			{
+				LogWrapper.getLogger().info("Implement me!");
+			}
+			
+			@Override
+			String getName()
+			{
+				return "Verify Integrity";
 			}
 		});
 	}

@@ -85,7 +85,7 @@ public class TrackerStore implements Closeable
 				String name = results.getString(ndx++);
 				
 				entry.set(ident, keyString, ip, port, port + nports, name);
-				entry.print(output);
+				entry.generate(output);
 				count++;
 			}
 			
@@ -144,7 +144,7 @@ public class TrackerStore implements Closeable
 			@Override
 			public void receiveTracker(TrackerEntry entry)
 			{
-				entry.print(output);
+				entry.generate(output);
 			}
 		});
 		output.writeEnd();
@@ -196,7 +196,7 @@ public class TrackerStore implements Closeable
 					String name = results.getString(ndx++);
 
 					machineEntry.set(ident, keyString, ip, port, port + nports, name);
-					machineEntry.print(output);
+					machineEntry.generate(output);
 				}
 			}
 		}
@@ -229,7 +229,7 @@ public class TrackerStore implements Closeable
 					String oid = results.getString(ndx++);
 
 					comment.set(oid, did, message, rating, sent);
-					comment.print(generator);
+					comment.generate(generator);
 				}
 			}
 		}
@@ -309,7 +309,7 @@ public class TrackerStore implements Closeable
 					long size = results.getLong(ndx++);
 
 					fileEntry.set(checksum, size);
-					fileEntry.print(output);
+					fileEntry.generate(output);
 				}
 			}
 		}

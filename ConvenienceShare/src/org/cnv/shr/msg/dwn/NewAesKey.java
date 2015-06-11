@@ -82,10 +82,11 @@ public class NewAesKey extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (encryptedAesKey!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("encryptedAesKey", Misc.format(encryptedAesKey));
 		generator.writeEnd();
 	}
@@ -100,7 +101,7 @@ public class NewAesKey extends Message
 			case END_OBJECT:                         
 				if (needsencryptedAesKey)
 				{
-					throw new RuntimeException("Message needs encryptedAesKey");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs encryptedAesKey");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -118,6 +119,7 @@ public class NewAesKey extends Message
 		}
 	}
 	public static String getJsonName() { return "NewAesKey"; }
+	public String getJsonKey() { return getJsonName(); }
 	public NewAesKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

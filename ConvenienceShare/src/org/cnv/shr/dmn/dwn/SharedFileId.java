@@ -81,7 +81,7 @@ public class SharedFileId implements Jsonable
 	public RemoteFile getRemote()
 	{
 		Machine machine = DbMachines.getMachine(machineIdent);
-		RootDirectory root = DbRoots.getRoot(machine, path);
+		RootDirectory root = DbRoots.getRoot(machine, rootName);
 		PathElement pathElement = DbPaths.getPathElement(path);
 		return (RemoteFile) DbFiles.getFile(root, pathElement);
 	}
@@ -94,13 +94,13 @@ public class SharedFileId implements Jsonable
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
-		if (machineIdent!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("machineIdent", machineIdent);
-		if (rootName!=null)
 		generator.write("rootName", rootName);
-		if (path!=null)
 		generator.write("path", path);
 		generator.writeEnd();
 	}
@@ -117,15 +117,15 @@ public class SharedFileId implements Jsonable
 			case END_OBJECT:                         
 				if (needsmachineIdent)
 				{
-					throw new RuntimeException("Message needs machineIdent");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machineIdent");
 				}
 				if (needsrootName)
 				{
-					throw new RuntimeException("Message needs rootName");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
 				if (needspath)
 				{
-					throw new RuntimeException("Message needs path");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -153,6 +153,7 @@ public class SharedFileId implements Jsonable
 		}
 	}
 	public static String getJsonName() { return "SharedFileId"; }
+	public String getJsonKey() { return getJsonName(); }
 	public SharedFileId(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -65,17 +65,17 @@ public class LocalBackup implements Jsonable
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
-		if (name!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("name", name);
-		if (description!=null)
 		generator.write("description", description);
 		if (tags!=null)
 		generator.write("tags", tags);
 		generator.write("minFSize", minFSize);
 		generator.write("maxFSize", maxFSize);
-		if (path!=null)
 		generator.write("path", path);
 		if (totalFileSize!=null)
 		generator.write("totalFileSize", totalFileSize);
@@ -88,40 +88,59 @@ public class LocalBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsminFSize = true;
+		boolean needsmaxFSize = true;
 		boolean needsname = true;
 		boolean needsdescription = true;
 		boolean needspath = true;
-		boolean needsminFSize = true;
-		boolean needsmaxFSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsname)
-				{
-					throw new RuntimeException("Message needs name");
-				}
-				if (needsdescription)
-				{
-					throw new RuntimeException("Message needs description");
-				}
-				if (needspath)
-				{
-					throw new RuntimeException("Message needs path");
-				}
 				if (needsminFSize)
 				{
-					throw new RuntimeException("Message needs minFSize");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs minFSize");
 				}
 				if (needsmaxFSize)
 				{
-					throw new RuntimeException("Message needs maxFSize");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs maxFSize");
+				}
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsdescription)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
+				}
+				if (needspath)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "minFSize":
+				needsminFSize = false;
+				minFSize = Long.parseLong(parser.getString());
+				break;
+			case "maxFSize":
+				needsmaxFSize = false;
+				maxFSize = Long.parseLong(parser.getString());
+				break;
+			case "totalFileSize":
+				totalFileSize = Long.parseLong(parser.getString());
+				break;
+			case "totalNumFiles":
+				totalNumFiles = Long.parseLong(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -145,30 +164,12 @@ public class LocalBackup implements Jsonable
 				break;
 			}
 			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "minFSize":
-				needsminFSize = false;
-				minFSize = Long.parseLong(parser.getString());
-				break;
-			case "maxFSize":
-				needsmaxFSize = false;
-				maxFSize = Long.parseLong(parser.getString());
-				break;
-			case "totalFileSize":
-				totalFileSize = Long.parseLong(parser.getString());
-				break;
-			case "totalNumFiles":
-				totalNumFiles = Long.parseLong(parser.getString());
-				break;
-			}
-			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "LocalBackup"; }
+	public String getJsonKey() { return getJsonName(); }
 	public LocalBackup(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

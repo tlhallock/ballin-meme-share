@@ -55,12 +55,13 @@ public class FileBackup implements Jsonable
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
-		if (path!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("path", path);
 		generator.write("fileSize", fileSize);
-		if (rootName!=null)
 		generator.write("rootName", rootName);
 		if (checksum!=null)
 		generator.write("checksum", checksum);
@@ -72,35 +73,48 @@ public class FileBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needspath = true;
-		boolean needsrootName = true;
 		boolean needsfileSize = true;
 		boolean needslastModified = true;
+		boolean needspath = true;
+		boolean needsrootName = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needspath)
-				{
-					throw new RuntimeException("Message needs path");
-				}
-				if (needsrootName)
-				{
-					throw new RuntimeException("Message needs rootName");
-				}
 				if (needsfileSize)
 				{
-					throw new RuntimeException("Message needs fileSize");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
 				}
 				if (needslastModified)
 				{
-					throw new RuntimeException("Message needs lastModified");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
+				}
+				if (needspath)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
+				}
+				if (needsrootName)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "fileSize":
+				needsfileSize = false;
+				fileSize = Long.parseLong(parser.getString());
+				break;
+			case "lastModified":
+				needslastModified = false;
+				lastModified = Long.parseLong(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -120,24 +134,12 @@ public class FileBackup implements Jsonable
 				break;
 			}
 			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "fileSize":
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
-				break;
-			case "lastModified":
-				needslastModified = false;
-				lastModified = Long.parseLong(parser.getString());
-				break;
-			}
-			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "FileBackup"; }
+	public String getJsonKey() { return getJsonName(); }
 	public FileBackup(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

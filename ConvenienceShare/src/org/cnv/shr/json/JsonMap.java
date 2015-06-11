@@ -6,11 +6,10 @@ import java.util.HashMap;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
-import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.Misc;
 
-public class JsonMap extends HashMap<PublicKey, byte[]> implements Jsonable
+public class JsonMap extends HashMap<PublicKey, byte[]>
 {
 	public JsonMap() {}
 	

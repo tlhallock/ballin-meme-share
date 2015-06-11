@@ -80,63 +80,74 @@ public class WhoIAm extends MachineFound
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (pKey!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("pKey", KeyPairObject.serialize(pKey));
-		if (versionString!=null)
 		generator.write("versionString", versionString);
 		generator.write("port", port);
 		generator.write("nports", nports);
-		if (name!=null)
 		generator.write("name", name);
-		if (ident!=null)
 		generator.write("ident", ident);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsport = true;
+		boolean needsnports = true;
 		boolean needspKey = true;
 		boolean needsversionString = true;
 		boolean needsname = true;
 		boolean needsident = true;
-		boolean needsport = true;
-		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needspKey)
-				{
-					throw new RuntimeException("Message needs pKey");
-				}
-				if (needsversionString)
-				{
-					throw new RuntimeException("Message needs versionString");
-				}
-				if (needsname)
-				{
-					throw new RuntimeException("Message needs name");
-				}
-				if (needsident)
-				{
-					throw new RuntimeException("Message needs ident");
-				}
 				if (needsport)
 				{
-					throw new RuntimeException("Message needs port");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
 				}
 				if (needsnports)
 				{
-					throw new RuntimeException("Message needs nports");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
+				if (needspKey)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pKey");
+				}
+				if (needsversionString)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs versionString");
+				}
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsident)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+				break;
+			case "nports":
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -158,24 +169,12 @@ public class WhoIAm extends MachineFound
 				break;
 			}
 			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
-				break;
-			}
-			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "WhoIAm"; }
+	public String getJsonKey() { return getJsonName(); }
 	public WhoIAm(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

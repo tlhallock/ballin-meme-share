@@ -58,11 +58,12 @@ public class DownloadDone extends DownloadMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (descriptor!=null)
-		descriptor.generate(generator);
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
+		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -76,7 +77,7 @@ public class DownloadDone extends DownloadMessage
 			case END_OBJECT:                         
 				if (needsdescriptor)
 				{
-					throw new RuntimeException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -94,6 +95,7 @@ public class DownloadDone extends DownloadMessage
 		}
 	}
 	public static String getJsonName() { return "DownloadDone"; }
+	public String getJsonKey() { return getJsonName(); }
 	public DownloadDone(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

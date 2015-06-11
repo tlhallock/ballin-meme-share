@@ -81,10 +81,11 @@ public class GetPermission extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (rootName!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("rootName", rootName);
 		generator.writeEnd();
 	}
@@ -99,7 +100,7 @@ public class GetPermission extends Message
 			case END_OBJECT:                         
 				if (needsrootName)
 				{
-					throw new RuntimeException("Message needs rootName");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -117,6 +118,7 @@ public class GetPermission extends Message
 		}
 	}
 	public static String getJsonName() { return "GetPermission"; }
+	public String getJsonKey() { return getJsonName(); }
 	public GetPermission(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

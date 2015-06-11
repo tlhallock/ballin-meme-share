@@ -10,7 +10,6 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -70,11 +69,12 @@ public class ChecksumRequest extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (descriptor!=null)
-		descriptor.generate(generator);
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
+		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -88,7 +88,7 @@ public class ChecksumRequest extends Message
 			case END_OBJECT:                         
 				if (needsdescriptor)
 				{
-					throw new RuntimeException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -98,7 +98,7 @@ public class ChecksumRequest extends Message
 			if (key==null) break;
 			if (key.equals("descriptor")) {
 				needsdescriptor = false;
-				descriptor = JsonThing.readFileId(parser);
+				descriptor = new SharedFileId(parser);
 			}
 			break;
 			default: break;
@@ -106,6 +106,7 @@ public class ChecksumRequest extends Message
 		}
 	}
 	public static String getJsonName() { return "ChecksumRequest"; }
+	public String getJsonKey() { return getJsonName(); }
 	public ChecksumRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

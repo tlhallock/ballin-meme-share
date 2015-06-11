@@ -52,10 +52,11 @@ public class KeyFailure extends KeyMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (reason!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("reason", reason);
 		generator.writeEnd();
 	}
@@ -70,7 +71,7 @@ public class KeyFailure extends KeyMessage
 			case END_OBJECT:                         
 				if (needsreason)
 				{
-					throw new RuntimeException("Message needs reason");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs reason");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -88,6 +89,7 @@ public class KeyFailure extends KeyMessage
 		}
 	}
 	public static String getJsonName() { return "KeyFailure"; }
+	public String getJsonKey() { return getJsonName(); }
 	public KeyFailure(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

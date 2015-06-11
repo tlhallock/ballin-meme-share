@@ -2,7 +2,6 @@ package org.cnv.shr.trck;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,15 +62,6 @@ public class TrackObjectUtils
 	
 	
 	
-	static String toString(TrackObject machineEntry)
-	{
-		StringWriter writer = new StringWriter();
-		try (JsonGenerator generator = generatorFactory.createGenerator(writer);)
-		{
-			machineEntry.print(generator);
-		}
-		return writer.toString();
-	}
 
 	public static JsonParser openArray(InputStream input) throws JsonException
 	{
@@ -97,7 +87,7 @@ public class TrackObjectUtils
 			switch (e)
 			{
 			case START_OBJECT:
-				t.read(parser);
+				t.parse(parser);
 				return true;
 			case END_ARRAY:
 				return false;
@@ -126,7 +116,7 @@ public class TrackObjectUtils
 			LogWrapper.getLogger().info("Expected start object for " + t.getClass().getName() + ", found: " + next);
 			return false;
 		}
-		t.read(parser);
+		t.parse(parser);
 		return true;
 	}
 }

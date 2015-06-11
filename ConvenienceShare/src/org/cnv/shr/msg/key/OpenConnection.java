@@ -87,14 +87,14 @@ public class OpenConnection extends KeyMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (sourcePublicKey!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("sourcePublicKey", KeyPairObject.serialize(sourcePublicKey));
 		if (destinationPublicKey!=null)
 		generator.write("destinationPublicKey", KeyPairObject.serialize(destinationPublicKey));
-		if (requestedNaunce!=null)
 		generator.write("requestedNaunce", Misc.format(requestedNaunce));
 		generator.writeEnd();
 	}
@@ -110,11 +110,11 @@ public class OpenConnection extends KeyMessage
 			case END_OBJECT:                         
 				if (needssourcePublicKey)
 				{
-					throw new RuntimeException("Message needs sourcePublicKey");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sourcePublicKey");
 				}
 				if (needsrequestedNaunce)
 				{
-					throw new RuntimeException("Message needs requestedNaunce");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs requestedNaunce");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -141,6 +141,7 @@ public class OpenConnection extends KeyMessage
 		}
 	}
 	public static String getJsonName() { return "OpenConnection"; }
+	public String getJsonKey() { return getJsonName(); }
 	public OpenConnection(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

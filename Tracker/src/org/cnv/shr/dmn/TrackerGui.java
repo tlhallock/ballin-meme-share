@@ -126,6 +126,12 @@ public class TrackerGui extends BrowserFrame
 					protected void runLater(Runnable runnable)
 					{
 						Track.threads.execute(runnable);
+					}
+
+					@Override
+					public void addOthers()
+					{
+						LogWrapper.getLogger().info("Implement me!");
 					}});
 			}
 		});

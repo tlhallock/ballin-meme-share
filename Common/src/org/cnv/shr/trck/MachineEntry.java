@@ -1,7 +1,5 @@
 package org.cnv.shr.trck;
 
-import java.math.BigDecimal;
-
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
@@ -9,7 +7,7 @@ import org.cnv.shr.util.KeyPairObject;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
-public class MachineEntry implements TrackObject
+public class MachineEntry extends TrackObject
 {
 	private String ident;
 	private String keyStr;
@@ -36,55 +34,55 @@ public class MachineEntry implements TrackObject
 		this.name = name;
 	}
 
-	@Override
-	public void read(JsonParser parser)
-	{
-		String key = null;
-		while (parser.hasNext())
-		{
-			JsonParser.Event e = parser.next();
-			switch (e)
-			{
-			case KEY_NAME:
-				key = parser.getString();
-				break;
-			case VALUE_STRING:
-				if (key == null) break;
-				switch (key)
-				{
-				case "ip":    ip       = parser.getString();  break;
-				case "key":   keyStr   = parser.getString();  break;
-				case "ident": ident    = parser.getString();  break;
-				case "name":  name     = parser.getString();  break;
-				}
-				break;
-			case VALUE_NUMBER:
-				if (key == null) break;
-				BigDecimal bd = new BigDecimal(parser.getString());
-				switch (key)
-				{
-				case "beginPort": beginPort = bd.intValue(); break;
-				case "endPort":   endPort   = bd.intValue(); break;
-				}
-				break;
-			case END_OBJECT:
-				return;
-			}
-		}
-	}
-
-	@Override
-	public void print(JsonGenerator generator)
-	{
-		generator.writeStartObject();
-		generator.write("ident", ident);
-		generator.write("key", keyStr);
-		generator.write("ip", ip);
-		generator.write("beginPort", beginPort);
-		generator.write("endPort", endPort);
-		generator.write("name", name);
-		generator.writeEnd();
-	}
+//	@Override
+//	public void read(JsonParser parser)
+//	{
+//		String key = null;
+//		while (parser.hasNext())
+//		{
+//			JsonParser.Event e = parser.next();
+//			switch (e)
+//			{
+//			case KEY_NAME:
+//				key = parser.getString();
+//				break;
+//			case VALUE_STRING:
+//				if (key == null) break;
+//				switch (key)
+//				{
+//				case "ip":    ip       = parser.getString();  break;
+//				case "key":   keyStr   = parser.getString();  break;
+//				case "ident": ident    = parser.getString();  break;
+//				case "name":  name     = parser.getString();  break;
+//				}
+//				break;
+//			case VALUE_NUMBER:
+//				if (key == null) break;
+//				BigDecimal bd = new BigDecimal(parser.getString());
+//				switch (key)
+//				{
+//				case "beginPort": beginPort = bd.intValue(); break;
+//				case "endPort":   endPort   = bd.intValue(); break;
+//				}
+//				break;
+//			case END_OBJECT:
+//				return;
+//			}
+//		}
+//	}
+//
+//	@Override
+//	public void print(JsonGenerator generator)
+//	{
+//		generator.writeStartObject();
+//		generator.write("ident", ident);
+//		generator.write("key", keyStr);
+//		generator.write("ip", ip);
+//		generator.write("beginPort", beginPort);
+//		generator.write("endPort", endPort);
+//		generator.write("name", name);
+//		generator.writeEnd();
+//	}
 	
 	public RSAPublicKey getKey()
 	{
@@ -131,11 +129,6 @@ public class MachineEntry implements TrackObject
 		return name;
 	}
 
-	public String toString()
-	{
-		return TrackObjectUtils.toString(this);
-	}
-
 	public String getAddress()
 	{
 		return ip + ":" + beginPort + "-" + endPort;
@@ -149,15 +142,14 @@ public class MachineEntry implements TrackObject
 	
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
-		if (ident!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("ident", ident);
-		if (keyStr!=null)
 		generator.write("keyStr", keyStr);
-		if (name!=null)
 		generator.write("name", name);
-		if (ip!=null)
 		generator.write("ip", ip);
 		generator.write("beginPort", beginPort);
 		generator.write("endPort", endPort);
@@ -166,45 +158,58 @@ public class MachineEntry implements TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsbeginPort = true;
+		boolean needsendPort = true;
 		boolean needsident = true;
 		boolean needskeyStr = true;
 		boolean needsname = true;
 		boolean needsip = true;
-		boolean needsbeginPort = true;
-		boolean needsendPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsident)
-				{
-					throw new RuntimeException("Message needs ident");
-				}
-				if (needskeyStr)
-				{
-					throw new RuntimeException("Message needs keyStr");
-				}
-				if (needsname)
-				{
-					throw new RuntimeException("Message needs name");
-				}
-				if (needsip)
-				{
-					throw new RuntimeException("Message needs ip");
-				}
 				if (needsbeginPort)
 				{
-					throw new RuntimeException("Message needs beginPort");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs beginPort");
 				}
 				if (needsendPort)
 				{
-					throw new RuntimeException("Message needs endPort");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs endPort");
+				}
+				if (needsident)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
+				}
+				if (needskeyStr)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keyStr");
+				}
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsip)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "beginPort":
+				needsbeginPort = false;
+				beginPort = Integer.parseInt(parser.getString());
+				break;
+			case "endPort":
+				needsendPort = false;
+				endPort = Integer.parseInt(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -226,24 +231,12 @@ public class MachineEntry implements TrackObject
 				break;
 			}
 			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "beginPort":
-				needsbeginPort = false;
-				beginPort = Integer.parseInt(parser.getString());
-				break;
-			case "endPort":
-				needsendPort = false;
-				endPort = Integer.parseInt(parser.getString());
-				break;
-			}
-			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "MachineEntry"; }
+	public String getJsonKey() { return getJsonName(); }
 	public MachineEntry(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

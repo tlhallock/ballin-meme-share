@@ -36,7 +36,7 @@ public abstract class TrackerConnection implements Closeable
 		
 		
 		MachineEntry local = getLocalMachine();
-		local.print(generator);
+		local.generate(generator);
 		generator.flush();
 
 		parser = TrackObjectUtils.createParser(socket.getInputStream());
@@ -49,7 +49,7 @@ public abstract class TrackerConnection implements Closeable
 		
 		authenticate();
 		
-		request.print(generator);
+		request.generate(generator);
 		generator.flush();
 	}
 

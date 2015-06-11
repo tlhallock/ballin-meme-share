@@ -23,7 +23,7 @@ public class JsonList<T extends Jsonable> extends LinkedList<T>
 		
 		for (T t : this)
 		{
-			t.generate(generator);
+			t.generate(generator, null);
 		}
 		
 		generator.writeEnd();

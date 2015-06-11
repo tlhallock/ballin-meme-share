@@ -103,62 +103,49 @@ public class MachineFound extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("port", port);
 		generator.write("nports", nports);
-		if (name!=null)
 		generator.write("name", name);
-		if (ident!=null)
 		generator.write("ident", ident);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsname = true;
-		boolean needsident = true;
 		boolean needsport = true;
 		boolean needsnports = true;
+		boolean needsname = true;
+		boolean needsident = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsname)
-				{
-					throw new RuntimeException("Message needs name");
-				}
-				if (needsident)
-				{
-					throw new RuntimeException("Message needs ident");
-				}
 				if (needsport)
 				{
-					throw new RuntimeException("Message needs port");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
 				}
 				if (needsnports)
 				{
-					throw new RuntimeException("Message needs nports");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsident)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "ident":
-				needsident = false;
-				ident = parser.getString();
-				break;
-			}
-			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -172,11 +159,25 @@ public class MachineFound extends Message
 				break;
 			}
 			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "name":
+				needsname = false;
+				name = parser.getString();
+				break;
+			case "ident":
+				needsident = false;
+				ident = parser.getString();
+				break;
+			}
+			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "MachineFound"; }
+	public String getJsonKey() { return getJsonName(); }
 	public MachineFound(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

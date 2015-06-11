@@ -44,6 +44,8 @@ public class AcceptKey extends javax.swing.JFrame {
         	key = key.substring(0, 50) + "...";
         }
         acceptKey.jLabel5.setText(key);
+        acceptKey.pack();
+        
         
         acceptKey.lock.lock();
         try

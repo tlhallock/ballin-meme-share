@@ -54,8 +54,6 @@
                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="jComboBox1" min="-2" pref="189" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
                       <Component id="jButton2" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -93,7 +91,6 @@
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="jLabel2" alignment="3" max="32767" attributes="0"/>
                   <Component id="jComboBox1" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jButton2" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jButton1" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
@@ -286,15 +283,10 @@
     </Component>
     <Component class="javax.swing.JTextField" name="jTextField1">
     </Component>
-    <Component class="javax.swing.JLabel" name="jLabel5">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="(This overrides others.)"/>
-      </Properties>
-    </Component>
     <Component class="javax.swing.JCheckBox" name="jCheckBox1">
       <Properties>
         <Property name="selected" type="boolean" value="true"/>
-        <Property name="text" type="java.lang.String" value="Ingore less than or equal to:"/>
+        <Property name="text" type="java.lang.String" value="Ingore files with size less than or equal to:"/>
       </Properties>
       <Events>
         <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="jCheckBox1StateChanged"/>

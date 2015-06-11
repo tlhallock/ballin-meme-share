@@ -2,7 +2,6 @@ package org.cnv.shr.dmn.trk;
 
 import java.io.IOException;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.MachineEntry;
@@ -152,7 +151,7 @@ public abstract class TrackerClient
 	CloseableIterator<CommentEntry> listComments(MachineEntry machine) throws Exception
 	{
 		TrackerConnection connection = connect(TrackerAction.LIST_RATINGS);
-		machine.print(connection.generator);
+		machine.generate(connection.generator, null);
 		connection.generator.flush();
 		
 		TrackObjectUtils.openArray(connection.parser);
@@ -231,7 +230,7 @@ public abstract class TrackerClient
 	{
 		try (TrackerConnection connection = connect(TrackerAction.POST_COMMENT))
 		{
-			comment.print(connection.generator);
+			comment.generate(connection.generator);
 			connection.generator.writeEnd();
 			connection.generator.flush();
 			connection.parser.next();
@@ -246,28 +245,9 @@ public abstract class TrackerClient
 		return trackerEntry.toString();
 	}
 
-	void addOthers()
-	{
-		try (TrackerConnection connection = connect(TrackerAction.LIST_TRACKERS))
-		{
-			TrackerEntry entry = new TrackerEntry();
-			TrackObjectUtils.openArray(connection.parser);
-			while (TrackObjectUtils.next(connection.parser, entry))
-			{
-			}
-			connection.generator.writeEnd();
-			connection.generator.flush();
-			connection.parser.next();
-
-			LogWrapper.getLogger().info("Added " + entry);
-		}
-		catch (Exception ex)
-		{
-			Logger.getLogger(TrackerClient.class.getName()).log(Level.SEVERE, null, ex);
-		}
-	}
-
 	public abstract void sync();
 	protected abstract void foundTracker(TrackerEntry entry);
   protected abstract void runLater(Runnable runnable);
+
+	public abstract void addOthers();
 }

@@ -35,13 +35,13 @@ public class RootPermissionBackup implements Jsonable
 	
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
-		if (machineIdent!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("machineIdent", machineIdent);
-		if (localName!=null)
 		generator.write("localName", localName);
-		if (currentState!=null)
 		generator.write("currentState",currentState.name());
 		generator.writeEnd();
 	}
@@ -58,15 +58,15 @@ public class RootPermissionBackup implements Jsonable
 			case END_OBJECT:                         
 				if (needsmachineIdent)
 				{
-					throw new RuntimeException("Message needs machineIdent");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machineIdent");
 				}
 				if (needslocalName)
 				{
-					throw new RuntimeException("Message needs localName");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs localName");
 				}
 				if (needscurrentState)
 				{
-					throw new RuntimeException("Message needs currentState");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentState");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -94,6 +94,7 @@ public class RootPermissionBackup implements Jsonable
 		}
 	}
 	public static String getJsonName() { return "RootPermissionBackup"; }
+	public String getJsonKey() { return getJsonName(); }
 	public RootPermissionBackup(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

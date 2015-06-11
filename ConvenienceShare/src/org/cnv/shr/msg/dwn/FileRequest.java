@@ -52,16 +52,22 @@ public class FileRequest extends DownloadMessage
 	public void perform(Communication connection) throws Exception
 	{
 		LocalFile local = getLocal();
+		if (local == null)
+		{
+//			fail("Unable to find local file.");
+		}
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Serve file");
 		ServeInstance serve = Services.server.serve(local, connection);
-		serve.sendChunks(chunkSize);
+		synchronized (serve)
+		{
+			serve.sendChunks(chunkSize);
+		}
 	}
 
 	@Override
 	protected void finishParsing(ByteReader reader) throws IOException
 	{
 		chunkSize = reader.readInt();
-		
 	}
 
 	@Override
@@ -72,12 +78,13 @@ public class FileRequest extends DownloadMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("chunkSize", chunkSize);
-		if (descriptor!=null)
-		descriptor.generate(generator);
+		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -92,11 +99,11 @@ public class FileRequest extends DownloadMessage
 			case END_OBJECT:                         
 				if (needsdescriptor)
 				{
-					throw new RuntimeException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				if (needschunkSize)
 				{
-					throw new RuntimeException("Message needs chunkSize");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -121,6 +128,7 @@ public class FileRequest extends DownloadMessage
 		}
 	}
 	public static String getJsonName() { return "FileRequest"; }
+	public String getJsonKey() { return getJsonName(); }
 	public FileRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

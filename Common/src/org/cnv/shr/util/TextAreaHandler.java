@@ -34,8 +34,6 @@ public class TextAreaHandler extends Handler
 			builder.append(s);
 		}
 		logArea.setText(builder.toString());
-		
-		System.out.println("Currently at " + builder.toString());
 	}
 	
 	public void setLogLines(int numLines)

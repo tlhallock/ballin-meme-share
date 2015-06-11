@@ -48,7 +48,7 @@ public class DbBackupRestore
 			{
 				while (listLocals.hasNext())
 				{
-					new MachineBackup(listLocals.next()).generate(generator);
+					new MachineBackup(listLocals.next()).generate(generator, null);
 				}
 			}
 			generator.writeEnd();
@@ -60,7 +60,7 @@ public class DbBackupRestore
 			{
 				while (listLocals.hasNext())
 				{
-					new LocalBackup(listLocals.next()).generate(generator);
+					new LocalBackup(listLocals.next()).generate(generator, null);
 				}
 			}
 			generator.writeEnd();
@@ -71,7 +71,7 @@ public class DbBackupRestore
 			{
 				while (listLocals.hasNext())
 				{
-					new FileBackup(listLocals.next()).generate(generator);
+					new FileBackup(listLocals.next()).generate(generator, null);
 				}
 			}
 			generator.writeEnd();
@@ -89,7 +89,7 @@ public class DbBackupRestore
 					LocalDirectory local = DbRoots.getLocalByName(results.getString(2));
 					Machine machine = DbMachines.getMachine(results.getString(3));
 					
-					new RootPermissionBackup(local, machine, state).generate(generator);
+					new RootPermissionBackup(local, machine, state).generate(generator, null);
 				}
 			}
 			catch (SQLException e)

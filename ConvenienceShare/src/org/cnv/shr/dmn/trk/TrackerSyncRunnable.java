@@ -48,7 +48,7 @@ public class TrackerSyncRunnable implements Runnable
 			connection.generator.writeStartArray();
 		  for (FileEntry entry : clone)
 			{
-				entry.print(connection.generator);
+				entry.generate(connection.generator);
 			}
 			connection.generator.writeEnd();
 			connection.generator.writeEnd();
@@ -88,7 +88,7 @@ public class TrackerSyncRunnable implements Runnable
 			TrackObjectUtils.openArray(connection.parser);
 			while (TrackObjectUtils.next(connection.parser, entry))
 			{
-				if (DbFiles.getFile(entry.getChecksum()) == null)
+				if (DbFiles.getFile(entry.getChecksum(), entry.getFileSize()) == null)
 				{
 					delete(entry);
 				}
@@ -116,7 +116,7 @@ public class TrackerSyncRunnable implements Runnable
 			{
 				LocalFile next = locals.next();
 				FileEntry entry = new FileEntry(next.getChecksum(), next.getFileSize());
-				entry.print(connection.generator);
+				entry.generate(connection.generator);
 			}
 			connection.generator.writeEnd();
 			connection.generator.writeEnd();

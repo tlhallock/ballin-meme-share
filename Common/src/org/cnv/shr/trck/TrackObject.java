@@ -1,12 +1,25 @@
 package org.cnv.shr.trck;
 
+import java.io.ByteArrayOutputStream;
+
 import javax.json.stream.JsonGenerator;
-import javax.json.stream.JsonParser;
 
 import org.cnv.shr.util.Jsonable;
 
-public interface TrackObject extends Jsonable
+public abstract class TrackObject implements Jsonable 
 {
-	void read(JsonParser reader);
-	void print(JsonGenerator generator);
+	public String toString()
+	{
+		ByteArrayOutputStream writer = new ByteArrayOutputStream();
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(writer);)
+		{
+			generate(generator, null);
+		}
+		return new String(writer.toByteArray());
+	}
+
+	public void generate(JsonGenerator generator)
+	{
+		generate(generator, null);
+	}
 }

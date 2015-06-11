@@ -9,7 +9,6 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -68,12 +67,12 @@ public class UpdateInfoRequest extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (publicKey!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("publicKey", KeyPairObject.serialize(publicKey));
-		if (naunceRequest!=null)
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}
@@ -89,11 +88,11 @@ public class UpdateInfoRequest extends Message
 			case END_OBJECT:                         
 				if (needspublicKey)
 				{
-					throw new RuntimeException("Message needs publicKey");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs publicKey");
 				}
 				if (needsnaunceRequest)
 				{
-					throw new RuntimeException("Message needs naunceRequest");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -117,6 +116,7 @@ public class UpdateInfoRequest extends Message
 		}
 	}
 	public static String getJsonName() { return "UpdateInfoRequest"; }
+	public String getJsonKey() { return getJsonName(); }
 	public UpdateInfoRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

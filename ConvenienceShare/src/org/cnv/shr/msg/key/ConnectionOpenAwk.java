@@ -72,12 +72,12 @@ public class ConnectionOpenAwk extends KeyMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (decryptedNaunce!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
-		if (naunceRequest!=null)
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}
@@ -93,11 +93,11 @@ public class ConnectionOpenAwk extends KeyMessage
 			case END_OBJECT:                         
 				if (needsdecryptedNaunce)
 				{
-					throw new RuntimeException("Message needs decryptedNaunce");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
 				if (needsnaunceRequest)
 				{
-					throw new RuntimeException("Message needs naunceRequest");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -121,6 +121,7 @@ public class ConnectionOpenAwk extends KeyMessage
 		}
 	}
 	public static String getJsonName() { return "ConnectionOpenAwk"; }
+	public String getJsonKey() { return getJsonName(); }
 	public ConnectionOpenAwk(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

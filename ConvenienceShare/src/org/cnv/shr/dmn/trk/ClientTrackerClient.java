@@ -3,6 +3,7 @@ package org.cnv.shr.dmn.trk;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbMachines;
@@ -133,5 +134,27 @@ public class ClientTrackerClient extends TrackerClient
 	protected void runLater(Runnable runnable)
 	{
 		Services.userThreads.execute(runnable);
+	}
+	
+	public void addOthers()
+	{
+		try (TrackerConnection connection = connect(TrackerAction.LIST_TRACKERS))
+		{
+			TrackerEntry entry = new TrackerEntry();
+			TrackObjectUtils.openArray(connection.parser);
+			while (TrackObjectUtils.next(connection.parser, entry))
+			{
+				Services.trackers.add(entry);
+			}
+			connection.generator.writeEnd();
+			connection.generator.flush();
+			connection.parser.next();
+
+			LogWrapper.getLogger().info("Added " + entry);
+		}
+		catch (Exception ex)
+		{
+			Logger.getLogger(TrackerClient.class.getName()).log(Level.SEVERE, null, ex);
+		}
 	}
 }

@@ -6,13 +6,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbFiles;
+import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.dmn.not.NotificationListenerAdapter;
+import org.cnv.shr.gui.DiskUsage;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.SharedFile;
@@ -28,41 +31,25 @@ public class ChecksumManager extends Thread
 	
 	private boolean stop;
 	
-	// Need to add a notifications listener...
-	
-	NotificationListenerAdapter listener;
+	private DbIterator<LocalFile> iterator;
 	
 	public ChecksumManager()
 	{
-		Services.notifications.add(listener = new NotificationListenerAdapter()
+		setName("ChecksumManager");
+		Services.notifications.add(new NotificationListenerAdapter()
 		{
 			@Override
-			public void localsChanged()
-			{
-				kick();
-			}
-
+			public void localsChanged()                             { kick(); }
 			@Override
-			public void localDirectoryChanged(LocalDirectory local)
-			{
-				kick();
-			}
-
+			public void localDirectoryChanged(LocalDirectory local) { kick(); }
 			@Override
-			public void fileAdded(SharedFile file)
-			{
-				kick();
-			}
-
+			public void fileAdded(SharedFile file)                  { kick(); }
 			@Override
-			public void fileChanged(SharedFile file)
-			{
-				kick();
-			}
+			public void fileChanged(SharedFile file)                { kick(); }
 		});
 	}
 
-	private void kick()
+	void kick()
 	{
 		lock.lock();
 		condition.signalAll();
@@ -82,14 +69,33 @@ public class ChecksumManager extends Thread
 	
 	private LocalFile getNextFile()
 	{
+		int count = 0;
 		while (true)
 		{
 			if (stop) return null;
+			if (iterator == null)
+			{
+				iterator = DbFiles.getSomeUnchecksummedFiles();
+				count++;
+			}
+			if (iterator.hasNext())
+			{
+				return iterator.next();
+			}
+
+			iterator.close();
+			iterator = null;
+			if (count < 2)
+			{
+				// results are paged, don't wait yet
+				continue;
+			}
 			
 			lock.lock();
 			try
 			{
-				condition.await();
+				// Wait for a notification that there are new files...
+				condition.await(1, TimeUnit.DAYS);
 			}
 			catch (InterruptedException e)
 			{
@@ -98,13 +104,6 @@ public class ChecksumManager extends Thread
 			finally
 			{
 				lock.unlock();
-			}
-			if (stop) return null;
-
-			LocalFile unChecksummedFile = DbFiles.getUnChecksummedFile();
-			if (unChecksummedFile != null)
-			{
-				return unChecksummedFile;
 			}
 		}
 	}
@@ -144,7 +143,7 @@ public class ChecksumManager extends Thread
 
 	public String checksumBlocking(Path f, Level level) throws IOException
 	{
-		LogWrapper.getLogger().log(level, "Checksumming " + f);
+		LogWrapper.getLogger().log(level, "Checksumming " + f + " [" + new DiskUsage(Files.size(f)) + "]");
 
 		MessageDigest digest = null;
 		try
@@ -170,7 +169,7 @@ public class ChecksumManager extends Thread
 			}
 
 			String digestToString = digestToString(digest);
-			LogWrapper.getLogger().log(level, "Done checksumming " + f + ": " + digestToString);
+			LogWrapper.getLogger().log(level, "Done checksumming : " + digestToString);
 			return digestToString;
 		}
 	}
@@ -179,6 +178,7 @@ public class ChecksumManager extends Thread
 	{
 		lock.lock();
 		stop = true;
+		iterator.close();
 		condition.signalAll();
 		lock.unlock();
 	}

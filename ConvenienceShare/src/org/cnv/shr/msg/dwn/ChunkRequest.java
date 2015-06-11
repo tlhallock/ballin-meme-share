@@ -9,7 +9,7 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
-import org.cnv.shr.msg.JsonThing;
+import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -50,7 +50,12 @@ public class ChunkRequest extends DownloadMessage
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		checkPermissionsDownloadable(connection, connection.getMachine(), getLocal().getRootDirectory(), "Sending chunk.");
+		LocalFile local = getLocal();
+		if (local == null)
+		{
+			// lost the file...
+		}
+		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Sending chunk.");
 		Services.server.getServeInstance(connection).serve(chunk);
 	}
 
@@ -71,13 +76,13 @@ public class ChunkRequest extends DownloadMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (chunk!=null)
-		chunk.generate(generator);
-		if (descriptor!=null)
-		descriptor.generate(generator);
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
+		chunk.generate(generator, "chunk");
+		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -92,11 +97,11 @@ public class ChunkRequest extends DownloadMessage
 			case END_OBJECT:                         
 				if (needschunk)
 				{
-					throw new RuntimeException("Message needs chunk");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunk");
 				}
 				if (needsdescriptor)
 				{
-					throw new RuntimeException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -107,7 +112,7 @@ public class ChunkRequest extends DownloadMessage
 			switch(key) {
 			case "chunk":
 				needschunk = false;
-				chunk = JsonThing.readChunk(parser);
+				chunk = new Chunk(parser);
 				break;
 			case "descriptor":
 				needsdescriptor = false;
@@ -120,6 +125,7 @@ public class ChunkRequest extends DownloadMessage
 		}
 	}
 	public static String getJsonName() { return "ChunkRequest"; }
+	public String getJsonKey() { return getJsonName(); }
 	public ChunkRequest(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

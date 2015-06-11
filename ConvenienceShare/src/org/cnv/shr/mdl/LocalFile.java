@@ -141,7 +141,7 @@ public class LocalFile extends SharedFile
 	@Override
 	public void setChecksum(String checksum) throws IOException
 	{
-		if (checksum != null && checksum.equals(checksum))
+		if (this.checksum != null && this.checksum.equals(checksum))
 		{
 			return;
 		}

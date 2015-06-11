@@ -88,6 +88,11 @@ private OutputStream logFile;
 	@Override
 	public void close() throws IOException
 	{
+		stopOtherSide();
+	}
+	
+	public void actuallyClose() throws IOException
+	{
 		delegate.close();
 		logFile.close();
 	}

@@ -16,6 +16,7 @@ import org.cnv.shr.dmn.ChecksumManager;
 import org.cnv.shr.stng.Settings;
 
 
+// TODO: java nio
 public class ChunkData
 {
 	public static void read(Chunk chunk, File f, InputStream input) throws IOException, NoSuchAlgorithmException

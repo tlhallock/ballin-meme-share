@@ -62,104 +62,77 @@ public class MachineBackup implements Jsonable
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
-		if (ip!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("ip", ip);
 		generator.write("port", port);
 		generator.write("nports", nports);
-		if (name!=null)
 		generator.write("name", name);
-		if (identifier!=null)
 		generator.write("identifier", identifier);
 		generator.write("allowsMessages", allowsMessages);
-		if (weShareToThem!=null)
 		generator.write("weShareToThem",weShareToThem.name());
-		if (sharesWithUs!=null)
 		generator.write("sharesWithUs",sharesWithUs.name());
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsallowsMessages = true;
+		boolean needsport = true;
+		boolean needsnports = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsidentifier = true;
 		boolean needsweShareToThem = true;
 		boolean needssharesWithUs = true;
-		boolean needsallowsMessages = true;
-		boolean needsport = true;
-		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsip)
+				if (needsallowsMessages)
 				{
-					throw new RuntimeException("Message needs ip");
-				}
-				if (needsname)
-				{
-					throw new RuntimeException("Message needs name");
-				}
-				if (needsidentifier)
-				{
-					throw new RuntimeException("Message needs identifier");
-				}
-				if (needsweShareToThem)
-				{
-					throw new RuntimeException("Message needs weShareToThem");
-				}
-				if (needssharesWithUs)
-				{
-					throw new RuntimeException("Message needs sharesWithUs");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
 				}
 				if (needsallowsMessages)
 				{
-					throw new RuntimeException("Message needs allowsMessages");
-				}
-				if (needsallowsMessages)
-				{
-					throw new RuntimeException("Message needs allowsMessages");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
 				}
 				if (needsport)
 				{
-					throw new RuntimeException("Message needs port");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
 				}
 				if (needsnports)
 				{
-					throw new RuntimeException("Message needs nports");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
+				if (needsip)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
+				}
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsidentifier)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs identifier");
+				}
+				if (needsweShareToThem)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs weShareToThem");
+				}
+				if (needssharesWithUs)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "ip":
-				needsip = false;
-				ip = parser.getString();
-				break;
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "identifier":
-				needsidentifier = false;
-				identifier = parser.getString();
-				break;
-			case "weShareToThem":
-				needsweShareToThem = false;
-				weShareToThem = SharingState.valueOf(parser.getString());;
-				break;
-			case "sharesWithUs":
-				needssharesWithUs = false;
-				sharesWithUs = SharingState.valueOf(parser.getString());;
-				break;
-			}
-			break;
 		case VALUE_FALSE:
 			if (key==null) break;
 			if (key.equals("allowsMessages")) {
@@ -187,11 +160,37 @@ public class MachineBackup implements Jsonable
 				break;
 			}
 			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "ip":
+				needsip = false;
+				ip = parser.getString();
+				break;
+			case "name":
+				needsname = false;
+				name = parser.getString();
+				break;
+			case "identifier":
+				needsidentifier = false;
+				identifier = parser.getString();
+				break;
+			case "weShareToThem":
+				needsweShareToThem = false;
+				weShareToThem = SharingState.valueOf(parser.getString());;
+				break;
+			case "sharesWithUs":
+				needssharesWithUs = false;
+				sharesWithUs = SharingState.valueOf(parser.getString());;
+				break;
+			}
+			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "MachineBackup"; }
+	public String getJsonKey() { return getJsonName(); }
 	public MachineBackup(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

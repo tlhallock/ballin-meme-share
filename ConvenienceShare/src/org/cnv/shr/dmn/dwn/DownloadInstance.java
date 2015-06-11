@@ -1,20 +1,20 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.TimerTask;
 import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
@@ -23,17 +23,14 @@ import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.msg.dwn.ChunkRequest;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
-import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -44,12 +41,15 @@ public class DownloadInstance
 	static int CHUNK_SIZE = 1024 * 1024; // long numChunks = (remoteFile.getFileSize() / CHUNK_SIZE) + 1;
 	static long COMPLETION_REFRESH_RATE = 5 * 1000;
 	
-	private HashMap<String, Seeder> seeders = new HashMap<>();
+//	private HashMap<String, Seeder> seeders = new HashMap<>();
+	private LinkedList<Seeder> freeSeeders = new LinkedList<Seeder>();
+	private Map<Chunk, Seeder> pendingSeeders = new HashMap<Chunk, Seeder>();
+	
+	
 	private RemoteFile remoteFile;
 	
 	private Path destination;
 	
-	private HashMap<String, ChunkRequest> pending = new HashMap<>();
 	// These should be stored on file...
 	private Download download;
 	
@@ -66,7 +66,7 @@ public class DownloadInstance
 	public synchronized void continueDownload() throws UnknownHostException, IOException
 	{
 		DownloadState state = download.getState();
-		if (state.hasYetTo(DownloadState.GETTING_META_DATA))
+		if (state.hasYetTo(DownloadState.REQUESTING_METADATA))
 		{
 			getMetaData();
 			return;
@@ -76,9 +76,9 @@ public class DownloadInstance
 		requestSeeders();
 	}
 
-	private void getMetaData() throws UnknownHostException, IOException
+	private synchronized void getMetaData() throws UnknownHostException, IOException
 	{
-		download.setState(DownloadState.GETTING_META_DATA);
+		download.setState(DownloadState.REQUESTING_METADATA);
 		
 		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
 		{
@@ -96,42 +96,61 @@ public class DownloadInstance
 		}
 		
 		Seeder seeder = new Seeder(machine, openConnection);
-		seeders.put(openConnection.getUrl(), seeder);
+		freeSeeders.addLast(seeder);
 		seeder.send(request);
+
+		// this should have a time out before it goes back to requesting meta data
+		download.setState(DownloadState.RECEIVING_METADATA);
 	}
 
 	private void requestSeeders()
 	{
 //		download.setState(DownloadState.FINDING_PEERS);
-		Services.userThreads.execute(new Runnable() {
-			@Override
-			public void run()
-			{
-				FileEntry fileEntry = remoteFile.getFileEntry();
-				for (ClientTrackerClient client : Services.trackers.getClients())
-				{
-					client.requestSeeders(fileEntry, seeders.values());
-				}
-			}
-		});
+		if (Math.random() < 2)
+		{
+			LogWrapper.getLogger().info("Currently not requesting seeders.");
+			return;
+		}
+//		Services.userThreads.execute(new Runnable() {
+//			@Override
+//			public void run()
+//			{
+//				FileEntry fileEntry = remoteFile.getFileEntry();
+//				for (ClientTrackerClient client : Services.trackers.getClients())
+//				{
+//					client.requestSeeders(fileEntry, seeders);
+//				}
+//			}
+//		});
 	}
 
-	public void addSeeder(Machine machine, Communication connection)
+	public synchronized void addSeeder(Machine machine, Communication connection)
 	{
-		seeders.put(connection.getUrl(), new Seeder(machine, connection));
+		freeSeeders.add(new Seeder(machine, connection));
 		queue();
 	}
 
-	public void foundChunks(Machine machine, List<Chunk> chunks) throws IOException
+	public synchronized void foundChunks(Machine machine, List<Chunk> chunks) throws IOException
 	{
 		if (remoteFile.getRootDirectory().getMachine().getId() != machine.getId())
 		{
 			return;
 		}
+		download.setState(DownloadState.RECEIVING_METADATA);
 		
 		for (Chunk chunk : chunks)
 		{
+			if (chunk.getBegin() % CHUNK_SIZE != 0)
+			{
+				LogWrapper.getLogger().info("Received a bad chunk!!: " + chunk + " chunksize is " + CHUNK_SIZE);
+				continue;
+			}
 			DbChunks.addChunk(download, chunk);
+		}
+		
+		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
+		{
+			download.setState(DownloadState.DOWNLOADING);
 		}
 
 		Services.userThreads.execute(new Runnable() { @Override public void run() {
@@ -144,14 +163,9 @@ public class DownloadInstance
 					LogWrapper.getLogger().log(Level.INFO, "Unable to continue download.", e);
 				}
 			}});
-		
-		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
-		{
-			download.setState(DownloadState.DOWNLOADING);
-		}
 	}
 	
-	private void recover()
+	private synchronized void recover()
 	{
 		DownloadState prev = download.getState();
 		download.setState(DownloadState.RECOVERING);
@@ -189,91 +203,105 @@ public class DownloadInstance
 		download.setState(prev);
 	}
 	
-	private void allocate() throws IOException
+	private synchronized void allocate() throws IOException
 	{
-		if (!download.getState().hasYetTo(DownloadState.ALLOCATING) && Files.size(destination) > 0)
+		if (!download.getState().hasYetTo(DownloadState.ALLOCATING) && Files.size(destination) == remoteFile.getFileSize())
 		{
 			return;
 		}
-		download.setState(DownloadState.ALLOCATING);
 		
-		// Should checkout random access file.setLength()
-		try (OutputStream outputStream = Files.newOutputStream(destination);)
+		download.setState(DownloadState.ALLOCATING);
+		try (RandomAccessFile raf = new RandomAccessFile(destination.toFile(), "rw");)
 		{
-			for (long i = 0; i < remoteFile.getFileSize(); i++)
-			{
-				outputStream.write(0);
-			}
+			raf.setLength(remoteFile.getFileSize());
 		}
 	}
 	
 	private synchronized void queue()
 	{
-		while (pending.size() < NUM_PENDING_CHUNKS)
+		List<Chunk> upComing = DbChunks.getNextChunks(download, NUM_PENDING_CHUNKS - pendingSeeders.size());
+		if (upComing.isEmpty())
 		{
-			List<Chunk> upComing = DbChunks.getNextChunks(download, NUM_PENDING_CHUNKS - pending.size());
-			if (upComing.isEmpty())
-			{
-				if (pending.isEmpty())
-				{
-					complete();
-				}
-				return;
-			}
-			for (Chunk c : upComing)
-			{
-				if (seeders.isEmpty())
-				{
-					fail("There are no more seeders left!");
-					return;
-				}
-				Seeder seeder = getRandomSeeder();
-				try
-				{
-					pending.put(c.getChecksum(), seeder.request(remoteFile.getFileEntry(), c));
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to request chunk", e);
-				}
-			}
-		}
-	}
-
-	private Seeder getRandomSeeder()
-	{
-		if (seeders.size() == 1)
-		{
-			return seeders.entrySet().iterator().next().getValue();
-		}
-		int index = random.nextInt(seeders.size() - 1);
-		Iterator<Entry<String, Seeder>> iterator = seeders.entrySet().iterator();
-		for (int i = 0; i < index; i++)
-		{
-			iterator.next();
-		}
-		return iterator.next().getValue();
-	}
-
-	public synchronized void download(Chunk chunk, Communication communication) throws IOException, NoSuchAlgorithmException
-	{
-		ChunkRequest chunkRequest = pending.get(chunk.getChecksum());
-		if (chunkRequest == null)
-		{
-			fail("Unkown chunk.");
+			checkIfDone();
 			return;
 		}
-		// TODO: java nio
-		ChunkData.read(chunkRequest.getChunk(), destination.toFile(), communication.getIn());
-		pending.remove(chunk.getChecksum());
+		if (freeSeeders.size() + pendingSeeders.size() == 0)
+		{
+			fail("There are no more seeders left!");
+			return;
+		}
+		for (Chunk c : upComing)
+		{
+			if (pendingSeeders.containsKey(c))
+			{
+				continue;
+			}
+			if (freeSeeders.isEmpty())
+			{
+				LogWrapper.getLogger().info("All seeders busy.");
+				break;
+			}
+			
+			Seeder removeFirst = freeSeeders.removeFirst();
+			try
+			{
+				removeFirst.request(remoteFile.getFileEntry(), c);
+				pendingSeeders.put(c, removeFirst);
+				LogWrapper.getLogger().info("Requested chunk " + c + " from " + removeFirst);
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to request chunk", e);
+			}
+		}
+	}
+
+	private void checkIfDone()
+	{
+		if (pendingSeeders.isEmpty() && DbChunks.hasAllChunks(download, CHUNK_SIZE))
+		{
+			// Should be using ScheduledThreadPoolExecutor
+			
+			// This needs to happen a while later.
+			// If this was the last chunk, then all seeders will be removed, including the one that inspired this queue (maybe a download chunk).
+			// If we do it later, we can hope to terminate peacefully.
+			Services.timer.schedule(new TimerTask() {
+				@Override
+				public void run()
+				{
+					// complete can take a long time, so don't have it on the timer :)
+					Services.userThreads.execute(new Runnable() { public void run() {
+						complete();
+					}});
+				}}, 1000);
+		}
+		return;
+	}
+
+	public synchronized void download(Chunk chunk, Communication connection) throws IOException, NoSuchAlgorithmException
+	{
+		Seeder chunkRequest = pendingSeeders.remove(chunk);
+		if (chunkRequest == null)
+		{
+			LogWrapper.getLogger().info("Some seeder gave an unknown chunk.");
+			return;
+		}
+		freeSeeders.addLast(chunkRequest);
+		
+		chunkRequest.requestCompleted(null, chunk);
+		connection.beginReadRaw();
+		ChunkData.read(chunk, destination.toFile(), connection.getIn());
+		connection.endReadRaw();
+		
 		DbChunks.chunkDone(download, chunk, true);
-		communication.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage()));
+		connection.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage()));
+		
 		queue();
 	}
 	
-	private void complete()
+	private synchronized void complete()
 	{
-		for (Seeder seeder : seeders.values())
+		for (Seeder seeder : freeSeeders)
 		{
 			seeder.done();
 		}
@@ -291,22 +319,23 @@ public class DownloadInstance
 			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate checksum", e);
 		}
 		
-		try
-		{
-			Files.move(destination, download.getTargetFile(), StandardCopyOption.REPLACE_EXISTING);
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to move downloaded file.", e);
-		}
+//		try
+//		{
+//			Files.move(destination, download.getTargetFile(), StandardCopyOption.REPLACE_EXISTING);
+//		}
+//		catch (IOException e)
+//		{
+//			LogWrapper.getLogger().log(Level.INFO, "Unable to move downloaded file.", e);
+//		}
 		
 		Services.downloads.remove(this);
 		Services.notifications.downloadDone(this);
 		download.setState(DownloadState.ALL_DONE);
+		// maybe we shouldn't delete the chunks till the download is removed, remember the verify?
 		DbChunks.allChunksDone(download);
 	}
 
-	public void setDestinationFile()
+	public synchronized void setDestinationFile()
 	{
 		Path localRoot = remoteFile.getRootDirectory().getLocalRoot();
 		destination = PathSecurity.secureMakeDirs(localRoot, Paths.get(remoteFile.getPath().getFullPath()));
@@ -345,9 +374,15 @@ public class DownloadInstance
 		return remoteFile.getChecksum();
 	}
 
-	public boolean contains(Communication c)
+	public synchronized boolean contains(Communication c)
 	{
-		return seeders.get(c.getUrl()) != null;
+		for (Seeder seeder : freeSeeders)
+			if (seeder.is(c))
+				return true;
+		for (Seeder seeder : pendingSeeders.values())
+			if (seeder.is(c))
+				return true;
+		return false;
 	}
 	
 	private boolean checkChecksum() throws IOException
@@ -369,9 +404,9 @@ public class DownloadInstance
 		return completionSatus = DbChunks.getDownloadPercentage(download);
 	}
 	
-	public void sendCompletionStatus()
+	public synchronized void sendCompletionStatus()
 	{
-		for (Seeder seeder : seeders.values())
+		for (Seeder seeder : freeSeeders)
 		{
 			try
 			{
@@ -379,34 +414,52 @@ public class DownloadInstance
 			}
 			catch (IOException e)
 			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to send completion status to " + seeder.connection.getUrl(), e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to send completion status.", e);
 			}
 		}
 	}
 	
-	public void fail(String string)
+	public synchronized void fail(String string)
 	{
 		System.out.println(string);
-		for (Seeder seeder : seeders.values())
-		{
+		for (Seeder seeder : pendingSeeders.values())
 			seeder.done();
-		}
+		for (Seeder seeder : freeSeeders)
+			seeder.done();
 		Services.downloads.remove(this);
 		Services.notifications.downloadRemoved(this);
 	}
 
-	public void removePeer(Communication connection)
+	public synchronized void removePeer(Communication connection)
 	{
-		Seeder seeder = seeders.remove(connection.getUrl());
-		if (seeder != null)
+		Seeder badSeeder = null;
+		for (Seeder seeder : freeSeeders)
 		{
-			seeder.done();
+			if (seeder.is(connection))
+			{
+				badSeeder = seeder;
+				freeSeeders.remove(seeder);
+			}
 		}
-		
-		if (seeders.isEmpty())
+		for (Map.Entry<Chunk, Seeder> seeder : pendingSeeders.entrySet())
+		{
+			if (seeder.getValue().is(connection))
+			{
+				badSeeder = seeder.getValue();
+				pendingSeeders.remove(seeder.getKey());
+			}
+		}
+		if (badSeeder == null)
+		{
+			return;
+		}
+
+		if (freeSeeders.size() + pendingSeeders.size() == 0)
 		{
 			fail("There are no more seeders left!");
 		}
+		
+		badSeeder.done();
 	}
 
 	public String getSpeed()

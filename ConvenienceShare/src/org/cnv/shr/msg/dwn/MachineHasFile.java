@@ -86,12 +86,13 @@ public class MachineHasFile extends DownloadMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("hasFile", hasFile);
-		if (descriptor!=null)
-		descriptor.generate(generator);
+		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -106,15 +107,15 @@ public class MachineHasFile extends DownloadMessage
 			case END_OBJECT:                         
 				if (needsdescriptor)
 				{
-					throw new RuntimeException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				if (needshasFile)
 				{
-					throw new RuntimeException("Message needs hasFile");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
 				}
 				if (needshasFile)
 				{
-					throw new RuntimeException("Message needs hasFile");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -146,6 +147,7 @@ public class MachineHasFile extends DownloadMessage
 		}
 	}
 	public static String getJsonName() { return "MachineHasFile"; }
+	public String getJsonKey() { return getJsonName(); }
 	public MachineHasFile(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
@@ -74,7 +73,7 @@ public class ConnectionManager
 			}
 			catch (ConnectException ex)
 			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to connect, trying others if available.", ex);
+				LogWrapper.getLogger().info("Unable to connect to " + ip + " on port " + port + ", trying others if available. " + ex.getMessage());
 			}
 		}
 		return null;

@@ -39,8 +39,12 @@ public class Communication implements Closeable
 	// The streams
 	private Socket socket;
 	
-	private InputStream inputOrig;
-	private OutputStream outputOrig;
+	
+	// output wrappers
+	private CountingInputStream inputOrig;
+	private CountingOutputStream outputOrig;
+	
+	// json stuff
 	private JsonParser parser;
 	private JsonGenerator generator;
 	
@@ -79,22 +83,22 @@ public class Communication implements Closeable
 		inputOrig  = new CountingInputStream(socket.getInputStream());
 		outputOrig = new CountingOutputStream(socket.getOutputStream());
 
-		stats = new ConnectionStatistics((CountingInputStream) inputOrig, (CountingOutputStream) outputOrig);
+		stats = new ConnectionStatistics(inputOrig, outputOrig);
 		
 		needsMore = true;
 		this.authentication = authentication;
 
 		generator = TrackObjectUtils.createGenerator(outputOrig);
-		generator.writeStartArray();
+		generator.writeStartObject();
 		generator.flush();
 	}
 	
 	void initParser()
 	{
 		parser = TrackObjectUtils.createParser(inputOrig);
-		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{
-			System.out.println("This is bad...");
+			throw new RuntimeException("Expected start object!");
 		}
 	}
 	
@@ -124,10 +128,10 @@ public class Communication implements Closeable
 		
 		LogWrapper.getLogger().info("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
 
-		synchronized (generator)
+		synchronized (getOutput())
 		{
 			// Should re-encrypt every so often...
-			m.generate(generator);
+			m.generate(generator, m.getJsonKey());
 			generator.flush();
 			outputOrig.flush();
 		}
@@ -150,7 +154,11 @@ public class Communication implements Closeable
 		return socket.isClosed();
 	}
 
-	public OutputStream getOut()
+	public JsonGenerator getGenerator()
+	{
+		return generator;
+	}
+	public OutputStream getOutput()
 	{
 		return outputOrig;
 	}
@@ -283,35 +291,60 @@ public class Communication implements Closeable
 		}
 	}
 	
-	/** Don't let these be finalized. **/
-	private static JsonGenerator oldGen;
-	private static JsonParser oldParser;
 	public synchronized void encrypt() throws InvalidKeyException, IOException
 	{
 		RijndaelKey key = KeysService.createAesKey();
 		send(new NewAesKey(key, authentication.getRemoteKey()));
 		generator.writeEnd();
-		generator.flush();
-		oldGen = generator;
-		((CountingOutputStream) outputOrig).stopOtherSide();
+		generator.close();
 		generator = TrackObjectUtils.createGenerator(outputOrig);// = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
-		generator.writeStartArray();
+		generator.writeStartObject();
 		generator.flush();
 	}
 
 	public synchronized void decrypt(RijndaelKey key) throws InvalidKeyException, IOException
 	{
-		if (!parser.next().equals(JsonParser.Event.END_ARRAY))
+		if (!parser.next().equals(JsonParser.Event.END_OBJECT))
 		{
-			System.out.println("This is bad...");
+			throw new RuntimeException("Expected end object!");
 		}
-		oldParser = parser;
-		((CountingInputStream) inputOrig).startAgain();
+		parser.close();
+		inputOrig.startAgain();
 		parser = TrackObjectUtils.createParser(inputOrig);// = FlushableEncryptionStreams.createEncryptedInputStream(inputOrig, key));
-		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{
-			System.out.println("This is bad...");
+			throw new RuntimeException("Expected start object!");
 		}
 		authentication.notifyAuthentication();
+	}
+	
+	// Below methods should already be synchronized on out
+	public void beginWriteRaw() throws IOException
+	{
+		generator.writeEnd();
+		generator.close();
+	}
+	public void endWriteRaw() throws IOException
+	{
+		generator = TrackObjectUtils.createGenerator(outputOrig);
+		generator.writeStartObject();
+		generator.flush();
+	}
+	public void beginReadRaw() throws IOException
+	{
+		if (!parser.next().equals(JsonParser.Event.END_OBJECT))
+		{
+			throw new RuntimeException("Expected end object!");
+		}
+		parser.close();
+		inputOrig.startAgain();
+	}
+	public void endReadRaw() throws IOException
+	{
+		parser = TrackObjectUtils.createParser(inputOrig);
+		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
+		{
+			throw new RuntimeException("Expected start object!");
+		}
 	}
 }

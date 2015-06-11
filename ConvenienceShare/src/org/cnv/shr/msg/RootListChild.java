@@ -63,15 +63,14 @@ public class RootListChild implements Jsonable
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
-		if (name!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("name", name);
-		if (tags!=null)
 		generator.write("tags", tags);
-		if (description!=null)
 		generator.write("description", description);
-		if (state!=null)
 		generator.write("state",state.name());
 		generator.writeEnd();
 	}
@@ -89,19 +88,19 @@ public class RootListChild implements Jsonable
 			case END_OBJECT:                         
 				if (needsname)
 				{
-					throw new RuntimeException("Message needs name");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
 				}
 				if (needstags)
 				{
-					throw new RuntimeException("Message needs tags");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs tags");
 				}
 				if (needsdescription)
 				{
-					throw new RuntimeException("Message needs description");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
 				}
 				if (needsstate)
 				{
-					throw new RuntimeException("Message needs state");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs state");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -133,6 +132,7 @@ public class RootListChild implements Jsonable
 		}
 	}
 	public static String getJsonName() { return "RootListChild"; }
+	public String getJsonKey() { return getJsonName(); }
 	public RootListChild(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

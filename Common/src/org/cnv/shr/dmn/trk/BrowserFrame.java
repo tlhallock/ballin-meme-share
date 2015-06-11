@@ -200,8 +200,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 
         jMenuItem2.setText("Show");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
             }
         });
@@ -209,8 +208,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 
         jMenuItem1.setText("Delete highlighted item");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem1ActionPerformed(evt);
             }
         });
@@ -241,19 +239,16 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
                 false, false, false
             };
 
-            @Override
-						public Class getColumnClass(int columnIndex) {
+            public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            @Override
-						public boolean isCellEditable(int rowIndex, int columnIndex) {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-						public void mouseClicked(java.awt.event.MouseEvent evt) {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jTable1MouseClicked(evt);
             }
         });
@@ -282,7 +277,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         );
         commentPanelLayout.setVerticalGroup(
             commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 266, Short.MAX_VALUE)
+            .addGap(0, 258, Short.MAX_VALUE)
         );
 
         jScrollPane3.setViewportView(commentPanel);
@@ -296,8 +291,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton3.setText("Open");
         jButton3.setEnabled(false);
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -305,8 +299,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton5.setText("Add Comment");
         jButton5.setEnabled(false);
         jButton5.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton5ActionPerformed(evt);
             }
         });
@@ -370,7 +363,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 261, Short.MAX_VALUE))
         );
 
         jSplitPane2.setRightComponent(jPanel2);
@@ -378,8 +371,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton8.setText("Next");
         jButton8.setEnabled(false);
         jButton8.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton8ActionPerformed(evt);
             }
         });
@@ -387,8 +379,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton9.setText("Prev");
         jButton9.setEnabled(false);
         jButton9.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton9ActionPerformed(evt);
             }
         });
@@ -402,8 +393,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton6.setText("Refresh");
         jButton6.setEnabled(false);
         jButton6.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton6ActionPerformed(evt);
             }
         });
@@ -411,8 +401,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton1.setText("Add known trackers");
         jButton1.setEnabled(false);
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
@@ -420,8 +409,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton2.setText("Upload file metadata");
         jButton2.setEnabled(false);
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -447,7 +435,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
                     .addComponent(jButton6)
                     .addComponent(jButton1)
                     .addComponent(jButton2))
-                .addContainerGap(15, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -485,7 +473,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
                             .addComponent(jButton8)))
                     .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jSplitPane2))
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE))
         );
 
         jSplitPane1.setRightComponent(jPanel1);
@@ -495,16 +483,13 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jList1.setModel(new DefaultListModel());
         jList1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         jList1.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-						public void mousePressed(java.awt.event.MouseEvent evt) {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
                 jList1MousePressed(evt);
             }
-            @Override
-						public void mouseReleased(java.awt.event.MouseEvent evt) {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
                 jList1MouseReleased(evt);
             }
-            @Override
-						public void mouseClicked(java.awt.event.MouseEvent evt) {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jList1MouseClicked(evt);
             }
         });
@@ -512,8 +497,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 
         jButton4.setText("Add...");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
             }
         });
@@ -521,8 +505,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton7.setText("Remove");
         jButton7.setEnabled(false);
         jButton7.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton7ActionPerformed(evt);
             }
         });
@@ -688,6 +671,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 					{
 						return;
 					}
+					
 					currentClient.addOthers();
 	
 					if (isVisible())

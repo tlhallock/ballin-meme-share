@@ -2,7 +2,6 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -94,43 +93,37 @@ public class UserMessageMessage extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("type", type);
-		if (messageStr!=null)
 		generator.write("messageStr", messageStr);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsmessageStr = true;
 		boolean needstype = true;
+		boolean needsmessageStr = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsmessageStr)
-				{
-					throw new RuntimeException("Message needs messageStr");
-				}
 				if (needstype)
 				{
-					throw new RuntimeException("Message needs type");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs type");
+				}
+				if (needsmessageStr)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs messageStr");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("messageStr")) {
-				needsmessageStr = false;
-				messageStr = parser.getString();
-			}
-			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("type")) {
@@ -138,11 +131,19 @@ public class UserMessageMessage extends Message
 				type = Integer.parseInt(parser.getString());
 			}
 			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("messageStr")) {
+				needsmessageStr = false;
+				messageStr = parser.getString();
+			}
+			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "UserMessageMessage"; }
+	public String getJsonKey() { return getJsonName(); }
 	public UserMessageMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -207,7 +207,7 @@ public class Tracker implements Runnable
 			output.writeStartArray();
 			if (other != null)
 			{
-				other.print(output);
+				other.generate(output);
 			}
 			output.writeEnd();
 			break;

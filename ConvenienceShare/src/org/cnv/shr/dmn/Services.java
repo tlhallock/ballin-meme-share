@@ -180,7 +180,7 @@ public class Services
 	{
 		notifications.start();
 		// Now start other threads...
-		checksums.start();
+		checksums.start(); checksums.kick();
 		for (int i = 0; i < handlers.length; i++)
 		{
 			if (handlers[i] != null)
@@ -322,6 +322,11 @@ public class Services
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to connect to begin port. Good.\n" + ex.getMessage());
 		}
+		
+
+		LogWrapper.logToFile(
+				Services.settings.logToFile.get() ? Services.settings.logFile.getPath() : null,
+				Services.settings.logLength.get());
 
 		int numServeThreads = Math.max(1, settings.maxServes.get());
 		sockets = new ServerSocket[numServeThreads];

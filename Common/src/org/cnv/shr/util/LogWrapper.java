@@ -1,7 +1,11 @@
 package org.cnv.shr.util;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Path;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -10,6 +14,34 @@ import java.util.logging.SimpleFormatter;
 public class LogWrapper
 {
 	private static Logger logger = Logger.getGlobal();
+	static {
+		logger.setUseParentHandlers(false);
+		logger.addHandler(new ConsoleHandler() {
+			{
+				setOutputStream(System.out);
+				setFormatter(new Formatter() {
+					@Override
+					public String format(LogRecord record)
+					{
+		        String throwable = "";
+		        if (record.getThrown() != null) {
+		            StringWriter sw = new StringWriter();
+		            try (PrintWriter pw = new PrintWriter(sw);) {
+									pw.println();
+									record.getThrown().printStackTrace(pw);
+									pw.close();
+								}
+		            throwable = sw.toString();
+		        }
+		        return record.getMessage() + "\n" + throwable;
+					}});
+			}
+		});
+	}
+	
+	
+	
+	
 	private static Handler fileHandler;
 
 	// This should never be created...
@@ -29,8 +61,7 @@ public class LogWrapper
 		try
 		{
 			Misc.ensureDirectory(file, true);
-			CircularOutputStream output = new CircularOutputStream(file.toFile(), logLength);
-			logger.addHandler(fileHandler = createFileHandler(output));
+			logger.addHandler(fileHandler = createFileHandler(new CircularOutputStream(file, logLength)));
 		}
 		catch (IOException e1)
 		{

@@ -185,12 +185,12 @@ public class PathList extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (name!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("name", name);
-		if (currentPath!=null)
 		generator.write("currentPath", currentPath);
 		if (subDirs!=null){
 			generator.writeStartArray("subDirs");
@@ -205,48 +205,35 @@ public class PathList extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsname = true;
-		boolean needscurrentPath = true;
 		boolean needssubDirs = true;
 		boolean needschildren = true;
+		boolean needsname = true;
+		boolean needscurrentPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsname)
-				{
-					throw new RuntimeException("Message needs name");
-				}
-				if (needscurrentPath)
-				{
-					throw new RuntimeException("Message needs currentPath");
-				}
 				if (needssubDirs)
 				{
-					throw new RuntimeException("Message needs subDirs");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs subDirs");
 				}
 				if (needschildren)
 				{
-					throw new RuntimeException("Message needs children");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs children");
+				}
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needscurrentPath)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPath");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "currentPath":
-				needscurrentPath = false;
-				currentPath = parser.getString();
-				break;
-			}
-			break;
 		case START_ARRAY:
 			if (key==null) break;
 			switch(key) {
@@ -260,11 +247,25 @@ public class PathList extends Message
 				break;
 			}
 			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "name":
+				needsname = false;
+				name = parser.getString();
+				break;
+			case "currentPath":
+				needscurrentPath = false;
+				currentPath = parser.getString();
+				break;
+			}
+			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "PathList"; }
+	public String getJsonKey() { return getJsonName(); }
 	public PathList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

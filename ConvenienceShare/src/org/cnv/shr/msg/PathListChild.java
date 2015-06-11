@@ -71,9 +71,11 @@ public class PathListChild implements Jsonable
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
-		if (name!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("name", name);
 		generator.write("size", size);
 		if (checksum!=null)
@@ -86,30 +88,43 @@ public class PathListChild implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsname = true;
 		boolean needssize = true;
 		boolean needslastModified = true;
+		boolean needsname = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsname)
-				{
-					throw new RuntimeException("Message needs name");
-				}
 				if (needssize)
 				{
-					throw new RuntimeException("Message needs size");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs size");
 				}
 				if (needslastModified)
 				{
-					throw new RuntimeException("Message needs lastModified");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
+				}
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "size":
+				needssize = false;
+				size = Long.parseLong(parser.getString());
+				break;
+			case "lastModified":
+				needslastModified = false;
+				lastModified = Long.parseLong(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -125,24 +140,12 @@ public class PathListChild implements Jsonable
 				break;
 			}
 			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "size":
-				needssize = false;
-				size = Long.parseLong(parser.getString());
-				break;
-			case "lastModified":
-				needslastModified = false;
-				lastModified = Long.parseLong(parser.getString());
-				break;
-			}
-			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "PathListChild"; }
+	public String getJsonKey() { return getJsonName(); }
 	public PathListChild(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

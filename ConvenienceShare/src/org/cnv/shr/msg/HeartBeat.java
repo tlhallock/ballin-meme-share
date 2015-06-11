@@ -61,9 +61,11 @@ public class HeartBeat extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -79,6 +81,7 @@ public class HeartBeat extends Message
 		}                                        
 	}                                          
 	public static String getJsonName() { return "HeartBeat"; }
+	public String getJsonKey() { return getJsonName(); }
 	public HeartBeat(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

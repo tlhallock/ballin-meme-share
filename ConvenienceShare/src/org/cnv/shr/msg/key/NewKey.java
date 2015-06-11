@@ -11,7 +11,6 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.IdkWhereToPutThis;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
@@ -85,12 +84,12 @@ public class NewKey extends KeyMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (newKey!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("newKey", KeyPairObject.serialize(newKey));
-		if (naunceRequest!=null)
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}
@@ -106,11 +105,11 @@ public class NewKey extends KeyMessage
 			case END_OBJECT:                         
 				if (needsnewKey)
 				{
-					throw new RuntimeException("Message needs newKey");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs newKey");
 				}
 				if (needsnaunceRequest)
 				{
-					throw new RuntimeException("Message needs naunceRequest");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -134,6 +133,7 @@ public class NewKey extends KeyMessage
 		}
 	}
 	public static String getJsonName() { return "NewKey"; }
+	public String getJsonKey() { return getJsonName(); }
 	public NewKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

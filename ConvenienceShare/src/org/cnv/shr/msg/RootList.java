@@ -133,9 +133,11 @@ public class RootList extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		if (sharedDirectories!=null){
 			generator.writeStartArray("sharedDirectories");
 			sharedDirectories.generate(generator);
@@ -153,7 +155,7 @@ public class RootList extends Message
 			case END_OBJECT:                         
 				if (needssharedDirectories)
 				{
-					throw new RuntimeException("Message needs sharedDirectories");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharedDirectories");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -171,6 +173,7 @@ public class RootList extends Message
 		}
 	}
 	public static String getJsonName() { return "RootList"; }
+	public String getJsonKey() { return getJsonName(); }
 	public RootList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

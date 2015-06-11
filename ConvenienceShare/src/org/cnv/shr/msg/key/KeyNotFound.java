@@ -12,7 +12,6 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.cnctn.IdkWhereToPutThis;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.json.JsonList;
 import org.cnv.shr.json.JsonMap;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -110,9 +109,11 @@ public class KeyNotFound extends KeyMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		if (tests!=null){
 			generator.writeStartArray("tests");
 			tests.generate(generator);
@@ -130,7 +131,7 @@ public class KeyNotFound extends KeyMessage
 			case END_OBJECT:                         
 				if (needstests)
 				{
-					throw new RuntimeException("Message needs tests");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs tests");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -148,6 +149,7 @@ public class KeyNotFound extends KeyMessage
 		}
 	}
 	public static String getJsonName() { return "KeyNotFound"; }
+	public String getJsonKey() { return getJsonName(); }
 	public KeyNotFound(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

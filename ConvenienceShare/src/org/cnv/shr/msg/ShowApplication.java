@@ -62,9 +62,11 @@ public class ShowApplication extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -80,6 +82,7 @@ public class ShowApplication extends Message
 		}                                        
 	}                                          
 	public static String getJsonName() { return "ShowApplication"; }
+	public String getJsonKey() { return getJsonName(); }
 	public ShowApplication(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

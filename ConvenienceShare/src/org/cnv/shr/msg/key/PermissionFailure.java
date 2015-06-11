@@ -17,7 +17,6 @@ import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -166,14 +165,13 @@ public class PermissionFailure extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (rootName!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("rootName", rootName);
-		if (currentPermission!=null)
 		generator.write("currentPermission",currentPermission.name());
-		if (action!=null)
 		generator.write("action", action);
 		generator.writeEnd();
 	}
@@ -190,15 +188,15 @@ public class PermissionFailure extends Message
 			case END_OBJECT:                         
 				if (needsrootName)
 				{
-					throw new RuntimeException("Message needs rootName");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
 				if (needscurrentPermission)
 				{
-					throw new RuntimeException("Message needs currentPermission");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPermission");
 				}
 				if (needsaction)
 				{
-					throw new RuntimeException("Message needs action");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -226,6 +224,7 @@ public class PermissionFailure extends Message
 		}
 	}
 	public static String getJsonName() { return "PermissionFailure"; }
+	public String getJsonKey() { return getJsonName(); }
 	public PermissionFailure(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

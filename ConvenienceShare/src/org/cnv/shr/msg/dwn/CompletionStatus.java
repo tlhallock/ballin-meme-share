@@ -2,7 +2,6 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -70,12 +69,13 @@ public class CompletionStatus extends DownloadMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("percentComplete", percentComplete);
-		if (descriptor!=null)
-		descriptor.generate(generator);
+		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -90,11 +90,11 @@ public class CompletionStatus extends DownloadMessage
 			case END_OBJECT:                         
 				if (needsdescriptor)
 				{
-					throw new RuntimeException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				if (needspercentComplete)
 				{
-					throw new RuntimeException("Message needs percentComplete");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs percentComplete");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -119,6 +119,7 @@ public class CompletionStatus extends DownloadMessage
 		}
 	}
 	public static String getJsonName() { return "CompletionStatus"; }
+	public String getJsonKey() { return getJsonName(); }
 	public CompletionStatus(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

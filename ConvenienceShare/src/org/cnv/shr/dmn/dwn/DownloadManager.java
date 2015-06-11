@@ -46,7 +46,7 @@ public class DownloadManager
 
 	synchronized DownloadInstance createDownload(Download d) throws UnknownHostException, IOException
 	{
-		DownloadInstance prev = downloads.get(d.getFile().getId());
+		DownloadInstance prev = downloads.get(d.getFile().getFileEntry());
 		if (prev != null)
 		{
 			LogWrapper.getLogger().info("Already downloading.");

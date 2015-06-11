@@ -81,8 +81,11 @@ public enum SharingState implements Jsonable
 		
 		// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("state", state);
 		generator.writeEnd();
 	}
@@ -97,7 +100,7 @@ public enum SharingState implements Jsonable
 			case END_OBJECT:                         
 				if (needsstate)
 				{
-					throw new RuntimeException("Message needs state");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs state");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -115,5 +118,6 @@ public enum SharingState implements Jsonable
 		}
 	}
 	public static String getJsonName() { return "SharingState"; }
+	public String getJsonKey() { return getJsonName(); }
 		// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	}

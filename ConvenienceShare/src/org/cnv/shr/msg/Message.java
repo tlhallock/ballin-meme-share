@@ -3,8 +3,6 @@ package org.cnv.shr.msg;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.json.stream.JsonGenerator;
-
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.SharingState;
@@ -104,6 +102,6 @@ public abstract class Message implements Jsonable
 		c.finish();
 		throw new PermissionException(action);
 	}
-
-	public abstract void generate(JsonGenerator logFile);
+	
+	public abstract String getJsonKey();
 }

@@ -143,10 +143,7 @@ public class Download extends DbObject<Integer>
 		{
 			return destinationFile.normalize();
 		}
-		else
-		{
-			return file.getTargetFile().normalize();
-		}
+		return file.getTargetFile().normalize();
 	}
 	
 	public enum DownloadState
@@ -155,7 +152,8 @@ public class Download extends DbObject<Integer>
 //		NOT_STARTED         (2),
 		ALLOCATING          (3),
 		RECOVERING          (4),
-		GETTING_META_DATA   (5),
+		REQUESTING_METADATA (5),
+		RECEIVING_METADATA  (6),
 //		FINDING_PEERS       (6),
 		DOWNLOADING         (7),
 		PLACING_IN_FS       (8),

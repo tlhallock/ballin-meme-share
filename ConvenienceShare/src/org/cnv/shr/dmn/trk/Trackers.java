@@ -41,7 +41,7 @@ public class Trackers
 			generator.writeStartArray();
 			for (TrackerClient client : trackers.values())
 			{
-				client.getEntry().print(generator);
+				client.getEntry().generate(generator);
 			}
 			generator.writeEnd();
 		}

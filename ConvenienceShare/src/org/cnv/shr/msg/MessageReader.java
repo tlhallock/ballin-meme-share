@@ -22,7 +22,7 @@ public class MessageReader
 			JsonParser.Event e = input.next();
 			switch (e)
 			{
-			case VALUE_STRING:
+			case KEY_NAME:
 				className = input.getString();
 				break;
 			case START_OBJECT:

@@ -95,56 +95,62 @@ public class UpdateManager extends TimerTask
 			port = UpdateInfo.DEFAULT_UPDATE_PORT;
 		}
 
-		try (Socket socket = new Socket(ip, port);
-				InputStream inputStream = socket.getInputStream();
-				OutputStream outputStream = socket.getOutputStream();)
+		try (Socket socket = new Socket(ip, port);)
 		{
-			try (OutputByteWriter writer = new OutputByteWriter(outputStream);)
+			try (InputStream inputStream = socket.getInputStream();
+					 OutputStream outputStream = socket.getOutputStream();)
 			{
-				ByteReader byteReader = new ByteReader(inputStream);
-
-				writer.append(authenticate);
-				if (authenticate)
+				try (OutputByteWriter writer = new OutputByteWriter(outputStream);)
 				{
-					byte[] naunce = Misc.createNaunce(Services.settings.minNaunce.get());
-					byte[] encrypted = Services.keyManager.encrypt(pKey, naunce);
+					ByteReader byteReader = new ByteReader(inputStream);
 
-					writer.appendVarByteArray(encrypted);
-					byte[] decrypted = byteReader.readVarByteArray();
-					if (!Arrays.equals(naunce, decrypted))
+					writer.append(authenticate);
+					if (authenticate)
 					{
-						LogWrapper.getLogger().info("Update server failed authentication.");
+						byte[] naunce = Misc.createNaunce(Services.settings.minNaunce.get());
+						byte[] encrypted = Services.keyManager.encrypt(pKey, naunce);
+
+						writer.appendVarByteArray(encrypted);
+						byte[] decrypted = byteReader.readVarByteArray();
+						if (!Arrays.equals(naunce, decrypted))
+						{
+							LogWrapper.getLogger().info("Update server failed authentication.");
+							return;
+						}
+					}
+
+					String serverVersionString = byteReader.readString();
+					if (!versionIsNewer(serverVersionString, currentVersion))
+					{
+						LogWrapper.getLogger().info("We already have the latest version.");
+						writer.append(false);
+
+						// here we could also check the version on file...
 						return;
 					}
-				}
 
-				String serverVersionString = byteReader.readString();
-				if (!versionIsNewer(serverVersionString, currentVersion))
+					update(inputStream, writer, serverVersionString, origin);
+				}
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to open connection to update server", e);
+
+				Path currentJar = ProcessInfo.getJarFile(Main.class);
+				Path downloadFile = Paths.get(currentJar.toString() + ".new");
+				if (shouldUseDownloadedVersion(downloadFile, currentVersion, false))
 				{
-					LogWrapper.getLogger().info("We already have the latest version.");
-					writer.append(false);
-
-					// here we could also check the version on file...
-					return;
+					LogWrapper.getLogger().info("Found previous code download.");
+					completeUpdate(currentJar, downloadFile, origin);
 				}
-
-				update(inputStream, writer, serverVersionString, origin);
 			}
 		}
 		catch (IOException e)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to open connection to update server", e);
-			
-			Path currentJar = ProcessInfo.getJarFile(Main.class);
-			Path downloadFile = Paths.get(currentJar.toString() + ".new");
-			if (shouldUseDownloadedVersion(downloadFile, currentVersion, false))
-			{
-				LogWrapper.getLogger().info("Found previous code download.");
-				completeUpdate(currentJar, downloadFile, origin);
-			}
+			LogWrapper.getLogger().info("Unable to connect to update server." + e.getMessage());
 		}
 	}
-	
+
 	private boolean confirmUpgrade(JFrame origin)
 	{
 			UserInputWait wait = new UserInputWait();

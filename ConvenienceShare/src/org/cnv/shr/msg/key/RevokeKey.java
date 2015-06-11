@@ -9,7 +9,6 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbKeys;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -54,10 +53,11 @@ public class RevokeKey extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (revoke!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("revoke", KeyPairObject.serialize(revoke));
 		generator.writeEnd();
 	}
@@ -72,7 +72,7 @@ public class RevokeKey extends Message
 			case END_OBJECT:                         
 				if (needsrevoke)
 				{
-					throw new RuntimeException("Message needs revoke");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs revoke");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -90,6 +90,7 @@ public class RevokeKey extends Message
 		}
 	}
 	public static String getJsonName() { return "RevokeKey"; }
+	public String getJsonKey() { return getJsonName(); }
 	public RevokeKey(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

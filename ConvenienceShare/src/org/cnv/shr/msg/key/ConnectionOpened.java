@@ -64,10 +64,11 @@ public class ConnectionOpened extends KeyMessage
 	
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (decryptedNaunce!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
 		generator.writeEnd();
 	}
@@ -82,7 +83,7 @@ public class ConnectionOpened extends KeyMessage
 			case END_OBJECT:                         
 				if (needsdecryptedNaunce)
 				{
-					throw new RuntimeException("Message needs decryptedNaunce");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -100,6 +101,7 @@ public class ConnectionOpened extends KeyMessage
 		}
 	}
 	public static String getJsonName() { return "ConnectionOpened"; }
+	public String getJsonKey() { return getJsonName(); }
 	public ConnectionOpened(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

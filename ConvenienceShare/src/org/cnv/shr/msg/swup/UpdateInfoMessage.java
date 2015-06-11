@@ -9,7 +9,6 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
@@ -78,50 +77,56 @@ public class UpdateInfoMessage extends Message
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (ip!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("ip", ip);
 		generator.write("port", port);
-		if (pKey!=null)
 		generator.write("pKey", KeyPairObject.serialize(pKey));
-		if (decryptedNaunce!=null)
 		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsport = true;
 		boolean needsip = true;
 		boolean needspKey = true;
 		boolean needsdecryptedNaunce = true;
-		boolean needsport = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
 				if (needsip)
 				{
-					throw new RuntimeException("Message needs ip");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
 				}
 				if (needspKey)
 				{
-					throw new RuntimeException("Message needs pKey");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pKey");
 				}
 				if (needsdecryptedNaunce)
 				{
-					throw new RuntimeException("Message needs decryptedNaunce");
-				}
-				if (needsport)
-				{
-					throw new RuntimeException("Message needs port");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			if (key.equals("port")) {
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -139,18 +144,12 @@ public class UpdateInfoMessage extends Message
 				break;
 			}
 			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("port")) {
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-			}
-			break;
 			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "UpdateInfoMessage"; }
+	public String getJsonKey() { return getJsonName(); }
 	public UpdateInfoMessage(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

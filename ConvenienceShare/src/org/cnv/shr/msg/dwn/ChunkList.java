@@ -30,6 +30,7 @@ public class ChunkList extends DownloadMessage
 	public ChunkList(List<Chunk> chunks2, FileEntry descriptor)
 	{
 		super(descriptor);
+		chunks.addAll(chunks2);
 	}
 
 	@Override
@@ -72,7 +73,7 @@ public class ChunkList extends DownloadMessage
 	{
 		StringBuilder builder = new StringBuilder();
 		
-		builder.append("Listing chunks:");
+		builder.append("Listing chunks: [size=").append(chunks.size()).append("]");
 		for (Chunk c : chunks)
 		{
 			builder.append(c);
@@ -84,15 +85,16 @@ public class ChunkList extends DownloadMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		if (chunks!=null){
 			generator.writeStartArray("chunks");
 			chunks.generate(generator);
 		}
-		if (descriptor!=null)
-		descriptor.generate(generator);
+		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -107,11 +109,11 @@ public class ChunkList extends DownloadMessage
 			case END_OBJECT:                         
 				if (needsdescriptor)
 				{
-					throw new RuntimeException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				if (needschunks)
 				{
-					throw new RuntimeException("Message needs chunks");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -136,6 +138,7 @@ public class ChunkList extends DownloadMessage
 		}
 	}
 	public static String getJsonName() { return "ChunkList"; }
+	public String getJsonKey() { return getJsonName(); }
 	public ChunkList(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

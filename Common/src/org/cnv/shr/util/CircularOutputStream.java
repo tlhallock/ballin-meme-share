@@ -1,9 +1,10 @@
 package org.cnv.shr.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class CircularOutputStream extends OutputStream
 {
@@ -15,21 +16,24 @@ public class CircularOutputStream extends OutputStream
 	private long writtenOffset;
 	private RandomAccessFile file;
 
-	public CircularOutputStream(File file, long requestedLength) throws IOException
+	public CircularOutputStream(Path file, long requestedLength) throws IOException
 	{
 		length = Math.min(1024L * 1024L * 1024L, Math.max(requestedLength, WRITE_BUFFER + OFFSET_LENGTH));
-		if (file.length() != this.length)
+		boolean exists = Files.exists(file);
+		if (!exists || Files.size(file) != this.length)
 		{
-			file.delete();
+			if (exists)
+			{
+				Files.delete(file);
+			}
 			Misc.ensureDirectory(file, true);
-			System.out.println(file.getAbsolutePath());
-			this.file = new RandomAccessFile(file, "rw");
+			this.file = new RandomAccessFile(file.toFile(), "rw");
 			System.out.println("Allocating log file.");
 			allocate();
 		}
 		else
 		{
-			this.file = new RandomAccessFile(file, "rw");
+			this.file = new RandomAccessFile(file.toFile(), "rw");
 			offset = readOffset();
 			writtenOffset = getNextOffset();
 			writeWrittenOffset();
@@ -47,15 +51,11 @@ public class CircularOutputStream extends OutputStream
 	
 	private void allocate() throws IOException
 	{
+		file.setLength(length);
 		file.seek(0);
 		offset = OFFSET_LENGTH;
 		writtenOffset = offset + WRITE_BUFFER;
 		file.write(getOffsetBytes());
-		for (long i = offset; i < length; i++)
-		{
-			file.write('\n');
-		}
-		file.seek(offset);
 	}
 	
 	private void checkLoop() throws IOException
@@ -100,14 +100,14 @@ public class CircularOutputStream extends OutputStream
 	private byte[] getOffsetBytes() throws IOException
 	{
 		byte[] bytes = new byte[OFFSET_LENGTH];
-		bytes[0] = (byte) ((writtenOffset << 56L) & 0xff);
-		bytes[1] = (byte) ((writtenOffset << 48L) & 0xff);
-		bytes[2] = (byte) ((writtenOffset << 40L) & 0xff);
-		bytes[3] = (byte) ((writtenOffset << 32L) & 0xff);
-		bytes[4] = (byte) ((writtenOffset << 24L) & 0xff);
-		bytes[5] = (byte) ((writtenOffset << 16L) & 0xff);
-		bytes[6] = (byte) ((writtenOffset <<  8L) & 0xff);
-		bytes[7] = (byte) ((writtenOffset <<  0L) & 0xff);
+		bytes[0] = (byte) (writtenOffset << 56L & 0xff);
+		bytes[1] = (byte) (writtenOffset << 48L & 0xff);
+		bytes[2] = (byte) (writtenOffset << 40L & 0xff);
+		bytes[3] = (byte) (writtenOffset << 32L & 0xff);
+		bytes[4] = (byte) (writtenOffset << 24L & 0xff);
+		bytes[5] = (byte) (writtenOffset << 16L & 0xff);
+		bytes[6] = (byte) (writtenOffset <<  8L & 0xff);
+		bytes[7] = (byte) (writtenOffset <<  0L & 0xff);
 		return bytes;
 	}
 	

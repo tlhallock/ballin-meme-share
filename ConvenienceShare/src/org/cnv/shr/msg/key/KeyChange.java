@@ -10,7 +10,6 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.msg.JsonThing;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
@@ -78,16 +77,14 @@ public class KeyChange extends KeyMessage
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
-	public void generate(JsonGenerator generator) {
-		generator.write(getJsonName());
-		generator.writeStartObject();
-		if (oldKey!=null)
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
 		generator.write("oldKey", KeyPairObject.serialize(oldKey));
-		if (newKey!=null)
 		generator.write("newKey", KeyPairObject.serialize(newKey));
-		if (decryptedProof!=null)
 		generator.write("decryptedProof", Misc.format(decryptedProof));
-		if (naunceRequest!=null)
 		generator.write("naunceRequest", Misc.format(naunceRequest));
 		generator.writeEnd();
 	}
@@ -105,19 +102,19 @@ public class KeyChange extends KeyMessage
 			case END_OBJECT:                         
 				if (needsoldKey)
 				{
-					throw new RuntimeException("Message needs oldKey");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs oldKey");
 				}
 				if (needsnewKey)
 				{
-					throw new RuntimeException("Message needs newKey");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs newKey");
 				}
 				if (needsdecryptedProof)
 				{
-					throw new RuntimeException("Message needs decryptedProof");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedProof");
 				}
 				if (needsnaunceRequest)
 				{
-					throw new RuntimeException("Message needs naunceRequest");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -149,6 +146,7 @@ public class KeyChange extends KeyMessage
 		}
 	}
 	public static String getJsonName() { return "KeyChange"; }
+	public String getJsonKey() { return getJsonName(); }
 	public KeyChange(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

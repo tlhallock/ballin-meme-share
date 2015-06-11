@@ -6,6 +6,12 @@ import java.util.logging.Level;
 
 import org.cnv.shr.util.LogWrapper;
 
+// From documentation, I should look at:
+//stmt = conn.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+//    java.sql.ResultSet.CONCUR_READ_ONLY);
+//stmt.setFetchSize(Integer.MIN_VALUE);
+
+
 public class DbIterator<T extends DbObject> implements org.cnv.shr.gui.tbl.DbJTable.MyIt<T>
 {
 	private ResultSet results;
