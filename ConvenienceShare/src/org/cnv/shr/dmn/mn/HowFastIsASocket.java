@@ -16,9 +16,12 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,  *
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.              *
  *                                                                          *
- * See LICENSE file at repo head.                                           *
- * git clone git@github.com:tlhallock/ballin-meme-share.git                 *
- *                                                                          */
+ * See LICENSE file at repo head at                                         *
+ * https://github.com/tlhallock/ballin-meme-share                           *
+ * or after                                                                 *
+ * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
+
+
 
 
 package org.cnv.shr.dmn.mn;

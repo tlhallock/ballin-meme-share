@@ -16,9 +16,12 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,  *
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.              *
  *                                                                          *
- * See LICENSE file at repo head.                                           *
- * git clone git@github.com:tlhallock/ballin-meme-share.git                 *
- *                                                                          */
+ * See LICENSE file at repo head at                                         *
+ * https://github.com/tlhallock/ballin-meme-share                           *
+ * or after                                                                 *
+ * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
+
+
 
 
 package org.cnv.shr.dmn.mn;
@@ -173,9 +176,10 @@ public class UpdateHeaders
 		output.println(" * with this program; if not, write to the Free Software Foundation, Inc.,  *");
 		output.println(" * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.              *");
 		output.println(" *                                                                          *");
-		output.println(" * See LICENSE file at repo head.                                           *");
-		output.println(" * git clone git@github.com:tlhallock/ballin-meme-share.git                 *");
-		output.println(" *                                                                          */");
+		output.println(" * See LICENSE file at repo head at                                         *");
+		output.println(" * https://github.com/tlhallock/ballin-meme-share                           *");
+		output.println(" * or after                                                                 *");
+		output.println(" * git clone git@github.com:tlhallock/ballin-meme-share.git                 */");
 		output.println();
 	}
 	
