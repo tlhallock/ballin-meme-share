@@ -3,5 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Common"/>
+	<classpathentry kind="lib" path="/ConvenienceShare/lib/h2-1.4.187.jar"/>
+	<classpathentry kind="lib" path="/ConvenienceShare/lib/CoDec-build17-jdk13.jar"/>
+	<classpathentry kind="lib" path="/ConvenienceShare/lib/FlexiProvider-1.7p7.signed.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
