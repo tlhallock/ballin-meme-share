@@ -645,9 +645,8 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 			{
 				throw new IOException("Did not find GENERATOR_UNIQUE in file " + original);
 			}
-			
-			Files_move(backup, original);
 		}
+		Files_move(backup, original);
 	}
 
 	private static void printConstructor(PrintStream ps, Class<?> c)
