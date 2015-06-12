@@ -32,6 +32,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.security.PublicKey;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import javax.swing.JMenuItem;
@@ -243,13 +244,33 @@ public class MachineViewer extends javax.swing.JFrame
     {
         class LastPopupClick { int x; int y; }; final LastPopupClick lastPopupClick = new LastPopupClick();
         final JPopupMenu menu = new JPopupMenu();
-        JMenuItem item = new JMenuItem("Download all currently synced");
+        JMenuItem item = new JMenuItem("Download all currently cached");
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                LogWrapper.getLogger().info("Would download...");
+                LinkedList<SharedFile> accumulator = new LinkedList<>();
+                CollectingFiles display = new CollectingFiles();
+                display.setLocation(getLocation());
+                display.setVisible(true);
+                n.getPathElement().collectAllCachedFiles(getRootDirectory(), accumulator, display);
+                if (!display.confirm())
+                {
+                	return;
+                }
+                
+                for (SharedFile file : accumulator)
+                {
+                	try
+									{
+										Services.downloads.download(file);
+									}
+									catch (IOException e)
+									{
+										LogWrapper.getLogger().log(Level.INFO, "Unable to download " + file, e);
+									}
+                }
             }
         });
         menu.add(item);
@@ -300,6 +321,16 @@ public class MachineViewer extends javax.swing.JFrame
                 }
                 
                 Misc.nativeOpen(((LocalFile) file).getFsFile(), true);
+            }
+        });
+        menu.add(item);
+        item = new JMenuItem("Recursively cache all subfolders");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
+                final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+                n.syncFully();
             }
         });
         menu.add(item);
@@ -834,7 +865,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         jLabel15.setText("Loading...");
 
-        jButton4.setText("Clear Browsing data");
+        jButton4.setText("Clear Local Cache");
         jButton4.setEnabled(false);
 
         jButton5.setText("Find Trackers");
@@ -845,6 +876,11 @@ public class MachineViewer extends javax.swing.JFrame
         });
 
         jButton6.setText("Find Machines");
+        jButton6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton6ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -889,7 +925,7 @@ public class MachineViewer extends javax.swing.JFrame
                         .addComponent(isMessaging)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(pin)
-                        .addGap(0, 121, Short.MAX_VALUE)))
+                        .addGap(0, 140, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1022,6 +1058,18 @@ public class MachineViewer extends javax.swing.JFrame
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         
     }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+        Machine machine = getMachine();
+        if (!machine.isLocal())
+        {
+            UserActions.findMachines(machine);
+        }
+        else
+        {
+            LogWrapper.getLogger().info("Unable to find machines from local machine.");
+        }
+    }//GEN-LAST:event_jButton6ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton changePathButton;

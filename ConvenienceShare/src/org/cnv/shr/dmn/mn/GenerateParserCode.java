@@ -563,7 +563,11 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 	case "org.cnv.shr.json.JsonList":
 	case "org.cnv.shr.json.JsonStringList":
 	case "org.cnv.shr.json.JsonMap":
-		output.println("\t\tif (" + fieldName + "!=null){");
+		if (nullable)
+		{
+			output.println("\t\tif (" + fieldName + "!=null)");
+		}
+		output.println("\t\t{");
 		output.println("\t\t\tgenerator.writeStartArray(\"" + fieldName + "\");");
 		output.println("\t\t\t" + fieldName + ".generate(generator);");
 		output.println("\t\t}");

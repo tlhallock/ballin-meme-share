@@ -104,7 +104,6 @@ public class MachineBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsallowsMessages = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsidentifier = true;
@@ -112,19 +111,12 @@ public class MachineBackup implements Jsonable
 		boolean needssharesWithUs = true;
 		boolean needsport = true;
 		boolean needsnports = true;
+		boolean needsallowsMessages = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsallowsMessages)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
-				}
-				if (needsallowsMessages)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
-				}
 				if (needsip)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
@@ -153,24 +145,18 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
 				}
+				if (needsallowsMessages)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
+				}
+				if (needsallowsMessages)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_FALSE:
-			if (key==null) break;
-			if (key.equals("allowsMessages")) {
-				needsallowsMessages = false;
-				allowsMessages = false;
-			}
-			break;
-		case VALUE_TRUE:
-			if (key==null) break;
-			if (key.equals("allowsMessages")) {
-				needsallowsMessages = false;
-				allowsMessages = true;
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -207,6 +193,20 @@ public class MachineBackup implements Jsonable
 				needsnports = false;
 				nports = Integer.parseInt(parser.getString());
 				break;
+			}
+			break;
+		case VALUE_FALSE:
+			if (key==null) break;
+			if (key.equals("allowsMessages")) {
+				needsallowsMessages = false;
+				allowsMessages = false;
+			}
+			break;
+		case VALUE_TRUE:
+			if (key==null) break;
+			if (key.equals("allowsMessages")) {
+				needsallowsMessages = false;
+				allowsMessages = true;
 			}
 			break;
 			default: break;

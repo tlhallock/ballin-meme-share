@@ -196,18 +196,6 @@ public class TrackerEntry extends TrackObject
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_FALSE:
-			if (key==null) break;
-			if (key.equals("sync")) {
-				sync = false;
-			}
-			break;
-		case VALUE_TRUE:
-			if (key==null) break;
-			if (key.equals("sync")) {
-				sync = true;
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			if (key.equals("url")) {
@@ -226,6 +214,18 @@ public class TrackerEntry extends TrackObject
 				needsend = false;
 				end = Integer.parseInt(parser.getString());
 				break;
+			}
+			break;
+		case VALUE_FALSE:
+			if (key==null) break;
+			if (key.equals("sync")) {
+				sync = false;
+			}
+			break;
+		case VALUE_TRUE:
+			if (key==null) break;
+			if (key.equals("sync")) {
+				sync = true;
 			}
 			break;
 			default: break;

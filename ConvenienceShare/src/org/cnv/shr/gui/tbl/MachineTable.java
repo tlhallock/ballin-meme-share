@@ -60,6 +60,7 @@ public class MachineTable extends DbJTable<Machine>
 				viewer.setTitle("Machine " + machine.getName());
 				viewer.setVisible(true);
 				LogWrapper.getLogger().info("Showing remote " + machine.getName());
+				UserActions.syncRoots(machine);
 			}
 			
 			@Override

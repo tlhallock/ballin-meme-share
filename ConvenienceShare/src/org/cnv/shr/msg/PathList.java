@@ -216,11 +216,11 @@ public class PathList extends Message
 			generator.writeStartObject();
 		generator.write("name", name);
 		generator.write("currentPath", currentPath);
-		if (subDirs!=null){
+		{
 			generator.writeStartArray("subDirs");
 			subDirs.generate(generator);
 		}
-		if (children!=null){
+		{
 			generator.writeStartArray("children");
 			children.generate(generator);
 		}
@@ -229,23 +229,15 @@ public class PathList extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssubDirs = true;
-		boolean needschildren = true;
 		boolean needsname = true;
 		boolean needscurrentPath = true;
+		boolean needssubDirs = true;
+		boolean needschildren = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssubDirs)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs subDirs");
-				}
-				if (needschildren)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs children");
-				}
 				if (needsname)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
@@ -254,23 +246,18 @@ public class PathList extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPath");
 				}
+				if (needssubDirs)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs subDirs");
+				}
+				if (needschildren)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs children");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_ARRAY:
-			if (key==null) break;
-			switch(key) {
-			case "subDirs":
-				needssubDirs = false;
-				subDirs.parse(parser);
-				break;
-			case "children":
-				needschildren = false;
-				children.parse(parser);
-				break;
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -281,6 +268,19 @@ public class PathList extends Message
 			case "currentPath":
 				needscurrentPath = false;
 				currentPath = parser.getString();
+				break;
+			}
+			break;
+		case START_ARRAY:
+			if (key==null) break;
+			switch(key) {
+			case "subDirs":
+				needssubDirs = false;
+				subDirs.parse(parser);
+				break;
+			case "children":
+				needschildren = false;
+				children.parse(parser);
 				break;
 			}
 			break;

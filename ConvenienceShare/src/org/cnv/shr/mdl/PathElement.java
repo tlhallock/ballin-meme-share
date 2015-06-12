@@ -28,10 +28,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
+import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
@@ -184,6 +186,27 @@ public class PathElement extends DbObject<Long>
 	public String getFsPath()
 	{
 		return Misc.deSanitize(getFullPath());
+	}
+
+	public interface CollectingFilesMonitor
+	{
+		public void found(int currentNumber);
+	}
+	
+	public void collectAllCachedFiles(RootDirectory root, List<SharedFile> accumulator, CollectingFilesMonitor monitor)
+	{
+		SharedFile file = DbFiles.getFile(root, this);
+		if (file != null)
+		{
+			accumulator.add(file);
+			monitor.found(accumulator.size());
+			return;
+		}
+		
+		for (PathElement child : list(root))
+		{
+			child.collectAllCachedFiles(root, accumulator, monitor);
+		}
 	}
 	
 	public LinkedList<PathElement> list(RootDirectory local)

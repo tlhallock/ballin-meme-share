@@ -114,7 +114,7 @@ public class ChunkList extends DownloadMessage
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
-		if (chunks!=null){
+		{
 			generator.writeStartArray("chunks");
 			chunks.generate(generator);
 		}

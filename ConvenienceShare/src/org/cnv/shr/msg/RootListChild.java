@@ -30,6 +30,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.DbPermissions;
+import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
@@ -42,7 +43,9 @@ import org.cnv.shr.util.Jsonable;
 public class RootListChild implements Jsonable
 {
 	String name       ;
+	@MyParserNullable
 	String tags       ;
+	@MyParserNullable
 	String description;
 	SharingState state;
 	
@@ -93,7 +96,9 @@ public class RootListChild implements Jsonable
 		else
 			generator.writeStartObject();
 		generator.write("name", name);
+		if (tags!=null)
 		generator.write("tags", tags);
+		if (description!=null)
 		generator.write("description", description);
 		generator.write("state",state.name());
 		generator.writeEnd();
@@ -102,8 +107,6 @@ public class RootListChild implements Jsonable
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsname = true;
-		boolean needstags = true;
-		boolean needsdescription = true;
 		boolean needsstate = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
@@ -113,14 +116,6 @@ public class RootListChild implements Jsonable
 				if (needsname)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
-				}
-				if (needstags)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs tags");
-				}
-				if (needsdescription)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
 				}
 				if (needsstate)
 				{
@@ -138,11 +133,9 @@ public class RootListChild implements Jsonable
 				name = parser.getString();
 				break;
 			case "tags":
-				needstags = false;
 				tags = parser.getString();
 				break;
 			case "description":
-				needsdescription = false;
 				description = parser.getString();
 				break;
 			case "state":

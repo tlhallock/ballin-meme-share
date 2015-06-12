@@ -141,6 +141,7 @@ public class UserActions
 				String url = m.getUrl();
 				try
 				{
+          LogWrapper.getLogger().info("Synchronizing roots with " + m.getName());
 					Communication openConnection = Services.networkManager.openConnection(m, false);
 					if (openConnection == null)
 					{
@@ -152,7 +153,7 @@ public class UserActions
 				}
 				catch (IOException e)
 				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to discover " + url, e);
+					LogWrapper.getLogger().log(Level.INFO, "Unable to sync roots with " + url, e);
 				}
 			}
 		});
@@ -167,6 +168,7 @@ public class UserActions
 			{
 				try
 				{
+                                    LogWrapper.getLogger().info("Requesting peers from " + m.getName());
 					Communication openConnection = Services.networkManager.openConnection(m, false);
 					if (openConnection == null)
 					{
@@ -214,18 +216,6 @@ public class UserActions
 			public void run()
 			{
 				directory.synchronize(null);
-			}
-		});
-	}
-
-	public static void queueLocal(final Path localDirectory, final String name)
-	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				addLocalImmediately(localDirectory, name);
 			}
 		});
 	}

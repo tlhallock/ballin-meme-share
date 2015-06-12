@@ -138,7 +138,7 @@ public class KeyNotFound extends KeyMessage
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
-		if (tests!=null){
+		{
 			generator.writeStartArray("tests");
 			tests.generate(generator);
 		}

@@ -44,12 +44,6 @@ import org.cnv.shr.util.LogWrapper;
 
 public class PathTreeModelNode implements TaskListener
 {
-	public interface CollectingFilesMonitor
-	{
-		public void found(int currentNumber);
-	}
-	
-	
 	private static final PathTreeModelNode[] DUMMY = new PathTreeModelNode[0];
 	
 	private PathTreeModel model;
@@ -59,8 +53,14 @@ public class PathTreeModelNode implements TaskListener
 	private Pair[] sourceChildren;
 	
 	PathTreeModelNode[] children;
+	
+	private long lastSync;
+	private boolean syncFully;
 
-	public PathTreeModelNode(final PathTreeModelNode parent, final PathTreeModel model, final PathElement element)
+	public PathTreeModelNode(final PathTreeModelNode parent, 
+													 final PathTreeModel model,
+													 final PathElement element,
+													 boolean syncFully)
 	{
 		Objects.requireNonNull(element, "Path must not be null.");
 		
@@ -68,26 +68,12 @@ public class PathTreeModelNode implements TaskListener
 		this.model = model;
 		this.element = element;
 		this.children = null;
+		this.syncFully = syncFully;
 	}
 	
-	public void collectAllCachedFiles(List<SharedFile> accumulator, CollectingFilesMonitor monitor)
+	public PathElement getPathElement()
 	{
-		SharedFile file = getFile();
-		if (file != null)
-		{
-			accumulator.add(file);
-			monitor.found(accumulator.size());
-			return;
-		}
-		if (children == null)
-		{
-			return;
-		}
-		
-		for (PathTreeModelNode child : children)
-		{
-			child.collectAllCachedFiles(accumulator, monitor);
-		}
+		return element;
 	}
 	
 	private PathTreeModelNode[] getPath()
@@ -156,11 +142,28 @@ public class PathTreeModelNode implements TaskListener
 		return DbFiles.getFile(model.rootDirectory, element);
 	}
 	
+	public synchronized void syncFully()
+	{
+		syncFully(true);
+		setToSource();
+	}
+	public synchronized void syncFully(boolean val)
+	{
+		syncFully = val;
+		if (children != null)
+		{
+			for (PathTreeModelNode node : children)
+			{
+				node.syncFully(val);
+			}
+		}
+	}
+	
 	@Override
 	public synchronized void syncCompleted(final Pair[] pairs)
 	{
 		this.sourceChildren = pairs;
-		if (children != null)
+		if (syncFully || children != null)
 		{
 			setToSource();
 		}
@@ -205,12 +208,19 @@ public class PathTreeModelNode implements TaskListener
 		int ndx = 0;
 		for (final PathElement e : list)
 		{
-			children[ndx++] = new PathTreeModelNode(this, model, e);
+			children[ndx++] = new PathTreeModelNode(this, model, e, syncFully);
 		}
 	}
 	
 	public synchronized void setToSource()
 	{
+		long now = System.currentTimeMillis();
+		if (children != null && lastSync + 5 * 60 * 1000 > now)
+		{
+			return;
+		}
+		lastSync = now;
+		
 		TreeModelEvent event = null;
 		if (children != null)
 		{
@@ -223,7 +233,7 @@ public class PathTreeModelNode implements TaskListener
 		{
 			final PathElement pathElement = p.getPathElement();
 			accountedFor.add(pathElement.getUnbrokenName());
-			PathTreeModelNode node = new PathTreeModelNode(this, model, pathElement);
+			PathTreeModelNode node = new PathTreeModelNode(this, model, pathElement, syncFully);
 			allChildren.add(node);
 			try
 			{
@@ -246,7 +256,7 @@ public class PathTreeModelNode implements TaskListener
 			{
 				continue;
 			}
-			allChildren.add(new PathTreeModelNode(this, model, childElement));
+			allChildren.add(new PathTreeModelNode(this, model, childElement, syncFully));
 		}
 		children = allChildren.toArray(DUMMY);
 		if (event == null)

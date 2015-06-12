@@ -86,6 +86,7 @@ import org.cnv.shr.stng.Setting;
 import org.cnv.shr.stng.Setting.SettingsEditor;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.sync.DebugListener;
+import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
@@ -1128,8 +1129,19 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-        	UserActions.queueLocal(
-        			Paths.get(fc.getSelectedFile().getAbsolutePath()), null);
+      		Services.userThreads.execute(new Runnable()
+      		{
+      			@Override
+      			public void run()
+      			{
+      				LocalDirectory local = UserActions.addLocalImmediately(Paths.get(fc.getSelectedFile().getAbsolutePath()), null);
+      				if (local != null)
+      				{
+      					List<SynchronizationListener> singletonList = Collections.singletonList(createLocalListener(local));
+      					local.synchronize(singletonList);
+      				}
+      			}
+      		});
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 

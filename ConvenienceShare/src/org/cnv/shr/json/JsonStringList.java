@@ -32,9 +32,7 @@ import javax.json.stream.JsonParser.Event;
 
 public class JsonStringList extends LinkedList<String> 
 {
-	public JsonStringList()
-	{
-	}
+	public JsonStringList() {}
 
 	public void generate(JsonGenerator generator)
 	{

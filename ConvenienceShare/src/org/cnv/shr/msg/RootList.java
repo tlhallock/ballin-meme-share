@@ -162,7 +162,7 @@ public class RootList extends Message
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
-		if (sharedDirectories!=null){
+		{
 			generator.writeStartArray("sharedDirectories");
 			sharedDirectories.generate(generator);
 		}

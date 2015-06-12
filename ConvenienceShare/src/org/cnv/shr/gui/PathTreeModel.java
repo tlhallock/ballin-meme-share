@@ -70,8 +70,8 @@ public class PathTreeModel implements TreeModel
 	
 	public PathTreeModel(MachineViewer viewer)
 	{
-		root = new PathTreeModelNode(null, this, new NoPath());
-                this.viewer = viewer;
+		root = new PathTreeModelNode(null, this, new NoPath(), false);
+    this.viewer = viewer;
 	}
 	
 	void closeConnections()
@@ -92,7 +92,7 @@ public class PathTreeModel implements TreeModel
 		closeConnections();
 		
 		startRemoteSynchronizer(newRoot);
-		this.root = new PathTreeModelNode(null, this, DbPaths.ROOT);
+		this.root = new PathTreeModelNode(null, this, DbPaths.ROOT, false);
 		try
 		{
 				iterator.queueSyncTask(rootSource, DbPaths.ROOT, this.root);

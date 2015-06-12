@@ -106,6 +106,7 @@ public class ExplorerSyncIterator extends SyncrhonizationTaskIterator
 			lock.unlock();
 		}
 	}
+	
 	@Override
 	public void close() throws IOException
 	{
