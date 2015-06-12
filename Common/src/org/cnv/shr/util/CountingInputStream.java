@@ -168,7 +168,9 @@ private OutputStream logFile;
 	{
 		if (rawMode)
 		{
-			return delegate.read(b, off, len);
+			int read = delegate.read(b, off, len);
+			soFar += read;
+			return read;
 		}
 		if (b == null || b.length < 1)
 		{
@@ -180,6 +182,7 @@ private OutputStream logFile;
 			return -1;
 		}
 		b[off] = (byte) read;
+		soFar++;
 		return 1;
 	}
 }

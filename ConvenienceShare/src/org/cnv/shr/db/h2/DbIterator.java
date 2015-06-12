@@ -28,6 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 
 // From documentation, I should look at:
@@ -36,7 +37,7 @@ import org.cnv.shr.util.LogWrapper;
 //stmt.setFetchSize(Integer.MIN_VALUE);
 
 
-public class DbIterator<T extends DbObject> implements org.cnv.shr.gui.tbl.DbJTable.MyIt<T>
+public class DbIterator<T extends DbObject> implements CloseableIterator<T>
 {
 	private ResultSet results;
 	private DbTables.DbObjects tableInfo;

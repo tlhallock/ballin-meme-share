@@ -75,6 +75,8 @@ public class KeyPairObject
 	{
 		return Misc.format(publicKey.getEncoded());
 	}
+	
+	public long getTimeStamp() { return timeStamp; }
 
     public String getTime() {
         return new Date(timeStamp).toString();

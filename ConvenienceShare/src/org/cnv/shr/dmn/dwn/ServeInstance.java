@@ -72,7 +72,7 @@ public class ServeInstance extends TimerTask
 		return local;
 	}
 	
-	private void serverChunks(int chunkSize) throws IOException, NoSuchAlgorithmException
+	private void serveChunks(long chunkSize) throws IOException, NoSuchAlgorithmException
 	{
 		local.ensureChecksummed();
 		
@@ -90,7 +90,7 @@ public class ServeInstance extends TimerTask
 		int buffSize = 8192;
 		if (chunkSize < buffSize)
 		{
-			buffSize = chunkSize;
+			buffSize = (int) chunkSize;
 		}
 		long fsize = Files.size(toShare);
 		if (fsize < buffSize)
@@ -109,17 +109,21 @@ public class ServeInstance extends TimerTask
 				long chunkStart = offsetInFile;
 				long chunkEnd = offsetInFile + chunkSize;
 
-				int chunkOffset = 0;
+				long chunkOffset = 0;
 
 				MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 				while (chunkOffset < chunkSize)
 				{
-					int nextReadSize = Math.min(buffer.length, chunkSize - chunkOffset);
+					int nextReadSize = buffer.length;
+					if (nextReadSize > chunkSize - chunkOffset)
+					{
+						nextReadSize = (int) (chunkSize - chunkOffset);
+					}
 					int nread = inputStream.read(buffer, 0, nextReadSize);
 
 					if (nread < 0)
 					{
-						chunkEnd = chunkOffset;
+						chunkEnd = chunkStart + chunkOffset;
 						atEndOfFile = true;
 						break;
 					}
@@ -129,9 +133,12 @@ public class ServeInstance extends TimerTask
 					digest.update(buffer, 0, nread);
 					totalDigest.update(buffer, 0, nread);
 				}
-
-				Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest));
-				chunks.add(chunk);
+				
+				if (chunkStart != chunkEnd)
+				{
+					Chunk chunk = new Chunk(chunkStart, chunkEnd, ChecksumManager.digestToString(digest));
+					chunks.add(chunk);
+				}
 				
 				if (chunks.size() < 50 && !atEndOfFile)
 				{
@@ -164,12 +171,12 @@ public class ServeInstance extends TimerTask
 		connection.finish();
 	}
 
-	public void sendChunks(int chunkSize)
+	public void sendChunks(long chunkSize)
 	{
 		try
 		{
 			LogWrapper.getLogger().info("Sending chunks of size " + chunkSize);
-				serverChunks(chunkSize);
+				serveChunks(chunkSize);
 		}
 		catch (NoSuchAlgorithmException e)
 		{

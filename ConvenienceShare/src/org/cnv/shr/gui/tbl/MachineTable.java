@@ -28,6 +28,7 @@ import java.util.HashMap;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
@@ -37,6 +38,7 @@ import org.cnv.shr.gui.MachineViewer;
 import org.cnv.shr.gui.NumberOfFiles;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 
 public class MachineTable extends DbJTable<Machine>
@@ -140,8 +142,35 @@ public class MachineTable extends DbJTable<Machine>
 	}
 
 	@Override
-	protected org.cnv.shr.gui.tbl.DbJTable.MyIt<Machine> list()
+	protected CloseableIterator<Machine> list()
 	{
 		return DbMachines.listMachines();
+	}
+
+	public static DefaultTableModel createTableModel()
+	{
+    return new javax.swing.table.DefaultTableModel(
+        new Object [][] {
+
+        },
+        new String [] {
+            "Name", "Current Address", "Id", "Sharing", "Number of files", "Total files size", "Last Ip", "Port", "Number of ports"
+        }
+    ) {
+        Class[] types = new Class [] {
+            java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, NumberOfFiles.class, DiskUsage.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class
+        };
+        boolean[] canEdit = new boolean [] {
+            false, false, false, false, false, false, true, true, true
+        };
+
+        public Class getColumnClass(int columnIndex) {
+            return types [columnIndex];
+        }
+
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            return canEdit [columnIndex];
+        }
+    };
 	}
 }

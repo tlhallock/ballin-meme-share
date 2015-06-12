@@ -24,6 +24,9 @@
 
 package org.cnv.shr.dmn.not;
 
+import java.awt.Window;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -47,7 +50,7 @@ import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.key.PermissionFailure.PermissionFailureEvent;
 import org.cnv.shr.util.LogWrapper;
 
-public class Notifications
+public class Notifications implements WindowFocusListener
 {
 	private final LinkedList<WeakReference<NotificationListener>> weakListeners = new LinkedList<>();
 	private boolean stop;
@@ -427,6 +430,7 @@ public class Notifications
 	public void registerWindow(final JFrame frame)
 	{
         frame.setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
+        frame.addWindowFocusListener(this);
 //		try
 //		{
 //			frame.setIconImage(Misc.getIcon());
@@ -436,4 +440,46 @@ public class Notifications
 //			LogWrapper.getLogger().log(Level.INFO, , e);
 //		}
 	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	private Window inFocus;
+//	@Override
+//	public void windowOpened(WindowEvent e) {}
+//	@Override
+//	public void windowClosing(WindowEvent e) {}
+//	@Override
+//	public void windowClosed(WindowEvent e) {}
+//	@Override
+//	public void windowIconified(WindowEvent e) {}
+//	@Override
+//	public void windowDeiconified(WindowEvent e) {}
+//	@Override
+//	public void windowActivated(WindowEvent e) { inFocus = e.getWindow(); }
+//	@Override
+//	public void windowDeactivated(WindowEvent e) {}
+	
+	public Window getCurrentContext()
+	{
+		if (inFocus != null && !inFocus.isVisible()) inFocus = null;
+		return inFocus;
+	}
+
+	@Override
+	public void windowGainedFocus(WindowEvent e)
+	{
+		inFocus = e.getWindow();
+	}
+	@Override
+	public void windowLostFocus(WindowEvent e) {}
 }

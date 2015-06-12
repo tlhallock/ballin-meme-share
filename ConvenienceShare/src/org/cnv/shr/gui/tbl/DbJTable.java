@@ -28,6 +28,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.logging.Level;
@@ -38,20 +39,24 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
-import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 
-public abstract class DbJTable<T extends DbObject<? extends Number>> extends MouseAdapter
+// Still need to make a serve table...
+
+
+public abstract class DbJTable<T> extends MouseAdapter
 {
 	// Still have to make paths table and files table...
 	
 	private JPopupMenu jPopupMenu;
 	private TableRightClickListener dblClick;
-	private int row = -1;
+	private int[] selectedRows2;
 	private JTable table;
 	private String keyName;
+	private String[] names;
+	
 	
 	public DbJTable(JTable table, String keyName)
 	{
@@ -60,6 +65,18 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		table.addMouseListener(this);
 		table.setAutoCreateRowSorter(true);
 		this.keyName = keyName;
+		setColumnNames();
+	}
+	
+	private void setColumnNames()
+	{
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		int columnCount = model.getColumnCount();
+		names = new String[columnCount];
+		for (int i = 0; i < columnCount; i++)
+		{
+			names[i] = model.getColumnName(i);
+		}
 	}
 
 	public void empty()
@@ -103,16 +120,11 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		emptyInternal();
 		
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
-		int columnCount = table.getColumnCount();
-		String[] names = new String[columnCount];
-		for (int i = 0; i < columnCount; i++)
-		{
-			names[i] = table.getColumnName(i);
-		}
+		int columnCount = model.getColumnCount();
 		HashMap<String, Object> currentRow = new HashMap<>();
 		Object[] rowData = new Object[columnCount];
 		
-		try (MyIt<T> it = list();)
+		try (CloseableIterator<T> it = list();)
 		{
 			while (it.hasNext())
 			{
@@ -149,18 +161,15 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		
-		int columnCount = table.getColumnCount();
-		String[] names = new String[columnCount];
+		int columnCount = model.getColumnCount();
 		int keyIndex = -1;
 		for (int i = 0; i < columnCount; i++)
 		{
-			names[i] = table.getColumnName(i);
 			if (names[i].equals(keyName))
 			{
 				keyIndex = i;
 			}
 		}
-		
 		HashMap<String, Object> values = new HashMap<>();
 		fillRow(t, values);
 		String needle = (String) values.get(keyName);
@@ -168,7 +177,7 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		int rowCount = table.getRowCount();
 		for (int row = 0; row < rowCount; row++)
 		{
-			String cValue = (String) table.getValueAt(row, keyIndex);
+			String cValue = (String) model.getValueAt(row, keyIndex);
 			if (!cValue.equals(needle))
 			{
 				continue;
@@ -176,7 +185,7 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 			
 			for (int col = 0; col < columnCount; col++)
 			{
-				table.setValueAt(values.get(names[col]), row, col);
+				model.setValueAt(values.get(names[col]), row, col);
 			}
 			
 			return;
@@ -218,7 +227,7 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 
 	protected abstract T create(HashMap<String, Object> currentRow);
 	protected abstract void fillRow(T t, HashMap<String, Object> currentRow);
-	protected abstract MyIt<T> list();
+	protected abstract CloseableIterator<T> list();
 	
 	protected void setDblClick(TableRightClickListener listener)
 	{
@@ -231,7 +240,7 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		HashMap<String, Object> rowData = new HashMap<>();
 		for (int i=0; i<table.getColumnCount(); i++)
 		{
-			rowData.put(model.getColumnName(i), table.getValueAt(row, i));
+			rowData.put(model.getColumnName(i), model.getValueAt(row,  i));
 		}
 		return create(rowData);
 	}
@@ -252,6 +261,29 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		jPopupMenu.add(menu);
 	}
 	
+//	public void removeSelected()
+//	{
+//		// The entire reason these classes exist is to put refreshes on the event queue
+//		SwingUtilities.invokeLater(new Runnable(){
+//			@Override
+//			public void run()
+//			{
+//				synchronized (table)
+//				{
+//					removeSelectedInternal();
+//				}
+//			}
+//		});
+//	}
+	
+	private void setSelectedRows()
+	{
+		selectedRows2 = table.getSelectedRows();
+		Arrays.sort(selectedRows2);
+	}
+
+	
+
 	
 	
 	
@@ -273,17 +305,15 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 	
 	
 	
-	
-	
-	
-	
+
 	private void checkPopup(MouseEvent me)
 	{
 		if (!me.isPopupTrigger())
 		{
 			return;
 		}
-		row = table.rowAtPoint(me.getPoint());
+		setSelectedRows();
+		table.rowAtPoint(me.getPoint());
 		jPopupMenu.show(me.getComponent(), me.getX(), me.getY());
 		jPopupMenu.setVisible(true);
 	}
@@ -304,35 +334,32 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 	public synchronized void mouseClicked(MouseEvent me)
 	{
 		int nRow = table.rowAtPoint(me.getPoint());
-		if (nRow >= 0 && nRow < table.getRowCount())
-		{
-			table.setRowSelectionInterval(nRow, nRow);
-		}
-		else
-		{
-			table.clearSelection();
-		}
+//		if (isSingleSelection())
+//		{
+//			// ensures row highlighted, even for right clicks...
+//			if (nRow >= 0 && nRow < table.getRowCount())
+//			{
+//				table.setRowSelectionInterval(nRow, nRow);
+//			}
+//			else
+//			{
+//				table.clearSelection();
+//			}
+//		}
 		
 		if (me.getClickCount() >= 2 && dblClick != null)
 		{
-			row = nRow;
-			dblClick.perform(create(row));
+			selectedRows2 = new int[] { nRow };
+			for (int i = selectedRows2.length - 1; i >= 0; i--)
+			{
+				dblClick.perform(create(selectedRows2[i]));
+			}
 		}
 		else
 		{
 			checkPopup(me);
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
@@ -350,30 +377,33 @@ public abstract class DbJTable<T extends DbObject<? extends Number>> extends Mou
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			final T create = create(row);
-			if (create == null)
+			for (int i = selectedRows2.length - 1; i >= 0; i--)
 			{
-				LogWrapper.getLogger().info("Unable to find record from " + row);
-				return;
-			}
+				final T create = create(selectedRows2[i]);
+				if (create == null)
+				{
+					LogWrapper.getLogger().info("Unable to find record from " + selectedRows2[i]);
+					return;
+				}
 
-			LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
-			Services.userThreads.execute(new Runnable() {
-				@Override
-				public void run() {
-					try
+				LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
+				Services.userThreads.execute(new Runnable()
+				{
+					@Override
+					public void run()
 					{
-						perform(create);
-					}
-					catch (Exception ex)
-					{
-						LogWrapper.getLogger().log(Level.INFO, null, ex);
-					}
-				};
-			});
+						try
+						{
+							perform(create);
+						}
+						catch (Exception ex)
+						{
+							LogWrapper.getLogger().log(Level.INFO, null, ex);
+						}
+					};
+				});
+			}
 		}
 	}
-	
-	
-	public interface MyIt<T extends DbObject> extends CloseableIterator<T> {}
 }
+

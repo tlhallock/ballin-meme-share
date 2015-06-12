@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -50,7 +51,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -75,6 +75,7 @@ import org.cnv.shr.gui.tbl.DownloadTable;
 import org.cnv.shr.gui.tbl.LocalTable;
 import org.cnv.shr.gui.tbl.MachineTable;
 import org.cnv.shr.gui.tbl.MessageTable;
+import org.cnv.shr.gui.tbl.ServeTable;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
@@ -106,6 +107,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private MachineTable remotes;
     private MessageTable messages;
     private DownloadTable downloads;
+    private ServeTable serves;
     
 	/**
 	 * Creates new form Application
@@ -121,6 +123,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		remotes = new MachineTable(this, machinesList);
 		downloads = new DownloadTable(this, jTable2);
 		messages = new MessageTable(this, messageTable);
+		serves = new ServeTable(jTable1);
 		
 		connectionsPanel.setLayout(new GridLayout(0, 1));
 		
@@ -281,9 +284,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		locals.refresh();
 		remotes.refresh();
 		messages.refresh();
+    serves.refresh();
 		refreshConnections();
                 refreshKeys();
-		refreshServes();
 	}
     
 	private synchronized void refreshLocal(LocalDirectory local)
@@ -299,27 +302,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		}
 	}
 	
-	private synchronized void refreshServes()
-	{
-		SwingUtilities.invokeLater(new Runnable() { @Override
-		public void run() {
-		DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-		while (model.getRowCount() > 0)
-		{
-			model.removeRow(0);
-		}
-		
-		for (ServeInstance instance : Services.server.getServeInstances())
-		{
-			model.addRow(new Object[] {
-					instance.getMachine().getName(),
-					instance.getFile().getPath().getFullPath(),
-					String.valueOf(instance.getCompletionPercentage()),
-					"Speed goes here...",
-			});
-		}}});
-	}
-
 	private void refreshSettings()
 	{
 		addressLabel.setText(Services.settings.getLocalIp() + ":" + Services.settings.servePortBeginE);
@@ -519,30 +501,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
-        machinesList.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Name", "Current Address", "Id", "Sharing", "Number of files", "Total files size", "Last Ip", "Port", "Number of ports"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, true, true, true
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        machinesList.setEnabled(false);
+        machinesList.setModel(MachineTable.createTableModel());
         jScrollPane4.setViewportView(machinesList);
 
         jButton10.setText("Refresh");
@@ -615,31 +574,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
-        localsView.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Path", "Name", "Description", "Tags", "Number of files", "Total file size"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
+        localsView.setModel(LocalTable.createTableModel());
         localsView.setToolTipText("");
-        localsView.setEnabled(false);
         jScrollPane5.setViewportView(localsView);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -676,30 +612,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Incoming Files"));
 
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Machine", "Directory", "File", "Size", "Added on", "Status", "Priority", "Local path", "Number of Mirrors", "Speed", "Percent", "Id"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.Object.class, java.lang.Object.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, false, false, false
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        jTable2.setEnabled(false);
+        jTable2.setModel(DownloadTable.createTableModel());
+        jTable2.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         jScrollPane2.setViewportView(jTable2);
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
@@ -721,14 +635,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Outgoing Files"));
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Machine", "File", "Percent", "Speed"
-            }
-        ));
+        jTable1.setModel(ServeTable.createTableModel());
         jScrollPane1.setViewportView(jTable1);
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
@@ -739,7 +646,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
         );
 
         jSplitPane1.setRightComponent(jPanel6);
@@ -779,7 +686,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(maxPending, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(160, 160, 160)
                 .addComponent(jButton12)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton7)
@@ -810,29 +717,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
-        messageTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Machine", "Type", "Date", "Message", "Id"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
+        messageTable.setModel(MessageTable.createTableModel());
         jScrollPane7.setViewportView(messageTable);
 
         jButton9.setText("Refresh");
@@ -1301,7 +1186,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     	// Should not be here...
   		this.maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
   		downloads.refresh();
-        refreshServes();
+      serves.refresh();
     }//GEN-LAST:event_jButton11ActionPerformed
 
     private void refreshConnectionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshConnectionsActionPerformed
@@ -1676,13 +1561,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			@Override
 			public void serveAdded(ServeInstance s)
 			{
-				refreshServes();
+				serves.refresh();
 			}
 
 			@Override
 			public void serveRemoved(ServeInstance s)
 			{
-				refreshServes();
+				serves.refresh();
 			}
 
 			@Override
@@ -1758,16 +1643,29 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
 	void refreshKeys()
 	{
-		jPanel13.setLayout(new GridLayout(0, 1));
-		jPanel13.removeAll();
+		LinkedList<KeyPairObject> allKeys = new LinkedList<>();
 		synchronized (Services.keyManager)
 		{
 			for (KeyPairObject pair : Services.keyManager.getPairs())
 			{
-				KeyPanel panel = new KeyPanel(this, pair);
-				jPanel13.add(panel);
-				panel.setVisible(true);
+				allKeys.add(pair);
 			}
+		}
+		
+		Collections.sort(allKeys, new Comparator<KeyPairObject> () {
+			@Override
+			public int compare(KeyPairObject o1, KeyPairObject o2)
+			{
+				return -Long.compare(o1.getTimeStamp(), o2.getTimeStamp());
+			}});
+
+		jPanel13.setLayout(new GridLayout(0, 1));
+		jPanel13.removeAll();
+		for (KeyPairObject pair : allKeys)
+		{
+			KeyPanel panel = new KeyPanel(this, pair);
+			jPanel13.add(panel);
+			panel.setVisible(true);
 		}
 	}
 }

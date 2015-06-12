@@ -119,7 +119,7 @@ public class ChecksumManager extends Thread
 			try
 			{
 				// Wait for a notification that there are new files...
-				condition.await(1, TimeUnit.DAYS);
+				condition.await(10, TimeUnit.SECONDS);
 			}
 			catch (InterruptedException e)
 			{

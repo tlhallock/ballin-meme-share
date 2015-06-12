@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
@@ -38,6 +39,7 @@ import org.cnv.shr.gui.LocalDirectoryView;
 import org.cnv.shr.gui.NumberOfFiles;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -127,8 +129,35 @@ public class LocalTable extends DbJTable<LocalDirectory>
 	}                                                                               
 
 	@Override
-	protected org.cnv.shr.gui.tbl.DbJTable.MyIt<LocalDirectory> list()
+	protected CloseableIterator<LocalDirectory> list()
 	{
 		return DbRoots.listLocals();
+	}
+
+	public static DefaultTableModel createTableModel()
+	{
+		return new javax.swing.table.DefaultTableModel(
+        new Object [][] {
+
+        },
+        new String [] {
+            "Path", "Name", "Description", "Tags", "Number of files", "Total file size"
+        }
+    ) {
+        Class[] types = new Class [] {
+            java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, NumberOfFiles.class, DiskUsage.class
+        };
+        boolean[] canEdit = new boolean [] {
+            false, false, false, false, false, false
+        };
+
+        public Class getColumnClass(int columnIndex) {
+            return types [columnIndex];
+        }
+
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            return canEdit [columnIndex];
+        }
+    };
 	}
 }

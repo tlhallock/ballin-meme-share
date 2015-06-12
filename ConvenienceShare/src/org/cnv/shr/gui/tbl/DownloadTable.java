@@ -29,6 +29,7 @@ import java.util.HashMap;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.dmn.Services;
@@ -40,6 +41,7 @@ import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -123,6 +125,9 @@ public class DownloadTable extends DbJTable<Download>
 					dInstance.fail("User quit.");
 				}
 				download.delete();
+				
+				//Services.notifications.downloadDeleted(download);
+				refresh();
 			}
 			
 			@Override
@@ -145,6 +150,14 @@ public class DownloadTable extends DbJTable<Download>
 				return "Verify Integrity";
 			}
 		});
+		
+		table.setEnabled(true);
+	}
+
+	protected void delete(Download t) { t.delete(); }
+	protected boolean isSingleSelection()
+	{
+		return false;
 	}
 
 	@Override
@@ -161,23 +174,55 @@ public class DownloadTable extends DbJTable<Download>
 		Machine machine = directory.getMachine();
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(file.getFileEntry());
 		
-		currentRow.put("Machine",           machine.getName()                                                                                                                                             );
-		currentRow.put("Directory",         directory.getName()                                                                                                                                           );
-		currentRow.put("File",              file.getPath().getUnbrokenName()                                                                                                                              );
-		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                                                                                                             );
-		currentRow.put("Added on",          new Date(download.getAdded())                                                                                                                                 );
-		currentRow.put("Status",            download.getState().humanReadable()                                                                                                                           );
-		currentRow.put("Priority",          String.valueOf(download.getPriority())                                                                                                                        );
-		currentRow.put("Local path",        download.getTargetFile().toString()                                                                                                                           );
-		currentRow.put("Number of Mirrors", "1"                                                                                                                                                           );
-		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()                                                                                                );
-		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100%" : downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage()));
-		currentRow.put("Id",                String.valueOf(download.getId())                                                                                                                              );
+		currentRow.put("Machine",           machine.getName()                                                    );
+		currentRow.put("Directory",         directory.getName()                                                  );
+		currentRow.put("File",              file.getPath().getUnbrokenName()                                     );
+		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                    );
+		currentRow.put("Added on",          new Date(download.getAdded())                                        );
+		currentRow.put("Status",            download.getState().humanReadable()                                  );
+		currentRow.put("Priority",          String.valueOf(download.getPriority())                               );
+		currentRow.put("Local path",        download.getTargetFile().toString()                                  );
+		currentRow.put("Number of Mirrors", "1"                                                                  );
+		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()       );
+		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100"         
+				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage() * 100));
+		currentRow.put("Id",                String.valueOf(download.getId())                                     );
 	}
 
 	@Override
-	protected org.cnv.shr.gui.tbl.DbJTable.MyIt<Download> list()
+	protected CloseableIterator<Download> list()
 	{
 		return DbDownloads.listDownloads();
+	}
+
+	public static DefaultTableModel createTableModel()
+	{
+    return new javax.swing.table.DefaultTableModel(
+        new Object [][] {
+
+        },
+        new String [] {
+            "Machine", "Directory", "File", "Size", "Added on", "Status", "Priority", "Local path", "Number of Mirrors", "Speed", "Percent", "Id"
+        }
+    ) {
+        Class[] types = new Class [] {
+            java.lang.String.class, java.lang.String.class, java.lang.String.class, DiskUsage.class, java.util.Date.class, java.lang.Object.class, java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, 
+            // speed
+            java.lang.Object.class, 
+            //percent
+            java.lang.Object.class, java.lang.String.class
+        };
+        boolean[] canEdit = new boolean [] {
+            false, false, false, false, false, false, false, false, false, false, false, false
+        };
+
+        public Class getColumnClass(int columnIndex) {
+            return types [columnIndex];
+        }
+
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            return canEdit [columnIndex];
+        }
+    };
 	}
 }

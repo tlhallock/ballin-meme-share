@@ -104,12 +104,14 @@ public class ChunkResponse extends DownloadMessage
 		else
 			generator.writeStartObject();
 		chunk.generate(generator, "chunk");
+		generator.write("isCompressed", isCompressed);
 		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsisCompressed = true;
 		boolean needschunk = true;
 		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
@@ -117,6 +119,14 @@ public class ChunkResponse extends DownloadMessage
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsisCompressed)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isCompressed");
+				}
+				if (needsisCompressed)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isCompressed");
+				}
 				if (needschunk)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunk");
@@ -129,6 +139,20 @@ public class ChunkResponse extends DownloadMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_FALSE:
+			if (key==null) break;
+			if (key.equals("isCompressed")) {
+				needsisCompressed = false;
+				isCompressed = false;
+			}
+			break;
+		case VALUE_TRUE:
+			if (key==null) break;
+			if (key.equals("isCompressed")) {
+				needsisCompressed = false;
+				isCompressed = true;
+			}
+			break;
 		case START_OBJECT:
 			if (key==null) break;
 			switch(key) {

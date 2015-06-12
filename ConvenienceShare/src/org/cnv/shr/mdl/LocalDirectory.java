@@ -233,6 +233,11 @@ public class LocalDirectory extends RootDirectory
 	{
 		return defaultShare;
 	}
+	
+	private boolean isMirror()
+	{
+		return false;
+	}
 
 	public void setName(String text)
 	{

@@ -34,6 +34,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
@@ -44,6 +45,7 @@ import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.Misc;
 
 public class FilesTable extends DbJTable<SharedFile>
@@ -167,9 +169,9 @@ public class FilesTable extends DbJTable<SharedFile>
 	}
 
 	@Override
-	protected org.cnv.shr.gui.tbl.DbJTable.MyIt<SharedFile> list()
+	protected CloseableIterator<SharedFile> list()
 	{
-		return new MyIt<SharedFile>()
+		return new CloseableIterator<SharedFile>()
 		{
 			// Not synchronized on currently displaying...
 			Iterator<SharedFile> delegate = currentlyDisplaying.iterator();
@@ -189,5 +191,34 @@ public class FilesTable extends DbJTable<SharedFile>
 			@Override
 			public void close() throws IOException {}
 		};
+	}
+
+	public static DefaultTableModel createTableModel()
+	{
+		return new javax.swing.table.DefaultTableModel(
+      new Object [][] {
+
+      },
+      new String [] {
+          "Path", "Name", "Size", "Checksum", "Description", "Modified", "Extension"
+      }
+  ) {
+      Class[] types = new Class [] {
+          java.lang.String.class, java.lang.String.class, DiskUsage.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class
+      };
+      boolean[] canEdit = new boolean [] {
+          false, false, false, false, false, false, false
+      };
+
+      @Override
+			public Class getColumnClass(int columnIndex) {
+          return types [columnIndex];
+      }
+
+      @Override
+			public boolean isCellEditable(int rowIndex, int columnIndex) {
+          return canEdit [columnIndex];
+      }
+  	};
 	}
 }

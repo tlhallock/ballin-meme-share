@@ -122,36 +122,29 @@ public class MachineHasFile extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdescriptor = true;
 		boolean needshasFile = true;
+		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needshasFile)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
+				}
+				if (needshasFile)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
+				}
 				if (needsdescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
-				}
-				if (needshasFile)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
-				}
-				if (needshasFile)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-			}
-			break;
 		case VALUE_FALSE:
 			if (key==null) break;
 			if (key.equals("hasFile")) {
@@ -164,6 +157,13 @@ public class MachineHasFile extends DownloadMessage
 			if (key.equals("hasFile")) {
 				needshasFile = false;
 				hasFile = true;
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
 			}
 			break;
 			default: break;

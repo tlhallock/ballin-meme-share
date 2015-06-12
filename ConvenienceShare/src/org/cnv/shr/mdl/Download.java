@@ -51,11 +51,13 @@ public class Download extends DbObject<Integer>
 	private long added;
 	private int priority;
 	private Path destinationFile;
+	private int chunkSize = -1;
 	
 	public Download(RemoteFile remote)
 	{
 		super(DbDownloads.getPendingDownloadId(remote));
 		this.file = remote;
+		setChunkSize();
 		this.currentState = DownloadState.QUEUED;
 		this.added = System.currentTimeMillis();
 	}
@@ -68,6 +70,25 @@ public class Download extends DbObject<Integer>
 	public RemoteFile getFile()
 	{
 		return file;
+	}
+	
+	private void setChunkSize()
+	{
+		chunkSize = 1024 * 1024;
+		int better = (int) Math.min(50 * 1024 * 1024, file.getFileSize() / 100);
+		if (better > chunkSize)
+		{
+			chunkSize = better;
+		}
+	}
+	
+	public long getChunkSize()
+	{
+		if (chunkSize < 0 && file != null)
+		{
+			setChunkSize();
+		}
+		return chunkSize;
 	}
 
 	@Override
@@ -90,7 +111,7 @@ public class Download extends DbObject<Integer>
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(UPDATE1);)
 		{
-			stmt.setInt(1, DownloadState.ALL_DONE.dbValue);
+			stmt.setInt(1, state.dbValue);
 			stmt.setInt(2, id);
 			stmt.execute();
 		}
@@ -172,16 +193,17 @@ public class Download extends DbObject<Integer>
 	
 	public enum DownloadState
 	{
-		QUEUED              (1),
-//		NOT_STARTED         (2),
-		ALLOCATING          (3),
-		RECOVERING          (4),
-		REQUESTING_METADATA (5),
-		RECEIVING_METADATA  (6),
-//		FINDING_PEERS       (6),
-		DOWNLOADING         (7),
-		PLACING_IN_FS       (8),
-		ALL_DONE            (9),
+		QUEUED                       ( 1),
+//		NOT_STARTED                   (2),
+		ALLOCATING                   ( 3),
+		RECOVERING                   ( 4),
+		REQUESTING_METADATA          ( 5),
+		RECEIVING_METADATA           ( 6),
+//		FINDING_PEERS                 (6),
+		DOWNLOADING                  ( 7),
+		VERIFYING_COMPLETED_DOWNLOAD ( 8),
+		PLACING_IN_FS                ( 9),
+		ALL_DONE                     (10),
 		
 		;
 

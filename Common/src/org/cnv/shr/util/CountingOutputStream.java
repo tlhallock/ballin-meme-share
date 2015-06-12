@@ -132,6 +132,7 @@ private OutputStream logFile;
 	{
 		if (rawMode)
 		{
+			soFar += len;
 			delegate.write(b, off, len);
 		}
 		else

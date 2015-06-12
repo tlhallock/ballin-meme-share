@@ -114,8 +114,9 @@ public class DbChunks
 		}
 	}
 
-	public static boolean hasAllChunks(Download d, long chunkSize)
+	public static boolean hasAllChunks(Download d)
 	{
+		long chunkSize = d.getChunkSize();
 		// should check for each chunk, in reverse order...
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(SELECT5))

@@ -332,7 +332,7 @@ public class MachineViewer extends javax.swing.JFrame
     
     private PathTreeModel getRoot() {
         if (model == null) {
-            model = new PathTreeModel();
+            model = new PathTreeModel(this);
         }
         return model;
     }
@@ -478,6 +478,8 @@ public class MachineViewer extends javax.swing.JFrame
         jTextField2 = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         filesTree = new javax.swing.JTree();
+        jLabel2 = new javax.swing.JLabel();
+        syncStatus = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
@@ -516,8 +518,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton1.setText("Request");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
@@ -528,8 +529,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton3.setText("Synchronize Roots");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -551,13 +551,11 @@ public class MachineViewer extends javax.swing.JFrame
                 false
             };
 
-            @Override
-						public Class getColumnClass(int columnIndex) {
+            public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
 
-            @Override
-						public boolean isCellEditable(int rowIndex, int columnIndex) {
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
@@ -570,37 +568,12 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel5.setText("Filter:");
 
         jTextField1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextField1ActionPerformed(evt);
             }
         });
 
-        filesTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Path", "Name", "Size", "Checksum", "Description", "Modified", "Extension"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false
-            };
-
-            @Override
-						public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            @Override
-						public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
+        filesTable.setModel(FilesTable.createTableModel());
         jScrollPane3.setViewportView(filesTable);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
@@ -623,7 +596,7 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 320, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE))
         );
 
         jSplitPane2.setRightComponent(jPanel3);
@@ -631,8 +604,7 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel6.setText("Filter:");
 
         jTextField2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextField2ActionPerformed(evt);
             }
         });
@@ -640,17 +612,27 @@ public class MachineViewer extends javax.swing.JFrame
         filesTree.setModel(getRoot());
         jScrollPane2.setViewportView(filesTree);
 
+        jLabel2.setText("Status:");
+
+        syncStatus.setText("not connected");
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel6)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextField2)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextField2))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(syncStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -660,7 +642,12 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel6))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 320, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(syncStatus))
+                .addGap(6, 6, 6))
         );
 
         jSplitPane2.setLeftComponent(jPanel4);
@@ -697,8 +684,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         requestShareButton.setText("Request");
         requestShareButton.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 requestShareButtonActionPerformed(evt);
             }
         });
@@ -708,8 +694,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         requestDownloadButton.setText("Request");
         requestDownloadButton.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 requestDownloadButtonActionPerformed(evt);
             }
         });
@@ -719,16 +704,14 @@ public class MachineViewer extends javax.swing.JFrame
 
         changePathButton.setText("Change");
         changePathButton.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 changePathButtonActionPerformed(evt);
             }
         });
 
         jButton7.setText("Synchronize");
         jButton7.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton7ActionPerformed(evt);
             }
         });
@@ -823,7 +806,7 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(requestDownloadButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton7)
-                .addContainerGap(155, Short.MAX_VALUE))
+                .addContainerGap(158, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Settings", jPanel2);
@@ -832,8 +815,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton2.setText("Send Message");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -857,8 +839,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton5.setText("Find Trackers");
         jButton5.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-						public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton5ActionPerformed(evt);
             }
         });
@@ -937,13 +918,14 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(jButton5)
                     .addComponent(jButton6))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
+                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 391, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    	MachineViewer b = this;
     	Services.userThreads.execute(new Runnable() { @Override
 			public void run() { try {
         	Machine machine = getMachine();
@@ -953,7 +935,7 @@ public class MachineViewer extends javax.swing.JFrame
                 connection.send(new UserMessageMessage(UserMessage.createShareRequest()));
                 connection.finish();
 
-        		JOptionPane.showMessageDialog(null, 
+        		JOptionPane.showMessageDialog(b, 
         				"A request to share with " + machine.getName() + " was sent.",
         				"Request sent",
         				JOptionPane.INFORMATION_MESSAGE);
@@ -994,6 +976,7 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void requestDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestDownloadButtonActionPerformed
+    	MachineViewer b = this;
     	Services.userThreads.execute(new Runnable() { @Override
 			public void run() { try {
             Machine machine = getMachine();
@@ -1004,7 +987,7 @@ public class MachineViewer extends javax.swing.JFrame
                 connection.send(new UserMessageMessage(UserMessage.createShareRootRequest(directory)));
                 connection.finish();
                 
-        		JOptionPane.showMessageDialog(null, 
+        		JOptionPane.showMessageDialog(b, 
         				"A request for permissions to download from " + rootDirectoryName + " was sent.",
         				"Request sent",
         				JOptionPane.INFORMATION_MESSAGE);
@@ -1015,6 +998,7 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_requestDownloadButtonActionPerformed
 
     private void requestShareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestShareButtonActionPerformed
+    	MachineViewer b = this;
         Services.userThreads.execute(new Runnable() { @Override
 				public void run() { try {
             Machine machine = getMachine();
@@ -1025,7 +1009,7 @@ public class MachineViewer extends javax.swing.JFrame
                 connection.send(new UserMessageMessage(UserMessage.createListRequest(directory)));
                 connection.finish();
 
-        		JOptionPane.showMessageDialog(null, 
+        		JOptionPane.showMessageDialog(b, 
         				"A request for permissions to view " + rootDirectoryName + " was sent.",
         				"Request sent",
         				JOptionPane.INFORMATION_MESSAGE);
@@ -1060,6 +1044,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1091,10 +1076,15 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JCheckBox rootIsVisibleCheckBox;
     private javax.swing.JLabel rootNameLabel;
     private javax.swing.JComboBox sharingWithRemoteMachine;
+    private javax.swing.JLabel syncStatus;
     private javax.swing.JLabel tagsLabel;
     // End of variables declaration//GEN-END:variables
     
-    
+    public void setSyncStatus(String status)
+    {
+        if (syncStatus != null)
+            syncStatus.setText(status);
+    }
 
 	private NotificationListenerAdapter createListener()
 	{

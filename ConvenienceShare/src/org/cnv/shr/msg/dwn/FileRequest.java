@@ -41,11 +41,11 @@ import org.cnv.shr.util.ByteReader;
 
 public class FileRequest extends DownloadMessage
 {
-	private int chunkSize;
+	private long chunkSize;
 
 	public static int TYPE = 13;
 
-	public FileRequest(RemoteFile remoteFile, int chunkSize)
+	public FileRequest(RemoteFile remoteFile, long chunkSize)
 	{
 		super(remoteFile.getFileEntry());
 		this.chunkSize = chunkSize;
@@ -144,7 +144,7 @@ public class FileRequest extends DownloadMessage
 			if (key==null) break;
 			if (key.equals("chunkSize")) {
 				needschunkSize = false;
-				chunkSize = Integer.parseInt(parser.getString());
+				chunkSize = Long.parseLong(parser.getString());
 			}
 			break;
 			default: break;

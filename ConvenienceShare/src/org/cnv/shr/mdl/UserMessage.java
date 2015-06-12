@@ -149,7 +149,8 @@ public class UserMessage extends DbObject<Integer>
 			return;
 		}
 
-		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null, 
+		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
+				Services.notifications.getCurrentContext(), 
 				"Would you like to share with machine " + machine.getName(), 
 				"Share message sent on " + new Date(sent), 
 				JOptionPane.YES_NO_OPTION))
@@ -175,7 +176,7 @@ public class UserMessage extends DbObject<Integer>
 		}
 
 		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
-				null,
+				Services.notifications.getCurrentContext(),
 				"Would you like to share root \"" + localByName.getName() + "\" with machine \"" + machine.getName() + "\"",
 				"Share root message sent on " + new Date(sent),
 				JOptionPane.YES_NO_OPTION))
@@ -253,7 +254,7 @@ public class UserMessage extends DbObject<Integer>
 			LogWrapper.getLogger().info("No machine.");
 			return;
 		}
-		JOptionPane.showMessageDialog(null, 
+		JOptionPane.showMessageDialog(Services.notifications.getCurrentContext(), 
 				"Machine " + machine.getName() + " says \"" + message + "\"",
 				"Message sent on " + new Date(sent),
 				JOptionPane.INFORMATION_MESSAGE);

@@ -64,9 +64,12 @@ public class DbBackupRestore
 	
 	public static void backupDatabase(File f) throws IOException
 	{
+		LogWrapper.getLogger().info("Backing up the database.");
+		
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(Files.newOutputStream(Paths.get(f.getAbsolutePath())));)
 		{
 			generator.writeStartObject();
+			LogWrapper.getLogger().info("Writing machines.");
 			generator.writeStartArray("machines");
 			try (DbIterator<Machine> listLocals = DbMachines.listRemoteMachines();)
 			{
@@ -76,9 +79,8 @@ public class DbBackupRestore
 				}
 			}
 			generator.writeEnd();
-			
-			Services.notifications.remotesChanged();
 
+			LogWrapper.getLogger().info("Writing local directories.");
 			generator.writeStartArray("directories");
 			try (DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
 			{
@@ -88,8 +90,8 @@ public class DbBackupRestore
 				}
 			}
 			generator.writeEnd();
-			Services.notifications.localsChanged();
 
+			LogWrapper.getLogger().info("Writing local files.");
 			generator.writeStartArray("files");
 			try (DbIterator<LocalFile> listLocals = DbFiles.listAllLocalFiles())
 			{
@@ -100,8 +102,7 @@ public class DbBackupRestore
 			}
 			generator.writeEnd();
 			
-			Services.notifications.localsChanged();
-
+			LogWrapper.getLogger().info("Writing directory permissions.");
 			generator.writeStartArray("permissions");
 			try (ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection(); 
 					StatementWrapper stmt = wrapper.prepareStatement(ALL_LOCALS);
@@ -123,8 +124,14 @@ public class DbBackupRestore
 			generator.writeEnd();
 
 			generator.writeEnd();
+
+			
+			LogWrapper.getLogger().info("Should write downloads.");
+			LogWrapper.getLogger().info("Should write messages.");
+			
 			Services.notifications.localsChanged();
 		}
+		LogWrapper.getLogger().info("Database backup complete.");
 	}
 
 	public static void restoreDatabase(File f)
@@ -175,18 +182,22 @@ public class DbBackupRestore
 					case "machines":
 						dbRestoreProgress.setState("Reading machines");
 						readMachines(parser, wrapper, dbRestoreProgress, newInputStream);
+						Services.notifications.remotesChanged();
 						break;
 					case "directories":
 						dbRestoreProgress.setState("Reading directories");
 						readDirectories(parser, wrapper, dbRestoreProgress, newInputStream);
+						Services.notifications.localsChanged();
 						break;
 					case "files":
 						dbRestoreProgress.setState("Reading files");
 						readFiles(parser, wrapper, dbRestoreProgress, newInputStream);
+						Services.notifications.localsChanged();
 						break;
 					case "permissions":
 						dbRestoreProgress.setState("Reading permissions");
 						readPermissions(parser, wrapper, dbRestoreProgress, newInputStream);
+						Services.notifications.localsChanged();
 						break;
 					}
 				}

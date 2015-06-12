@@ -61,16 +61,16 @@ public class NewMachineFrame extends javax.swing.JFrame {
         downloads.setText(System.getProperty("user.home") + File.separator + "Downloads" + File.separator + "ConvenienceShare");
     }
     
-    private static void error(String message)
+    private void error(String message)
     {
-		JOptionPane.showMessageDialog(null, 
+		JOptionPane.showMessageDialog(this, 
 				message,
 				"Unable to install.",
 				JOptionPane.INFORMATION_MESSAGE);
                 System.exit(0);
     }
     
-    private static File getFile(String path)
+    private File getFile(String path)
     {
     	File f = new File(path);
     	Misc.ensureDirectory(path, true);

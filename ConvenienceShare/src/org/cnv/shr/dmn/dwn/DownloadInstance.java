@@ -62,7 +62,7 @@ public class DownloadInstance
 {
 	static final Random random = new Random();
 	static int NUM_PENDING_CHUNKS = 10;
-	static int CHUNK_SIZE = 1024 * 1024; // long numChunks = (remoteFile.getFileSize() / CHUNK_SIZE) + 1;
+	
 	static long COMPLETION_REFRESH_RATE = 5 * 1000;
 	
 //	private HashMap<String, Seeder> seeders = new HashMap<>();
@@ -76,6 +76,7 @@ public class DownloadInstance
 	
 	// These should be stored on file...
 	private Download download;
+	
 	
 	DownloadInstance(Download d) throws IOException
 	{
@@ -104,14 +105,14 @@ public class DownloadInstance
 	{
 		download.setState(DownloadState.REQUESTING_METADATA);
 		
-		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
+		if (DbChunks.hasAllChunks(download))
 		{
 			download.setState(DownloadState.DOWNLOADING);
 			continueDownload();
 			return;
 		}
 		
-		FileRequest request = new FileRequest(remoteFile, CHUNK_SIZE);
+		FileRequest request = new FileRequest(remoteFile, download.getChunkSize());
 		Machine machine = remoteFile.getRootDirectory().getMachine();
 		Communication openConnection = Services.networkManager.openConnection(machine, false);
 		if (openConnection == null)
@@ -164,15 +165,15 @@ public class DownloadInstance
 		
 		for (Chunk chunk : chunks)
 		{
-			if (chunk.getBegin() % CHUNK_SIZE != 0)
+			if (chunk.getBegin() % download.getChunkSize() != 0)
 			{
-				LogWrapper.getLogger().info("Received a bad chunk!!: " + chunk + " chunksize is " + CHUNK_SIZE);
+				LogWrapper.getLogger().info("Received a bad chunk!!: " + chunk + " chunksize is " + download.getChunkSize());
 				continue;
 			}
 			DbChunks.addChunk(download, chunk);
 		}
 		
-		if (DbChunks.hasAllChunks(download, CHUNK_SIZE))
+		if (DbChunks.hasAllChunks(download))
 		{
 			download.setState(DownloadState.DOWNLOADING);
 		}
@@ -273,7 +274,7 @@ public class DownloadInstance
 				shouldCompress = true;
 				removeFirst.request(remoteFile.getFileEntry(), c, shouldCompress);
 				pendingSeeders.put(c, removeFirst);
-				LogWrapper.getLogger().info("Requested chunk " + c + " from " + removeFirst);
+				LogWrapper.getLogger().info("Requested chunk " + c + " from " + removeFirst.getConnection().getUrl());
 			}
 			catch (IOException e)
 			{
@@ -284,7 +285,7 @@ public class DownloadInstance
 
 	private void checkIfDone()
 	{
-		if (pendingSeeders.isEmpty() && DbChunks.hasAllChunks(download, CHUNK_SIZE))
+		if (pendingSeeders.isEmpty() && DbChunks.hasAllChunks(download))
 		{
 			// Should be using ScheduledThreadPoolExecutor
 			
@@ -316,10 +317,12 @@ public class DownloadInstance
 		
 		resquestedSeeder.requestCompleted(null, chunk);
 		connection.beginReadRaw();
-		ChunkData.read(chunk, destination.toFile(), connection.getIn(), compressed);
+		boolean successful = ChunkData.read(chunk, destination.toFile(), connection.getIn(), compressed);
 		connection.endReadRaw();
-		
-		DbChunks.chunkDone(download, chunk, true);
+		if (successful)
+		{
+			DbChunks.chunkDone(download, chunk, true);
+		}
 		connection.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage()));
 		
 		queue();
@@ -332,7 +335,7 @@ public class DownloadInstance
 			seeder.done();
 		}
 
-		download.setState(DownloadState.PLACING_IN_FS);
+		download.setState(DownloadState.VERIFYING_COMPLETED_DOWNLOAD);
 		try
 		{
 			if (!checkChecksum())
@@ -344,7 +347,8 @@ public class DownloadInstance
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate checksum", e);
 		}
-		
+
+//		download.setState(DownloadState.PLACING_IN_FS);
 //		try
 //		{
 //			Files.move(destination, download.getTargetFile(), StandardCopyOption.REPLACE_EXISTING);
@@ -358,7 +362,7 @@ public class DownloadInstance
 		Services.notifications.downloadDone(this);
 		download.setState(DownloadState.ALL_DONE);
 		// maybe we shouldn't delete the chunks till the download is removed, remember the verify?
-		DbChunks.allChunksDone(download);
+//		DbChunks.allChunksDone(download);
 	}
 
 	public synchronized void setDestinationFile()
@@ -422,7 +426,7 @@ public class DownloadInstance
 	public double getCompletionPercentage()
 	{
 		long now = System.currentTimeMillis();
-		if (lastCountRefresh + COMPLETION_REFRESH_RATE < now)
+		if (lastCountRefresh + COMPLETION_REFRESH_RATE > now)
 		{
 			return completionSatus;
 		}

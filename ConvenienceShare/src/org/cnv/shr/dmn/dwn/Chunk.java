@@ -59,6 +59,10 @@ public class Chunk implements Jsonable
 		this.begin = begin;
 		this.end = end;
 		this.checksum = checksum;
+		if (begin > end)
+		{
+			throw new IllegalArgumentException("Bad begin/end: "  + begin + " - " + end);
+		}
 	}
 
 	public Chunk(ByteReader input) throws IOException
@@ -164,6 +168,12 @@ public class Chunk implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("checksum")) {
+				checksum = parser.getString();
+			}
+			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -175,12 +185,6 @@ public class Chunk implements Jsonable
 				needsend = false;
 				end = Long.parseLong(parser.getString());
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				checksum = parser.getString();
 			}
 			break;
 			default: break;

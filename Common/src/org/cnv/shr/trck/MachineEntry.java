@@ -182,25 +182,17 @@ public class MachineEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsbeginPort = true;
-		boolean needsendPort = true;
 		boolean needsident = true;
 		boolean needskeyStr = true;
 		boolean needsname = true;
 		boolean needsip = true;
+		boolean needsbeginPort = true;
+		boolean needsendPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsbeginPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs beginPort");
-				}
-				if (needsendPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs endPort");
-				}
 				if (needsident)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
@@ -217,23 +209,18 @@ public class MachineEntry extends TrackObject
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
 				}
+				if (needsbeginPort)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs beginPort");
+				}
+				if (needsendPort)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs endPort");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "beginPort":
-				needsbeginPort = false;
-				beginPort = Integer.parseInt(parser.getString());
-				break;
-			case "endPort":
-				needsendPort = false;
-				endPort = Integer.parseInt(parser.getString());
-				break;
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -252,6 +239,19 @@ public class MachineEntry extends TrackObject
 			case "ip":
 				needsip = false;
 				ip = parser.getString();
+				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "beginPort":
+				needsbeginPort = false;
+				beginPort = Integer.parseInt(parser.getString());
+				break;
+			case "endPort":
+				needsendPort = false;
+				endPort = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;

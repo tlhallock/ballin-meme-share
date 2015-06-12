@@ -44,6 +44,12 @@ import org.cnv.shr.util.LogWrapper;
 
 public class PathTreeModelNode implements TaskListener
 {
+	public interface CollectingFilesMonitor
+	{
+		public void found(int currentNumber);
+	}
+	
+	
 	private static final PathTreeModelNode[] DUMMY = new PathTreeModelNode[0];
 	
 	private PathTreeModel model;
@@ -62,6 +68,26 @@ public class PathTreeModelNode implements TaskListener
 		this.model = model;
 		this.element = element;
 		this.children = null;
+	}
+	
+	public void collectAllCachedFiles(List<SharedFile> accumulator, CollectingFilesMonitor monitor)
+	{
+		SharedFile file = getFile();
+		if (file != null)
+		{
+			accumulator.add(file);
+			monitor.found(accumulator.size());
+			return;
+		}
+		if (children == null)
+		{
+			return;
+		}
+		
+		for (PathTreeModelNode child : children)
+		{
+			child.collectAllCachedFiles(accumulator, monitor);
+		}
 	}
 	
 	private PathTreeModelNode[] getPath()

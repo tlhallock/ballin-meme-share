@@ -58,6 +58,8 @@ import org.cnv.shr.util.LogWrapper;
 
 public class PathTreeModel implements TreeModel
 {
+        private MachineViewer viewer;
+    
 	LinkedList<TreeModelListener> listeners = new LinkedList<>();
 	RootDirectory rootDirectory;
 	private PathTreeModelNode root;
@@ -66,9 +68,10 @@ public class PathTreeModel implements TreeModel
 	ExplorerSyncIterator iterator;
 	private FileSource rootSource;
 	
-	public PathTreeModel()
+	public PathTreeModel(MachineViewer viewer)
 	{
 		root = new PathTreeModelNode(null, this, new NoPath());
+                this.viewer = viewer;
 	}
 	
 	void closeConnections()
@@ -114,18 +117,23 @@ public class PathTreeModel implements TreeModel
 			iterator = new ExplorerSyncIterator(rootDirectory);
 			if (rootDirectory.isLocal())
 			{
+        viewer.setSyncStatus("Browsing local files.");
 				rootSource = new FileFileSource(new File(
 						rootDirectory.getPathElement().getFsPath()),
 						DbRoots.getIgnores((LocalDirectory) newRoot));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
+                                
 			}
 			else
 			{
+        viewer.setSyncStatus("Connecting...");
 				final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer((RemoteDirectory) rootDirectory);
 				rootSource = new RemoteFileSource((RemoteDirectory) rootDirectory, createRemoteSynchronizer);
 				iterator.setCloseable(createRemoteSynchronizer);
 				synchronizer = new RemoteSynchronizer((RemoteDirectory) rootDirectory, iterator);
+        viewer.setSyncStatus("Connected to remote.");
 			}
+                        
 		}
 		catch (final IOException e)
 		{
@@ -270,6 +278,7 @@ public class PathTreeModel implements TreeModel
 
 	private void setToNullSynchronizers(final RootDirectory newRoot)
 	{
+		viewer.setSyncStatus("Not connected, browsing cache.");
 		iterator = new ExplorerSyncIterator(newRoot) {
 			@Override
 			public SynchronizationTask next()

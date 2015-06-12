@@ -45,7 +45,7 @@ import org.cnv.shr.stng.Settings;
 // TODO: java nio
 public class ChunkData
 {
-	public static void read(Chunk chunk, File f, InputStream input, boolean compressed) throws IOException, NoSuchAlgorithmException
+	public static boolean read(Chunk chunk, File f, InputStream input, boolean compressed) throws IOException, NoSuchAlgorithmException
 	{
 		if (compressed)
 			input = new GZIPInputStream(input);
@@ -78,11 +78,6 @@ public class ChunkData
 			}
 		}
 		
-		String digestToString = ChecksumManager.digestToString(digest);
-		if (!digestToString.equals(chunk.getChecksum()))
-		{
-			throw new IOException("The checksum did not match!");
-		}
 		
 		if (compressed)
 		{
@@ -91,6 +86,9 @@ public class ChunkData
 			// what if the input stream reads past the end of its stream?
 			// maybe zip magic prevents that...
 		}
+		
+		String digestToString = ChecksumManager.digestToString(digest);
+		return digestToString.equals(chunk.getChecksum());
 	}
 
 	public static void write(Chunk chunk, Path f, OutputStream output, boolean compress) throws IOException
@@ -102,14 +100,24 @@ public class ChunkData
 		try (RandomAccessFile toRead = new RandomAccessFile(f.toFile(), "r"))
 		{
 			toRead.seek(chunk.getBegin());
-			int numberOfBytes = (int) chunk.getSize();
+			long numberOfBytes = chunk.getSize();
 
-			byte[] buffer = new byte[1024];
-			int offset = 0;
+			int bufferSize = 8196;
+			if (bufferSize > chunk.getSize())
+			{
+				bufferSize = (int) chunk.getSize();
+			}
+			byte[] buffer = new byte[bufferSize];
+			long offset = 0;
 
 			while (offset < numberOfBytes)
 			{
-				int nread = toRead.read(buffer, 0, Math.min(numberOfBytes - offset, buffer.length));
+				int nextRead = buffer.length;
+				if (numberOfBytes - offset < nextRead)
+				{
+					nextRead = (int) (numberOfBytes - offset);
+				}
+				int nread = toRead.read(buffer, 0, nextRead);
 				if (nread < 0 && offset < numberOfBytes)
 				{
 					throw new IOException("Hit end of file too early!");
@@ -134,10 +142,10 @@ public class ChunkData
 		try (SeekableByteChannel toRead = Files.newByteChannel(f);)
 		{
 			toRead.position(chunk.getBegin());
-			int numberOfBytes = (int) chunk.getSize();
+			long numberOfBytes = chunk.getSize();
 
 			ByteBuffer buffer = ByteBuffer.allocate(128);
-			int offset = 0;
+			long offset = 0;
 
 			while (offset < numberOfBytes)
 			{
