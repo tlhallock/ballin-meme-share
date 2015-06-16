@@ -22,73 +22,58 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
-package org.cnv.shr.msg.dwn;
+package org.cnv.shr.dmn;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.security.PublicKey;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
-import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.dmn.Services;
-import org.cnv.shr.dmn.dwn.ServeInstance;
-import org.cnv.shr.trck.FileEntry;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.db.h2.MyParserNullable;
+import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.KeyPairObject;
 
-public class CompletionStatus extends DownloadMessage
+
+public class JsonableUpdateInfo implements Jsonable
 {
-	public static int TYPE = 12;
+	private String ip;
+	private int port;
 	
-	private double percentComplete;
+	@MyParserNullable
+	private PublicKey pKey;
 	
-	public CompletionStatus(FileEntry descriptor, double d)
+	JsonableUpdateInfo()
 	{
-		super(descriptor);
-		percentComplete = d;
+		ip = "127.0.0.1";
+		port = org.cnv.shr.updt.UpdateInfo.DEFAULT_UPDATE_PORT;
+		pKey = null;
+	}
+	
+	String getIp()
+	{
+		return ip;
+	}
+	
+	int getPort()
+	{
+		return port;
+	}
+	
+	PublicKey getKey()
+	{
+		return pKey;
+	}
+	public void setAddress(String ip, int port)
+	{
+		this.ip = ip;
+		this.port = port;
 	}
 
-	public CompletionStatus(InputStream stream) throws IOException
+	public synchronized void updateInfo(String ip, int port, PublicKey pKey)
 	{
-		super(stream);
-	}
-	
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-	@Override
-	protected void finishParsing(ByteReader reader) throws IOException
-	{
-		percentComplete = reader.readDouble();
-	}
-	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(percentComplete);
-	}
-	@Override
-	public void perform(Communication connection) throws Exception
-	{
-		ServeInstance serveInstance = Services.server.getServeInstance(connection);
-		if (serveInstance == null)
-		{
-			connection.finish();
-			return;
-		}
-		serveInstance.setPercentComplete(percentComplete);
-	}
-	
-	@Override
-	public String toString()
-	{
-		StringBuilder builder = new StringBuilder();
-		
-		builder.append("remote is " + percentComplete + " done.");
-		
-		return builder.toString();
+		this.ip = ip;
+		this.port = port;
+		this.pKey = pKey;
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -98,52 +83,59 @@ public class CompletionStatus extends DownloadMessage
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
-		generator.write("percentComplete", percentComplete);
-		descriptor.generate(generator, "descriptor");
+		generator.write("ip", ip);
+		generator.write("port", port);
+		if (pKey!=null)
+		generator.write("pKey", KeyPairObject.serialize(pKey));
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdescriptor = true;
-		boolean needspercentComplete = true;
+		boolean needsip = true;
+		boolean needsport = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdescriptor)
+				if (needsip)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
 				}
-				if (needspercentComplete)
+				if (needsport)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs percentComplete");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
+		case VALUE_STRING:
 			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
+			switch(key) {
+			case "ip":
+				needsip = false;
+				ip = parser.getString();
+				break;
+			case "pKey":
+				pKey = KeyPairObject.deSerializePublicKey(parser.getString());
+				break;
 			}
 			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
-			if (key.equals("percentComplete")) {
-				needspercentComplete = false;
-				percentComplete = Double.parseDouble(parser.getString());
+			if (key.equals("port")) {
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
 			}
 			break;
 			default: break;
 			}
 		}
 	}
-	public static String getJsonName() { return "CompletionStatus"; }
+	public static String getJsonName() { return "JsonableUpdateInfo"; }
 	public String getJsonKey() { return getJsonName(); }
-	public CompletionStatus(JsonParser parser) { parse(parser); }
+	public JsonableUpdateInfo(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

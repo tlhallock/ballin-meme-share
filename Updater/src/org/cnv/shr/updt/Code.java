@@ -32,12 +32,13 @@ import java.util.logging.Level;
 import java.util.zip.ZipException;
 
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.ProcessInfo;
 
 public class Code
 {
 	private long timeStamp;
-	private Path jar = Updater.getUpdatesDirectory().resolve("ConvenienceShare.jar");
+	private Path jar = Updater.getUpdatesDirectory().resolve("updates.zip");
 	private String version;
 	
 	public Code() throws ZipException, IOException
@@ -64,7 +65,7 @@ public class Code
 			return;
 		}
 		
-		version = ProcessInfo.getJarVersion(jar);
+		version = ProcessInfo.getJarVersionFromUpdates(jar, Misc.CONVENIENCE_SHARE_JAR);
 		LogWrapper.getLogger().info("read version " + version + " from jar.");
 		if (version != null)
 		{

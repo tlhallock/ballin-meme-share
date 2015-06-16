@@ -30,85 +30,85 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 
 public class ProcessInfo
 {
-
-	public static Path getJarPath(Class c)
+	public static Path getJarPath(Class<?> c)
 	{
 		String path = c.getProtectionDomain().getCodeSource().getLocation().getPath();
 		switch (Misc.getOperatingSystem())
 		{
-		case Mac:   return Paths.get(path);
-		case Linux:   return Paths.get(path);
+		case Mac:   break;
+		case Linux: break;
 		case Windows: 
 			if (path.startsWith("/"))
 			{
 				path = path.substring(1);
 			}
-			return Paths.get(path);
+			break;
 		default:
 			break;
-			
 		}
 		
-		Paths.get("C:/Users/thallock/Documents/Source/ballin-meme-share/ConvenienceShare/bin/");
-
-//		try
-//		{
-			return Paths.get(path);
-					
-					
-					
-//					URLDecoder.decode(path, "UTF-8"));
-//		}
-//		catch (UnsupportedEncodingException e)
-//		{
-////			LogWrapper.getLogger().log(Level.INFO, , e);
-//			e.printStackTrace();
-//			return Paths.get(path);
-//		}
+		LogWrapper.getLogger().info("The found jar path is \"" + path + "\"");
+		
+		if (path.endsWith(".jar"))
+		{
+			return Paths.get(path).getParent();
+		}
+		
+		return Paths.get(path);
 	}
 	
-	private static String getJarName()
-	{
-		return "ConvenienceShare.jar";
-	}
-	
-	public static Path getJarFile(Class c)
-	{
-		return getJarPath(c); //.resolve(getJarName());
-	}
-	
-	
-	public static String getJavaPath()
-	{
-		return "/usr/bin/java";
-	}
 	public static String getTestClassPath()
 	{
+		// Needs to be updated...
 		return "../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:../../Common/bin:.";
 	}
 	
-	public static String getJarVersion(Path jar)
+	public static String getJarVersionFromUpdates(Path file, String jar)
 	{
-		try (ZipFile zipFile = new ZipFile(jar.toFile());
-				InputStream inputStream = zipFile.getInputStream(zipFile.getEntry("META-INF/MANIFEST.MF"));)
+		try (ZipFile zipFile = new ZipFile(file.toFile());
+				InputStream inputStream = zipFile.getInputStream(zipFile.getEntry(jar));
+				ZipInputStream subStream = new ZipInputStream(inputStream))
 		{
-			return new Manifest(inputStream).getMainAttributes().getValue("Implementation-Version");
+			if (!findZipEntry(subStream, "META-INF/MANIFEST.MF"))
+			{
+				LogWrapper.getLogger().info("Bad jar file: can't find manifest");
+				return null;
+			}
+			return new Manifest(subStream).getMainAttributes().getValue("Implementation-Version");
 		}
 		catch (ZipException e)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Bad jar file.", e);
+			LogWrapper.getLogger().log(Level.INFO, "Bad jar file: no convenience share jar.", e);
 			return null;
 		}
 		catch (IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to read jar.", e);
 			return null;
+		}
+	}
+	
+	public static boolean findZipEntry(ZipInputStream input, String name) throws IOException
+	{
+		while (true)
+		{
+			ZipEntry nextEntry = input.getNextEntry();
+			if (nextEntry == null)
+			{
+				return false;
+			}
+			if (nextEntry.getName().equals(name))
+			{
+				return true;
+			}
 		}
 	}
 }

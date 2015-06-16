@@ -49,6 +49,7 @@ import javax.json.stream.JsonParser.Event;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.dmn.JsonableUpdateInfo;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.msg.DoneMessage;
@@ -154,6 +155,7 @@ public class GenerateParserCode
 				SharingState.class               ,
 				PathListChild.class              ,
 				RootListChild.class              ,
+				JsonableUpdateInfo.class                 ,
 				
 //				TrackerRequest.class             ,
 				

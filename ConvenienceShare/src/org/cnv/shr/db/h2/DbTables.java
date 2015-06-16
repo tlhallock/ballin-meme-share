@@ -278,7 +278,7 @@ public class DbTables
 		{
 			try (StatementWrapper stmt = c.prepareNewStatement(statements[i] + ";");)
 			{
-				System.out.println("Executing " + statements[i]);
+				LogWrapper.getLogger().fine("Executing " + statements[i]);
 				stmt.execute();
 			}
 		}

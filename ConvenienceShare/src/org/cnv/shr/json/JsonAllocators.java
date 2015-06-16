@@ -60,6 +60,9 @@ public class JsonAllocators
 			public org.cnv.shr.db.h2.SharingState create(JsonParser p) { return SharingState.valueOf(p.getString()); }  
 		});
 		
+		
+		
+		
 		ALLOCATORS.put(org.cnv.shr.trck.TrackerEntry.getJsonName(), new JsonAllocator<org.cnv.shr.trck.TrackerEntry>()          
 				{                                                                     
 					public org.cnv.shr.trck.TrackerEntry create(JsonParser p) { return new org.cnv.shr.trck.TrackerEntry(p); }  
@@ -95,6 +98,10 @@ public class JsonAllocators
 				ALLOCATORS.put(org.cnv.shr.msg.RootListChild.getJsonName(), new JsonAllocator<org.cnv.shr.msg.RootListChild>()          
 				{                                                                     
 					public org.cnv.shr.msg.RootListChild create(JsonParser p) { return new org.cnv.shr.msg.RootListChild(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.dmn.JsonableUpdateInfo.getJsonName(), new JsonAllocator<org.cnv.shr.dmn.JsonableUpdateInfo>()          
+				{                                                                     
+					public org.cnv.shr.dmn.JsonableUpdateInfo create(JsonParser p) { return new org.cnv.shr.dmn.JsonableUpdateInfo(p); }  
 				});                                                                   
 				ALLOCATORS.put(org.cnv.shr.msg.dwn.DownloadFailure.getJsonName(), new JsonAllocator<org.cnv.shr.msg.dwn.DownloadFailure>()          
 				{                                                                     
@@ -279,7 +286,6 @@ public class JsonAllocators
 				ALLOCATORS.put(org.cnv.shr.db.h2.bak.RootPermissionBackup.getJsonName(), new JsonAllocator<org.cnv.shr.db.h2.bak.RootPermissionBackup>()          
 				{                                                                     
 					public org.cnv.shr.db.h2.bak.RootPermissionBackup create(JsonParser p) { return new org.cnv.shr.db.h2.bak.RootPermissionBackup(p); }  
-				});                                                                   
-                                     
+				});              
 	}
 }

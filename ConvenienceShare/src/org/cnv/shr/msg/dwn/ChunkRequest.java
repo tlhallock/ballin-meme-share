@@ -115,14 +115,22 @@ public class ChunkRequest extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needspleaseCompress = true;
 		boolean needschunk = true;
 		boolean needsdescriptor = true;
-		boolean needspleaseCompress = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needspleaseCompress)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pleaseCompress");
+				}
+				if (needspleaseCompress)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pleaseCompress");
+				}
 				if (needschunk)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunk");
@@ -131,31 +139,10 @@ public class ChunkRequest extends DownloadMessage
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
-				if (needspleaseCompress)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pleaseCompress");
-				}
-				if (needspleaseCompress)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pleaseCompress");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			switch(key) {
-			case "chunk":
-				needschunk = false;
-				chunk = new Chunk(parser);
-				break;
-			case "descriptor":
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-				break;
-			}
-			break;
 		case VALUE_FALSE:
 			if (key==null) break;
 			if (key.equals("pleaseCompress")) {
@@ -168,6 +155,19 @@ public class ChunkRequest extends DownloadMessage
 			if (key.equals("pleaseCompress")) {
 				needspleaseCompress = false;
 				pleaseCompress = true;
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			switch(key) {
+			case "chunk":
+				needschunk = false;
+				chunk = new Chunk(parser);
+				break;
+			case "descriptor":
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
+				break;
 			}
 			break;
 			default: break;

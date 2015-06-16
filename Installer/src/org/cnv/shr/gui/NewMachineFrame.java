@@ -32,13 +32,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.LinkedList;
+import java.util.Scanner;
 import java.util.logging.Level;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.inst.MonitorThread;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.LogWrapper;
@@ -59,6 +60,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
         name.setText(System.getProperty("user.name") +"'s Machine");
         application.setText(System.getProperty("user.home") + File.separator + "Applications" + File.separator + "ConvenienceShare");
         downloads.setText(System.getProperty("user.home") + File.separator + "Downloads" + File.separator + "ConvenienceShare");
+        share.setSelected(true);
     }
     
     private void error(String message)
@@ -119,7 +121,10 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		stgs.servePortBeginE.set(beginPort);
 		stgs.maxServes.set(endPort - beginPort);
 		stgs.machineIdentifier.set(Misc.getRandomString(50));
-		stgs.shareWithEveryone.set(share.isSelected());
+//		stgs.shareWithEveryone.set(share.isSelected());
+		stgs.defaultPermission.set((share.isSelected() ? SharingState.DOWNLOADABLE : SharingState.DO_NOT_SHARE).name());
+		
+		
 		try
 		{
 			stgs.write();
@@ -129,33 +134,48 @@ public class NewMachineFrame extends javax.swing.JFrame {
 			LogWrapper.getLogger().log(Level.WARNING, "Unable to write settings", e);
 			error("Unable to write settings file.");
 		}
-
-		try (ZipInputStream zipInputStream = new ZipInputStream(ClassLoader.getSystemResourceAsStream("dist/install_data.zip"));)
-		{
-			extract(zipInputStream, root);
-		}
-		catch (IOException e1)
-		{
-			LogWrapper.getLogger().log(Level.WARNING, "Unable to extract install data", e1);
-			error("Unable to extract install data to " + root);
-		}
 		
-		try (InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream("dist/updateKey");)
-		{
-			Files.copy(systemResourceAsStream, root.resolve("app" + File.separator + "updateKey"), StandardCopyOption.REPLACE_EXISTING);
-		}
-		catch (IOException e1)
-		{
-			LogWrapper.getLogger().log(Level.WARNING, "Unable to extract update public key", e1);
-		}
 
-		try (InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream("dist/trackers");)
+		try (Scanner scanner = new Scanner(ClassLoader.getSystemResourceAsStream("dist/install_files.txt"));)
 		{
-			Files.copy(systemResourceAsStream, root.resolve("app" + File.separator + "trackers"), StandardCopyOption.REPLACE_EXISTING);
+			while (scanner.hasNext())
+			{
+				String file = scanner.next();
+				String location = scanner.next();
+				boolean isZip = scanner.nextBoolean();
+
+				if (isZip)
+				{
+					try (ZipInputStream zipInputStream = new ZipInputStream(ClassLoader.getSystemResourceAsStream("dist/" + file));)
+					{
+						Misc.extract(zipInputStream, root.resolve(location));
+					}
+					catch (IOException e1)
+					{
+						LogWrapper.getLogger().log(Level.WARNING, "Unable to extract install data", e1);
+						error("Unable to extract install data to " + root);
+					}
+				}
+				else
+				{
+					try (InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream("dist/" + file);)
+					{
+						
+						Path resolve = root.resolve(location).resolve(file);
+						LogWrapper.getLogger().info("Extracting " + file + " to " + resolve);
+						Files.copy(systemResourceAsStream, resolve, StandardCopyOption.REPLACE_EXISTING);
+					}
+					catch (IOException e1)
+					{
+						LogWrapper.getLogger().log(Level.WARNING, "Unable to extract file " + file, e1);
+					}
+				}
+			}
 		}
-		catch (IOException e1)
+		catch (Exception e1)
 		{
-			LogWrapper.getLogger().log(Level.WARNING, "Unable to extract update public key", e1);
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to install list.", e1);
+			error("Unable to find install list " + root);
 		}
 		
 		LinkedList<String> args = new LinkedList<>();
@@ -212,29 +232,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
     	name.setEditable(false);
 	}
 	
-	private static void extract(ZipInputStream zipInputStream, Path destPath) throws IOException
-	{
-		ZipEntry entry;
-		while ((entry = zipInputStream.getNextEntry()) != null)
-		{
-			if (entry.isDirectory())
-			{
-				continue;
-			}
-			Path entryDest = destPath.resolve(entry.getName());
-			Misc.ensureDirectory(entryDest, true);
-			try
-			{
-				Files.copy(zipInputStream, entryDest, StandardCopyOption.REPLACE_EXISTING);
-			}
-			catch (IOException ex)
-			{
-				LogWrapper.getLogger().log(Level.WARNING, "Unable to extract " + entry.getName() + " to " + destPath, ex);
-			}
-		}
-	}
-
-    /**
+	/**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.

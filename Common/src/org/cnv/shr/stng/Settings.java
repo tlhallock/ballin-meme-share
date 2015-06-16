@@ -115,7 +115,7 @@ public class Settings implements SettingListener
 		logFile         .set(Paths.get(applicationDirectory.get().getPath(), "log.txt"  ));
 		dbFile          .set(Paths.get(applicationDirectory.get().getPath(), "files"    ));
 		codeUpdateKey   .set(Paths.get(applicationDirectory.get().getPath(), "updateKey"));
-		codeUpdateKey   .set(Paths.get(applicationDirectory.get().getPath(), "trackers" ));
+		trackerFile     .set(Paths.get(applicationDirectory.get().getPath(), "trackers" ));
 	}
 	
 	public void listenToSettings()

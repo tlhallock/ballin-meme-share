@@ -2,7 +2,7 @@
 <project default="convenienceshare" name="Create Runnable Jar for Project ConvenienceShare with libraries in sub-folder">
 
 	<path id="jars">
-		<fileset dir="../ConvenienceShare/lib/">
+		<fileset dir="../libs/">
 			<include name="*.jar" />
 		</fileset>
 	</path>
@@ -37,11 +37,11 @@
 	</target>
 
 	<target name="cpylibs" depends="makedadirs">
-		<copy file="../ConvenienceShare/lib/FlexiProvider-1.7p7.signed.jar" todir="dist/libs" />
-		<copy file="../ConvenienceShare/lib/CoDec-build17-jdk13.jar"        todir="dist/libs" />
-		<copy file="../ConvenienceShare/lib/portmapper-2.0.0-alpha1.jar"    todir="dist/libs" />
-		<copy file="../ConvenienceShare/lib/h2-1.4.187.jar"                 todir="dist/libs" />
-		<copy file="../ConvenienceShare/lib/javax.json-1.0.2.jar"           todir="dist/libs" />
+		<copy file="../libs/FlexiProvider-1.7p7.signed.jar" todir="dist/libs" />
+		<copy file="../libs/CoDec-build17-jdk13.jar"        todir="dist/libs" />
+		<copy file="../libs/portmapper-2.0.0-alpha1.jar"    todir="dist/libs" />
+		<copy file="../libs/h2-1.4.187.jar"                 todir="dist/libs" />
+<!-- 		<copy file="../lib/javax.json-1.0.2.jar"           todir="dist/libs" /> -->
 	</target>
 
 
@@ -63,7 +63,7 @@
 		</javac>
 
 		<buildnumber file="build.num"/>
-		<property name="version" value="1.0.0"/>
+		<property name="version" value="0.0"/>
 
 		<jar destfile="dist/ConvenienceShare.jar">
 			<manifest>
@@ -134,11 +134,13 @@
 
 		<jar destfile="dist/Installer.jar">
 			<manifest>
-				<attribute name="Main-Class" value="org.cnv.shr.inst.Install2" />
+<!-- 				<attribute name="Main-Class" value="org.cnv.shr.inst.Install2" /> -->
+ 				<attribute name="Main-Class" value="org.cnv.shr.inst.Install" />
 				<attribute name="Class-Path" value="" />
 			</manifest>
 			<fileset dir="classes/install/" />
 			<fileset dir="classes/common/" />
+			<zipfileset file="install_files.txt" prefix="dist/" />
 			<zipfileset file="dist/install_data.zip" prefix="dist/" />
 			<zipfileset file="../instances/updater/updateKey" prefix="dist/" />
 			<zipfileset file="../instances/tracker/trackers" prefix="dist/" />
@@ -148,7 +150,10 @@
         
 	<target name="update" depends="clean,convenienceshare,updater,tracker">
 		<mkdir dir="../instances/updater/updates/" />
-		<copy file="dist/ConvenienceShare.jar" todir="../instances/updater/updates/" />
+		<zip destfile="../instances/updater/updates/updates.zip">
+			<zipfileset file="dist/ConvenienceShare.jar"/>
+			<zipfileset file="dist/Tracker.jar"/>
+		</zip>
 	</target>
 
 	<target name="cleanbuild" depends="clean, convenienceshare" />

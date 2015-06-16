@@ -1,0 +1,3 @@
+install_data.zip . true
+updateKey app false
+trackers app false

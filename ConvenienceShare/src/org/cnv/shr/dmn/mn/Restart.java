@@ -31,13 +31,14 @@ import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.ProcessInfo;
 
 public class Restart extends Quiter
 {
 	private Path launchDir;
 	
-	public Restart() { this (ProcessInfo.getJarFile(Main.class).getParent()); }
+	public Restart() { this (ProcessInfo.getJarPath(Main.class)); }
 	
 	public Restart(Path launch) { this.launchDir = launch; }
 	
@@ -57,22 +58,22 @@ public class Restart extends Quiter
 			LinkedList<String> args = new LinkedList<>();
 			args.add("java");
 			args.add("-jar");
-			args.add(ProcessInfo.getJarFile(Main.class).toString());
+			args.add(launchDir.resolve(Misc.CONVENIENCE_SHARE_JAR).toString());
 			args.add("-f");
 			args.add(Services.settings.getSettingsFile());
 			
-			System.out.println("Restarting from:");
-			System.out.println(launchDir.toString());
-			System.out.println("with:");
+			LogWrapper.getLogger().info("Restarting from:");
+			LogWrapper.getLogger().info(launchDir.toString());
+			LogWrapper.getLogger().info("with:");
 			for (String str : args)
 			{
-				System.out.println(str);
+				LogWrapper.getLogger().info(str);
 			}
 
 			ProcessBuilder builder = new ProcessBuilder();
 			builder.command(args);
 			builder.directory(launchDir.toFile());
-
+			
 			builder.start();
 		}
 		catch (IOException e)

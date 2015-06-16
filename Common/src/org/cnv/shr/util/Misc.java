@@ -40,6 +40,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -52,6 +53,8 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
@@ -243,7 +246,10 @@ public class Misc
 		try (InputStream input = clazz.getClassLoader().getResourceAsStream("META-INF/MANIFEST.MF");)
 		{
 			String value = new Manifest(input).getMainAttributes().getValue("Implementation-Version");
-			value = "0.0.0.0.0.1";
+			if (value == null)
+			{
+				value = "0.0.0.0.0.1";
+			}
 			return value;
 		}
 		catch (IOException e)
@@ -627,4 +633,29 @@ public class Misc
 //	}
 	
 	public static final int MAX_PORT = 65535;
+
+	public static void extract(ZipInputStream zipInputStream, Path destPath) throws IOException
+	{
+		ZipEntry entry;
+		while ((entry = zipInputStream.getNextEntry()) != null)
+		{
+			if (entry.isDirectory())
+			{
+				continue;
+			}
+			Path entryDest = destPath.resolve(entry.getName());
+			ensureDirectory(entryDest, true);
+			try
+			{
+				LogWrapper.getLogger().info("Extracting " + entry.getName() + " to " + entryDest);
+				Files.copy(zipInputStream, entryDest, StandardCopyOption.REPLACE_EXISTING);
+			}
+			catch (IOException ex)
+			{
+				LogWrapper.getLogger().log(Level.WARNING, "Unable to extract " + entry.getName() + " to " + destPath, ex);
+			}
+		}
+	}
+
+	public static final String CONVENIENCE_SHARE_JAR = "ConvenienceShare.jar";
 }
