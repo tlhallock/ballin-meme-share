@@ -63,20 +63,21 @@ public class UserMessage extends DbObject<Integer>
 	
 	public UserMessage(Machine machine, int type, String message)
 	{
-		super(null);
-		this.machine = machine;
-		this.sent = System.currentTimeMillis();
-		this.type = MessageType.getMessageType(type);
-		this.message = message;
+		this(machine, type, message, System.currentTimeMillis());
 	}
 	
 	private UserMessage(MessageType type, String message)
 	{
-		super(null);
-		this.type = type;
+		this (Services.localMachine, type.dbValue, message);
+	}
+
+	public UserMessage(Machine machine, int type, String message, long added)
+	{
+		this(null);
+		this.machine = machine;
+		this.sent = added;
+		this.type = MessageType.getMessageType(type);
 		this.message = message;
-		this.sent = System.currentTimeMillis();
-		this.machine = Services.localMachine;
 	}
 
 	@Override

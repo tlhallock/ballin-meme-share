@@ -344,7 +344,7 @@ public class UpdateManager extends TimerTask
 		{
 			info = new JsonableUpdateInfo(input);
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to read update info from " + updateKeyPath, e);
 			write();

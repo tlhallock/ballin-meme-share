@@ -23,12 +23,18 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.sql.SQLException;
+import java.util.logging.Level;
+
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 
 public class MessageBackup implements Jsonable
@@ -49,7 +55,22 @@ public class MessageBackup implements Jsonable
 
 	public void save(ConnectionWrapper wrapper)
 	{
-		// ...
+		Machine remoteMachine = DbMachines.getMachine(machine);
+		if (remoteMachine == null)
+		{
+			LogWrapper.getLogger().info("Unable to get remote machine " + machine);
+			return;
+		}
+
+		UserMessage userMessage = new UserMessage(remoteMachine, UserMessage.MessageType.valueOf(messageType).getDbValue(), message, sent);
+		try
+		{
+			userMessage.save(wrapper);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save user message " + this, e);
+		}
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK

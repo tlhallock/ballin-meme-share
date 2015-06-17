@@ -68,6 +68,14 @@ public class Download extends DbObject<Integer>
 		super(int1);
 	}
 	
+	public Download(RemoteFile remoteFile, long added2, int priority2, long chunkSize2)
+	{
+		super(null);
+		this.added = added2;
+		this.priority = priority2;
+		this.chunkSize = chunkSize2;
+	}
+
 	public RemoteFile getFile()
 	{
 		return file;

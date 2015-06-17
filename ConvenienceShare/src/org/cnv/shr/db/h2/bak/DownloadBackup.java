@@ -23,17 +23,26 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.sql.SQLException;
+import java.util.logging.Level;
+
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.MyParserNullable;
+import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 
 public class DownloadBackup implements Jsonable
@@ -76,9 +85,57 @@ public class DownloadBackup implements Jsonable
 	public void save(ConnectionWrapper wrapper)
 	{
 		Machine remote = DbMachines.getMachine(remoteMachine);
-		// ...
+		if (remote == null)
+		{
+			LogWrapper.getLogger().info("Unable to get remote machine, it should have been saved in the json: " + remoteMachine);
+			return;
+		}
+		RemoteDirectory root = (RemoteDirectory) DbRoots.getRoot(remote, remoteDirectory);
+		if (root == null)
+		{
+			// The tags and description will be updated when the user synchronizes...
+			root = new RemoteDirectory(remote, remoteDirectory, null, null, SharingState.DO_NOT_SHARE);
+			try
+			{
+				root.save(wrapper);
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to save remote directory " + remoteDirectory, e);
+				return;
+			}
+		}
+		PathElement pathElement = DbPaths.getPathElement(remotePath);
+		DbPaths.pathLiesIn(pathElement, root);
+		RemoteFile remoteFile = new RemoteFile(root, pathElement, fileSize, checksum, tags, lastModified);
+		try
+		{
+			remoteFile.save(wrapper);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save remote file " + this, e);
+			return;
+		}
+
+		Download download = new Download(remoteFile, added, priority, chunkSize);
+		
+		try
+		{
+			download.save(wrapper);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save download " + this, e);
+		}
+		
 		DownloadState state = DownloadState.valueOf(currentDownloadState);
-		// ...
+		if (state == null)
+		{
+			LogWrapper.getLogger().info("Unkown download state: " + currentDownloadState);
+			return;
+		}
+		download.setState(state); // This already tries to save the download...
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK

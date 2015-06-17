@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -53,6 +54,7 @@ public class ChecksumManager extends Thread
 	
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
+	private HashMap<String, Long> errors = new HashMap<>();
 	
 	private boolean stop;
 	
@@ -103,9 +105,12 @@ public class ChecksumManager extends Thread
 				iterator = DbFiles.getSomeUnchecksummedFiles();
 				count++;
 			}
-			if (iterator.hasNext())
+			LocalFile next;
+			if (iterator.hasNext()
+					// We will be kicked when the synchronizing is done anyway...
+					&& !(next = iterator.next()).getRootDirectory().isSynchronizing())
 			{
-				return iterator.next();
+				return next;
 			}
 
 			iterator.close();
@@ -136,6 +141,18 @@ public class ChecksumManager extends Thread
 	private void updateChecksum(LocalFile sf)
 	{
 		String checksum = null;
+		
+		String errorsKey = sf.getFsFile().toString();
+		Long long1 = errors.get(errorsKey);
+		if (long1 != null)
+		{
+			if (long1 >= System.currentTimeMillis() - 5 * 60 * 1000)
+			{
+				return;
+			}
+			errors.remove(errorsKey);
+		}
+		
 		try
 		{
 			checksum = checksumBlocking(sf.getFsFile(), Level.INFO);
@@ -143,10 +160,12 @@ public class ChecksumManager extends Thread
 			{
 				sf.setChecksum(checksum);
 			}
+			errors.remove(errorsKey);
 		}
 		catch (Exception e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate or set checksum of " + sf, e);
+			errors.put(errorsKey, System.currentTimeMillis());
 		}
 	}
 	

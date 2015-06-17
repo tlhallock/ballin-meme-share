@@ -183,7 +183,6 @@ public abstract class RootDirectory extends DbObject<Integer>
 			localSynchronizer.run();
 			t.cancel();
 			setStats();
-			sendNotifications();
 
 			LogWrapper.getLogger().info("Done synchronizing " + getPathElement().getFullPath());
 		}
@@ -195,6 +194,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 		{
 			stopSynchronizing(this);
 		}
+		
+		sendNotifications();
 	}
 
 	public void setStats()
@@ -305,6 +306,16 @@ public abstract class RootDirectory extends DbObject<Integer>
 		{
 			remove.quit();
 		}
+	}
+	
+	private static synchronized boolean isSynchronizing(RootDirectory localDirectory)
+	{
+		return synchronizing.containsKey(localDirectory.getPathElement().getFullPath());
+	}
+	
+	public boolean isSynchronizing()
+	{
+		return isSynchronizing(this);
 	}
 
 	public long getMinFileSize()
