@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.trk;
 
 import java.io.IOException;
@@ -51,10 +52,11 @@ public class Trackers
 		trackers.put(client.getAddress(), client);
 	}
 
-	public void add(TrackerEntry entry)
+	public ClientTrackerClient add(TrackerEntry entry)
 	{
 		ClientTrackerClient client = new ClientTrackerClient(entry);
 		trackers.put(client.getAddress(), client);
+		return client;
 	}
 	
 	public void save(Path trackersFile)
@@ -114,5 +116,15 @@ public class Trackers
 		public void kickSyncers(TrackerClient client)
 		{
 			Services.userThreads.execute(new TrackerSyncRunnable(client));
+		}
+
+		public TrackerClient getClient(TrackerEntry entry)
+		{
+			ClientTrackerClient clientTrackerClient = trackers.get(entry.getAddress());
+			if (clientTrackerClient == null)
+			{
+				return add(entry);
+			}
+			return clientTrackerClient;
 		}
 }

@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.util;
 
 import java.io.BufferedReader;
@@ -193,7 +194,7 @@ public class PortMapper {
 			int beginPortI = Services.settings.servePortBeginI.get();
 			int beginPortE = Services.settings.servePortBeginE.get();
 			
-			int nports = Services.settings.maxServes.get();
+			int nports = Services.settings.numHandlers.get();
 			HashMap<Integer, Integer> mappings = new HashMap<>();
 			for (int i = 0; i < nports; i++)
 			{

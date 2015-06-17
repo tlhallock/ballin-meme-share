@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.mdl;
 
 import java.nio.file.Path;
@@ -51,7 +52,7 @@ public class Download extends DbObject<Integer>
 	private long added;
 	private int priority;
 	private Path destinationFile;
-	private int chunkSize = -1;
+	private long chunkSize = -1;
 	
 	public Download(RemoteFile remote)
 	{

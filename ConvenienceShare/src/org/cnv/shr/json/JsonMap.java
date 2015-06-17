@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.json;
 
 import java.security.PublicKey;
@@ -61,7 +62,7 @@ public class JsonMap extends HashMap<PublicKey, byte[]>
 			JsonParser.Event e = parser.next();
 			switch (e)
 			{
-			case END_ARRAY:
+			case END_OBJECT:
 				return;
 			case KEY_NAME:
 				key = parser.getString();

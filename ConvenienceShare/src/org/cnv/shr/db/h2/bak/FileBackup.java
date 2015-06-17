@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.db.h2.bak;
 
 import java.sql.SQLException;
@@ -97,23 +98,15 @@ public class FileBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needspath = true;
-		boolean needsrootName = true;
 		boolean needsfileSize = true;
 		boolean needslastModified = true;
+		boolean needspath = true;
+		boolean needsrootName = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needspath)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
-				}
-				if (needsrootName)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
-				}
 				if (needsfileSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
@@ -122,10 +115,31 @@ public class FileBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
 				}
+				if (needspath)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
+				}
+				if (needsrootName)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "fileSize":
+				needsfileSize = false;
+				fileSize = Long.parseLong(parser.getString());
+				break;
+			case "lastModified":
+				needslastModified = false;
+				lastModified = Long.parseLong(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -142,19 +156,6 @@ public class FileBackup implements Jsonable
 				break;
 			case "tags":
 				tags = parser.getString();
-				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "fileSize":
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
-				break;
-			case "lastModified":
-				needslastModified = false;
-				lastModified = Long.parseLong(parser.getString());
 				break;
 			}
 			break;

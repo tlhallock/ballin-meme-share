@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.trk;
 
 import java.util.LinkedList;
@@ -54,6 +55,11 @@ public class TrackerSyncRunnable implements Runnable
 	{
 		List<FileEntry> clone = (List<FileEntry>) toDel.clone();
 		toDel.clear();
+		
+		if (clone.isEmpty())
+		{
+			return;
+		}
 
 		Services.userThreads.execute(new Runnable()
 		{
@@ -104,7 +110,7 @@ public class TrackerSyncRunnable implements Runnable
 	public void run()
 	{
 		// should track which files already exist, or make sync action, should compress these...
-		TrackerRequest request = new TrackerRequest(TrackerAction.LIST_MY_FILES);
+		TrackerRequest request = new TrackerRequest(TrackerAction.LIST_FILES);
 		request.setParameter("other", Services.settings.machineIdentifier.get());
 		try (TrackerConnection connection = client.connect(request))
 		{
@@ -118,6 +124,7 @@ public class TrackerSyncRunnable implements Runnable
 				}
 			}
 			
+			connection.generator.writeEnd();
 			connection.generator.close();
 		}
 		catch(InterruptedException e)

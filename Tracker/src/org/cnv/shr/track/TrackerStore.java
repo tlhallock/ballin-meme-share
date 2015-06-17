@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.track;
 
 import java.io.Closeable;
@@ -33,8 +34,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
-
-import javax.json.stream.JsonGenerator;
 
 import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.FileEntry;
@@ -63,18 +62,18 @@ public class TrackerStore implements Closeable
 	private PreparedStatement cleanFilesStatement;
 	private PreparedStatement getMachineIdStatement;
 	private PreparedStatement removeTrackerStatement;
+	private PreparedStatement listNumFiles;
 //	private PreparedStatement fileRemovedStatement;
-	
 	
 	public TrackerStore() throws SQLException
 	{
 		c = createConnection();
 		
 		getMachineIdStatement      = c.prepareStatement("select M_ID from MACHINE where MACHINE.IDENT = ? LIMIT 1;");
-		addTrackerStatement        = c.prepareStatement("insert into TRACKER values(DEFAULT, ?, ?, ?, ?);");
-		listMachinesStatement      = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE join MACHINE_CONTAINS on MACHINE_CONTAINS.MID=MACHINE.M_ID join SFILE on SFILE.F_ID=MACHINE_CONTAINS.FID where SFILE.CHKSUM=? LIMIT ? OFFSET ?;");
-		listTrackersStatement      = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE from TRACKER;");
-		listAllMachinesStatement   = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE;");
+		addTrackerStatement        = c.prepareStatement("merge into TRACKER key (IP, PORT, ENDPORT) values((select T_ID from TRACKER where IP=? and PORT=? and ENDPORT=?), ?, ?, ?, ?);");
+		listMachinesStatement      = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE join MACHINE_CONTAINS on MACHINE_CONTAINS.MID=MACHINE.M_ID join SFILE on SFILE.F_ID=MACHINE_CONTAINS.FID where SFILE.CHKSUM=?;");
+		listTrackersStatement      = c.prepareStatement("select IP, PORT, ENDPORT, LAST_ACTIVE from TRACKER;");
+		listAllMachinesStatement   = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE LIMIT ? OFFSET ?;");
 		listCommentsStatement      = c.prepareStatement("select SENT, RATING, MESSAGE, IDENT from RATING_COMMENT join MACHINE on OID=MACHINE.M_ID where DID=(select M_ID from MACHINE where ident=?);");
 		postCommentStatement       = c.prepareStatement("merge into RATING_COMMENT key (OID, DID) values((select C_ID from RATING_COMMENT where OID=? and DID=?), ?, ?, ?, ?, ?);");
 		getMachineStatement        = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, KEYSTR, MNAME from MACHINE where IDENT=?;");
@@ -86,34 +85,39 @@ public class TrackerStore implements Closeable
 		fileFoundStatement         = c.prepareStatement("merge into SFILE key (CHKSUM) values ((select F_ID from SFILE where CHKSUM=?), ?, ?)");
 		cleanFilesStatement        = c.prepareStatement("delete from SFILE where not exists (select FID from MACHINE_CONTAINS where FID=SFILE.F_ID);");
 		removeTrackerStatement     = c.prepareStatement("delete from TRACKER where TRACKER.IP=? and TRACKER.PORT=?;");
+		listNumFiles               = c.prepareStatement("select count(F_ID) as number from SFILE join MACHINE_CONTAINS on FID=F_ID where MID=(select M_ID from MACHINE where IDENT=?);");
 //		fileRemovedStatement       = c.prepareStatement("delete from MACHINE_CONTAINS where FID=(select F_ID from SFILE where CHKSUM=?);");
 	}
 
 	// Queries
-	public void listMachines(JsonGenerator output)
+	public void listMachines(Receiver<MachineEntry> receiver, int offset)
 	{
-		output.writeStartArray();
-		try (ResultSet results = listAllMachinesStatement.executeQuery())
+		try
 		{
-			MachineEntry entry = new MachineEntry();
-			int count = 0;
-			while (results.next())
+			listAllMachinesStatement.setInt(1, TrackerEntry.MACHINE_PAGE_SIZE);
+			listAllMachinesStatement.setInt(2, offset);
+			try (ResultSet results = listAllMachinesStatement.executeQuery())
 			{
-				int ndx = 1;
-				String ip = results.getString(ndx++);
-				int port  = results.getInt(ndx++);
-				int nports = results.getInt(ndx++);
-				long lastActive = results.getLong(ndx++);
-				String ident = results.getString(ndx++);
-				String keyString = results.getString(ndx++);
-				String name = results.getString(ndx++);
-				
-				entry.set(ident, keyString, ip, port, port + nports, name);
-				entry.generate(output);
-				count++;
+				MachineEntry entry = new MachineEntry();
+				int count = 0;
+				while (results.next())
+				{
+					int ndx = 1;
+					String ip = results.getString(ndx++);
+					int port = results.getInt(ndx++);
+					int nports = results.getInt(ndx++);
+					long lastActive = results.getLong(ndx++);
+					String ident = results.getString(ndx++);
+					String keyString = results.getString(ndx++);
+					String name = results.getString(ndx++);
+
+					entry.set(ident, keyString, ip, port, port + nports, name);
+					receiver.receive(entry);
+					count++;
+				}
+
+				LogWrapper.getLogger().info("Listed " + count + " machines.");
 			}
-			
-			LogWrapper.getLogger().info("Listed " + count + " machines.");
 		}
 		catch (SQLException e)
 		{
@@ -121,7 +125,7 @@ public class TrackerStore implements Closeable
 		}
 		finally
 		{
-			output.writeEnd();
+			receiver.done();
 		}
 	}
 	
@@ -130,6 +134,12 @@ public class TrackerStore implements Closeable
 		try
 		{
 			int ndx = 1;
+			// query
+			addTrackerStatement.setString(ndx++, entry.getIp());
+			addTrackerStatement.setInt(ndx++, entry.getBeginPort());
+			addTrackerStatement.setInt(ndx++, entry.getEndPort());
+			
+			// values
 			addTrackerStatement.setString(ndx++, entry.getIp());
 			addTrackerStatement.setInt(ndx++, entry.getBeginPort());
 			addTrackerStatement.setInt(ndx++, entry.getEndPort());
@@ -159,22 +169,7 @@ public class TrackerStore implements Closeable
 		}
 	}
 
-  public interface TrackerListener { public void receiveTracker(TrackerEntry entry); }
-	public void listTrackers(JsonGenerator output)
-	{
-		output.writeStartArray();
-		listTrackers(new TrackerListener()
-		{
-			@Override
-			public void receiveTracker(TrackerEntry entry)
-			{
-				entry.generate(output);
-			}
-		});
-		output.writeEnd();
-	}
-	
-	public void listTrackers(TrackerListener listener)
+	public void listTrackers(Receiver<TrackerEntry> listener)
 	{
 		try (ResultSet results = listTrackersStatement.executeQuery())
 		{
@@ -184,27 +179,28 @@ public class TrackerStore implements Closeable
 				int ndx = 1;
 				String ip = results.getString(ndx++);
 				int port  = results.getInt(ndx++);
-				int nports = results.getInt(ndx++);
+				int endport = results.getInt(ndx++);
 				long lastActive = results.getLong(ndx++);
 				
-				tracker.set(ip, port, port + nports);
-				listener.receiveTracker(tracker);
+				tracker.set(ip, port, endport);
+				listener.receive(tracker);
 			}
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
 		}
+		finally
+		{
+			listener.done();
+		}
 	}
 	
-	public void listMachines(FileEntry entry, JsonGenerator output, int offset)
+	public void listSeeders(FileEntry entry, Receiver<MachineEntry> output)
 	{
-		output.writeStartArray();
 		try
 		{
 			listMachinesStatement.setString(1, entry.getChecksum());
-			listMachinesStatement.setInt(2, TrackerEntry.MACHINE_PAGE_SIZE);
-			listMachinesStatement.setInt(3, offset);
 			try (ResultSet results = listMachinesStatement.executeQuery())
 			{
 				MachineEntry machineEntry = new MachineEntry();
@@ -220,7 +216,7 @@ public class TrackerStore implements Closeable
 					String name = results.getString(ndx++);
 
 					machineEntry.set(ident, keyString, ip, port, port + nports, name);
-					machineEntry.generate(output);
+					output.receive(machineEntry);
 				}
 			}
 		}
@@ -230,14 +226,14 @@ public class TrackerStore implements Closeable
 		}
 		finally
 		{
-			output.writeEnd();
+			output.done();
 		}
 	}
 	
-	public void listComments(MachineEntry entry, JsonGenerator generator)
+	public void listComments(MachineEntry entry, Receiver<CommentEntry> generator)
 	{
 		String did = entry.getIdentifer();
-		generator.writeStartArray();
+		
 		try
 		{
 			listCommentsStatement.setString(1, did);
@@ -253,7 +249,7 @@ public class TrackerStore implements Closeable
 					String oid = results.getString(ndx++);
 
 					comment.set(oid, did, message, rating, sent);
-					comment.generate(generator);
+					generator.receive(comment);
 				}
 			}
 		}
@@ -263,7 +259,7 @@ public class TrackerStore implements Closeable
 		}
 		finally
 		{
-			generator.writeEnd();
+			generator.done();
 		}
 	}
 	
@@ -317,9 +313,8 @@ public class TrackerStore implements Closeable
 		return null;
 	}
 	
-	public void listFiles(MachineEntry entry, JsonGenerator output)
+	public void listFiles(MachineEntry entry, Receiver<FileEntry> output)
 	{
-		output.writeStartArray();
 		try
 		{
 			listFilesStatement.setString(1, entry.getIdentifer());
@@ -333,7 +328,7 @@ public class TrackerStore implements Closeable
 					long size = results.getLong(ndx++);
 
 					fileEntry.set(checksum, size);
-					fileEntry.generate(output);
+					output.receive(fileEntry);
 				}
 			}
 		}
@@ -343,8 +338,34 @@ public class TrackerStore implements Closeable
 		}
 		finally
 		{
-			output.writeEnd();
+			output.done();
 		}
+	}
+
+	public Long getNumFiles(MachineEntry entry)
+	{
+		try
+		{
+			listNumFiles.setString(1, entry.getIdentifer());
+			try (ResultSet results = listNumFiles.executeQuery())
+			{
+				if (!results.next())
+				{
+					return null;
+				}
+				int ndx = 1;
+				long long1 = results.getLong(ndx++);
+				if (long1 > 0)
+				{
+					return long1;
+				}
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to execute query.", e);
+		}
+		return null;
 	}
 	
 	public void postComment(CommentEntry comment)
@@ -503,21 +524,22 @@ public class TrackerStore implements Closeable
 	@Override
 	public void close()
 	{
-		try { getMachineIdStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { addTrackerStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { listMachinesStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { listTrackersStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { listAllMachinesStatement.close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { listCommentsStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { postCommentStatement    .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { getMachineStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { machineFoundStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { machineClaimsStatement  .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { machineLostStatement    .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { listFilesStatement      .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { removeMachineStatement  .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { fileFoundStatement      .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
-		try { cleanFilesStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement.", ex); }
+		try { getMachineIdStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"getMachineIdStatement   \"", ex); }
+		try { addTrackerStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"addTrackerStatement     \"", ex); }
+		try { listMachinesStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"listMachinesStatement   \"", ex); }
+		try { listTrackersStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"listTrackersStatement   \"", ex); }
+		try { listAllMachinesStatement.close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"listAllMachinesStatement\"", ex); }
+		try { listCommentsStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"listCommentsStatement   \"", ex); }
+		try { postCommentStatement    .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"postCommentStatement    \"", ex); }
+		try { getMachineStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"getMachineStatement     \"", ex); }
+		try { machineFoundStatement   .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"machineFoundStatement   \"", ex); }
+		try { machineClaimsStatement  .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"machineClaimsStatement  \"", ex); }
+		try { machineLostStatement    .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"machineLostStatement    \"", ex); }
+		try { listFilesStatement      .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"listFilesStatement      \"", ex); }
+		try { removeMachineStatement  .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"removeMachineStatement  \"", ex); }
+		try { fileFoundStatement      .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"fileFoundStatement      \"", ex); }
+		try { cleanFilesStatement     .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"cleanFilesStatement     \"", ex); }
+		try { listNumFiles            .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close statement \"listNumFiles            \"", ex); }
 		try { c                       .close(); } catch (Exception ex) { LogWrapper.getLogger().log(Level.INFO, "Unable to close connection.", ex); }
 	}
 }

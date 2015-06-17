@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.msg;
 
 import java.io.IOException;
@@ -141,23 +142,15 @@ public class MachineFound extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsname = true;
-		boolean needsident = true;
 		boolean needsport = true;
 		boolean needsnports = true;
+		boolean needsname = true;
+		boolean needsident = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsname)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
-				}
-				if (needsident)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
-				}
 				if (needsport)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
@@ -166,23 +159,18 @@ public class MachineFound extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
 				}
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsident)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "ident":
-				needsident = false;
-				ident = parser.getString();
-				break;
-			}
-			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -193,6 +181,19 @@ public class MachineFound extends Message
 			case "nports":
 				needsnports = false;
 				nports = Integer.parseInt(parser.getString());
+				break;
+			}
+			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "name":
+				needsname = false;
+				name = parser.getString();
+				break;
+			case "ident":
+				needsident = false;
+				ident = parser.getString();
 				break;
 			}
 			break;

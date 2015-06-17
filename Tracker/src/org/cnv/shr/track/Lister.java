@@ -21,13 +21,31 @@
  * or after                                                                 *
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
+package org.cnv.shr.track;
 
-package org.cnv.shr.sync;
+import javax.json.stream.JsonGenerator;
 
+import org.cnv.shr.trck.TrackObject;
 
-public class ExampleCrypt
+public class Lister<T extends TrackObject> implements Receiver<T>
 {
-	public static void main(String[] args) throws Exception
-	{}
+	private JsonGenerator generator;
+	
+	public Lister(JsonGenerator generator)
+	{
+		this.generator = generator;
+		generator.writeStartArray();
+	}
 
+	@Override
+	public void receive(T t)
+	{
+		t.generate(generator);
+	}
+
+	@Override
+	public void done()
+	{
+		generator.writeEnd();
+	}
 }

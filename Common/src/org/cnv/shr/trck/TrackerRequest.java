@@ -22,36 +22,28 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.trck;
 
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
+import org.cnv.shr.json.JsonStringMap;
+
 public class TrackerRequest extends TrackObject
 {
 	private String action;
-	private HashMap<String, String> params;
+	private JsonStringMap params = new JsonStringMap();
 
-	public TrackerRequest()
-	{
-		params = new HashMap<>();
-	}
+	public TrackerRequest() {}
 	
 	public TrackerRequest(TrackerAction action)
 	{
-		this();
 		this.action = action.name();
 	}
 
-	public TrackerRequest(JsonParser parser)
-	{
-		this();
-		parse(parser);
-	}
-	
 	public void setParameter(String name, String value)
 	{
 		params.put(name, value);
@@ -72,56 +64,63 @@ public class TrackerRequest extends TrackObject
 	{
 		return params.get(string);
 	}
+
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator, String key) {
 		if (key!=null)
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
-		if (action!=null)
 		generator.write("action", action);
-		for (Entry<String, String> entry : params.entrySet())
 		{
-			generator.write(entry.getKey(), entry.getValue());
+			generator.writeStartObject("params");
+			params.generate(generator);
 		}
 		generator.writeEnd();
 	}
-	
 	@Override                                    
-	public void parse(JsonParser parser)
-	{
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		boolean needsparams = true;
 		boolean needsaction = true;
-		String key = null;
-		while (parser.hasNext())
-		{
-			JsonParser.Event e = parser.next();
-			switch (e)
-			{
-			case KEY_NAME:
-				key = parser.getString();
-				break;
-			case VALUE_STRING:
-				if (key == null)
-					break;
-				switch (key)
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				if (needsparams)
 				{
-				case "action":
-					action = parser.getString();
-					break;
-				default:
-					params.put(key, parser.getString());
-					break;
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs params");
 				}
-				break;
-			case END_OBJECT:
 				if (needsaction)
 				{
-					throw new RuntimeException("Message needs action");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
 				}
-				return;
-			default:
+				return;                                
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("params")) {
+				needsparams = false;
+				params.parse(parser);
+			}
+			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("action")) {
+				needsaction = false;
+				action = parser.getString();
+			}
+			break;
+			default: break;
 			}
 		}
 	}
 	public static String getJsonName() { return "TrackerRequest"; }
+	public String getJsonKey() { return getJsonName(); }
+	public TrackerRequest(JsonParser parser) { parse(parser); }
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.db.h2.bak;
 
 import java.sql.SQLException;
@@ -105,13 +106,13 @@ public class MachineBackup implements Jsonable
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsallowsMessages = true;
+		boolean needsport = true;
+		boolean needsnports = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsidentifier = true;
 		boolean needsweShareToThem = true;
 		boolean needssharesWithUs = true;
-		boolean needsport = true;
-		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -124,6 +125,14 @@ public class MachineBackup implements Jsonable
 				if (needsallowsMessages)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
+				}
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
 				}
 				if (needsip)
 				{
@@ -145,14 +154,6 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
 				}
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsnports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -169,6 +170,19 @@ public class MachineBackup implements Jsonable
 			if (key.equals("allowsMessages")) {
 				needsallowsMessages = false;
 				allowsMessages = true;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+				break;
+			case "nports":
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
+				break;
 			}
 			break;
 		case VALUE_STRING:
@@ -193,19 +207,6 @@ public class MachineBackup implements Jsonable
 			case "sharesWithUs":
 				needssharesWithUs = false;
 				sharesWithUs = SharingState.valueOf(parser.getString());;
-				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;

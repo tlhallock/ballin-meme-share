@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.track;
 
 import java.io.IOException;
@@ -35,11 +36,13 @@ import java.util.logging.Level;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
+import org.cnv.shr.dmn.trk.NumFilesMessage;
 import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerAction;
+import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.trck.TrackerRequest;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -67,10 +70,6 @@ public class Tracker implements Runnable
 			LogWrapper.getLogger().info("Waiting on " + serverSocket.getLocalPort());
 			
 			try (Socket socket       = serverSocket.accept();
-
-					
-					
-					
 					
 					// Should be compressed streams...
 					JsonParser input     = TrackObjectUtils.createParser(socket.getInputStream());
@@ -80,6 +79,7 @@ public class Tracker implements Runnable
 				Track.timer.schedule(ensureClosed, 10 * 60 * 1000);
 				
 				output.writeStartArray();
+				output.flush();
 				if (!input.next().equals(JsonParser.Event.START_ARRAY))
 				{
 					fail("Messages should be arrays", input, output);
@@ -114,7 +114,14 @@ public class Tracker implements Runnable
 		generator.flush();
 		EnsureClosed ensureClosed = new EnsureClosed(generator);
 		Track.timer.schedule(ensureClosed, 10 * 1000);
-		input.next().equals(JsonParser.Event.END_ARRAY);
+		try
+		{
+			input.next().equals(JsonParser.Event.END_ARRAY);
+		}
+		catch (Exception e)
+		{
+			LogWrapper.getLogger().info("Client already closed.\n" + e.getMessage());
+		}
 		ensureClosed.closed = true;
 		
 //		TrackObjectUtils.read(input, new Done());
@@ -122,6 +129,11 @@ public class Tracker implements Runnable
 
 	private MachineEntry authenticateClient(JsonParser input, JsonGenerator generator, String realAddress) throws TrackerException
 	{
+		if (!getWantsToAuthenticate(input))
+		{
+			return null;
+		}
+		
 		MachineEntry claimedClient = new MachineEntry();
 		if (!TrackObjectUtils.read(input, claimedClient))
 		{
@@ -135,6 +147,7 @@ public class Tracker implements Runnable
 			generator.writeStartObject();
 			generator.write("need-authentication", false);
 			generator.writeEnd();
+			generator.flush();
 			
 			claimedClient.setIp(realAddress);
 			store.machineFound(claimedClient, System.currentTimeMillis());
@@ -179,6 +192,37 @@ public class Tracker implements Runnable
 	}
 	
 	
+	private static boolean getWantsToAuthenticate(JsonParser input) throws TrackerException
+	{
+		if (!input.next().equals(JsonParser.Event.START_OBJECT))
+		{
+			throw new TrackerException("Tracker connection needs to begin with an indicator for whether the client wishes to authenticate. No start.");
+		}
+		if (!input.next().equals(JsonParser.Event.KEY_NAME))
+		{
+			throw new TrackerException("Tracker connection needs to begin with an indicator for whether the client wishes to authenticate. No key name.");
+		}
+		if (!input.getString().equals("authenticate"))
+		{
+			throw new TrackerException("Tracker connection needs to begin with an indicator for whether the client wishes to authenticate. First key name not \"authenticate\".");
+		}
+		boolean returnValue;
+		switch (input.next())
+		{
+		case VALUE_TRUE:
+			returnValue = true;
+			break;
+		case VALUE_FALSE:
+			returnValue = false;
+			break;
+			default:
+				throw new TrackerException("Tracker connection needs to begin with an indicator for whether the client wishes to authenticate. First value not boolean.");
+		}
+		while (!input.next().equals(JsonParser.Event.END_OBJECT))
+			;
+		return returnValue;
+	}
+
 	private byte[] getDecryptedNaunce(JsonParser input, JsonGenerator generator) throws TrackerException
 	{
 		if (!input.next().equals(JsonParser.Event.START_OBJECT))
@@ -256,26 +300,6 @@ public class Tracker implements Runnable
 			}
 			break;
 		case LIST_ALL_MACHINES:
-			store.listMachines(output);
-			break;
-		case LIST_MY_FILES:
-			other = store.getMachine(request.getParam("other"));
-			store.listFiles(other, output);
-			break;
-		case LIST_RATINGS:
-			other = new MachineEntry();
-			if (!TrackObjectUtils.read(input, other))
-			{
-				fail("List ratings without a machine", input, output);
-			}
-			store.listComments(other, output);
-			break;
-		case LIST_SEEDERS:
-			file = new FileEntry();
-			if (!TrackObjectUtils.read(input, file))
-			{
-				fail("List without a file", input, output);
-			}
 			int offset = 0;
 			String param = request.getParam("offset");
 			if (param != null)
@@ -289,9 +313,32 @@ public class Tracker implements Runnable
 					LogWrapper.getLogger().info("Bad offset: " + param);
 				}
 			}
-			store.listMachines(file, output, offset);
+			store.listMachines(new Lister<MachineEntry> (output), offset);
+			break;
+		case LIST_FILES:
+			other = store.getMachine(request.getParam("other"));
+			store.listFiles(other, new Lister<FileEntry>(output));
+			break;
+		case LIST_RATINGS:
+			other = new MachineEntry();
+			if (!TrackObjectUtils.read(input, other))
+			{
+				fail("List ratings without a machine", input, output);
+			}
+			
+			new NumFilesMessage(store.getNumFiles(other)).generate(output, null);
+			store.listComments(other, new Lister<CommentEntry>(output));
+			break;
+		case LIST_SEEDERS:
+			file = new FileEntry();
+			if (!TrackObjectUtils.read(input, file))
+			{
+				fail("List without a file", input, output);
+			}
+			store.listSeeders(file, new Lister<MachineEntry> (output));
 			break;
 		case LIST_TRACKERS:
+			store.listTrackers(new Lister<TrackerEntry>(output));
 			break;
 		case LOSE_FILE:
 			file = new FileEntry();

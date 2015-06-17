@@ -61,7 +61,7 @@ public class TestStore
 			public void close() {}
 		});)
 		{
-			store.listMachines(createGenerator);
+			store.listMachines(new Lister<MachineEntry>(createGenerator), 0);
 		}
 		
 		MachineEntry another = store.getMachine(entry1.getIdentifer());
@@ -91,7 +91,7 @@ public class TestStore
 		};
 		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
-			store.listComments(entry2, createGenerator);
+			store.listComments(entry2, new Lister<CommentEntry>(createGenerator));
 		}
 		Assert.assertTrue(builder.toString().contains(comment.getText()));
 		
@@ -100,7 +100,7 @@ public class TestStore
 		builder.setLength(0);
 		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
-			store.listComments(entry2, createGenerator);
+			store.listComments(entry2,  new Lister<CommentEntry>(createGenerator));
 		}
 		
 		System.out.println(builder.toString());
@@ -127,17 +127,15 @@ public class TestStore
 		};
 		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
-			store.listMachines(sfile, createGenerator, 0);
+			store.listSeeders(sfile, new Lister<MachineEntry>(createGenerator));
 		}
 		Assert.assertTrue(builder.toString().contains(entry1.getIdentifer()));
 
 		builder.setLength(0);
 		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
-			store.listFiles(entry1, createGenerator);
+			store.listFiles(entry1, new Lister<>(createGenerator));
 		}
-		
-		store.debug("SFILE");
 		
 		Assert.assertTrue(builder.toString().contains(sfile.getChecksum()));
 		
@@ -145,7 +143,7 @@ public class TestStore
 		builder.setLength(0);
 		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
-			store.listMachines(sfile, createGenerator, 0);
+			store.listSeeders(sfile, new Lister<>(createGenerator));
 		}
 		Assert.assertFalse(builder.toString().contains(entry1.getIdentifer()));
 		
@@ -153,7 +151,7 @@ public class TestStore
 		builder.setLength(0);
 		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
-			store.listFiles(entry1, createGenerator);
+			store.listFiles(entry1, new Lister<>(createGenerator));
 		}
 		Assert.assertFalse(builder.toString().contains(sfile.getChecksum()));
 	}
@@ -175,7 +173,7 @@ public class TestStore
 		builder.setLength(0);
 		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
-			store.listTrackers(createGenerator);
+			store.listTrackers(new Lister<>(createGenerator));
 		}
 		Assert.assertFalse(builder.toString().contains(tracker.getIp()));
 		
@@ -184,7 +182,7 @@ public class TestStore
 		builder.setLength(0);
 		try (JsonGenerator createGenerator = TrackObjectUtils.createGenerator(out);)
 		{
-			store.listTrackers(createGenerator);
+			store.listTrackers(new Lister<>(createGenerator));
 		}
 		Assert.assertTrue(builder.toString().contains(tracker.getIp()));
 	}

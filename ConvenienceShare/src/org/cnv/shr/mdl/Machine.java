@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.mdl;
 
 import java.sql.ResultSet;
@@ -346,7 +347,7 @@ public class Machine extends DbObject<Integer>
 		@Override
 		public int getNumberOfPorts()
 		{
-			return Services.settings.maxServes.get();
+			return Services.settings.numHandlers.get();
 		}
 		
 		@Override

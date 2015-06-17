@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.gui.tbl;
 
 import java.util.HashMap;
@@ -126,7 +127,7 @@ public class MachineTable extends DbJTable<Machine>
 			currentRow.put("Total files size",  new DiskUsage(DbMachines.getTotalDiskspace(Services.localMachine))   );
 			currentRow.put("Last Ip",           Services.settings.getLocalIp()                                       );
 			currentRow.put("Port",              Services.settings.servePortBeginE.get()                              );
-			currentRow.put("Number of ports",   Services.settings.maxServes.get()                                    );
+			currentRow.put("Number of ports",   Services.settings.numHandlers.get()                                  );
 		}
 		else
 		{

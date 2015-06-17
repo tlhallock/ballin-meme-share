@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.trk;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ public abstract class TrackerClient
 		this.trackerEntry = new TrackerEntry(entry);
 	}
 
-  TrackerConnection connect(TrackerAction action) throws Exception
+  protected TrackerConnection connect(TrackerAction action) throws Exception
   {
   	return connect(new TrackerRequest(action));
   }
@@ -75,11 +76,9 @@ public abstract class TrackerClient
 		{
 			throw new IOException("Not able to connect on any ports.", lastException);
 		}
-		else
-		{
-			connection.connect(request);
-			return connection;
-		}
+
+		connection.connect(request);
+		return connection;
 	}
 
 	protected abstract TrackerConnection createConnection(int port) throws IOException;
@@ -94,7 +93,7 @@ public abstract class TrackerClient
 		return trackerEntry.getAddress();
 	}
 
-	CloseableIterator<MachineEntry> list(int start) throws Exception
+	protected CloseableIterator<MachineEntry> list(int start) throws Exception
 	{
 		TrackerRequest trackerRequest = new TrackerRequest(TrackerAction.LIST_ALL_MACHINES);
 		trackerRequest.setParameter("offset", String.valueOf(start));
@@ -171,18 +170,23 @@ public abstract class TrackerClient
 		return iterator;
 	}
 	
+	public interface CommentsListInterface extends CloseableIterator<CommentEntry>
+	{
+		public String getNumFiles();
+	}
 
-	CloseableIterator<CommentEntry> listComments(MachineEntry machine) throws Exception
+	CommentsListInterface listComments(MachineEntry machine) throws Exception
 	{
 		TrackerConnection connection = connect(TrackerAction.LIST_RATINGS);
 		machine.generate(connection.generator, null);
 		connection.generator.flush();
 		
+		NumFilesMessage numFilesMessage = new NumFilesMessage(connection.parser);
+		
 		TrackObjectUtils.openArray(connection.parser);
-		CloseableIterator<CommentEntry> iterator = new CloseableIterator<CommentEntry>()
+		CommentsListInterface iterator = new CommentsListInterface()
 		{
 			private CommentEntry next;
-
 			{
 				CommentEntry entry = new CommentEntry();
 				if (connection.socket.isClosed() || !TrackObjectUtils.next(connection.parser, entry))
@@ -246,6 +250,17 @@ public abstract class TrackerClient
 					LogWrapper.getLogger().log(Level.INFO, "Unable to close", e);
 				}
 			}
+
+			@Override
+			public String getNumFiles()
+			{
+				Long numFiles = numFilesMessage.numFiles();
+				if (numFiles == null)
+				{
+					return "0";
+				}
+				return String.valueOf(numFiles);
+			}
 		};
 		return iterator;
 	}
@@ -270,8 +285,13 @@ public abstract class TrackerClient
 	}
 
 	public abstract void sync();
-	protected abstract void foundTracker(TrackerEntry entry);
+//	protected abstract void foundTracker(TrackerEntry entry);
   protected abstract void runLater(Runnable runnable);
 
 	public abstract void addOthers();
+	
+	public boolean represents(TrackerEntry other)
+	{
+		return trackerEntry.equals(other);
+	}
 }

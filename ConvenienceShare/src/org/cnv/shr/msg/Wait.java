@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.msg;
 
 import java.io.IOException;
@@ -33,11 +34,14 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class Wait extends Message
 {
 	public static int TYPE = 8;
 	
+	public Wait() {}
+
 	public Wait(InputStream i) throws IOException
 	{
 		super(i);
@@ -63,7 +67,7 @@ public class Wait extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		
+		LogWrapper.getLogger().info("Remote is busy: " + connection);
 	}
 	
 	public String toString()
@@ -100,4 +104,5 @@ public class Wait extends Message
 	public String getJsonKey() { return getJsonName(); }
 	public Wait(JsonParser parser) { parse(parser); }
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+
 }

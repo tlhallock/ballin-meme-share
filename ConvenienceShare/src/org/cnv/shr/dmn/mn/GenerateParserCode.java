@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.mn;
 
 
@@ -52,6 +53,7 @@ import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.JsonableUpdateInfo;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.SharedFileId;
+import org.cnv.shr.dmn.trk.NumFilesMessage;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.DoneResponse;
 import org.cnv.shr.msg.EmptyMessage;
@@ -101,6 +103,7 @@ import org.cnv.shr.trck.Done;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackerEntry;
+import org.cnv.shr.trck.TrackerRequest;
 
 public class GenerateParserCode
 {
@@ -157,9 +160,9 @@ public class GenerateParserCode
 				RootListChild.class              ,
 				JsonableUpdateInfo.class                 ,
 				
-//				TrackerRequest.class             ,
+				TrackerRequest.class             ,
 				
-				
+				NumFilesMessage.class            ,
 				
 				
 				
@@ -210,6 +213,8 @@ public class GenerateParserCode
 				org.cnv.shr.db.h2.bak.MachineBackup.class,
 				org.cnv.shr.db.h2.bak.FileBackup.class,
 				org.cnv.shr.db.h2.bak.RootPermissionBackup.class,
+				org.cnv.shr.db.h2.bak.MessageBackup.class,
+				org.cnv.shr.db.h2.bak.DownloadBackup.class,
 			})
 		{
 			try
@@ -439,6 +444,7 @@ public class GenerateParserCode
 	{
 		switch (f.getType().getName())
 		{
+		case "org.cnv.shr.json.JsonStringMap":
 		case "org.cnv.shr.json.JsonMap":
 		case "org.cnv.shr.json.JsonList":
 		case "org.cnv.shr.json.JsonStringList": return ".parse(parser)";
@@ -464,9 +470,6 @@ public class GenerateParserCode
 			default:
 				return null;
 			}
-//		case "int":              return "new BigDecimal(parser.getString()).intValue()";
-//		case "long":             return "new BigDecimal(parser.getString()).longValue()";
-//		case "double":           return "new BigDecimal(parser.getString()).doubleValue()";
 		case "java.lang.Integer":
 		case "int":              return " = Integer.parseInt("   + "parser.getString())";
 		case "java.lang.Long":  
@@ -479,9 +482,6 @@ public class GenerateParserCode
 		
 		case "[B":               return " = Misc.format(parser.getString())";
 		case "java.lang.String": return " = parser.getString()";
-//		case "java.util.List":
-//		case "java.util.LinkedList":
-//				return "new LinkedList<>();\n" + parseList(f);
 		default:
 		}
 		return null;
@@ -491,10 +491,12 @@ public class GenerateParserCode
 	{
 		switch (fieldName)
 		{
-		case "org.cnv.shr.json.JsonMap":
 		case "org.cnv.shr.json.JsonList":
 		case "org.cnv.shr.json.JsonStringList":
 			return JsonParser.Event.START_ARRAY;
+		case "org.cnv.shr.json.JsonStringMap":
+		case "org.cnv.shr.json.JsonMap":
+			return JsonParser.Event.START_OBJECT;
 
 		case "org.cnv.shr.msg.PathListChild":
 		case "org.cnv.shr.msg.RootListChild":
@@ -562,9 +564,19 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 	case "org.cnv.shr.mdl.RemoteDirectory":
 		output.println("fix me");
 		break;
+	case "org.cnv.shr.json.JsonStringMap":
+	case "org.cnv.shr.json.JsonMap":
+		if (nullable)
+		{
+			output.println("\t\tif (" + fieldName + "!=null)");
+		}
+		output.println("\t\t{");
+		output.println("\t\t\tgenerator.writeStartObject(\"" + fieldName + "\");");
+		output.println("\t\t\t" + fieldName + ".generate(generator);");
+		output.println("\t\t}");
+		return;
 	case "org.cnv.shr.json.JsonList":
 	case "org.cnv.shr.json.JsonStringList":
-	case "org.cnv.shr.json.JsonMap":
 		if (nullable)
 		{
 			output.println("\t\tif (" + fieldName + "!=null)");

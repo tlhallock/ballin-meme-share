@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.not;
 
 import org.cnv.shr.cnctn.Communication;

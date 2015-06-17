@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.trk;
 
 import javax.swing.JOptionPane;
@@ -123,7 +124,24 @@ public class TrackerFrame extends BrowserFrame
 	{
 		for (TrackerClient client : Services.trackers.getClients())
 		{
-			listener.receiveTracker(client);
+			listener.receiveTracker(client.getEntry());
 		}
+	}
+
+	@Override
+	protected TrackerClient createTrackerClient(TrackerEntry entry)
+	{
+		return Services.trackers.getClient(entry);
+	}
+
+	@Override
+	protected boolean trackAction2Enabled()
+	{
+		return currentClient != null;
+	}
+	@Override
+	protected boolean machineAction2Enabled()
+	{
+		return currentClient != null && currentMachine != null;
 	}
 }

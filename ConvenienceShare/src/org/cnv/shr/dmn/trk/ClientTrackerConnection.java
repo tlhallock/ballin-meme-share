@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.trk;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class ClientTrackerConnection extends TrackerConnection
 				publicKey,
 				"not used.",
 				Services.settings.servePortBeginE.get(),
-				Services.settings.servePortBeginE.get() + Services.settings.numThreads.get(),
+				Services.settings.servePortBeginE.get() + Services.settings.numHandlers.get(),
 				Services.settings.machineName.get());
 	}
 

@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.trck;
 
 import javax.json.stream.JsonGenerator;
@@ -160,16 +161,24 @@ public class CommentEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsrating = true;
+		boolean needsdate = true;
 		boolean needsoriginIdent = true;
 		boolean needsdestIdent = true;
 		boolean needstext = true;
-		boolean needsrating = true;
-		boolean needsdate = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsrating)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rating");
+				}
+				if (needsdate)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs date");
+				}
 				if (needsoriginIdent)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs originIdent");
@@ -182,18 +191,23 @@ public class CommentEntry extends TrackObject
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs text");
 				}
-				if (needsrating)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rating");
-				}
-				if (needsdate)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs date");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "rating":
+				needsrating = false;
+				rating = Integer.parseInt(parser.getString());
+				break;
+			case "date":
+				needsdate = false;
+				date = Long.parseLong(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -208,19 +222,6 @@ public class CommentEntry extends TrackObject
 			case "text":
 				needstext = false;
 				text = parser.getString();
-				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "rating":
-				needsrating = false;
-				rating = Integer.parseInt(parser.getString());
-				break;
-			case "date":
-				needsdate = false;
-				date = Long.parseLong(parser.getString());
 				break;
 			}
 			break;

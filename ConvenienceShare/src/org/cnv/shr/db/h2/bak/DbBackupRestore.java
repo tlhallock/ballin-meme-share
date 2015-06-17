@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.db.h2.bak;
 
 import java.io.File;
@@ -39,17 +40,21 @@ import javax.json.stream.JsonParser.Event;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
+import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.DbRestoreProgress;
+import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.LogWrapper;
@@ -122,13 +127,33 @@ public class DbBackupRestore
 				LogWrapper.getLogger().log(Level.INFO, "Unable to list permissions.", e);
 			}
 			generator.writeEnd();
+			
+
+			LogWrapper.getLogger().info("Writing user messages.");
+			generator.writeStartArray("messages");
+			try (DbIterator<UserMessage> messages = DbMessages.listMessages())
+			{
+				while (messages.hasNext())
+				{
+					new MessageBackup(messages.next()).generate(generator, null);
+				}
+			}
+			generator.writeEnd();
+			
+
+			LogWrapper.getLogger().info("Writing downloads.");
+			generator.writeStartArray("downloads");
+			try (DbIterator<Download> downloads = DbDownloads.listDownloads();)
+			{
+				while (downloads.hasNext())
+				{
+					new DownloadBackup(downloads.next()).generate(generator, null);
+				}
+			}
+			generator.writeEnd();
 
 			generator.writeEnd();
 
-			
-			LogWrapper.getLogger().info("Should write downloads.");
-			LogWrapper.getLogger().info("Should write messages.");
-			
 			Services.notifications.localsChanged();
 		}
 		LogWrapper.getLogger().info("Database backup complete.");
@@ -197,6 +222,16 @@ public class DbBackupRestore
 					case "permissions":
 						dbRestoreProgress.setState("Reading permissions");
 						readPermissions(parser, wrapper, dbRestoreProgress, newInputStream);
+						Services.notifications.localsChanged();
+						break;
+					case "messages":
+						dbRestoreProgress.setState("Reading messages");
+						readMessages(parser, wrapper, dbRestoreProgress, newInputStream);
+						Services.notifications.localsChanged();
+						break;
+					case "downloads":
+						dbRestoreProgress.setState("Reading downloads");
+						readDownloads(parser, wrapper, dbRestoreProgress, newInputStream);
 						Services.notifications.localsChanged();
 						break;
 					}
@@ -268,44 +303,6 @@ public class DbBackupRestore
 		}
 	}
 
-	private static void readDownloads(JsonParser parser,
-			ConnectionWrapper wrapper, 
-			DbRestoreProgress p, CountingInputStream newInputStream)
-	{
-		Event next;
-		while (parser.hasNext())
-		{
-			next = parser.next();
-			switch (next)
-			{
-			case END_ARRAY:
-				return;
-			case START_OBJECT:
-				new LocalBackup(parser).save(wrapper);
-				p.setProgress(newInputStream.getSoFar());
-			}
-		}
-	}
-
-	private static void readMessages(JsonParser parser,
-			ConnectionWrapper wrapper, 
-			DbRestoreProgress p, CountingInputStream newInputStream)
-	{
-		Event next;
-		while (parser.hasNext())
-		{
-			next = parser.next();
-			switch (next)
-			{
-			case END_ARRAY:
-				return;
-			case START_OBJECT:
-				new LocalBackup(parser).save(wrapper);
-				p.setProgress(newInputStream.getSoFar());
-			}
-		}
-	}
-
 	private static void readPermissions(JsonParser parser, 
 			ConnectionWrapper wrapper,
 			DbRestoreProgress p,
@@ -321,6 +318,45 @@ public class DbBackupRestore
 				return;
 			case START_OBJECT:
 				new RootPermissionBackup(parser).save(wrapper);
+				p.setProgress(newInputStream.getSoFar());
+			}
+		}
+	}
+
+	private static void readDownloads(JsonParser parser,
+			ConnectionWrapper wrapper, 
+			DbRestoreProgress p, CountingInputStream newInputStream)
+	{
+		Event next;
+		while (parser.hasNext())
+		{
+			next = parser.next();
+			switch (next)
+			{
+			case END_ARRAY:
+				return;
+			case START_OBJECT:
+				new DownloadBackup(parser).save(wrapper);
+				p.setProgress(newInputStream.getSoFar());
+			}
+		}
+	}
+
+	private static void readMessages(JsonParser parser,
+			ConnectionWrapper wrapper, 
+			DbRestoreProgress p, 
+			CountingInputStream newInputStream)
+	{
+		Event next;
+		while (parser.hasNext())
+		{
+			next = parser.next();
+			switch (next)
+			{
+			case END_ARRAY:
+				return;
+			case START_OBJECT:
+				new MessageBackup(parser).save(wrapper);
 				p.setProgress(newInputStream.getSoFar());
 			}
 		}

@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.msg.dwn;
 
 import java.io.IOException;
@@ -117,37 +118,37 @@ public class ChecksumResponse extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needschecksum = true;
 		boolean needsdescriptor = true;
+		boolean needschecksum = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needschecksum)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
-				}
 				if (needsdescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+				}
+				if (needschecksum)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				needschecksum = false;
-				checksum = parser.getString();
-			}
-			break;
 		case START_OBJECT:
 			if (key==null) break;
 			if (key.equals("descriptor")) {
 				needsdescriptor = false;
 				descriptor = new SharedFileId(parser);
+			}
+			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("checksum")) {
+				needschecksum = false;
+				checksum = parser.getString();
 			}
 			break;
 			default: break;

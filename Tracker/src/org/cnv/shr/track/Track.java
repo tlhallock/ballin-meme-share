@@ -22,9 +22,11 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.track;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
@@ -50,18 +52,32 @@ public class Track
 	static Timer timer;
 	public static ExecutorService threads;
 	static TrackerGui gui;
+	public static TrackerEntry LOCAL_TRACKER = getLocalTracker();
 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException, UnknownHostException
 	{
 		LogWrapper.logToFile(Paths.get("..", "instances", "tracker", "tracker_log.txt"), 1024 * 1024);
+		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler()
+		{
+			@Override
+			public void uncaughtException(Thread t, Throwable e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Uncaught exception.", e);
+			}
+		});
+		
+		
 		LogWrapper.getLogger().info("Address: " + InetAddress.getLocalHost().getHostAddress());
 		
 		threads = Executors.newCachedThreadPool();
 		timer = new Timer();
 		
 		Class.forName("org.h2.Driver");
+//		deleteDb();
 		createDb();
 		keys = new KeysService();
+		
+		ensureLocalTrackerIsPresent();
 		
 		gui = new TrackerGui();
 		gui.setVisible(true);
@@ -79,6 +95,30 @@ public class Track
 		}
 	}
 
+	private static TrackerEntry getLocalTracker()
+	{
+		try
+		{
+			return new TrackerEntry(
+					InetAddress.getLocalHost().getHostAddress(),
+					TrackerEntry.TRACKER_PORT_BEGIN, TrackerEntry.TRACKER_PORT_END);
+		}
+		catch (UnknownHostException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get local host.", e);
+			System.exit(-1);
+			return null;
+		}
+	}
+	
+	private static void ensureLocalTrackerIsPresent() throws UnknownHostException, SQLException
+	{
+		try (TrackerStore store = new TrackerStore())
+		{
+			store.addTracker(LOCAL_TRACKER);
+		}
+	}
+
 	static void createDb() throws SQLException
 	{
 		try (Connection c = TrackerStore.createConnection())
@@ -88,7 +128,7 @@ public class Track
 			{
 				try (PreparedStatement stmt = c.prepareStatement(statements[i] + ";");)
 				{
-					System.out.println("Executing " + statements[i]);
+					LogWrapper.getLogger().fine("Executing " + statements[i]);
 					stmt.execute();
 				}
 			}

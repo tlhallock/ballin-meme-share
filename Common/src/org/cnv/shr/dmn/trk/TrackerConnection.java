@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.trk;
 
 import java.io.Closeable;
@@ -31,6 +32,7 @@ import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
+import javax.json.stream.JsonParser.Event;
 
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
@@ -57,21 +59,35 @@ public abstract class TrackerConnection implements Closeable
 		generator = TrackObjectUtils.createGenerator(socket.getOutputStream());
 		generator.writeStartArray();
 		
-		
-		
 		MachineEntry local = getLocalMachine();
-		local.generate(generator);
+
+		generator.writeStartObject();
+		if (local != null)
+		{
+			generator.write("authenticate", true);
+			generator.writeEnd();
+			local.generate(generator);
+		}
+		else
+		{
+			generator.write("authenticate", false);
+			generator.writeEnd();
+		}
 		generator.flush();
 
 		parser = TrackObjectUtils.createParser(socket.getInputStream());
-		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+		Event next = parser.next();
+		if (!next.equals(JsonParser.Event.START_ARRAY))
 		{
 			LogWrapper.getLogger().info("Tracker connection did not start with an array.");
 			socket.close();
 			return;
 		}
 		
-		authenticate();
+		if (local != null && getNeedsAuthentication())
+		{
+			authenticate();
+		}
 		
 		request.generate(generator);
 		generator.flush();
@@ -79,10 +95,6 @@ public abstract class TrackerConnection implements Closeable
 
 	private void authenticate() throws IOException
 	{
-		if (!getNeedsAuthentication())
-		{
-			return;
-		}
 		generator.writeStartObject();
 		byte[] naunceRequest = new byte[0];
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))

@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn;
 
 import java.awt.AWTException;
@@ -352,7 +353,7 @@ public class Services
 				Services.settings.logToFile.get() ? Services.settings.logFile.getPath() : null,
 				Services.settings.logLength.get());
 
-		int numServeThreads = Math.max(1, settings.maxServes.get());
+		int numServeThreads = Math.max(1, settings.numHandlers.get());
 		sockets = new ServerSocket[numServeThreads];
 		int successCount = 0;
 		for (int i = 0; i < sockets.length; i++)

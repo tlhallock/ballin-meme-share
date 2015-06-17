@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.gui;
 
 import java.io.File;
@@ -119,7 +120,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
 
 		stgs.servePortBeginI.set(beginPort);
 		stgs.servePortBeginE.set(beginPort);
-		stgs.maxServes.set(endPort - beginPort);
+		stgs.numHandlers.set(endPort - beginPort);
 		stgs.machineIdentifier.set(Misc.getRandomString(50));
 //		stgs.shareWithEveryone.set(share.isSelected());
 		stgs.defaultPermission.set((share.isSelected() ? SharingState.DOWNLOADABLE : SharingState.DO_NOT_SHARE).name());

@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.dwn;
 
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import java.util.List;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.util.LogWrapper;
 
 public class ServeManager
 {
@@ -50,6 +52,13 @@ public class ServeManager
 				return instance;
 			}
 		}
+		
+		if (serves.size() >= Services.settings.maxSimServers.get())
+		{
+			LogWrapper.getLogger().info("Over number of simultaneous servers.");
+			return null;
+		}
+		
 		ServeInstance instance = new ServeInstance(c, file);
 		serves.put(c.getUrl(), instance);
 		Services.notifications.serveAdded(instance);

@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.trk;
 
 import java.awt.GridLayout;
@@ -40,6 +41,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
+import org.cnv.shr.dmn.trk.TrackerClient.CommentsListInterface;
 import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackerEntry;
@@ -77,7 +79,6 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         
         jButton5.setText(getMachineText1());
         jButton3.setText(getMachineText2());
-        
         jButton2.setText(getTrackerText1());
     }
 
@@ -98,11 +99,11 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 					listClients(new TrackerListener()
 					{
 						@Override
-						public void receiveTracker(TrackerClient client)
+						public void receiveTracker(TrackerEntry client)
 						{
 							String key = client.getAddress();
 							model.addElement(key);
-							clients.put(key, client);
+							clients.put(key, createTrackerClient(client));
 						}
 					});
 				}
@@ -137,10 +138,14 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 
 	private boolean showClientInternal(TrackerClient client)
 	{
-		jButton1.setEnabled(true);
+		jButton1.setEnabled(trackAction2Enabled());
 		jButton2.setEnabled(true);
 		jButton6.setEnabled(true);
 		currentClient = client;
+
+    jButton2.setText(getTrackerText1());
+    jButton5.setText(getMachineText1());
+    jButton3.setText(getMachineText2());
 
 		LogWrapper.getLogger().info("Showing " + client);
 		
@@ -623,7 +628,6 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         remoceClient(client);
         refreshTrackers();
     }
-		protected abstract void remoceClient(TrackerClient client);
     
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
 
@@ -667,20 +671,45 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
                 
     }//GEN-LAST:event_jButton6ActionPerformed
 
-	private void refreshAll()
+	protected void refreshAll()
 	{
 		refreshTrackers();
 		if (currentClient != null)
 		{
 			show(currentClient, false);
 		}
-		if (currentMachine != null)
+		if (currentMachine == null)
+		{
+			showNoComments();
+		}
+		else
 		{
 			refreshComments();
 		}
 	}
-    
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+
+	private void showNoComments()
+	{
+		if (!isVisible())
+		{
+			return;
+		}
+		comments.clear();
+		currentMachine = null;
+		LogWrapper.getLogger().info("Showing no machine");
+
+		jLabel4.setText("No machine selected.");
+		jButton5.setEnabled(false);
+		jButton3.setEnabled(false);
+		commentPanel.removeAll();
+
+		ratingLabel.setText("No machine selected.");
+		filesLabl.setText("No machine selected.");
+		commentPanel.removeAll();
+		repaint();
+	}
+
+		private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 			runLater(new Runnable()
 			{
 				@Override
@@ -705,8 +734,6 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         // tracker actions 1
     	trackerAction1();
     }//GEN-LAST:event_jButton2ActionPerformed
-
-    protected abstract void trackerAction1();
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
         deleteTheRow();
@@ -739,9 +766,6 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         // machine actions 2
         machineAction2();
     }//GEN-LAST:event_jButton3ActionPerformed
-
-		protected abstract void machineAction2();
-    protected abstract void machineAction1();
     
     void refreshComments()
     {
@@ -756,21 +780,26 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 			}
 		comments.clear();
 		currentMachine = machines.get(index);
+    jButton5.setText(getMachineText1());
+    jButton3.setText(getMachineText2());
+    
 		LogWrapper.getLogger().info("Showing " + currentMachine);
 		
 		jLabel4.setText(currentMachine.getName());
 		jButton5.setEnabled(true);
-		jButton3.setEnabled(true);
+		jButton3.setEnabled(machineAction2Enabled());
 		commentPanel.removeAll();
 
 		ratingLabel.setText("0");
+		filesLabl.setText("loading...");
+		commentPanel.removeAll();
 		
-		try (CloseableIterator<CommentEntry> listComments = currentClient.listComments(currentMachine);)
+		try (CommentsListInterface listComments = currentClient.listComments(currentMachine);)
 		{
+			filesLabl.setText(listComments.getNumFiles());
+			
 			int count = 0;
 			double sum = 0;
-			filesLabl.setText("Not supported yet.");
-			commentPanel.removeAll();
 			while (listComments.hasNext())
 			{
 				CommentEntry entry = listComments.next();
@@ -782,7 +811,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 					break;
 				}
 				commentPanel.add(new CommentPanel(entry, count));
-				System.out.println(entry);
+				LogWrapper.getLogger().info("Found " + entry);
 				comments.add(entry);
 
 				count++;
@@ -790,6 +819,9 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 
 				ratingLabel.setText(String.valueOf(sum / count));
 			}
+			LogWrapper.getLogger().info("Found " + count + " comments.");
+			commentPanel.repaint();
+			repaint();
 		}
 		catch (Exception ex)
 		{
@@ -798,7 +830,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 		}
 	}
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+		// Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel commentPanel;
     private javax.swing.JLabel filesLabl;
     private javax.swing.JButton jButton1;
@@ -839,7 +871,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton7.setEnabled(jList1.getSelectedIndex() >= 0);
     }
 
-    public interface TrackerListener { public void receiveTracker(TrackerClient client); }
+    public interface TrackerListener { public void receiveTracker(TrackerEntry client); }
   	protected abstract void listClients(TrackerListener listener);
   	
     protected abstract void runLater(Runnable runnable);
@@ -848,4 +880,14 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
     protected abstract String getMachineText1();
     protected abstract String getMachineText2();
     protected abstract String getTrackerText1();
+
+		protected abstract void machineAction2();
+    protected abstract void machineAction1();
+    protected abstract void trackerAction1();
+    
+		protected abstract void remoceClient(TrackerClient client);
+		protected abstract TrackerClient createTrackerClient(TrackerEntry entry);
+		
+		protected abstract boolean trackAction2Enabled();
+    protected abstract boolean machineAction2Enabled();
 }

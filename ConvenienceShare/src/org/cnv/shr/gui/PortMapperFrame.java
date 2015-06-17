@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.gui;
 
 import java.io.IOException;
@@ -74,10 +75,10 @@ public class PortMapperFrame extends javax.swing.JFrame {
     {
         is.setText(String.valueOf(Services.settings.servePortBeginI.get()));
         ie.setText(String.valueOf(Services.settings.servePortBeginI.get()
-             + Services.settings.numThreads.get()));
+             + Services.settings.numHandlers.get()));
         es.setText(String.valueOf(Services.settings.servePortBeginE.get()));
         ee.setText(String.valueOf(Services.settings.servePortBeginE.get()
-             + Services.settings.numThreads.get()));
+             + Services.settings.numHandlers.get()));
     }
     
 	private boolean checkForMapper()

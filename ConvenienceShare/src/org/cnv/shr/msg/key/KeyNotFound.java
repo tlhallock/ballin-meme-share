@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.msg.key;
 
 import java.io.IOException;
@@ -139,7 +140,7 @@ public class KeyNotFound extends KeyMessage
 		else
 			generator.writeStartObject();
 		{
-			generator.writeStartArray("tests");
+			generator.writeStartObject("tests");
 			tests.generate(generator);
 		}
 		generator.writeEnd();
@@ -161,7 +162,7 @@ public class KeyNotFound extends KeyMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_ARRAY:
+		case START_OBJECT:
 			if (key==null) break;
 			if (key.equals("tests")) {
 				needstests = false;

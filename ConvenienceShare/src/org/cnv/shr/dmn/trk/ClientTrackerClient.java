@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.dmn.trk;
 
 import java.io.IOException;
@@ -77,16 +78,19 @@ public class ClientTrackerClient extends TrackerClient
 		return new ClientTrackerConnection(trackerEntry.getIp(), port);
 	}
 
-	@Override
-	protected void foundTracker(TrackerEntry entry)
-	{
-		Services.trackers.add(entry);
-	}
+//	@Override
+//	protected void foundTracker(TrackerEntry entry)
+//	{
+//		Services.trackers.add(entry);
+//	}
 	
 	public void requestSeeders(FileEntry remoteFile, Collection<Seeder> seeders)
 	{
 		try (TrackerConnection connection = connect(TrackerAction.LIST_SEEDERS))
 		{
+			remoteFile.generate(connection.generator);
+			connection.generator.flush();
+			
 			MachineEntry entry = new MachineEntry();
 			TrackObjectUtils.openArray(connection.parser);
 
@@ -178,7 +182,7 @@ public class ClientTrackerClient extends TrackerClient
 		}
 		catch (Exception ex)
 		{
-			Logger.getLogger(TrackerClient.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(TrackerClient.class.getName()).log(Level.INFO, "Unable to list trackers.", ex);
 		}
 	}
 }

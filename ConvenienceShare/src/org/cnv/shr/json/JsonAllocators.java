@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.json;
 
 import java.util.HashMap;
@@ -59,9 +60,6 @@ public class JsonAllocators
 		{                                                                     
 			public org.cnv.shr.db.h2.SharingState create(JsonParser p) { return SharingState.valueOf(p.getString()); }  
 		});
-		
-		
-		
 		
 		ALLOCATORS.put(org.cnv.shr.trck.TrackerEntry.getJsonName(), new JsonAllocator<org.cnv.shr.trck.TrackerEntry>()          
 				{                                                                     
@@ -102,6 +100,14 @@ public class JsonAllocators
 				ALLOCATORS.put(org.cnv.shr.dmn.JsonableUpdateInfo.getJsonName(), new JsonAllocator<org.cnv.shr.dmn.JsonableUpdateInfo>()          
 				{                                                                     
 					public org.cnv.shr.dmn.JsonableUpdateInfo create(JsonParser p) { return new org.cnv.shr.dmn.JsonableUpdateInfo(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.trck.TrackerRequest.getJsonName(), new JsonAllocator<org.cnv.shr.trck.TrackerRequest>()          
+				{                                                                     
+					public org.cnv.shr.trck.TrackerRequest create(JsonParser p) { return new org.cnv.shr.trck.TrackerRequest(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.dmn.trk.NumFilesMessage.getJsonName(), new JsonAllocator<org.cnv.shr.dmn.trk.NumFilesMessage>()          
+				{                                                                     
+					public org.cnv.shr.dmn.trk.NumFilesMessage create(JsonParser p) { return new org.cnv.shr.dmn.trk.NumFilesMessage(p); }  
 				});                                                                   
 				ALLOCATORS.put(org.cnv.shr.msg.dwn.DownloadFailure.getJsonName(), new JsonAllocator<org.cnv.shr.msg.dwn.DownloadFailure>()          
 				{                                                                     
@@ -286,6 +292,14 @@ public class JsonAllocators
 				ALLOCATORS.put(org.cnv.shr.db.h2.bak.RootPermissionBackup.getJsonName(), new JsonAllocator<org.cnv.shr.db.h2.bak.RootPermissionBackup>()          
 				{                                                                     
 					public org.cnv.shr.db.h2.bak.RootPermissionBackup create(JsonParser p) { return new org.cnv.shr.db.h2.bak.RootPermissionBackup(p); }  
-				});              
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.db.h2.bak.MessageBackup.getJsonName(), new JsonAllocator<org.cnv.shr.db.h2.bak.MessageBackup>()          
+				{                                                                     
+					public org.cnv.shr.db.h2.bak.MessageBackup create(JsonParser p) { return new org.cnv.shr.db.h2.bak.MessageBackup(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.db.h2.bak.DownloadBackup.getJsonName(), new JsonAllocator<org.cnv.shr.db.h2.bak.DownloadBackup>()          
+				{                                                                     
+					public org.cnv.shr.db.h2.bak.DownloadBackup create(JsonParser p) { return new org.cnv.shr.db.h2.bak.DownloadBackup(p); }  
+				});           
 	}
 }

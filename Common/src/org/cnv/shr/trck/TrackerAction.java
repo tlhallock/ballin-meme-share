@@ -22,6 +22,7 @@
  * git clone git@github.com:tlhallock/ballin-meme-share.git                 */
 
 
+
 package org.cnv.shr.trck;
 
 public enum TrackerAction
@@ -34,7 +35,7 @@ public enum TrackerAction
 	POST_COMMENT,
 	POST_MACHINE,
 
-	LIST_MY_FILES,
+	LIST_FILES,
 	CLAIM_FILE,
 	LOSE_FILE,
 	
