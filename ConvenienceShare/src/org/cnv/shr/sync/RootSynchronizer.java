@@ -26,6 +26,7 @@
 
 package org.cnv.shr.sync;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ import org.cnv.shr.util.LogWrapper;
  * Instead, this keeps a stack inside the LocalDirectorySyncIterator of synchronization tasks to be performed.
  *
  */
-public abstract class RootSynchronizer implements Runnable
+public abstract class RootSynchronizer implements Runnable, Closeable
 {
 	private static final Pair[] dummy = new Pair[0];
 	
@@ -93,10 +94,18 @@ public abstract class RootSynchronizer implements Runnable
 	@Override
 	public void run()
 	{
+		Thread.currentThread().setName("Root Synchronizer [" + local.getName() + "]");
 		SynchronizationTask task = null;
-		while (!quit && (task = iterator.next()) != null)
+		try
 		{
-			synchronize(task);
+			while (!quit && (task = iterator.next()) != null)
+			{
+				synchronize(task);
+			}
+		}
+		catch (IOException | InterruptedException e1)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Exception in synchronizer: ", e1);
 		}
 		if (changeCount > 0)
 		{
@@ -109,6 +118,11 @@ public abstract class RootSynchronizer implements Runnable
 		catch (final IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to close iterator", e);
+		}
+
+		for (SynchronizationListener listener : listeners)
+		{
+			listener.syncDone();
 		}
 	}
 	
@@ -299,11 +313,17 @@ public abstract class RootSynchronizer implements Runnable
 		return returnValue;
 	}
 	
+	public void close() throws IOException
+	{
+		iterator.close();
+	}
+	
 	public static interface SynchronizationListener
 	{
 		void beganDirectory(String str);
 		void fileAdded(SharedFile f);
 		void fileRemoved(SharedFile f);
 		void fileUpdated(SharedFile f);
+		void syncDone();
 	}
 }

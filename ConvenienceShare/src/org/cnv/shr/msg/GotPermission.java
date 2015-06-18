@@ -146,7 +146,7 @@ public class GotPermission extends Message
 				break;
 			case "permission":
 				needspermission = false;
-				permission = SharingState.valueOf(parser.getString());;
+				permission = SharingState.valueOf(parser.getString());
 				break;
 			}
 			break;

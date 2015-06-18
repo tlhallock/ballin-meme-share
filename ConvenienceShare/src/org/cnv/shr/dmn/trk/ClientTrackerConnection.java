@@ -56,7 +56,7 @@ public class ClientTrackerConnection extends TrackerConnection
 	}
 
 	@Override
-	protected void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey2)
+	protected void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey2) throws IOException
 	{
 		if (publicKey2 == null)
 		{

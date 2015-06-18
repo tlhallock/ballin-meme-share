@@ -140,7 +140,7 @@ public class Authenticator
 			int count = 0;
 			while (authenticated == null)
 			{
-				if (count++ > 60)
+				if (count++ > 6)
 				{
 					throw new IOException("Connection timed out...");
 				}

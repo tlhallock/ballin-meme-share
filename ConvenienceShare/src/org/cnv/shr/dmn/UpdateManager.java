@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.zip.ZipInputStream;
@@ -42,6 +43,7 @@ import javax.json.stream.JsonParser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.cnv.shr.db.h2.bak.DbBackupRestore;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.updt.UpdateInfo;
@@ -59,6 +61,8 @@ public class UpdateManager extends TimerTask
 	private Path currentJarPath = ProcessInfo.getJarPath(Main.class);
 	// Tmp file to download 
 	private Path updatesFile = currentJarPath.resolve("updates.zip");
+	// Database backup
+	private Path dbBackup = currentJarPath.resolve("dbBackup.json");
 	
 	private JsonableUpdateInfo info;
 
@@ -176,6 +180,15 @@ public class UpdateManager extends TimerTask
 		{
 			LogWrapper.getLogger().log(Level.WARNING, "Unable to extract update data to " + currentJarPath, e1);
 			return;
+		}
+		
+		try
+		{
+			DbBackupRestore.backupDatabase(dbBackup);
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to backup database " + currentJarPath, e);
 		}
 		
 //		
@@ -312,7 +325,7 @@ public class UpdateManager extends TimerTask
 	}
 
 
-	private static void restart(JFrame origin)
+	private void restart(JFrame origin)
 	{
 		UserInputWait wait = new UserInputWait();
 		waitForInput(wait);
@@ -321,7 +334,11 @@ public class UpdateManager extends TimerTask
 				"Code update.", 
 				JOptionPane.INFORMATION_MESSAGE);
 		wait.userInput = true;
-		Main.restart();
+		
+		LinkedList<String> extraArgs = new LinkedList<String>();
+		extraArgs.add("-r");
+		extraArgs.add(dbBackup.toString());
+		Main.restart(extraArgs);
 	}
 
 	private static boolean confirmUpgrade(JFrame origin)

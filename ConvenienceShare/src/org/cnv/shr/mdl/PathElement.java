@@ -215,31 +215,30 @@ public class PathElement extends DbObject<Long>
 		LinkedList<PathElement> returnValue = new LinkedList<>();
 		LinkedList<PathElement> broken = new LinkedList<PathElement>();
 		
-		DbIterator<PathElement> iterator = DbPaths.listPathElements(local, this);
 
 		// not as simple as the recursive call, but only opens one statement at a time...
-		for (;;)
+		PathElement current = this;
+		while (current != null)
 		{
-			while (iterator.hasNext())
+			try (DbIterator<PathElement> iterator = DbPaths.listPathElements(local, current);)
 			{
-				PathElement next = iterator.next();
-				if (next.isBroken())
+				while (iterator.hasNext())
 				{
-					broken.add(next);
+					PathElement next = iterator.next();
+					if (next.isBroken())
+					{
+						broken.add(next);
+					}
+					else
+					{
+						returnValue.add(next);
+					}
 				}
-				else
-				{
-					returnValue.add(next);
-				}
+
+				current = broken.isEmpty() ? null : broken.removeLast();
 			}
-			
-			if (broken.isEmpty())
-			{
-				return returnValue;
-			}
-			
-			iterator = DbPaths.listPathElements(local, broken.removeLast());
 		}
+		return returnValue;
 	}
 
 	public boolean isBroken()

@@ -73,10 +73,7 @@ public class DbRoots
 				{
 					return executeQuery.getLong("totalsize");
 				}
-				else
-				{
-					return -1;
-				}
+				return -1;
 			}
 		}
 		catch (SQLException e)
@@ -98,10 +95,7 @@ public class DbRoots
 				{
 					return executeQuery.getLong("number");
 				}
-				else
-				{
-					return -1;
-				}
+				return -1;
 			}
 		}
 		catch (SQLException e)

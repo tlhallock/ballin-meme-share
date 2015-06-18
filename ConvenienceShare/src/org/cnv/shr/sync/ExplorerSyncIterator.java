@@ -26,29 +26,21 @@
 package org.cnv.shr.sync;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.sync.FileSource.FileSourceIterator;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
-import org.cnv.shr.util.LogWrapper;
 
 public class ExplorerSyncIterator extends SyncrhonizationTaskIterator
 {
 	private RootDirectory root;
 	
-	// Why did i have to write this queue myself?
-	private Lock lock = new ReentrantLock();
-	private Condition condition = lock.newCondition();
 	private boolean quit;
 	
-//	private LinkedBlockingDeque<SynchronizationTask> tasks = new LinkedBlockingDeque<>();
-	private LinkedList<SynchronizationTask> tasks = new LinkedList<>();
+	private LinkedBlockingDeque<MySyncTask> tasks = new LinkedBlockingDeque<>();
 	
 	public ExplorerSyncIterator(final RootDirectory remoteDirectory)
 	{
@@ -56,71 +48,52 @@ public class ExplorerSyncIterator extends SyncrhonizationTaskIterator
 	}
 
 	@Override
-	public SynchronizationTask next()
+	public SynchronizationTask next() throws IOException, InterruptedException
 	{
-		lock.lock();
-		try
+		while (true)
 		{
-			while (true)
+			if (quit)
+				return null;
+
+			MySyncTask t = tasks.pollFirst(10, TimeUnit.SECONDS);
+			if (t == null)
+				continue;
+
+			if (!t.file.stillExists())
+				continue;
+
+			try (FileSourceIterator grandChildren = t.file.listFiles();)
 			{
-				if (quit) return null;
-				
-				if (!tasks.isEmpty())
-				{
-					return tasks.removeLast();
-				}
-				try
-				{
-					condition.await();
-				}
-				catch (final InterruptedException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
-					return null;
-				}
+				final SynchronizationTask synchronizationTask = new SynchronizationTask(t.dbDir, root, grandChildren);
+				synchronizationTask.addListener(t.listener);
+				return synchronizationTask;
 			}
-		}
-		finally
-		{
-			lock.unlock();
 		}
 	}
 
-	public SynchronizationTask queueSyncTask(final FileSource file, final PathElement dbDir, final TaskListener listener) throws IOException
+	public void queueSyncTask(final FileSource file, final PathElement dbDir, final TaskListener listener)
 	{
-		if (!file.stillExists())
-		{
-			return null;
-		}
-
-		lock.lock();
-		try (FileSourceIterator grandChildren = file.listFiles();)
-		{
-			final SynchronizationTask synchronizationTask = new SynchronizationTask(dbDir, root, grandChildren);
-			tasks.addFirst(synchronizationTask);
-			synchronizationTask.addListener(listener);
-			condition.signalAll();
-			return synchronizationTask;
-		}
-		finally
-		{
-			lock.unlock();
-		}
+		tasks.offerLast(new MySyncTask(file, dbDir, listener));
 	}
 	
 	@Override
 	public void close() throws IOException
 	{
-		lock.lock();
-		try
+		quit = true;
+		super.close();
+	}
+	
+	class MySyncTask
+	{
+		private FileSource file;
+		private PathElement dbDir;
+		private TaskListener listener;
+		
+		public MySyncTask(FileSource file, PathElement dbDir, TaskListener listener)
 		{
-			quit = true;
-			condition.signalAll();
-			super.close();
-		}
-		finally
-		{
-			lock.unlock();
+			this.file = file;
+			this.dbDir = dbDir;
+			this.listener = listener;
 		}
 	}
 }

@@ -71,6 +71,8 @@ public class AcceptKey extends javax.swing.JFrame {
         try
         {
             acceptKey.setVisible(true);
+            acceptKey.setAlwaysOnTop(true);
+            
             int count = 0;
             while (acceptKey.result == null && count++ < 10)
             {

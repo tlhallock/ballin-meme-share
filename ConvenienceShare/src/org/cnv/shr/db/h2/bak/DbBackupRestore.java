@@ -25,10 +25,9 @@
 
 package org.cnv.shr.db.h2.bak;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -36,6 +35,7 @@ import java.util.logging.Level;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
+import javax.swing.JFrame;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
@@ -67,11 +67,11 @@ public class DbBackupRestore
 			+ "join MACHINE on SHARE_ROOT.MID=M_ID "
 			+ "where ROOT.IS_LOCAL=true;");
 	
-	public static void backupDatabase(File f) throws IOException
+	public static void backupDatabase(Path f) throws IOException
 	{
 		LogWrapper.getLogger().info("Backing up the database.");
 		
-		try (JsonGenerator generator = TrackObjectUtils.createGenerator(Files.newOutputStream(Paths.get(f.getAbsolutePath())));)
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(Files.newOutputStream(f), true);)
 		{
 			generator.writeStartObject();
 			LogWrapper.getLogger().info("Writing machines.");
@@ -159,7 +159,7 @@ public class DbBackupRestore
 		LogWrapper.getLogger().info("Database backup complete.");
 	}
 
-	public static void restoreDatabase(File f)
+	public static void restoreDatabase(JFrame origin, Path f)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -168,7 +168,7 @@ public class DbBackupRestore
 			{
 				try
 				{
-					restoreDatabaseInternal(f);
+					restoreDatabaseInternal(origin, f);
 				}
 				catch (IOException | SQLException e)
 				{
@@ -178,20 +178,26 @@ public class DbBackupRestore
 		});
 	}
 	
-	private synchronized static void restoreDatabaseInternal(File f) throws IOException, SQLException
+	private synchronized static void restoreDatabaseInternal(JFrame origin, Path f) throws IOException, SQLException
 	{
 		try (ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();)
 		{
 			DbTables.deleteDb(wrapper);
 		}
-		DbRestoreProgress dbRestoreProgress = new DbRestoreProgress(f.length());
+		DbRestoreProgress dbRestoreProgress = new DbRestoreProgress(Files.size(f));
+		if (origin != null)
+		{
+			dbRestoreProgress.setLocation(origin.getLocation());
+		}
 		dbRestoreProgress.setVisible(true);
 		
-		try (
-				CountingInputStream newInputStream = new CountingInputStream(Files.newInputStream(Paths.get(f.getAbsolutePath())));
-				JsonParser parser = TrackObjectUtils.createParser(newInputStream);
-				ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();)
+		try (CountingInputStream newInputStream = new CountingInputStream(Files.newInputStream(f));
+				 JsonParser parser = TrackObjectUtils.createParser(newInputStream);
+				 ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();)
 		{
+			// Should break up the counting input stream class into two different classes...
+			newInputStream.setRawMode(true);
+			
 			String key = null;
 			while (parser.hasNext())
 			{
@@ -241,6 +247,10 @@ public class DbBackupRestore
 		finally
 		{
 			dbRestoreProgress.done();
+			if (origin == null)
+			{
+				dbRestoreProgress.dispose();
+			}
 		}
 	}
 
@@ -286,7 +296,8 @@ public class DbBackupRestore
 
 	private static void readDirectories(JsonParser parser,
 			ConnectionWrapper wrapper, 
-			DbRestoreProgress p, CountingInputStream newInputStream)
+			DbRestoreProgress p, 
+			CountingInputStream newInputStream)
 	{
 		Event next;
 		while (parser.hasNext())
@@ -325,7 +336,8 @@ public class DbBackupRestore
 
 	private static void readDownloads(JsonParser parser,
 			ConnectionWrapper wrapper, 
-			DbRestoreProgress p, CountingInputStream newInputStream)
+			DbRestoreProgress p, 
+			CountingInputStream newInputStream)
 	{
 		Event next;
 		while (parser.hasNext())

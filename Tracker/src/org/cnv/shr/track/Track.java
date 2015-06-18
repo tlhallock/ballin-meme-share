@@ -30,6 +30,7 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -39,7 +40,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
-import org.cnv.shr.dmn.TrackerGui;
+import org.cnv.shr.dmn.trk.TrackerGui;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.KeysService;
@@ -53,10 +54,25 @@ public class Track
 	public static ExecutorService threads;
 	static TrackerGui gui;
 	public static TrackerEntry LOCAL_TRACKER = getLocalTracker();
+	public static Path rootDirectory = Paths.get(/*"..", "instances",*/ "tracker");
+	
+	
+	private static void parseArgs(String[] args)
+	{
+		for (int i = 0; i < args.length; i++)
+		{
+			if (args[i].equals("-d") && i < args.length - 1)
+			{
+				rootDirectory = Paths.get(args[i + 1]);
+			}
+		}
+	}
 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException, UnknownHostException
 	{
-		LogWrapper.logToFile(Paths.get("..", "instances", "tracker", "tracker_log.txt"), 1024 * 1024);
+		parseArgs(args);
+		Misc.ensureDirectory(rootDirectory, false);
+		LogWrapper.logToFile(rootDirectory.resolve("tracker_log.txt"), 1024 * 1024);
 		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler()
 		{
 			@Override

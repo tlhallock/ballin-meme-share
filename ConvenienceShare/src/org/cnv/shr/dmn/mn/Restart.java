@@ -38,6 +38,7 @@ import org.cnv.shr.util.ProcessInfo;
 public class Restart extends Quiter
 {
 	private Path launchDir;
+	private LinkedList<String> arguments;
 	
 	public Restart() { this (ProcessInfo.getJarPath(Main.class)); }
 	
@@ -62,6 +63,7 @@ public class Restart extends Quiter
 			args.add(launchDir.resolve(Misc.CONVENIENCE_SHARE_JAR).toString());
 			args.add("-f");
 			args.add(Services.settings.getSettingsFile());
+			args.addAll(arguments);
 			
 			LogWrapper.getLogger().info("Restarting from:");
 			LogWrapper.getLogger().info(launchDir.toString());
@@ -85,5 +87,10 @@ public class Restart extends Quiter
 		{
 			System.exit(0);
 		}
+	}
+
+	public void setArgs(LinkedList<String> args)
+	{
+		this.arguments = args;
 	}
 }

@@ -297,11 +297,11 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         commentPanel.setLayout(commentPanelLayout);
         commentPanelLayout.setHorizontalGroup(
             commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 448, Short.MAX_VALUE)
+            .addGap(0, 447, Short.MAX_VALUE)
         );
         commentPanelLayout.setVerticalGroup(
             commentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 258, Short.MAX_VALUE)
+            .addGap(0, 263, Short.MAX_VALUE)
         );
 
         jScrollPane3.setViewportView(commentPanel);
@@ -363,7 +363,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
                     .addComponent(jLabel3))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(filesLabl, javax.swing.GroupLayout.DEFAULT_SIZE, 270, Short.MAX_VALUE)
+                    .addComponent(filesLabl, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE)
                     .addComponent(ratingLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
@@ -387,7 +387,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 261, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE))
         );
 
         jSplitPane2.setRightComponent(jPanel2);
@@ -408,7 +408,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
             }
         });
 
-        jLabel5.setText("Viewing form:");
+        jLabel5.setText("Viewing from:");
 
         jLabel6.setText("0");
 
@@ -422,7 +422,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
             }
         });
 
-        jButton1.setText("Add known trackers");
+        jButton1.setText("Add trackers");
         jButton1.setEnabled(false);
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -830,7 +830,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 		}
 	}
 
-		// Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel commentPanel;
     private javax.swing.JLabel filesLabl;
     private javax.swing.JButton jButton1;

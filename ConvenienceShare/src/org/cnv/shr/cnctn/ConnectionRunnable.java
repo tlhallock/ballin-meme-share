@@ -25,7 +25,6 @@
 
 package org.cnv.shr.cnctn;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 
@@ -52,6 +51,7 @@ public class ConnectionRunnable implements Runnable
 	{
 		try
 		{
+			Services.networkManager.add(this);
 			connection.initParser();
 			while (connection.needsMore())
 			{
@@ -77,6 +77,7 @@ public class ConnectionRunnable implements Runnable
 					break;
 				}
 			}
+			LogWrapper.getLogger().info("No more input needed.");
 		}
 		catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 		{
@@ -89,21 +90,9 @@ public class ConnectionRunnable implements Runnable
 		}
 		finally
 		{
-			cleanup();
-		}
-	}
-
-	private void cleanup()
-	{
-		try
-		{
-			ensureClosed();
-		}
-		finally
-		{
 			try
 			{
-				Services.notifications.connectionClosed(connection);
+				cleanup(false);
 			}
 			finally
 			{
@@ -112,49 +101,35 @@ public class ConnectionRunnable implements Runnable
 		}
 	}
 
-	private void ensureClosed()
+	void cleanup(boolean now)
 	{
-		try
-		{
-			int ndx = 0;
-			while (!connection.isClosed())
-			{
-				if (ndx++ < 10)
-				{
-					Thread.sleep(200);
-					continue;
-				} 
-				connection.getSocket().close();
-				System.out.println("Closed");
-			}
-		}
-		catch (final InterruptedException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
+//		try
+//		{
+//			int ndx = 0;
+//			while (!connection.isClosed() && !now && false)
+//			{
+//				if (ndx++ < 10)
+//				{
+//					Thread.sleep(200);
+//					continue;
+//				} 
+//			}
+//		}
+//		catch (final InterruptedException e)
+//		{
+//			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
+//		}
+//		finally
+//		{
 			try
 			{
-				connection.getSocket().close();
+				connection.close();
+				System.out.println("Closed");
 			}
-			catch (final IOException e1)
+			catch (final Exception e1)
 			{
 				LogWrapper.getLogger().log(Level.INFO, "Can't close at all", e1);
 			}
-		}
-		catch (final IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Can't close" , e);
-		}
-	}
-	
-	void die()
-	{
-		try
-		{
-			connection.getSocket().close();
-		}
-		catch (final IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Can't die", e);
-		}
+//		}
 	}
 }

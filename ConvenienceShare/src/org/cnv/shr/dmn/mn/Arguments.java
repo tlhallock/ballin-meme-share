@@ -28,6 +28,8 @@ package org.cnv.shr.dmn.mn;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.cnv.shr.stng.Settings;
@@ -39,6 +41,7 @@ public class Arguments
 	public boolean deleteDb = false;
 	public boolean showGui = false;
 	public Settings settings = new Settings(Settings.DEFAULT_SETTINGS_FILE);
+	public Path restoreFile;
 	public Quiter quiter = new Quiter() {
 		@Override
 		public void doFinal()
@@ -67,7 +70,14 @@ public class Arguments
 			{
 				settings = new Settings(Paths.get(args[i + 1]));
 			}
-
+			if (args[i].equals("-r") && i < args.length - 1)
+			{
+				restoreFile = Paths.get(args[i + 1]);
+				if (!Files.exists(restoreFile))
+				{
+					restoreFile = null;
+				}
+			}
 			if (args[i].equals("-u") && i < args.length - 1)
 			{
 				File directory = new File(args[i+1]);

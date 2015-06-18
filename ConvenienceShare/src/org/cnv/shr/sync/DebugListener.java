@@ -103,4 +103,7 @@ public class DebugListener extends TimerTask implements SynchronizationListener
 	}
 	
 	protected void changed() {}
+
+	@Override
+	public void syncDone() {}
 }

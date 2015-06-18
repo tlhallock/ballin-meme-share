@@ -37,7 +37,7 @@ import org.cnv.shr.util.FileOutsideOfRootException;
 public interface FileSource
 {
 	boolean stillExists();
-	FileSourceIterator listFiles() throws IOException;
+	FileSourceIterator listFiles() throws IOException, InterruptedException;
 	String getName();
 	boolean isDirectory();
 	boolean isFile();

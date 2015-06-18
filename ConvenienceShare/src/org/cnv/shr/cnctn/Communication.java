@@ -61,6 +61,9 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 // TODO: this should really only need authentication to UPDATE machine info...
 public class Communication implements Closeable
 {
+	private static final int CLOSE_TIMEOUT = 1 * 60 * 1000;
+
+
 	// The streams
 	private Socket socket;
 	
@@ -213,7 +216,7 @@ public class Communication implements Closeable
 				socket.close();
 			}
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to close socket.", e);
 		}
@@ -249,34 +252,25 @@ public class Communication implements Closeable
 		{
 			send(new DoneMessage());
 		}
-		catch (IOException e1)
+		catch (Exception e1)
 		{
-			e1.printStackTrace();
+			LogWrapper.getLogger().log(Level.INFO, "Unable to send done message.", e1);
 		}
-//		try
-//		{
-//			socket.shutdownOutput();
-//		}
-//		catch (IOException e)
-//		{
-//			LogWrapper.getLogger().log(Level.INFO, "Unable to close output.", e);
-//		}
-		Services.timer.schedule(new TimerTask() {
-			@Override
-			public void run()
+		finally
+		{
+			try
 			{
-				if (socket.isClosed())
-					return;
-				try
-				{
-					socket.close();
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to close after expired.", e);
-				}
+				socket.shutdownOutput();
 			}
-		}, 1 * 60 * 1000);
+			catch (Exception e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to close output.", e);
+			}
+			finally
+			{
+				scheduleTimerCloseTask();
+			}
+		}
 	}
 	
 	public void setDone()
@@ -290,6 +284,32 @@ public class Communication implements Closeable
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to close input.", e);
 		}
+		finally
+		{
+			scheduleTimerCloseTask();
+		}
+	}
+	
+	private void scheduleTimerCloseTask()
+	{
+		Services.timer.schedule(new TimerTask() { public void run() { closeDaConnection(); } }, CLOSE_TIMEOUT);
+	}
+	
+	public void closeDaConnection()
+	{
+		if (socket.isClosed())
+		{
+			return;
+		}
+		try
+		{
+			LogWrapper.getLogger().info("Connection close timer fired");
+			socket.close();
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close after expired.", e);
+		}
 	}
 
 	public Authenticator getAuthentication()
@@ -297,11 +317,6 @@ public class Communication implements Closeable
 		return authentication;
 	}
 
-	public Socket getSocket()
-	{
-		return socket;
-	}
-	
 	// todo: remove this. can be done by breaking up whoiam and changing runnable exception to throwable
 	@Override
 	public void finalize()
@@ -375,5 +390,9 @@ public class Communication implements Closeable
 		{
 			throw new RuntimeException("Expected start object!");
 		}
+	}
+	public InetSocketAddress getRemoteSocketAddress()
+	{
+		return (InetSocketAddress) socket.getRemoteSocketAddress();
 	}
 }

@@ -27,13 +27,11 @@ package org.cnv.shr.sync;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.sync.FileSource.FileSourceIterator;
-import org.cnv.shr.util.LogWrapper;
 
 public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterator
 {
@@ -41,7 +39,7 @@ public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterato
 	private LinkedList<Node> stack = new LinkedList<>();
 	private RootDirectory root;
 		
-	public ConsecutiveDirectorySyncIterator(final RootDirectory remoteDirectory, final FileSource f) throws IOException
+	public ConsecutiveDirectorySyncIterator(final RootDirectory remoteDirectory, final FileSource f) throws IOException, InterruptedException
 	{
 		root = remoteDirectory;
 		stack.addLast(new Node(new SynchronizationTask(DbPaths.ROOT, root, f.listFiles())));
@@ -49,7 +47,7 @@ public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterato
 	}
 
 	@Override
-	public SynchronizationTask next()
+	public SynchronizationTask next() throws IOException, InterruptedException
 	{
 		if (first)
 		{
@@ -80,7 +78,7 @@ public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterato
 			// Collections.sort(subDirectories, Find.FILE_COMPARATOR);
 		}
 
-		private boolean findNext()
+		private boolean findNext() throws IOException, InterruptedException
 		{
 			while (index < sync.synchronizedResults.length)
 			{
@@ -98,12 +96,6 @@ public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterato
 					stack.addLast(new Node(new SynchronizationTask(dbDir, root, grandChildren)));
 					index++;
 					return true;
-				}
-				catch (final IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to create synchronization node.", e);
-					index++;
-					continue;
 				}
 			}
 			final Node last = stack.removeLast();

@@ -25,17 +25,22 @@
 
 package org.cnv.shr.gui;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.security.PublicKey;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
+import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -48,6 +53,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
@@ -56,6 +62,7 @@ import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.gui.tbl.FilesTable;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
@@ -82,6 +89,7 @@ public class MachineViewer extends javax.swing.JFrame
     public MachineViewer(Machine rMachine) {
     	machineIdent = rMachine.getIdentifier();
         initComponents();
+        syncStatus.setOpaque(true);
         filesManager = new FilesTable(filesTable, this);
 
         pathsTable.setAutoCreateRowSorter(true);
@@ -115,7 +123,7 @@ public class MachineViewer extends javax.swing.JFrame
 				@Override
 				public void windowClosing(WindowEvent e)
 				{
-					model.closeConnections();
+					model.close();
 				}
 			});
     }
@@ -373,6 +381,7 @@ public class MachineViewer extends javax.swing.JFrame
     {
         this.machineIdent = machine.getIdentifier();
         jLabel15.setText(machineIdent);
+        setSyncStatus(Color.GRAY, Color.WHITE, "Not viewing any root.");
         sharingWithRemoteMachine.setSelectedItem(machine.sharingWithOther().humanReadable());
         remoteSharingWithUs.setText(machine.getSharesWithUs().humanReadable());
         machineLabel.setText((machine.isLocal() ? "Local machine: " : "") + machine.getName());
@@ -395,10 +404,12 @@ public class MachineViewer extends javax.swing.JFrame
             model.removeRow(0);
         }
 
-        final DbIterator<? extends RootDirectory> listRemoteDirectories = DbRoots.list(machine);
-        while (listRemoteDirectories.hasNext())
+        try (final DbIterator<? extends RootDirectory> listRemoteDirectories = DbRoots.list(machine);)
         {
-            model.addRow(new String[]{listRemoteDirectories.next().getName()});
+	        while (listRemoteDirectories.hasNext())
+	        {
+	            model.addRow(new String[]{listRemoteDirectories.next().getName()});
+	        }
         }
         
         if (machine.isLocal())
@@ -968,7 +979,8 @@ public class MachineViewer extends javax.swing.JFrame
         	Machine machine = getMachine();
   				if (machine == null) return;
             Communication connection = Services.networkManager.openConnection(machine, false);
-            if (connection != null) {
+            if (connection != null)
+            {
                 connection.send(new UserMessageMessage(UserMessage.createShareRequest()));
                 connection.finish();
 
@@ -1002,6 +1014,56 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void changePathButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changePathButtonActionPerformed
         // change path
+  		RootDirectory root = getRootDirectory();
+			RemoteDirectory remoteDir = (RemoteDirectory) root;
+  		if (!(root instanceof RemoteDirectory))
+  		{
+  			LogWrapper.getLogger().info("Cannot change path of local directory");
+  			return;
+  		}
+			final JFileChooser fc = new JFileChooser();
+			fc.setCurrentDirectory(new File(pathField.getText()));
+			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+			if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
+			{
+				return;
+			}
+			String newPath = fc.getSelectedFile().getAbsolutePath();
+			String oldPath = remoteDir.getLocalRoot().toString();
+			int showConfirmDialog = JOptionPane.showConfirmDialog(this, "Changing location of local mirror for directory " + remoteDir.getName() + ".\n"
+					+ "Please be sure to move any contents of \n" + oldPath + "\nto\n" + newPath + ".\n"
+					+ "Would you like to open these directories now?",
+					"Changing local mirror for " + remoteDir.getName(), 
+					JOptionPane.YES_NO_CANCEL_OPTION);
+			switch (showConfirmDialog)
+			{
+			case JOptionPane.YES_OPTION:
+				Misc.ensureDirectory(Paths.get(oldPath), false);
+				Misc.ensureDirectory(Paths.get(newPath), false);
+				Misc.nativeOpen(Paths.get(oldPath),  false);
+				Misc.nativeOpen(Paths.get(newPath),  false);
+				break;
+			case JOptionPane.NO_OPTION:
+				break;
+			case JOptionPane.CANCEL_OPTION:
+				return;
+				default:
+					return;
+			}
+			PathElement pathElement = DbPaths.getPathElement(newPath);
+			DbPaths.pathDoesNotLieIn(remoteDir.getPathElement(), remoteDir);
+			DbPaths.pathLiesIn(pathElement, remoteDir);
+			remoteDir.setLocalMirror(pathElement);
+			try
+			{
+				remoteDir.save(Services.h2DbCache.getThreadConnection());
+	      this.pathField.setText(remoteDir.getPathElement().getFullPath());
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to change local mirror for remote directory " + remoteDir, e);
+			}
     }//GEN-LAST:event_changePathButtonActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -1129,10 +1191,15 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JLabel tagsLabel;
     // End of variables declaration//GEN-END:variables
     
-    public void setSyncStatus(String status)
+    public void setSyncStatus(Color back, Color fore, String status)
     {
         if (syncStatus != null)
+        {
             syncStatus.setText(status);
+            syncStatus.setBackground(back);
+            syncStatus.setForeground(fore);
+            syncStatus.repaint();
+        }
     }
 
 	private NotificationListenerAdapter createListener()

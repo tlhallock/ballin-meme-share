@@ -46,12 +46,14 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbChunks;
 import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.CompletionStatus;
@@ -358,6 +360,22 @@ public class DownloadInstance
 //		{
 //			LogWrapper.getLogger().log(Level.INFO, "Unable to move downloaded file.", e);
 //		}
+		
+		String localMirrorName = remoteFile.getRootDirectory().getLocalMirrorName();
+		LocalDirectory local = DbRoots.getLocalByName(localMirrorName);
+		if (local != null)
+		{
+			try
+			{
+				LocalFile localFile = new LocalFile(local, remoteFile.getPath());
+				DbPaths.pathLiesIn(remoteFile.getPath(), local);
+				localFile.save(Services.h2DbCache.getThreadConnection());
+			}
+			catch (IOException | SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to add local file to local mirror " + remoteFile, e);
+			}
+		}
 		
 		Services.downloads.remove(this);
 		Services.notifications.downloadDone(this);

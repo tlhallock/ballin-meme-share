@@ -93,32 +93,25 @@ public class JsonableUpdateInfo implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsport = true;
 		boolean needsip = true;
+		boolean needsport = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
 				if (needsip)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
+				}
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("port")) {
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -129,6 +122,13 @@ public class JsonableUpdateInfo implements Jsonable
 			case "pKey":
 				pKey = KeyPairObject.deSerializePublicKey(parser.getString());
 				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			if (key.equals("port")) {
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
 			}
 			break;
 			default: break;

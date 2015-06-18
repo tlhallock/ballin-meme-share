@@ -127,7 +127,7 @@ public class Tracker implements Runnable
 //		TrackObjectUtils.read(input, new Done());
 	}
 
-	private MachineEntry authenticateClient(JsonParser input, JsonGenerator generator, String realAddress) throws TrackerException
+	private MachineEntry authenticateClient(JsonParser input, JsonGenerator generator, String realAddress) throws TrackerException, IOException
 	{
 		if (!getWantsToAuthenticate(input))
 		{
@@ -142,7 +142,7 @@ public class Tracker implements Runnable
 		claimedClient.setIp(null);
 		
 		MachineEntry entry = store.getMachine(claimedClient.getIdentifer());
-		if (entry == null)
+		if (entry == null || entry.getKeyStr() == null || entry.getKeyStr().length() == 0)
 		{
 			generator.writeStartObject();
 			generator.write("need-authentication", false);

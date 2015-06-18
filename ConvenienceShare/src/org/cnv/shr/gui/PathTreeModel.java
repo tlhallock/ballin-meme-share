@@ -25,6 +25,8 @@
 
 package org.cnv.shr.gui;
 
+import java.awt.Color;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -51,15 +53,16 @@ import org.cnv.shr.sync.RemoteFileSource;
 import org.cnv.shr.sync.RemoteSynchronizer;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.sync.RootSynchronizer;
+import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
 import org.cnv.shr.sync.SynchronizationTask;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
 
 
-public class PathTreeModel implements TreeModel
+public class PathTreeModel implements TreeModel, Closeable, SynchronizationListener
 {
-        private MachineViewer viewer;
+  private MachineViewer viewer;
     
 	LinkedList<TreeModelListener> listeners = new LinkedList<>();
 	RootDirectory rootDirectory;
@@ -75,33 +78,38 @@ public class PathTreeModel implements TreeModel
     this.viewer = viewer;
 	}
 	
-	void closeConnections()
+	public void close()
 	{
 		if (synchronizer != null)
 		{
-			synchronizer.quit();
+			try
+			{
+				synchronizer.quit();
+			}
+			catch (Exception e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to quit synchronizer", e);
+			}
 		}
 		iterator = null;
 		rootSource = null;
 		synchronizer = null;
+	}
+
+	public void resetRoot()
+	{
+		setRoot(rootDirectory);
 	}
 	
 	public void setRoot(final RootDirectory newRoot)
 	{
 		final PathTreeModelNode oldroot = this.root;
 		this.rootDirectory = newRoot;
-		closeConnections();
+		close();
 		
 		startRemoteSynchronizer(newRoot);
 		this.root = new PathTreeModelNode(null, this, DbPaths.ROOT, false);
-		try
-		{
-				iterator.queueSyncTask(rootSource, DbPaths.ROOT, this.root);
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to create remote synchronizer", e);
-		}
+		iterator.queueSyncTask(rootSource, DbPaths.ROOT, this.root);
 		
 		Services.userThreads.execute(synchronizer);
 		this.root.expand();
@@ -118,7 +126,7 @@ public class PathTreeModel implements TreeModel
 			iterator = new ExplorerSyncIterator(rootDirectory);
 			if (rootDirectory.isLocal())
 			{
-        viewer.setSyncStatus("Browsing local files.");
+        viewer.setSyncStatus(Color.GREEN, Color.BLACK, "Browsing local files.");
 				rootSource = new FileFileSource(new File(
 						rootDirectory.getPathElement().getFsPath()),
 						DbRoots.getIgnores((LocalDirectory) newRoot));
@@ -127,19 +135,19 @@ public class PathTreeModel implements TreeModel
 			}
 			else
 			{
-        viewer.setSyncStatus("Connecting...");
+        viewer.setSyncStatus(Color.YELLOW, Color.BLACK, "Connecting...");
 				final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer((RemoteDirectory) rootDirectory);
 				rootSource = new RemoteFileSource((RemoteDirectory) rootDirectory, createRemoteSynchronizer);
 				iterator.setCloseable(createRemoteSynchronizer);
 				synchronizer = new RemoteSynchronizer((RemoteDirectory) rootDirectory, iterator);
-        viewer.setSyncStatus("Connected to remote.");
+				synchronizer.addListener(this);
+        viewer.setSyncStatus(Color.GREEN, Color.BLACK, "Connected to remote.");
 			}
-                        
 		}
 		catch (final IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to create remote synchronizer", e);
-			closeConnections();
+			close();
 			setToNullSynchronizers(newRoot);
 		}
 	}
@@ -147,7 +155,7 @@ public class PathTreeModel implements TreeModel
 	@Override
 	public void finalize()
 	{
-		closeConnections();
+		close();
 	}
 	
 	@Override
@@ -279,14 +287,13 @@ public class PathTreeModel implements TreeModel
 
 	private void setToNullSynchronizers(final RootDirectory newRoot)
 	{
-		viewer.setSyncStatus("Not connected, browsing cache.");
+		viewer.setSyncStatus(Color.RED, Color.WHITE, "Not connected, browsing cache.");
 		iterator = new ExplorerSyncIterator(newRoot) {
 			@Override
 			public SynchronizationTask next()
 			{ throw new RuntimeException("Don't call this."); }
 			@Override
-			public SynchronizationTask queueSyncTask(final FileSource file, final PathElement dbDir, final TaskListener listener) throws IOException
-			{ return null; }
+			public void queueSyncTask(final FileSource file, final PathElement dbDir, final TaskListener listener) {}
 			@Override
 			public void close() throws IOException {}
 		};
@@ -320,5 +327,19 @@ public class PathTreeModel implements TreeModel
 			@Override
 			protected boolean updateFile(SharedFile file) {return false;}
 		};
+	}
+
+	@Override
+	public void beganDirectory(String str) {}
+	@Override
+	public void fileAdded(SharedFile f) {}
+	@Override
+	public void fileRemoved(SharedFile f) {}
+	@Override
+	public void fileUpdated(SharedFile f) {}
+	@Override
+	public void syncDone()
+	{
+		viewer.setSyncStatus(Color.RED, Color.WHITE, "Connection closed.");
 	}
 }

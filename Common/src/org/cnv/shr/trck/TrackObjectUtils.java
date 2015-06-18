@@ -44,19 +44,30 @@ import org.cnv.shr.util.LogWrapper;
 public class TrackObjectUtils
 {
   private static final Charset UTF_8 = Charset.forName("UTF-8");
-	private static final JsonGeneratorFactory generatorFactory = createGeneratorFactory();
-	private static JsonGeneratorFactory createGeneratorFactory()
+	private static final JsonGeneratorFactory generatorFactory = createGeneratorFactory(false);
+	private static final JsonGeneratorFactory prettyGeneratorFactory = createGeneratorFactory(true);
+	private static JsonGeneratorFactory createGeneratorFactory(boolean prettyPrinting)
 	{
     Map<String, Object> properties = new HashMap<>(1);
-//    properties.put(JsonGenerator.PRETTY_PRINTING, true);
+    if (prettyPrinting)
+    {
+    	properties.put(JsonGenerator.PRETTY_PRINTING, true);
+    }
 		return Json.createGeneratorFactory(properties);
 	}
 	private static final JsonParserFactory parserFactory = Json.createParserFactory(null);
 	
 	public static JsonGenerator createGenerator(OutputStream output)
 	{
+		return createGenerator(output, false);
+	}
+	public static JsonGenerator createGenerator(OutputStream output, boolean prettyPrinting)
+	{
+		if (prettyPrinting)
+		{
+			return prettyGeneratorFactory.createGenerator(output, UTF_8);
+		}
 		return generatorFactory.createGenerator(output, UTF_8);
-		
 	}
 	public static JsonParser createParser(InputStream input)
 	{
@@ -90,8 +101,7 @@ public class TrackObjectUtils
 
 	public static JsonParser openArray(InputStream input) throws JsonException
 	{
-		JsonParser parser = parserFactory.createParser(input);
-		return openArray(parser);
+		return openArray(parserFactory.createParser(input));
 	}
 
 	public static JsonParser openArray(JsonParser parser)
@@ -125,11 +135,13 @@ public class TrackObjectUtils
 	
 	public static void debug(InputStream input)
 	{
-		JsonParser openArray = openArray(input);
-		MachineEntry entry = new MachineEntry();
-		while (next(openArray, entry))
+		try (JsonParser openArray = openArray(input);)
 		{
-			System.out.println(entry);
+			MachineEntry entry = new MachineEntry();
+			while (next(openArray, entry))
+			{
+				System.out.println(entry);
+			}
 		}
 	}
 	

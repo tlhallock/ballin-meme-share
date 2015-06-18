@@ -25,16 +25,28 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.security.PublicKey;
 import java.sql.SQLException;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.DbIterator;
+import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.json.JsonStringList;
+import org.cnv.shr.json.JsonStringMap;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.mdl.RemoteDirectory;
+import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 
 public class MachineBackup implements Jsonable
@@ -47,6 +59,8 @@ public class MachineBackup implements Jsonable
 	private boolean allowsMessages;
 	private SharingState weShareToThem;
 	private SharingState sharesWithUs;
+	private JsonStringList keys = new JsonStringList();
+	private JsonStringMap roots = new JsonStringMap();
 	
 	
 	public MachineBackup(Machine machine)
@@ -59,6 +73,20 @@ public class MachineBackup implements Jsonable
 		this.allowsMessages = machine.getAllowsMessages();
 		this.weShareToThem = machine.sharingWithOther();
 		this.sharesWithUs = machine.getSharesWithUs();
+		
+		for (PublicKey publicKey : DbKeys.getKeys(machine))
+		{
+			keys.add(KeyPairObject.serialize(publicKey));
+		}
+		
+		try (DbIterator<RootDirectory> iterator = DbRoots.list(machine))
+		{
+			while (iterator.hasNext())
+			{
+				RootDirectory next = iterator.next();
+				roots.put(next.getName(), next.getPathElement().getFullPath());
+			}
+		}
 	}
 	
 	public void save(ConnectionWrapper wrapper)
@@ -81,6 +109,33 @@ public class MachineBackup implements Jsonable
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to restore machine: " + identifier, e);
 		}
+		
+		for (String key : keys)
+		{
+			DbKeys.addKey(machine, KeyPairObject.deSerializePublicKey(key));
+		}
+		
+		for (Entry<String, String> entry : roots.entrySet())
+		{
+			String dirName = entry.getKey();
+			String path = entry.getValue();
+			RemoteDirectory root = (RemoteDirectory) DbRoots.getRoot(machine, dirName);
+			if (root == null)
+			{
+				root = new RemoteDirectory(machine, dirName, null, null, SharingState.DO_NOT_SHARE);
+			}
+			PathElement pathElement = DbPaths.getPathElement(path);
+			root.setLocalMirror(pathElement);
+			DbPaths.pathLiesIn(pathElement, root);
+			try
+			{
+				root.save(wrapper);
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to save root directory: " + dirName, e);
+			}
+		}
 	}
 	
 	
@@ -100,19 +155,29 @@ public class MachineBackup implements Jsonable
 		generator.write("allowsMessages", allowsMessages);
 		generator.write("weShareToThem",weShareToThem.name());
 		generator.write("sharesWithUs",sharesWithUs.name());
+		{
+			generator.writeStartArray("keys");
+			keys.generate(generator);
+		}
+		{
+			generator.writeStartObject("roots");
+			roots.generate(generator);
+		}
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsallowsMessages = true;
-		boolean needsport = true;
-		boolean needsnports = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsidentifier = true;
 		boolean needsweShareToThem = true;
 		boolean needssharesWithUs = true;
+		boolean needskeys = true;
+		boolean needsroots = true;
+		boolean needsport = true;
+		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -125,14 +190,6 @@ public class MachineBackup implements Jsonable
 				if (needsallowsMessages)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
-				}
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsnports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
 				}
 				if (needsip)
 				{
@@ -154,6 +211,22 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
 				}
+				if (needskeys)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
+				}
+				if (needsroots)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
+				}
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
@@ -170,19 +243,6 @@ public class MachineBackup implements Jsonable
 			if (key.equals("allowsMessages")) {
 				needsallowsMessages = false;
 				allowsMessages = true;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
-				break;
 			}
 			break;
 		case VALUE_STRING:
@@ -202,11 +262,38 @@ public class MachineBackup implements Jsonable
 				break;
 			case "weShareToThem":
 				needsweShareToThem = false;
-				weShareToThem = SharingState.valueOf(parser.getString());;
+				weShareToThem = SharingState.valueOf(parser.getString());
 				break;
 			case "sharesWithUs":
 				needssharesWithUs = false;
-				sharesWithUs = SharingState.valueOf(parser.getString());;
+				sharesWithUs = SharingState.valueOf(parser.getString());
+				break;
+			}
+			break;
+		case START_ARRAY:
+			if (key==null) break;
+			if (key.equals("keys")) {
+				needskeys = false;
+				keys.parse(parser);
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("roots")) {
+				needsroots = false;
+				roots.parse(parser);
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+				break;
+			case "nports":
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;

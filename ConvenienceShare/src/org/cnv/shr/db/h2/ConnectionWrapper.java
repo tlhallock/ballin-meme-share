@@ -40,7 +40,7 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 	private StatementWrapper[] statements = new StatementWrapper[NUM_STATEMENTS];
 	
 	private Connection connection;
-	private boolean inUse;
+	private int inUse;
 	
 	public ConnectionWrapper(Connection connection)
 	{
@@ -49,13 +49,13 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 
 	public void setInUse()
 	{
-		inUse = true;
+		inUse++;
 	}
 
 	@Override
 	public void run()
 	{
-		if (inUse)
+		if (inUse > 0)
 		{
 			return;
 		}
@@ -92,7 +92,7 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 	@Override
 	public void close() throws SQLException
 	{
-		inUse = false;
+		inUse--;
 	}
 
 	public StatementWrapper prepareStatement(QueryWrapper wrapper) throws SQLException

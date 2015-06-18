@@ -132,7 +132,7 @@ public abstract class TrackerConnection implements Closeable
 		generator.flush();
 	}
 
-	protected abstract void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey);
+	protected abstract void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey) throws IOException;
 
 	private boolean getNeedsAuthentication() throws IOException
 	{

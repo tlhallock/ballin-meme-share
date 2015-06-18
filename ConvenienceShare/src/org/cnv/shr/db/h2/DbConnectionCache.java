@@ -33,6 +33,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Arguments;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -40,13 +41,13 @@ public class DbConnectionCache extends TimerTask
 {
 	private HashMap<Long, ConnectionWrapper> connections = new HashMap<>();
 
-	public DbConnectionCache(boolean fresh) throws SQLException, IOException, ClassNotFoundException
+	public DbConnectionCache(Arguments args) throws SQLException, IOException, ClassNotFoundException
 	{
 		Class.forName("org.h2.Driver");
 		
 		try (ConnectionWrapper c = getThreadConnection();)
 		{
-			if (fresh)
+			if (args.deleteDb)
 			{
 				LogWrapper.getLogger().info("Deleting database.");
 				DbTables.deleteDb(c);

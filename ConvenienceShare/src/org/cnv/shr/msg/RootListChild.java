@@ -141,7 +141,7 @@ public class RootListChild implements Jsonable
 				break;
 			case "state":
 				needsstate = false;
-				state = SharingState.valueOf(parser.getString());;
+				state = SharingState.valueOf(parser.getString());
 				break;
 			}
 			break;

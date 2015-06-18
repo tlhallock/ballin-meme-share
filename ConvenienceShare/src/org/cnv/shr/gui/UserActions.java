@@ -32,6 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
+import javax.json.JsonException;
+
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbIterator;
@@ -49,7 +51,6 @@ import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.FindMachines;
 import org.cnv.shr.msg.ListRoots;
-import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
 import org.cnv.shr.util.LogWrapper;
 
@@ -110,9 +111,6 @@ public class UserActions
 						}
 					}
 					
-					openConnection.send(new MachineFound());
-					openConnection.send(new FindMachines());
-
 					openConnection.finish();
 					
 					if (params.open)
@@ -152,7 +150,7 @@ public class UserActions
 					openConnection.finish();
 					Services.notifications.remoteChanged(openConnection.getMachine());
 				}
-				catch (IOException e)
+				catch (IOException | JsonException e)
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Unable to sync roots with " + url, e);
 				}
@@ -169,7 +167,7 @@ public class UserActions
 			{
 				try
 				{
-                                    LogWrapper.getLogger().info("Requesting peers from " + m.getName());
+					LogWrapper.getLogger().info("Requesting peers from " + m.getName());
 					Communication openConnection = Services.networkManager.openConnection(m, false);
 					if (openConnection == null)
 					{
@@ -194,17 +192,19 @@ public class UserActions
 			public void run()
 			{
 				LinkedList<LocalDirectory> locals = new LinkedList<>();
-				final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
-				while (listLocals.hasNext())
+				try (final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
 				{
-					locals.add(listLocals.next());
+					while (listLocals.hasNext())
+					{
+						locals.add(listLocals.next());
+					}
+					for (LocalDirectory local : locals)
+					{
+						userSync(local, null);
+					}
+					// Services.db.removeUnusedPaths();
+					Services.notifications.localsChanged();
 				}
-				for (LocalDirectory local : locals)
-				{
-					userSync(local, null);
-				}
-				// Services.db.removeUnusedPaths();
-				Services.notifications.localsChanged();
 			}
 		});
 	}

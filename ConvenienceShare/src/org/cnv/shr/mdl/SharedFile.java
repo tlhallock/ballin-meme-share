@@ -33,6 +33,7 @@ import java.sql.Statement;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
+import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbTables;
@@ -164,6 +165,11 @@ public abstract class SharedFile extends DbObject<Integer>
 					return true;
 				}
 				// maybe no key was generated...
+
+				if (id == null)
+				{
+					id = DbFiles.getFile(rootDirectory, path).getId();
+				}
 				return true;
 			}
 		}

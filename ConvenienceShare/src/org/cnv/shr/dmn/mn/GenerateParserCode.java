@@ -453,7 +453,7 @@ public class GenerateParserCode
 		case "org.cnv.shr.trck.FileEntry":
 			return " = new FileEntry(parser)";
 		case "org.cnv.shr.db.h2.SharingState":
-			return " = SharingState.valueOf(parser.getString());";
+			return " = SharingState.valueOf(parser.getString())";
 		case "org.cnv.shr.dmn.dwn.SharedFileId":
 			return " = new SharedFileId(parser)";
 		case "org.cnv.shr.dmn.dwn.Chunk":

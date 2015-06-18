@@ -65,7 +65,7 @@ public class ShowApplication extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		InetSocketAddress remoteAddress = (InetSocketAddress) connection.getSocket().getRemoteSocketAddress();
+		InetSocketAddress remoteAddress = (InetSocketAddress) connection.getRemoteSocketAddress();
 		String hostAddress = remoteAddress.getAddress().getHostAddress();
 		HashSet<String> collectIps = Misc.collectIps();
 		

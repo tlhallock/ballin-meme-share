@@ -184,7 +184,7 @@ public class KeysService
 		return returnValue;
 	}
 	
-	public byte[] encrypt(PublicKey pKey, byte[] original)
+	public byte[] encrypt(PublicKey pKey, byte[] original) throws IOException
 	{
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		try (InputStream input = new ByteArrayInputStream(original))
@@ -201,20 +201,15 @@ public class KeysService
 
 			return output.toByteArray();
 		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to encrypt.", e);
-			return new byte[0];
-		}
 	}
 
-	public byte[] decrypt(PublicKey pKey, byte[] encrypted)
+	public byte[] decrypt(PublicKey pKey, byte[] encrypted) throws IOException
 	{
 		if (pKey == null) return new byte[0];
 		return decrypt(getPrivateKey(pKey), encrypted);
 	}
 
-	public byte[] decrypt(PrivateKey privateKey, byte[] encrypted)
+	public byte[] decrypt(PrivateKey privateKey, byte[] encrypted) throws IOException
 	{
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		if (privateKey == null) return new byte[0];
@@ -227,14 +222,10 @@ public class KeysService
 				output.write(decryptChunk(privateKey, encryptedChunk));
 			}
 		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to decrypt", e);
-		}
 		return output.toByteArray();
 	}
 
-	public byte[] encryptChunk(PublicKey pKey, byte[] original)
+	public byte[] encryptChunk(PublicKey pKey, byte[] original) throws IOException
 	{
 		try
 		{
@@ -260,12 +251,6 @@ public class KeysService
 
 			return byteArray;
 		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "WTH?", e);
-			System.exit(-1);
-			return new byte[0];
-		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Quiting:", e);
@@ -274,7 +259,7 @@ public class KeysService
 		}
 	}
 
-	public byte[] decryptChunk(PrivateKey privateKey, byte[] encrypted)
+	public byte[] decryptChunk(PrivateKey privateKey, byte[] encrypted) throws IOException
 	{
 		try
 		{
@@ -285,10 +270,6 @@ public class KeysService
 			try (ByteArrayInputStream input = new ByteArrayInputStream(encrypted, 0, encrypted.length);)
 			{
 				Misc.copy(new CipherInputStream(input, cipher2), output);
-			}
-			catch (IOException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to copy stream", e);
 			}
 			byte[] bytes = output.toByteArray();
 

@@ -27,7 +27,6 @@ package org.cnv.shr.track;
 
 import java.io.Closeable;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -486,7 +485,7 @@ public class TrackerStore implements Closeable
 	public static Connection createConnection() throws SQLException
 	{
 //		return DriverManager.getConnection("jdbc:h2:" + Paths.get("tracker_store").toAbsolutePath(), "sa", "");
-		Path path = Paths.get("..", "instances", "tracker", "tracker_store");
+		Path path = Track.rootDirectory.resolve("tracker_store");
 		Misc.ensureDirectory(path, true);
 		return DriverManager.getConnection("jdbc:h2:" + path.toAbsolutePath(), "sa", "");
 	}

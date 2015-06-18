@@ -34,7 +34,7 @@ public abstract class SyncrhonizationTaskIterator implements Closeable
 	// A little bit ugly, but I think this is the best spot for the closeable.
 	protected Closeable connection;
 	
-	public abstract SynchronizationTask next();
+	public abstract SynchronizationTask next() throws IOException, InterruptedException;
 
 	public void setCloseable(final Closeable closeable)
 	{

@@ -28,7 +28,6 @@ package org.cnv.shr.dmn.not;
 import java.awt.Window;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -322,17 +321,6 @@ public class Notifications implements WindowFocusListener
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.connectionClosed(c);
-				}
-				try
-				{
-					if (!c.getSocket().isClosed())
-					{
-						c.getSocket().close();
-					}
-				}
-				catch (final IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to close socket.", e);
 				}
 			}
 		});

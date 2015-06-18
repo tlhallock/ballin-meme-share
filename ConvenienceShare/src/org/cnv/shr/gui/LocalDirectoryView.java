@@ -91,13 +91,15 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		permissions.clear();
 		sharePanel.removeAll();
 		sharePanel.setLayout(new GridLayout(0, 1));
-		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
-		while (listRemoteMachines.hasNext())
+		try (DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();)
 		{
-			Machine machine = listRemoteMachines.next();
-			LocalSharePermission permission = new LocalSharePermission(machine, root);
-			sharePanel.add(permission);
-			permissions.add(permission);
+			while (listRemoteMachines.hasNext())
+			{
+				Machine machine = listRemoteMachines.next();
+				LocalSharePermission permission = new LocalSharePermission(machine, root);
+				sharePanel.add(permission);
+				permissions.add(permission);
+			}
 		}
 		
 		jComboBox1.setSelectedItem(root.getDefaultSharingState().humanReadable());

@@ -160,9 +160,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 	{
 		LogWrapper.getLogger().info("Synchronizing " + getPathElement().getFullPath());
 
-		try
+		try (RootSynchronizer localSynchronizer = createSynchronizer())
 		{
-			final RootSynchronizer localSynchronizer = createSynchronizer();
 			if (!startSynchronizing(this, localSynchronizer))
 			{
 				return;
@@ -193,9 +192,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 		finally
 		{
 			stopSynchronizing(this);
+			sendNotifications();
 		}
-		
-		sendNotifications();
 	}
 
 	public void setStats()
@@ -273,7 +271,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	}
 
 	public abstract boolean pathIsSecure(Path canonicalPath);
-	protected abstract RootSynchronizer createSynchronizer() throws IOException;
+	protected abstract RootSynchronizer createSynchronizer() throws IOException, InterruptedException;
 	protected abstract void sendNotifications();
 	
 	

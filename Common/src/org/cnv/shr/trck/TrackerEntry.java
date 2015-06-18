@@ -125,14 +125,18 @@ public class TrackerEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsurl = true;
 		boolean needsbegin = true;
 		boolean needsend = true;
-		boolean needsurl = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsurl)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs url");
+				}
 				if (needsbegin)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs begin");
@@ -140,10 +144,6 @@ public class TrackerEntry extends TrackObject
 				if (needsend)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs end");
-				}
-				if (needsurl)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs url");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -161,6 +161,13 @@ public class TrackerEntry extends TrackObject
 				sync = true;
 			}
 			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("url")) {
+				needsurl = false;
+				url = parser.getString();
+			}
+			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -172,13 +179,6 @@ public class TrackerEntry extends TrackObject
 				needsend = false;
 				end = Integer.parseInt(parser.getString());
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("url")) {
-				needsurl = false;
-				url = parser.getString();
 			}
 			break;
 			default: break;

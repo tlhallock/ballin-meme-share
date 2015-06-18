@@ -61,7 +61,7 @@ public class RemoteDirectory extends RootDirectory
 	public RemoteDirectory(final int int1)
 	{
 		super(int1);
-		// just for now...   
+		// just for now...
 		DbPaths.pathLiesIn(DbPaths.ROOT, this);
 	}
 
@@ -99,7 +99,7 @@ public class RemoteDirectory extends RootDirectory
 	}
 
 	@Override
-	protected RootSynchronizer createSynchronizer() throws IOException
+	protected RootSynchronizer createSynchronizer() throws IOException, InterruptedException
 	{
 		final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer(this);
 		final RemoteFileSource source = new RemoteFileSource(this, createRemoteSynchronizer);
@@ -134,5 +134,10 @@ public class RemoteDirectory extends RootDirectory
 	protected SharingState getDbSharing()
 	{
 		return sharesWithUs;
+	}
+
+	public void setLocalMirror(PathElement pathElement)
+	{
+		this.path = pathElement;
 	}
 }

@@ -44,7 +44,7 @@ import org.cnv.shr.util.LogWrapper;
 
 public class ConnectionManager
 {
-	List<ConnectionRunnable> runnables = new LinkedList<>();
+	private List<ConnectionRunnable> connectionRunnables = new LinkedList<>();
 	
 	public Communication openConnection(String url, boolean acceptKeys) throws UnknownHostException, IOException
 	{
@@ -61,25 +61,50 @@ public class ConnectionManager
 		return openConnection(m.getIp(), m.getPort(), m.getNumberOfPorts(), DbKeys.getKey(m), acceptKeys);
 	}
 	
-	private Communication openConnection(String ip, 
+	private static Communication openConnection(String ip, 
 			int portBegin,
 			int numPorts,
 			final PublicKey remoteKey, 
 			boolean acceptAnyKeys) throws UnknownHostException, IOException
 	{
 		Authenticator authentication = new Authenticator(acceptAnyKeys, remoteKey, Services.keyManager.getPublicKey());
-		Communication connection = connect(authentication, ip, portBegin, portBegin + Math.min(50, numPorts));
-		if (connection == null)
+		class TmpObject
 		{
+			Communication connection;
+		}
+		TmpObject o = new TmpObject();
+		
+		Services.connectionThreads.execute(new Runnable()
+		{
+			public void run()
+			{
+				try (Communication connection = connect(authentication, ip, portBegin, portBegin + Math.min(50, numPorts));)
+				{
+					o.connection = connection;
+					if (connection == null)
+					{
+						return;
+					}
+					connection.send(new WhoIAm());
+					connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
+					ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
+					connectionRunnable.run();
+				}
+				catch (Exception e)
+				{
+					LogWrapper.getLogger().info("Unable to open connection: " + e.getMessage());
+				}
+			}
+		});
+		try
+		{
+			return authentication.waitForAuthentication() ? o.connection : null;
+		}
+		catch (IOException ex)
+		{
+			LogWrapper.getLogger().info("Unable to wait for connection: " + ex.getMessage());
 			return null;
 		}
-		connection.send(new WhoIAm());
-		connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
-		Services.notifications.connectionOpened(connection);
-		ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
-		synchronized (runnables) { runnables.add(connectionRunnable); }
-		Services.connectionThreads.execute(connectionRunnable);
-		return authentication.waitForAuthentication() ? connection : null;
 	}
 	
 	private static Communication connect(Authenticator authentication, String ip, int portBegin, int portEnd) throws UnknownHostException, IOException
@@ -107,36 +132,43 @@ public class ConnectionManager
 	public void handleConnection(Socket accepted) throws IOException
 	{
 		Authenticator authentication = new Authenticator();
-		Communication connection = new Communication(authentication, accepted);
-		connection.send(new WhoIAm());
-		Services.notifications.connectionOpened(connection);
-		try
+		try (Communication connection = new Communication(authentication, accepted);)
 		{
+			connection.send(new WhoIAm());
 			ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
-			synchronized (runnables)
-			{
-				runnables.add(connectionRunnable);
-			}
 			connectionRunnable.run();
-		}
-		finally
-		{
-			Services.notifications.connectionClosed(connection);
 		}
 	}
 	
 	public void closeAll()
 	{
-		synchronized (runnables) {
-			for (ConnectionRunnable r : runnables)
-				r.die();
+		synchronized (connectionRunnables)
+		{
+			for (ConnectionRunnable r : connectionRunnables)
+			{
+				r.cleanup(true);
+			}
 		}
 	}
-	
+
+	void add(ConnectionRunnable connectionRunnable)
+	{
+		synchronized (connectionRunnables)
+		{
+			if (connectionRunnables.add(connectionRunnable))
+			{
+				Services.notifications.connectionOpened(connectionRunnable.connection);
+			}
+		}
+	}
 	void remove(ConnectionRunnable connectionRunnable)
 	{
-		synchronized (runnables) {
-			runnables.remove(connectionRunnable);
+		synchronized (connectionRunnables)
+		{
+			if (connectionRunnables.remove(connectionRunnable))
+			{
+				Services.notifications.connectionClosed(connectionRunnable.connection);
+			}
 		}
 	}
 }

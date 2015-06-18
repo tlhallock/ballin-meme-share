@@ -51,6 +51,7 @@ import javax.swing.ImageIcon;
 import org.cnv.shr.cnctn.ConnectionManager;
 import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.bak.DbBackupRestore;
 import org.cnv.shr.dmn.dwn.DownloadManager;
 import org.cnv.shr.dmn.dwn.ServeManager;
 import org.cnv.shr.dmn.mn.Arguments;
@@ -112,8 +113,12 @@ public class Services
 			}
 		});
 		
-		createServices(args.settings);
 		testStartUp();
+		createServices(args.settings);
+		if (args.restoreFile != null)
+		{
+			DbBackupRestore.restoreDatabase(null, args.restoreFile);
+		}
 		checkIfUpdateManagerIsRunning(args);
 		startServices();
 		
@@ -376,7 +381,7 @@ public class Services
 
 		try
 		{
-			h2DbCache = new DbConnectionCache(args.deleteDb);
+			h2DbCache = new DbConnectionCache(args);
 		}
 		catch (Exception e)
 		{

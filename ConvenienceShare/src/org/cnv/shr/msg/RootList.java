@@ -54,10 +54,12 @@ public class RootList extends Message
 
 	public RootList()
 	{
-		DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
-		while (listLocals.hasNext())
+		try (DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
 		{
-			add(listLocals.next());
+			while (listLocals.hasNext())
+			{
+				add(listLocals.next());
+			}
 		}
 	}
 	
@@ -88,17 +90,19 @@ public class RootList extends Message
 		}
 
 		List<RootDirectory> toDelete = new LinkedList<>();
-		DbIterator<RootDirectory> list = DbRoots.list(machine);
-		while (list.hasNext())
+		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
 		{
-			final RootDirectory next = list.next();
-			if (accountedFor.contains(next.getName()))
+			while (list.hasNext())
 			{
-				continue;
+				final RootDirectory next = list.next();
+				if (accountedFor.contains(next.getName()))
+				{
+					continue;
+				}
+				toDelete.add(next);
+				DbRoots.deleteRoot(next);
+				changed = true;
 			}
-			toDelete.add(next);
-			DbRoots.deleteRoot(next);
-			changed = true;
 		}
 		
 		for (RootDirectory root : toDelete)

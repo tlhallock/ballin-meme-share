@@ -45,9 +45,6 @@ import org.cnv.shr.util.LogWrapper;
 
 public class RemoteSynchronizerQueue implements Closeable
 {
-	private static final int MAXIMUM_ERROR_COUNT = 100;
-	private int errorCount = 0;
-	
 	private long MAX_TIME_TO_WAIT = 2 * 60 * 1000;
 	private long lastCommunication;
 	
@@ -65,7 +62,7 @@ public class RemoteSynchronizerQueue implements Closeable
 		this.root = root;
 	}
 	
-	private PathList waitForDirectory(final String path)
+	private PathList waitForDirectory(final String path) throws IOException, InterruptedException
 	{
 		for (;;)
 		{
@@ -74,10 +71,6 @@ public class RemoteSynchronizerQueue implements Closeable
 			{
 				directories.remove(path);
 				return directoryList;
-			}
-			if (errorCount > MAXIMUM_ERROR_COUNT)
-			{
-				return null;
 			}
 			try
 			{
@@ -88,23 +81,22 @@ public class RemoteSynchronizerQueue implements Closeable
 				// TODO: Make sure this is handled well...
 				LogWrapper.getLogger().log(Level.INFO, "Interrupted.", e);
 				communication.close();
-				return null;
+				throw e;
 			}
 			if (communication.isClosed() || System.currentTimeMillis() - lastCommunication > MAX_TIME_TO_WAIT)
 			{
-				errorCount++;
-				return null;
+				throw new IOException("connection closed.");
 			}
 		}
 	}
 	
-	PathList getDirectoryList(final PathElement pathElement)
+	PathList getDirectoryList(final PathElement pathElement) throws IOException, InterruptedException
 	{
 		final String path = pathElement.getFullPath();
 
 		if (communication.isClosed())
 		{
-			return null;
+			throw new IOException("connection closed.");
 		}
 		lock.lock();
 		try

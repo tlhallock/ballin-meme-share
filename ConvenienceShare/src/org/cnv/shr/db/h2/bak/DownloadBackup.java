@@ -118,7 +118,18 @@ public class DownloadBackup implements Jsonable
 			return;
 		}
 
-		Download download = new Download(remoteFile, added, priority, chunkSize);
+//		if (remoteFile.getId() == null)
+//		{
+//			remoteFile.setId(DbFiles.getFile(checksum, fileSize).getId());
+//		}
+
+		DownloadState state = DownloadState.valueOf(currentDownloadState);
+		if (state == null)
+		{
+			LogWrapper.getLogger().info("Unkown download state: " + currentDownloadState);
+			return;
+		}
+		Download download = new Download(remoteFile, added, priority, chunkSize, state);
 		
 		try
 		{
@@ -128,14 +139,6 @@ public class DownloadBackup implements Jsonable
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to save download " + this, e);
 		}
-		
-		DownloadState state = DownloadState.valueOf(currentDownloadState);
-		if (state == null)
-		{
-			LogWrapper.getLogger().info("Unkown download state: " + currentDownloadState);
-			return;
-		}
-		download.setState(state); // This already tries to save the download...
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -162,41 +165,21 @@ public class DownloadBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsfileSize = true;
-		boolean needslastModified = true;
-		boolean needsadded = true;
-		boolean needspriority = true;
-		boolean needschunkSize = true;
 		boolean needsremoteMachine = true;
 		boolean needsremoteDirectory = true;
 		boolean needsremotePath = true;
 		boolean needschecksum = true;
 		boolean needscurrentDownloadState = true;
+		boolean needsfileSize = true;
+		boolean needslastModified = true;
+		boolean needsadded = true;
+		boolean needspriority = true;
+		boolean needschunkSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsfileSize)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
-				}
-				if (needslastModified)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
-				}
-				if (needsadded)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs added");
-				}
-				if (needspriority)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs priority");
-				}
-				if (needschunkSize)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
-				}
 				if (needsremoteMachine)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteMachine");
@@ -217,35 +200,30 @@ public class DownloadBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentDownloadState");
 				}
+				if (needsfileSize)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+				}
+				if (needslastModified)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
+				}
+				if (needsadded)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs added");
+				}
+				if (needspriority)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs priority");
+				}
+				if (needschunkSize)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "fileSize":
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
-				break;
-			case "lastModified":
-				needslastModified = false;
-				lastModified = Long.parseLong(parser.getString());
-				break;
-			case "added":
-				needsadded = false;
-				added = Long.parseLong(parser.getString());
-				break;
-			case "priority":
-				needspriority = false;
-				priority = Integer.parseInt(parser.getString());
-				break;
-			case "chunkSize":
-				needschunkSize = false;
-				chunkSize = Long.parseLong(parser.getString());
-				break;
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -271,6 +249,31 @@ public class DownloadBackup implements Jsonable
 			case "currentDownloadState":
 				needscurrentDownloadState = false;
 				currentDownloadState = parser.getString();
+				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "fileSize":
+				needsfileSize = false;
+				fileSize = Long.parseLong(parser.getString());
+				break;
+			case "lastModified":
+				needslastModified = false;
+				lastModified = Long.parseLong(parser.getString());
+				break;
+			case "added":
+				needsadded = false;
+				added = Long.parseLong(parser.getString());
+				break;
+			case "priority":
+				needspriority = false;
+				priority = Integer.parseInt(parser.getString());
+				break;
+			case "chunkSize":
+				needschunkSize = false;
+				chunkSize = Long.parseLong(parser.getString());
 				break;
 			}
 			break;

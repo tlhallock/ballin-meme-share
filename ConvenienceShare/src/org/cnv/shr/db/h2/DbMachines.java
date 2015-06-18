@@ -172,7 +172,11 @@ public class DbMachines
 		machine.setName(name);
 		machine.setNumberOfPorts(nports);
 
-		machine.tryToSave();
+		if (!machine.tryToSave())
+		{
+			LogWrapper.getLogger().info("Unable to save new machine. This is possibly because the machine changed identifier.");
+			throw new RuntimeException("Unable to save new machine.");
+		}
 		// Is the first of these two really necessary?
 		Services.notifications.remoteChanged(machine);
 		Services.notifications.remotesChanged();
@@ -185,10 +189,12 @@ public class DbMachines
 	public static long getTotalNumFiles(Machine machine)
 	{
 		long returnValue = 0;
-		DbIterator<RootDirectory> list = DbRoots.list(machine);
-		while (list.hasNext())
+		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
 		{
-			returnValue += list.next().numFiles();
+			while (list.hasNext())
+			{
+				returnValue += list.next().numFiles();
+			}
 		}
 		return returnValue;
 	}
@@ -196,10 +202,12 @@ public class DbMachines
 	public static long getTotalDiskspace(Machine machine)
 	{
 		long returnValue = 0;
-		DbIterator<RootDirectory> list = DbRoots.list(machine);
-		while (list.hasNext())
+		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
 		{
-			returnValue += list.next().diskSpace();
+			while (list.hasNext())
+			{
+				returnValue += list.next().diskSpace();
+			}
 		}
 		return returnValue;
 	}

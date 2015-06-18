@@ -59,7 +59,7 @@ private OutputStream logFile;
   properties.put(JsonGenerator.PRETTY_PRINTING, true);
 	try
 	{
-		logFile = Files.newOutputStream(Paths.get("log.in" + System.currentTimeMillis() + "." + Math.random() + ".txt"));
+		logFile = Files.newOutputStream(Paths.get("log.in." + System.currentTimeMillis() + "." + Math.random() + ".txt"));
 	}
 	catch (IOException e)
 	{

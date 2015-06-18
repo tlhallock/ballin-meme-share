@@ -111,6 +111,10 @@ public class KeyPairObject
 	// I wish these serializable objects were serializable.
 	public static void serialize(RSAPublicKey publicKey, PrintStream ps)
 	{
+		if (publicKey == null)
+		{
+			return;
+		}
 		ps.print(Misc.format( publicKey.getN().toByteArray()) + " ");
 		ps.print(Misc.format( publicKey.getE().toByteArray()) + " ");
 	}

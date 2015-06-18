@@ -64,16 +64,18 @@ public class FindMachines extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		connection.send(new MachineFound());
-		DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();
-		while (listRemoteMachines.hasNext())
+		try (DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();)
 		{
-			MachineFound m = new MachineFound(listRemoteMachines.next());
-			if (m.equals(connection.getMachine()))
+			while (listRemoteMachines.hasNext())
 			{
-				continue;
+				MachineFound m = new MachineFound(listRemoteMachines.next());
+				if (m.equals(connection.getMachine()))
+				{
+					continue;
+				}
+				
+				connection.send(m);
 			}
-			
-			connection.send(m);
 		}
 	}
 	

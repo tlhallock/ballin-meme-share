@@ -89,19 +89,15 @@ public class MessageBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssent = true;
 		boolean needsmachine = true;
 		boolean needsmessageType = true;
 		boolean needsmessage = true;
+		boolean needssent = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssent)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sent");
-				}
 				if (needsmachine)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machine");
@@ -114,17 +110,14 @@ public class MessageBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
 				}
+				if (needssent)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sent");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("sent")) {
-				needssent = false;
-				sent = Long.parseLong(parser.getString());
-			}
-			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -140,6 +133,13 @@ public class MessageBackup implements Jsonable
 				needsmessage = false;
 				message = parser.getString();
 				break;
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			if (key.equals("sent")) {
+				needssent = false;
+				sent = Long.parseLong(parser.getString());
 			}
 			break;
 			default: break;

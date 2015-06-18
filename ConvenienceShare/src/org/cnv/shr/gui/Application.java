@@ -65,6 +65,7 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.db.h2.TrackerInfoExport;
 import org.cnv.shr.db.h2.bak.DbBackupRestore;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
@@ -302,6 +303,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		{
 			status.refresh();
 		}
+		connectionsPanel.repaint();
 	}
 	
 	private void refreshSettings()
@@ -379,6 +381,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jLabel3 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         jComboBox2 = new javax.swing.JComboBox();
+        jButton3 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu6 = new javax.swing.JMenu();
         jMenuItem12 = new javax.swing.JMenuItem();
@@ -399,9 +402,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jMenuItem6 = new javax.swing.JMenuItem();
         jMenuItem7 = new javax.swing.JMenuItem();
         jMenuItem8 = new javax.swing.JMenuItem();
+        jMenuItem15 = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         jMenuItem9 = new javax.swing.JMenuItem();
         jMenuItem10 = new javax.swing.JMenuItem();
+        jMenu7 = new javax.swing.JMenu();
+        jMenuItem17 = new javax.swing.JMenuItem();
+        jMenuItem16 = new javax.swing.JMenuItem();
 
         jMenuItem1.setText("jMenuItem1");
 
@@ -914,6 +921,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
+        jButton3.setText("Clear");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
         jPanel8.setLayout(jPanel8Layout);
         jPanel8Layout.setHorizontalGroup(
@@ -927,10 +941,12 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(logLines, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(logLines, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton3)))
                 .addContainerGap())
         );
         jPanel8Layout.setVerticalGroup(
@@ -941,9 +957,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(logLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3)
                     .addComponent(jLabel5)
-                    .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton3))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1080,6 +1097,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         });
         jMenu2.add(jMenuItem8);
 
+        jMenuItem15.setText("Export Tracker Info");
+        jMenuItem15.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem15ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem15);
+
         jMenuBar1.add(jMenu2);
 
         jMenu3.setText("Info");
@@ -1101,6 +1126,26 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jMenu3.add(jMenuItem10);
 
         jMenuBar1.add(jMenu3);
+
+        jMenu7.setText("Actions");
+
+        jMenuItem17.setText("Add Remote Machine");
+        jMenuItem17.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem17ActionPerformed(evt);
+            }
+        });
+        jMenu7.add(jMenuItem17);
+
+        jMenuItem16.setText("Add Local Directory");
+        jMenuItem16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem16ActionPerformed(evt);
+            }
+        });
+        jMenu7.add(jMenuItem16);
+
+        jMenuBar1.add(jMenu7);
 
         setJMenuBar(jMenuBar1);
 
@@ -1126,50 +1171,54 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        final JFileChooser fc = new JFileChooser();
-        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-        {
-      		Services.userThreads.execute(new Runnable()
-      		{
-      			@Override
-      			public void run()
-      			{
-      				LocalDirectory local = UserActions.addLocalImmediately(Paths.get(fc.getSelectedFile().getAbsolutePath()), null);
-      				if (local != null)
-      				{
-      					List<SynchronizationListener> singletonList = Collections.singletonList(createLocalListener(local));
-      					local.synchronize(singletonList);
-      				}
-      			}
-      		});
-        }
+        addLocal();
     }//GEN-LAST:event_jButton1ActionPerformed
 
+		private void addLocal()
+		{
+			final JFileChooser fc = new JFileChooser();
+			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
+			{
+				return;
+			}
+				Services.userThreads.execute(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						LocalDirectory local = UserActions.addLocalImmediately(Paths.get(fc.getSelectedFile().getAbsolutePath()), null);
+						if (local != null)
+						{
+							List<SynchronizationListener> singletonList = Collections.singletonList(createLocalListener(local));
+							local.synchronize(singletonList);
+						}
+					}
+				});
+		}
+
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        AddMachine addMachine = new AddMachine();
-        addMachine.setAlwaysOnTop(true);
-        Services.notifications.registerWindow(addMachine);
-        addMachine.setVisible(true);
+        addRemoteMachine();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-		
-        final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();
-		while (listLocals.hasNext())
+		try (final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
 		{
-			LocalDirectory next = listLocals.next();
-			DebugListener createLocalListener = createLocalListener(next);
-			List<DebugListener> singletonList = Collections.singletonList(createLocalListener);
-			if (createLocalListener == null)
+			while (listLocals.hasNext())
 			{
-				singletonList = null;
+				LocalDirectory next = listLocals.next();
+				DebugListener createLocalListener = createLocalListener(next);
+				List<DebugListener> singletonList = Collections.singletonList(createLocalListener);
+				if (createLocalListener == null)
+				{
+					singletonList = null;
+				}
+				else
+				{
+					singletonList = Collections.singletonList(createLocalListener);
+				}
+				UserActions.userSync(next, singletonList);
 			}
-			else
-			{
-				singletonList = Collections.singletonList(createLocalListener);
-			}
-			UserActions.userSync(next, singletonList);
 		}
 		Services.notifications.localsChanged();
     }//GEN-LAST:event_jButton4ActionPerformed
@@ -1214,7 +1263,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         Services.userThreads.execute(new Runnable() { @Override
 				public void run()
         {
-        
         try {
             LogWrapper.getLogger().info("Creating another key.");
             Services.keyManager.createAnotherKey(
@@ -1232,7 +1280,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void jButton18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton18ActionPerformed
-       refreshKeys();
+       Services.userThreads.execute(new Runnable() { public void run() { refreshKeys(); } });
     }//GEN-LAST:event_jButton18ActionPerformed
 
     private void jMenuItem12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem12ActionPerformed
@@ -1278,7 +1326,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
       {
       	try
 				{
-					DbBackupRestore.backupDatabase(fc.getSelectedFile());
+					DbBackupRestore.backupDatabase(Paths.get(fc.getSelectedFile().getAbsolutePath()));
 				}
 				catch (IOException e)
 				{
@@ -1292,7 +1340,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 		{
-			DbBackupRestore.restoreDatabase(fc.getSelectedFile());
+			DbBackupRestore.restoreDatabase(this, Paths.get(fc.getSelectedFile().getAbsolutePath()));
 		}
     }//GEN-LAST:event_jMenuItem6ActionPerformed
 
@@ -1311,7 +1359,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
     private void jMenuItem9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem9ActionPerformed
        // show about
-      LogWrapper.getLogger().info("Implement about.");
+    	JOptionPane.showMessageDialog(this, "About goes here...", "Convenience Share version " + Services.settings.getVersion(Main.class), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItem9ActionPerformed
 
     private void jMenuItem10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem10ActionPerformed
@@ -1367,6 +1415,48 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         }
     }//GEN-LAST:event_jComboBox2ActionPerformed
 
+    private void jMenuItem15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem15ActionPerformed
+        // export tracker info...
+    	final JFileChooser fc = new JFileChooser();
+      fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+      if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+      {
+      	return;
+      }
+      
+      LogWrapper.getLogger().info("Export tracker info to file " + fc.getSelectedFile());
+      try
+			{
+				TrackerInfoExport.exportTrackerInfo(Paths.get(fc.getSelectedFile().getAbsolutePath()));
+			}
+			catch (IOException e)
+			{
+	      LogWrapper.getLogger().log(Level.INFO, "Unable to export tracker info to file " + fc.getSelectedFile(), e);
+			}
+    }//GEN-LAST:event_jMenuItem15ActionPerformed
+
+    private void jMenuItem17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem17ActionPerformed
+        // find remote machine
+      addRemoteMachine();
+    }//GEN-LAST:event_jMenuItem17ActionPerformed
+
+		private static void addRemoteMachine()
+		{
+			AddMachine addMachine = new AddMachine();
+      addMachine.setAlwaysOnTop(true);
+      Services.notifications.registerWindow(addMachine);
+      addMachine.setVisible(true);
+		}
+
+    private void jMenuItem16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem16ActionPerformed
+        // add local directory
+    	addLocal();
+    }//GEN-LAST:event_jMenuItem16ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        logHandler.clear();
+    }//GEN-LAST:event_jButton3ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1378,6 +1468,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JButton jButton17;
     private javax.swing.JButton jButton18;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
@@ -1400,6 +1491,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenu jMenu5;
     private javax.swing.JMenu jMenu6;
+    private javax.swing.JMenu jMenu7;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem10;
@@ -1407,6 +1499,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenuItem jMenuItem12;
     private javax.swing.JMenuItem jMenuItem13;
     private javax.swing.JMenuItem jMenuItem14;
+    private javax.swing.JMenuItem jMenuItem15;
+    private javax.swing.JMenuItem jMenuItem16;
+    private javax.swing.JMenuItem jMenuItem17;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;

@@ -83,7 +83,7 @@ public class UpdateInfoRequest extends Message
 	{
 		if (Services.codeUpdateInfo == null)
 		{
-			connection.setDone();
+			connection.finish();
 			return;
 		}
 		byte[] decrypted = Services.keyManager.decrypt(Services.codeUpdateInfo.getPrivateKey(publicKey), naunceRequest);

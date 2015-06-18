@@ -63,6 +63,7 @@ public class JsonStringMap extends HashMap<String, String>
 				break;
 			case VALUE_STRING:
 				put(key, parser.getString());
+				break;
 			default:
 				break;
 			}

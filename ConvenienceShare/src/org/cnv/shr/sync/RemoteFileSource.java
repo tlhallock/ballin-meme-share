@@ -82,7 +82,7 @@ public class RemoteFileSource implements FileSource
 	}
 
 	@Override
-	public FileSourceIterator listFiles() throws IOException
+	public FileSourceIterator listFiles() throws IOException, InterruptedException
 	{
 		if (remoteFile != null)
 		{
@@ -119,10 +119,7 @@ public class RemoteFileSource implements FileSource
 				{
 					return new RemoteFileSource(sync, pathElement, subDirs.next());
 				}
-				else
-				{
-					return new RemoteFileSource(sync, children.next().create());
-				}
+				return new RemoteFileSource(sync, children.next().create());
 			}
 
 			@Override

@@ -110,7 +110,7 @@ public class RootPermissionBackup implements Jsonable
 				break;
 			case "currentState":
 				needscurrentState = false;
-				currentState = SharingState.valueOf(parser.getString());;
+				currentState = SharingState.valueOf(parser.getString());
 				break;
 			}
 			break;

@@ -236,7 +236,7 @@ public class PermissionFailure extends Message
 				break;
 			case "currentPermission":
 				needscurrentPermission = false;
-				currentPermission = SharingState.valueOf(parser.getString());;
+				currentPermission = SharingState.valueOf(parser.getString());
 				break;
 			case "action":
 				needsaction = false;

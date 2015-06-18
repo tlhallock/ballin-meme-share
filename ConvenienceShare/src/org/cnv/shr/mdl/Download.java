@@ -43,7 +43,8 @@ import org.cnv.shr.util.LogWrapper;
 
 public class Download extends DbObject<Integer>
 {
-	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into DOWNLOAD key(FID) values ((select Q_ID from DOWNLOAD where FID=?), ?, ?, ?, ?, ?)");
+	// column count does not match...
+	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into DOWNLOAD key(FID) values ((select Q_ID from DOWNLOAD where FID=?), ?, ?, ?, ?, ?, ?)");
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from DOWNLOAD where FID=?");
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update DOWNLOAD set DSTATE=? where Q_ID=?");
 	
@@ -68,12 +69,14 @@ public class Download extends DbObject<Integer>
 		super(int1);
 	}
 	
-	public Download(RemoteFile remoteFile, long added2, int priority2, long chunkSize2)
+	public Download(RemoteFile remoteFile, long added2, int priority2, long chunkSize2, DownloadState currentState)
 	{
 		super(null);
 		this.added = added2;
 		this.priority = priority2;
 		this.chunkSize = chunkSize2;
+		this.file = remoteFile;
+		this.currentState = currentState;
 	}
 
 	public RemoteFile getFile()
@@ -110,6 +113,7 @@ public class Download extends DbObject<Integer>
 		this.currentState = DownloadState.getState(row.getInt(ndx++));
 		this.priority = row.getInt(ndx++);
 		this.destinationFile = Paths.get(row.getString(ndx++));
+		this.chunkSize = row.getLong(ndx++);
 	}
 	
 	public void setState(DownloadState state)
@@ -157,6 +161,7 @@ public class Download extends DbObject<Integer>
 	@Override
 	public boolean save(ConnectionWrapper c) throws SQLException
 	{
+		boolean returnValue;
 		try (StatementWrapper stmt = c.prepareStatement(MERGE1);)
 		{
 			int ndx = 1;
@@ -166,6 +171,7 @@ public class Download extends DbObject<Integer>
 			stmt.setInt(ndx++, currentState.dbValue);
 			stmt.setInt(ndx++, priority);
 			stmt.setString(ndx++, getTargetFile().toString());
+			stmt.setLong(ndx++, chunkSize);
 			stmt.executeUpdate();
 			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
@@ -173,6 +179,11 @@ public class Download extends DbObject<Integer>
 				{
 					id = generatedKeys.getInt(1);
 					return true;
+				}
+
+				if (id == null)
+				{
+					id = DbDownloads.getPendingDownloadId(file);
 				}
 				return false;
 			}

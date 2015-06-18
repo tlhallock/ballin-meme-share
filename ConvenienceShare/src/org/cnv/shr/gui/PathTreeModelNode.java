@@ -25,13 +25,11 @@
 
 package org.cnv.shr.gui;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
 
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
@@ -41,7 +39,6 @@ import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.Pair;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
-import org.cnv.shr.util.LogWrapper;
 
 public class PathTreeModelNode implements TaskListener
 {
@@ -117,10 +114,7 @@ public class PathTreeModelNode implements TaskListener
 		{
 			return model.rootDirectory.getName();
 		}
-		else
-		{
-			return element.getUnbrokenName();
-		}
+		return element.getUnbrokenName();
 	}
 	
 	@Override
@@ -236,14 +230,7 @@ public class PathTreeModelNode implements TaskListener
 			accountedFor.add(pathElement.getUnbrokenName());
 			PathTreeModelNode node = new PathTreeModelNode(this, model, pathElement, syncFully);
 			allChildren.add(node);
-			try
-			{
-					model.iterator.queueSyncTask(p.getSource(), pathElement, node);
-			}
-			catch (final IOException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to create sync task.", e);
-			}
+			model.iterator.queueSyncTask(p.getSource(), pathElement, node);
 		}
 		// add sub files...
 		for (final PathElement childElement : element.list(model.rootDirectory))

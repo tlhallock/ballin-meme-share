@@ -169,6 +169,12 @@ public class Chunk implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("checksum")) {
+				checksum = parser.getString();
+			}
+			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -180,12 +186,6 @@ public class Chunk implements Jsonable
 				needsend = false;
 				end = Long.parseLong(parser.getString());
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				checksum = parser.getString();
 			}
 			break;
 			default: break;

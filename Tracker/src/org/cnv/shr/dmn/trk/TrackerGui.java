@@ -23,17 +23,13 @@
 
 
 
-package org.cnv.shr.dmn;
+package org.cnv.shr.dmn.trk;
 
 import java.sql.SQLException;
 import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 
-import org.cnv.shr.dmn.trk.AddTracker;
-import org.cnv.shr.dmn.trk.BrowserFrame;
-import org.cnv.shr.dmn.trk.TrackerClient;
-import org.cnv.shr.dmn.trk.TrackerTrackerClient;
 import org.cnv.shr.track.Receiver;
 import org.cnv.shr.track.Track;
 import org.cnv.shr.track.TrackerStore;
@@ -44,6 +40,10 @@ import org.cnv.shr.util.LogWrapper;
 public class TrackerGui extends BrowserFrame
 {
 	private TrackerStore store;
+	
+	{
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+	}
 	
 	@Override
 	protected void remoceClient(TrackerClient client)
@@ -113,7 +113,9 @@ public class TrackerGui extends BrowserFrame
 				
 				if (client.represents(Track.LOCAL_TRACKER))
 				{
-					LogWrapper.getLogger().info("Add new machine info (Not supported yet).");
+					AddMachineToTracker addMachineToTracker = new AddMachineToTracker(getStore());
+					addMachineToTracker.setLocation(getLocation());
+					addMachineToTracker.setVisible(true);
 					return;
 				}
 				

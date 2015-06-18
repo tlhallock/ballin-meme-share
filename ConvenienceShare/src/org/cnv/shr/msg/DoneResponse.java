@@ -61,7 +61,7 @@ public class DoneResponse extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		connection.setDone();
-		connection.getSocket().close();
+		connection.close();
 	}
 
 	public boolean requiresAthentication()

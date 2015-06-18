@@ -27,6 +27,7 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -41,8 +42,7 @@ import org.cnv.shr.util.ByteReader;
 
 public class MachineFound extends Message
 {
-	@MyParserIgnore
-	private String ip;
+	protected String ip;
 	protected int port;
 	protected int nports;
 	protected String name;
@@ -58,6 +58,7 @@ public class MachineFound extends Message
 	public MachineFound()
 	{
 		this(Services.localMachine);
+		Objects.requireNonNull(ip);
 	}
 	
 	public MachineFound(Machine m)
@@ -68,6 +69,7 @@ public class MachineFound extends Message
 		ident      = m.getIdentifier();
 		lastActive = m.getLastActive();
 		nports     = m.getNumberOfPorts();
+		Objects.requireNonNull(ip);
 	}
 	
 	@Override
@@ -133,6 +135,7 @@ public class MachineFound extends Message
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
+		generator.write("ip", ip);
 		generator.write("port", port);
 		generator.write("nports", nports);
 		generator.write("name", name);
@@ -142,22 +145,19 @@ public class MachineFound extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsport = true;
-		boolean needsnports = true;
+		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsident = true;
+		boolean needsport = true;
+		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsport)
+				if (needsip)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsnports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
 				}
 				if (needsname)
 				{
@@ -167,10 +167,35 @@ public class MachineFound extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_STRING:
+			if (key==null) break;
+			switch(key) {
+			case "ip":
+				needsip = false;
+				ip = parser.getString();
+				break;
+			case "name":
+				needsname = false;
+				name = parser.getString();
+				break;
+			case "ident":
+				needsident = false;
+				ident = parser.getString();
+				break;
+			}
+			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			switch(key) {
@@ -181,19 +206,6 @@ public class MachineFound extends Message
 			case "nports":
 				needsnports = false;
 				nports = Integer.parseInt(parser.getString());
-				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "ident":
-				needsident = false;
-				ident = parser.getString();
 				break;
 			}
 			break;

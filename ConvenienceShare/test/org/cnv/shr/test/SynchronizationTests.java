@@ -2,12 +2,10 @@ package org.cnv.shr.test;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
@@ -29,7 +27,6 @@ import org.cnv.shr.sync.RemoteSynchronizer;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.sync.RootSynchronizer;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
-import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.junit.Assert;
 import org.junit.Test;
@@ -202,17 +199,9 @@ public class SynchronizationTests extends RemotesTest
 					activity = System.currentTimeMillis();
 					for (final Pair pair : pairs)
 					{
-						try
-						{
-							System.out.println("Queuing " + pair.getSource().getCanonicalPath());
-							System.out.println("and     " + pair.getPathElement().getFullPath());
-							iterator.queueSyncTask(pair.getSource(), pair.getPathElement(), this);
-						}
-						catch (final IOException e)
-						{
-							fail = true;
-							LogWrapper.getLogger().log(Level.INFO, "Unable to queue next pair " + pair, e);
-						}
+						System.out.println("Queuing " + pair.getSource().getCanonicalPath());
+						System.out.println("and     " + pair.getPathElement().getFullPath());
+						iterator.queueSyncTask(pair.getSource(), pair.getPathElement(), this);
 					}
 				}
 			};

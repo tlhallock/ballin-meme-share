@@ -35,9 +35,10 @@ import javax.swing.JTextArea;
 
 public class TextAreaHandler extends Handler
 {
-		private int logLines;
+    private int logLines;
     private LinkedList<String> logMessages = new LinkedList<>();
     private JTextArea logArea;
+    private StringBuilder builder = new StringBuilder();
     
     public TextAreaHandler(JTextArea area, int initialNumLines)
     {
@@ -48,12 +49,16 @@ public class TextAreaHandler extends Handler
 
 	private void log(String line)
 	{
-		logMessages.add(line + '\n');
+		logMessages.addLast(line + '\n');
 		while (logMessages.size() > logLines)
 		{
 			logMessages.removeFirst();
 		}
-		StringBuilder builder = new StringBuilder();
+	}
+
+	private void updateText()
+	{
+		builder.setLength(0);
 		for (String s : logMessages)
 		{
 			builder.append(s);
@@ -91,5 +96,13 @@ public class TextAreaHandler extends Handler
 		{
 			log(str);
 		}
+		updateText();
 	}
+
+    public synchronized void clear()
+    {
+        logMessages.clear();
+        logArea.setText("");
+        logArea.repaint();
+    }
 }

@@ -309,97 +309,74 @@ for security no symbolic links are added, and all files should remain inside the
 
 
 \section {Todos}
-search by filename across trackers?
 
 
-
-
-// What happens with two locals by the same name...
-// remove all caching of db objects...
-// make restore database "OK" become enabled
-// connections need to be revisited
-// trackers needs to be run again
-// get the mapper working again
-// launch tracker on startup
-// about thing
-// move help to install folder in build.xml
-// implement find machines, find trackers, clear browsing data
-// make sure remote permissions are as up to date as possible
-// make sure files are added to local directory mirrors when their download is complete
-// change path of mirror?
-// make sure downloads are reinitiated
-// implement verify integrity
-// implement download all cached
-// check all settings listeners
-// make sure things don't hang up when connections are manually closed
-// implement popup for serves
-// implement phone service
-// test with different port numbers
-// make sure restore actually works...??
-// profile memory
-// recursive directories in machine viewer
-// filter in machine viewer?
-// already downloaded frame
-// sync directories when added
-// test the min file size
-// always use offset in byte array
-// processinfo.getjavapath isn't used
-// Make sure help is built/copied in build.xml
-// make sure that the tracker closes when the tracker gui is closed
-// add button to request all others to update their code...
-// test tracker gui with remote tracker
-// change tracker browser "Add known trackers" to "Add trackers"
-// could change tracker gui to just ask the store its queries...
-// refactor client.listTrackers
-// make tracker directory configurable
-// add synchronization to tracker gui's tracker store
-// update should backup and restore database...
-// debug already running
-
-// finish getLogs, downloadsbackup, messagesbackup
-
-
-        // Need to break up PathList
-
-        // start on startup
-        
-		// use IOUtils.copy
-        
-        // make sure sockets close
- see about putting communications in try() {} blocks
- 
-dbl check connection caching
- 
-        // add way to change download priority
-        // figure out why sort on file size doesn't work
-        
-        // compress data
-        
-        // black list
-        // able to require password to log in for keys file.
-        
-		// look into ExtendedWatchEventModifier
-		// monitor free space
-		// Need to check versions when messaging.
-		// check full path vs fsPath
-		
-
-
- // use nio
- set a better number of ports
- run it for a long time
-
-
-use json for messages (reencrypt the streams)
-
-
-
-
-
-write TONS more tests
-
-
-
+First:
+\begin{itemize}
+\item What happens with two locals by the same name...
+\item connections need to be revisited
+\item get the mapper working again
+\item implement find machines, find trackers, clear browsing data
+\item make sure remote permissions are as up to date as possible
+\item about thing
+\item make sure files are added to local directory mirrors when their download is complete
+\item change path of mirror?
+\item make sure downloads are reinitiated
+\item implement verify integrity
+\item make sure things don't hang up when connections are manually closed
+\item already downloaded frame
+\item test the min file size
+\item add button to request all others to update their code...
+\item test tracker gui with remote tracker
+\item change tracker browser "Add known trackers" to "Add trackers"
+\item debug already running
+\item finish getLogs, downloadsbackup, messagesbackup
+\item use json for messages (reencrypt the streams)
+\item finish user manual
+\item refresh downloads in gui more often
+\item when cannot connect to machine ask tracker if the ip has changed
+\item automatically sync synced trackers
+\item close root synchronizer well when exception is thrown (and why is there a null pointer in RootSynchronizer.synchronize)
+\end{itemize}
+Later:
+\begin{itemize}
+\item remove all caching of db objects...
+\item launch tracker on startup
+\item check all settings listeners
+\item implement popup for serves
+\item test with different port numbers
+\item profile memory
+\item always use offset in byte array
+\item add synchronization to tracker gui's tracker store
+\item start on startup
+\item use IOUtils.copy
+\item make sure sockets close
+\item dbl check connection caching
+\item add way to change tags for files 
+\item add way to change download priority, and test priority
+\item compress data (path list, txt files, tracker connection for files, tracker import/exprt, db backup/restore)
+\item monitor free space
+\item Need to check versions when messaging.
+\item check full path vs fsPath
+\item run it for a long time
+\item write TONS more tests
+\item make the seeders work again
+\end{itemize}
+Maybe:
+\begin{itemize}
+\item search by filename across trackers?
+\item implement phone service
+\item recursive directories in machine viewer
+\item filter in machine viewer?
+\item could change tracker gui to just ask the store its queries...
+\item refactor client.listTrackers
+\item Need to break up PathList message
+\item see about putting communications in try() {} blocks
+\item able to require password to log in for keys file.
+\item black list
+\item look into ExtendedWatchEventModifier
+\item use nio
+\end{itemize}
 
 
 \section{terms}
@@ -408,3 +385,4 @@ remote, machine, root directory,
 need to add some pics when is more stable
 
 \end{document}\grid
+\grid

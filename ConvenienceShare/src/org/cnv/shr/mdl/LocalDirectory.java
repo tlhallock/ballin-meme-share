@@ -46,7 +46,6 @@ import org.cnv.shr.sync.FileFileSource;
 import org.cnv.shr.sync.FileSource;
 import org.cnv.shr.sync.LocalSynchronizer;
 import org.cnv.shr.sync.RootSynchronizer;
-import org.cnv.shr.sync.SyncrhonizationTaskIterator;
 import org.cnv.shr.util.Misc;
 
 public class LocalDirectory extends RootDirectory
@@ -161,7 +160,7 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	protected RootSynchronizer createSynchronizer() throws IOException
+	protected RootSynchronizer createSynchronizer() throws IOException, InterruptedException
 	{
 		File f = new File(getPathElement().getFullPath());
 		// This is probably not necessary...
@@ -171,8 +170,7 @@ public class LocalDirectory extends RootDirectory
 			throw new RuntimeException("Symbolic link: " + f + ". Skipping");
 		}
 		FileSource source = new FileFileSource(f, DbRoots.getIgnores(this));
-		SyncrhonizationTaskIterator iterator = new ConsecutiveDirectorySyncIterator(this, source);
-		return new LocalSynchronizer(this, iterator);
+		return new LocalSynchronizer(this, new ConsecutiveDirectorySyncIterator(this, source));
 	}
 
 	@Override

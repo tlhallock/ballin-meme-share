@@ -32,8 +32,6 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.msg.FindMachines;
-import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -91,8 +89,6 @@ public class IdkWhereToPutThis
 					openConnection = Services.networkManager.openConnection(url, true);
 					if (openConnection != null)
 					{
-						openConnection.send(new FindMachines());
-						openConnection.send(new MachineFound());
 						pendingAuthenticationRequests.remove(url);
 						Services.keyManager.writeKeys(Services.settings.keysFile.getPath());
 						continue outer;
