@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.logging.Level;
 
 import javax.json.JsonException;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.ConnectionWrapper;
@@ -43,15 +45,20 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.gui.AddMachine.AddMachineParams;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.FindMachines;
+import org.cnv.shr.msg.GetPermission;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
+import org.cnv.shr.trck.MachineEntry;
+import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 
 public class UserActions
@@ -89,37 +96,39 @@ public class UserActions
 						return;
 					}
 
-					Machine machine = openConnection.getMachine();
-					if (params.message)
+					Machine machine;
+					try
 					{
-						// enable messaging
-						machine.setAllowsMessages(true);
-						machine.tryToSave();
+						machine = openConnection.getMachine();
+						if (params.message)
+						{
+							// enable messaging
+							machine.setAllowsMessages(true);
+							machine.tryToSave();
+						}
+	
+						if (params.visible)
+						{
+							if (params.share)
+							{
+								machine.setWeShare(SharingState.DOWNLOADABLE);
+								machine.tryToSave();
+							}
+							else
+							{
+								machine.setWeShare(SharingState.SHARE_PATHS);
+								machine.tryToSave();
+							}
+						}
+					}
+					finally
+					{
+						openConnection.finish();
 					}
 
-					if (params.visible)
-					{
-						if (params.share)
-						{
-							machine.setWeShare(SharingState.DOWNLOADABLE);
-							machine.tryToSave();
-						}
-						else
-						{
-							machine.setWeShare(SharingState.SHARE_PATHS);
-							machine.tryToSave();
-						}
-					}
-					
-					openConnection.finish();
-					
 					if (params.open)
 					{
-						final MachineViewer viewer = new MachineViewer(machine);
-						Services.notifications.registerWindow(viewer);
-						viewer.setTitle("Machine " + machine.getName());
-						viewer.setVisible(true);
-						LogWrapper.getLogger().info("Showing remote " + machine.getName());
+						show(machine);
 					}
 				}
 				catch (IOException e)
@@ -137,25 +146,36 @@ public class UserActions
 			@Override
 			public void run()
 			{
-				String url = m.getUrl();
-				try
-				{
-          LogWrapper.getLogger().info("Synchronizing roots with " + m.getName());
-					Communication openConnection = Services.networkManager.openConnection(m, false);
-					if (openConnection == null)
-					{
-						return;
-					}
-					openConnection.send(new ListRoots());
-					openConnection.finish();
-					Services.notifications.remoteChanged(openConnection.getMachine());
-				}
-				catch (IOException | JsonException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to sync roots with " + url, e);
-				}
+				syncRootsNow(m);
 			}
 		});
+	}
+	
+	private static void syncRootsNow(final Machine m)
+	{
+		String url = m.getUrl();
+		try
+		{
+      LogWrapper.getLogger().info("Synchronizing roots with " + m.getName());
+			Communication openConnection = Services.networkManager.openConnection(m, false);
+			if (openConnection == null)
+			{
+				return;
+			}
+			try
+			{
+				openConnection.send(new ListRoots());
+			}
+			finally
+			{
+				openConnection.finish();
+			}
+			Services.notifications.remoteChanged(openConnection.getMachine());
+		}
+		catch (IOException | JsonException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to sync roots with " + url, e);
+		}
 	}
 
 	public static void findMachines(final Machine m)
@@ -173,8 +193,14 @@ public class UserActions
 					{
 						return;
 					}
-					openConnection.send(new FindMachines());
-					openConnection.finish();
+					try
+					{
+						openConnection.send(new FindMachines());
+					}
+					finally
+					{
+						openConnection.finish();
+					}
 				}
 				catch (IOException e)
 				{
@@ -363,5 +389,148 @@ public class UserActions
 				}
 			}
 		});
+	}
+
+	static void findMachines(JFrame origin)
+	{
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				LinkedList<ClientTrackerClient> list = new LinkedList<>();
+				synchronized (Services.trackers)
+				{
+					list.addAll(Services.trackers.getClients());
+				}
+				for (ClientTrackerClient client : list)
+				{
+					findMachines(origin, client);
+				}
+				
+				try (DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();)
+				{
+					while (listRemoteMachines.hasNext())
+					{
+						findMachines(listRemoteMachines.next());
+					}
+				}
+			}
+		});
+	}
+
+	static void findMachines(JFrame origin, ClientTrackerClient client)
+	{
+		int currentPage = 0;
+		boolean hasMore = true;
+		while (hasMore)
+		{
+			hasMore = false;
+			try (CloseableIterator<MachineEntry> machineEntries = client.list(currentPage);)
+			{
+				while (machineEntries.hasNext())
+				{
+					MachineEntry next = machineEntries.next();
+					if (next == null)
+					{
+						continue;
+					}
+					hasMore = true;
+					
+					Machine machine = DbMachines.getMachine(next.getIdentifer());
+					if (machine != null)
+					{
+						continue;
+					}
+					
+					if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
+							origin,
+							"Found a machine at address " + machine.getIp() + ".\n"
+									+ "The machine's name is " + machine.getName() + ".\n"
+									+ "Would you like to add it?", 
+									"Found a machine",
+									JOptionPane.YES_NO_OPTION))
+					{
+						AddMachine addMachine = new AddMachine(machine.getIp() + ":" + machine.getPort());
+						addMachine.setLocation(origin.getLocation());
+						addMachine.setVisible(true);
+						addMachine.setAlwaysOnTop(true);
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to get page " + currentPage + " from " + client.getEntry(), e);
+			}
+		}
+	}
+
+    static void findTrackers()
+    {
+  		Services.userThreads.execute(new Runnable()
+  		{
+  			@Override
+  			public void run()
+  			{
+  				LinkedList<ClientTrackerClient> list = new LinkedList<>();
+  				synchronized (Services.trackers)
+  				{
+  					list.addAll(Services.trackers.getClients());
+  				}
+  				for (ClientTrackerClient client : list)
+  				{
+  					client.addOthers();
+  				}
+  			}
+  		});
+  	}
+    
+	public static void syncPermissions(Machine machine)
+	{
+		syncRootsNow(machine);
+
+		try
+		{
+			Communication openConnection = Services.networkManager.openConnection(machine, false);
+			if (openConnection == null)
+			{
+				return;
+			}
+
+			try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
+			{
+				openConnection.send(new GetPermission());
+				while (list.hasNext())
+				{
+					openConnection.send(new GetPermission((RemoteDirectory) list.next()));
+				}
+			}
+			finally
+			{
+				openConnection.finish();
+			}
+			Services.notifications.remoteChanged(openConnection.getMachine());
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to sync permissions with " + machine, e);
+		}
+	}
+
+	public static void show(Machine machine)
+	{
+		if (machine == null)
+		{
+			LogWrapper.getLogger().info("Cannot show null machine");
+			return;
+		}
+
+		final MachineViewer viewer = new MachineViewer(machine);
+		Services.notifications.registerWindow(viewer);
+		viewer.setTitle("Machine " + machine.getName());
+		viewer.setVisible(true);
+		LogWrapper.getLogger().info("Showing remote " + machine.getName());
+
+		syncPermissions(machine);
 	}
 }

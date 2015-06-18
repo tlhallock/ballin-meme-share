@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
@@ -47,8 +48,9 @@ public class Main
 		a.parseArgs(args);
 		Settings settings;
 		
-//		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
-//		a.settings.applicationDirectory.set(Paths.get("another\\apps"));
+		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
+		a.settings.applicationDirectory.set(Paths.get("another\\apps"));
+	  a.settings.setDefaultApplicationDirectoryStructure();
 
 //		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
 //		a.settings.setDefaultApplicationDirectoryStructure();

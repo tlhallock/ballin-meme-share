@@ -178,10 +178,17 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
         Services.userThreads.execute(new Runnable() { public void run() {
         try {
             Communication connection = Services.networkManager.openConnection(machine, false);
-            if (connection != null)
+            if (connection == null)
+            {
+            	return;
+            }
+            try
             {
                 connection.send(new UserMessageMessage(userMessage));
-                connection.finish();
+            }
+            finally
+            {
+            	connection.finish();
             }
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to send message:", ex);

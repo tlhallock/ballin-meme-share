@@ -203,7 +203,7 @@ public class ChecksumManager extends Thread
 
 		try (InputStream fis = Files.newInputStream(f))
 		{
-			byte[] dataBytes = new byte[1024];
+			byte[] dataBytes = new byte[8192];
 
 			int nread = 0;
 

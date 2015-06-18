@@ -84,6 +84,11 @@ public class DebugListener extends TimerTask implements SynchronizationListener
 	{
 		long now = System.currentTimeMillis();
 		double seconds = (now - lastDebug) / 1000;
+		if (!local.isSynchronizing())
+		{
+			cancel();
+			return;
+		}
 
 		synchronized (LogWrapper.getLogger())
 		{
@@ -105,5 +110,8 @@ public class DebugListener extends TimerTask implements SynchronizationListener
 	protected void changed() {}
 
 	@Override
-	public void syncDone() {}
+	public void syncDone() 
+	{
+		cancel();
+	}
 }

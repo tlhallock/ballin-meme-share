@@ -83,6 +83,10 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 	
 	public void addListener(final SynchronizationListener listener)
 	{
+		if (listener == null || listeners.contains(listener))
+		{
+			return;
+		}
 		listeners.add(listener);
 	}
 	

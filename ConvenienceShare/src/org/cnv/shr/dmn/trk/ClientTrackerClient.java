@@ -134,8 +134,14 @@ public class ClientTrackerClient extends TrackerClient
 			{
 				return;
 			}
+			try
+			{
 			openConnection.send(new LookingFor(remoteFile));
-			openConnection.finish();
+			}
+			finally
+			{
+				openConnection.finish();
+			}
 		}
 		catch (IOException e)
 		{

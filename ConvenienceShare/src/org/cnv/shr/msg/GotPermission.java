@@ -36,8 +36,9 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
-import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -85,22 +86,30 @@ public class GotPermission extends Message
 		Machine remote = connection.getMachine();
 		// Don't change all the other settings...
 		remote = DbMachines.getMachine(remote.getIdentifier());
-		if (remote == null)
+		if (remote == null || remote.isLocal())
 		{
 			return;
 		}
 		if (rootName.length() == 0)
 		{
+			if (remote.getSharesWithUs() != null && remote.getSharesWithUs().equals(permission))
+			{
+				return;
+			}
 			remote.setTheyShare(permission);
+			remote.tryToSave();
+			Services.notifications.permissionsChanged(remote);
 		}
 		else
 		{
-			LocalDirectory directory = DbRoots.getLocalByName(rootName);
-			if (directory == null)
+			RemoteDirectory directory = (RemoteDirectory) DbRoots.getRoot(remote, rootName);
+			if (directory == null
+					|| (directory.getSharesWithUs() != null && directory.getSharesWithUs().equals(permission)))
 			{
 				return;
 			}
 			DbPermissions.setSharingState(remote, directory, permission);
+			Services.notifications.permissionsChanged(remote);
 		}
 	}
 

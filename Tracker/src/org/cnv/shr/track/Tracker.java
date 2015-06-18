@@ -286,7 +286,10 @@ public class Tracker implements Runnable
 			output.writeEnd();
 			break;
 		case CLAIM_FILE:
-			// this should be a stream...
+			if (!Track.storesMetaData)
+			{
+				fail("This tracker does not store metadata.");
+			}
 			file = new FileEntry();
 			TrackObjectUtils.openArray(input);
 			if (entry == null)
@@ -316,6 +319,10 @@ public class Tracker implements Runnable
 			store.listMachines(new Lister<MachineEntry> (output), offset);
 			break;
 		case LIST_FILES:
+			if (!Track.storesMetaData)
+			{
+				fail("This tracker does not store metadata.");
+			}
 			other = store.getMachine(request.getParam("other"));
 			store.listFiles(other, new Lister<FileEntry>(output));
 			break;

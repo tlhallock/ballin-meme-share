@@ -416,6 +416,36 @@ public class Notifications implements WindowFocusListener
 		});
 	}
 	
+	public void permissionsChanged(Machine remote)
+	{
+		notifiers.add(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				for (final NotificationListener listener : getListeners())
+				{
+					listener.permissionsChanged(remote);
+				}
+			}
+		});
+	}
+
+	public void permissionsChanged(RemoteDirectory remote)
+	{
+		notifiers.add(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				for (final NotificationListener listener : getListeners())
+				{
+					listener.permissionsChanged(remote);
+				}
+			}
+		});
+	}
+	
 	public void registerWindow(final JFrame frame)
 	{
         frame.setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());

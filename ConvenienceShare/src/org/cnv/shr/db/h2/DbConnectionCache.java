@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
@@ -130,5 +131,27 @@ public class DbConnectionCache extends TimerTask
 	public void run()
 	{
 		flush();
+	}
+	
+	public void debug()
+	{
+		try
+		{
+			LogWrapper.getLogger().info(debug(new StringBuilder()).toString());
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to debug.", e);
+		}
+	}
+	
+	public synchronized StringBuilder debug(StringBuilder builder) throws SQLException
+	{
+		for (Entry<Long, ConnectionWrapper> entry : connections.entrySet())
+		{
+			builder.append("Thread " + entry.getKey());
+			entry.getValue().debug(builder);
+		}
+		return builder;
 	}
 }

@@ -86,7 +86,6 @@ public class GetPermission extends Message
 		Machine remote = connection.getMachine();
 		LocalDirectory local = null;
 		
-		
 		SharingState permission = null;
 		if (rootName.length() == 0)
 		{

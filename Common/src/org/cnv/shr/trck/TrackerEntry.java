@@ -35,6 +35,7 @@ public class TrackerEntry extends TrackObject
 	private String url;
 	private int begin;
 	private int end;
+	private boolean storesMetadata = true;
 	
 	public static int TRACKER_PORT_BEGIN = 7006;
 	public static int TRACKER_PORT_END   = 7010;
@@ -43,11 +44,12 @@ public class TrackerEntry extends TrackObject
   @MyParserNullable
 	private Boolean sync;
 	
-	public TrackerEntry(String url, int portB, int portE)
+	public TrackerEntry(String url, int portB, int portE, boolean storesMetadata)
 	{
 		this.url = url;
 		this.begin = portB;
 		this.end = portE;
+		this.storesMetaData = storesMetaData;
 	}
 	
 	public TrackerEntry(TrackerEntry entry)
@@ -70,11 +72,12 @@ public class TrackerEntry extends TrackObject
 		return o.url.equals(url) && o.begin == begin && o.end == end;
 	}
 	
-	public void set(String url, int begin, int end)
+	public void set(String url, int begin, int end, boolean storesMetadata)
 	{
 		this.url = url;
 		this.begin = begin;
 		this.end = end;
+		this.storesMetaData = storesMetaData;
 	}
 	
 	public String getIp()

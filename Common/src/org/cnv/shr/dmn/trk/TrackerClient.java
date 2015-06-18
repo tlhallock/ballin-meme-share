@@ -93,7 +93,7 @@ public abstract class TrackerClient
 		return trackerEntry.getAddress();
 	}
 
-	protected CloseableIterator<MachineEntry> list(int start) throws Exception
+	public CloseableIterator<MachineEntry> list(int start) throws Exception
 	{
 		TrackerRequest trackerRequest = new TrackerRequest(TrackerAction.LIST_ALL_MACHINES);
 		trackerRequest.setParameter("offset", String.valueOf(start));

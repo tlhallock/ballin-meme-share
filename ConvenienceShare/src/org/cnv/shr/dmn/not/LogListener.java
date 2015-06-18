@@ -151,4 +151,16 @@ class LogListener implements NotificationListener
 		{
 			LogWrapper.getLogger().info("File gone: " + file);
 		}
+
+		@Override
+		public void permissionsChanged(Machine remote)
+		{
+			LogWrapper.getLogger().info("Found permissions " + remote.getSharesWithUs() + " for machine " + remote);
+		}
+
+		@Override
+		public void permissionsChanged(RemoteDirectory remote)
+		{
+			LogWrapper.getLogger().info("Found permissions " + remote.getSharesWithUs() + " for directory " + remote);
+		}
 }

@@ -225,6 +225,26 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		{
 			return statement.getUpdateCount();
 		}
+
+		public void debug(StringBuilder builder) throws SQLException
+		{
+			builder.append(" tmp=").append(temp);
+			builder.append(" results:");
+			if (results == null)
+			{
+				builder.append("null");
+			}
+			else if (results.isClosed())
+			{
+				builder.append("closed");
+			}
+			else
+			{
+				builder.append("open");
+			}
+			builder.append(" query=").append(statement);
+			builder.append('\n');
+		}
 	}
 
 	public boolean isClosed()
@@ -237,6 +257,20 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		{
 			LogWrapper.getLogger().log(Level.INFO, null, e);
 			return true;
+		}
+	}
+
+	public synchronized void debug(StringBuilder builder) throws SQLException
+	{
+		builder.append(" count: ").append(inUse).append('\n');
+		for (int i=0;i<statements.length;i++)
+		{
+			if (statements[i] == null)
+			{
+				continue;
+			}
+			builder.append("\tstmt #").append(i);
+			statements[i].debug(builder);
 		}
 	}
 }

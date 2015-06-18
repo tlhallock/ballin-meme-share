@@ -55,6 +55,7 @@ public class Track
 	static TrackerGui gui;
 	public static TrackerEntry LOCAL_TRACKER = getLocalTracker();
 	public static Path rootDirectory = Paths.get(/*"..", "instances",*/ "tracker");
+	public static boolean storesMetaData = true;
 	
 	
 	private static void parseArgs(String[] args)

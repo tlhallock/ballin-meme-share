@@ -30,10 +30,9 @@ import javax.swing.JOptionPane;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.AddMachine;
-import org.cnv.shr.gui.MachineViewer;
+import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.trck.TrackerEntry;
-import org.cnv.shr.util.LogWrapper;
 
 public class TrackerFrame extends BrowserFrame
 {
@@ -75,12 +74,7 @@ public class TrackerFrame extends BrowserFrame
 		Machine machine = DbMachines.getMachine(currentMachine.getIdentifer());
 		if (machine != null)
 		{
-			final MachineViewer viewer = new MachineViewer(machine);
-			Services.notifications.registerWindow(viewer);
-			viewer.setTitle("Machine " + machine.getName());
-			viewer.setVisible(true);
-			LogWrapper.getLogger().info("Showing remote " + machine.getName());
-
+			UserActions.show(machine);
 		}
 		else if (JOptionPane.showConfirmDialog(this, "This machine is not currently in the database, would you like to add it?", "Not currently in database", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
 		{

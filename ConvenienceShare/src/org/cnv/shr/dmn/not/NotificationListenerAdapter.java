@@ -75,4 +75,8 @@ public abstract class NotificationListenerAdapter implements NotificationListene
 	public void fileChanged(final SharedFile file)                     {}
 	@Override
 	public void fileDeleted(final SharedFile file)                     {}
+	@Override
+	public void permissionsChanged(final Machine remote)               {}
+	@Override
+	public void permissionsChanged(final RemoteDirectory remote)       {}
 }
