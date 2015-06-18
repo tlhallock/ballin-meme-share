@@ -35,7 +35,7 @@ public class TrackerEntry extends TrackObject
 	private String url;
 	private int begin;
 	private int end;
-	private boolean storesMetadata = true;
+	private boolean storesMetaData = true;
 	
 	public static int TRACKER_PORT_BEGIN = 7006;
 	public static int TRACKER_PORT_END   = 7010;
@@ -44,7 +44,7 @@ public class TrackerEntry extends TrackObject
   @MyParserNullable
 	private Boolean sync;
 	
-	public TrackerEntry(String url, int portB, int portE, boolean storesMetadata)
+	public TrackerEntry(String url, int portB, int portE, boolean storesMetaData)
 	{
 		this.url = url;
 		this.begin = portB;
@@ -57,6 +57,7 @@ public class TrackerEntry extends TrackObject
 		this.url = entry.url;
 		this.begin = entry.begin;
 		this.end = entry.end;
+		this.storesMetaData = entry.storesMetaData;
 	}
 	
 	public TrackerEntry() {}
@@ -77,7 +78,7 @@ public class TrackerEntry extends TrackObject
 		this.url = url;
 		this.begin = begin;
 		this.end = end;
-		this.storesMetaData = storesMetaData;
+		this.storesMetaData = storesMetadata;
 	}
 	
 	public String getIp()
@@ -110,6 +111,11 @@ public class TrackerEntry extends TrackObject
 		sync = val;
 	}
 
+	public boolean supportsMetaData()
+	{
+		return storesMetaData;
+	}
+
 	
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
@@ -121,6 +127,7 @@ public class TrackerEntry extends TrackObject
 		generator.write("url", url);
 		generator.write("begin", begin);
 		generator.write("end", end);
+		generator.write("storesMetaData", storesMetaData);
 		if (sync!=null)
 		generator.write("sync", sync);
 		generator.writeEnd();
@@ -128,17 +135,22 @@ public class TrackerEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsurl = true;
+		boolean needsstoresMetaData = true;
 		boolean needsbegin = true;
 		boolean needsend = true;
+		boolean needsurl = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsurl)
+				if (needsstoresMetaData)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs url");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs storesMetaData");
+				}
+				if (needsstoresMetaData)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs storesMetaData");
 				}
 				if (needsbegin)
 				{
@@ -148,27 +160,36 @@ public class TrackerEntry extends TrackObject
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs end");
 				}
+				if (needsurl)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs url");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 		case VALUE_FALSE:
 			if (key==null) break;
-			if (key.equals("sync")) {
+			switch(key) {
+			case "storesMetaData":
+				needsstoresMetaData = false;
+				storesMetaData = false;
+				break;
+			case "sync":
 				sync = false;
+				break;
 			}
 			break;
 		case VALUE_TRUE:
 			if (key==null) break;
-			if (key.equals("sync")) {
+			switch(key) {
+			case "storesMetaData":
+				needsstoresMetaData = false;
+				storesMetaData = true;
+				break;
+			case "sync":
 				sync = true;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("url")) {
-				needsurl = false;
-				url = parser.getString();
+				break;
 			}
 			break;
 		case VALUE_NUMBER:
@@ -182,6 +203,13 @@ public class TrackerEntry extends TrackObject
 				needsend = false;
 				end = Integer.parseInt(parser.getString());
 				break;
+			}
+			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("url")) {
+				needsurl = false;
+				url = parser.getString();
 			}
 			break;
 			default: break;

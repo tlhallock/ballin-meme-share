@@ -68,7 +68,7 @@ public class GenerateKey
 		}
 		
 		Trackers trackers = new Trackers();
-		trackers.add("127.0.0.1", TrackerEntry.TRACKER_PORT_BEGIN, TrackerEntry.TRACKER_PORT_END);
+		trackers.add("127.0.0.1", TrackerEntry.TRACKER_PORT_BEGIN, TrackerEntry.TRACKER_PORT_END, true);
 		trackers.save(Paths.get("..", "instances", "tracker", "trackers"));
 		
 		System.out.println("Done.");

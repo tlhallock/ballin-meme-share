@@ -29,17 +29,15 @@ import java.io.IOException;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
-import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
-import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.msg.dwn.ChecksumRequest;
 import org.cnv.shr.util.LogWrapper;
 
 public class DownloadInitiator extends TimerTask
 {
+	
 	private void restart(final Download next)
 	{
 		if (Services.downloads.downloads.size() >= Services.settings.maxDownloads.get())
@@ -49,7 +47,7 @@ public class DownloadInitiator extends TimerTask
 		
 		try
 		{
-			DownloadInstance createDownload = Services.downloads.createDownload(next);
+			DownloadInstance createDownload = Services.downloads.createDownload(next, false);
 			if (createDownload == null)
 			{
 				return;
@@ -59,22 +57,6 @@ public class DownloadInitiator extends TimerTask
 		catch (IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to begin download.", e);
-		}
-	}
-
-	public void requestChecksum(RemoteFile remote)
-	{
-		try
-		{
-			Communication openConnection = Services.networkManager.openConnection(remote.getRootDirectory().getMachine(), false);
-			if (openConnection != null)
-			{
-				openConnection.send(new ChecksumRequest(remote));
-			}
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to send checksum request.", e);
 		}
 	}
 

@@ -154,7 +154,7 @@ public abstract class AddTracker extends javax.swing.JFrame {
 			{
 				int negom = Math.min(Misc.MAX_PORT - 1, (Integer) jSpinner1.getValue());
 				int end = Math.max(negom + 1, (Integer) jSpinner2.getValue());
-				TrackerEntry entry = new TrackerEntry(jTextField1.getText(), negom, end);
+				TrackerEntry entry = new TrackerEntry(jTextField1.getText(), negom, end, true);
 				addTracker(entry);
 				frame.refreshTrackers();
 			}

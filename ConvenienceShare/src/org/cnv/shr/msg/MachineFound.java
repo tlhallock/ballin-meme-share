@@ -145,16 +145,24 @@ public class MachineFound extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsport = true;
+		boolean needsnports = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsident = true;
-		boolean needsport = true;
-		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
 				if (needsip)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
@@ -167,18 +175,23 @@ public class MachineFound extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsnports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+				break;
+			case "nports":
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -193,19 +206,6 @@ public class MachineFound extends Message
 			case "ident":
 				needsident = false;
 				ident = parser.getString();
-				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;

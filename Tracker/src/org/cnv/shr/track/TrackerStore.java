@@ -69,11 +69,11 @@ public class TrackerStore implements Closeable
 		c = createConnection();
 		
 		getMachineIdStatement      = c.prepareStatement("select M_ID from MACHINE where MACHINE.IDENT = ? LIMIT 1;");
-		addTrackerStatement        = c.prepareStatement("merge into TRACKER key (IP, PORT, ENDPORT) values((select T_ID from TRACKER where IP=? and PORT=? and ENDPORT=?), ?, ?, ?, ?);");
+		addTrackerStatement        = c.prepareStatement("merge into TRACKER key (IP, PORT, ENDPORT) values((select T_ID from TRACKER where IP=? and PORT=? and ENDPORT=?), ?, ?, ?, ?, ?);");
 		listMachinesStatement      = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE join MACHINE_CONTAINS on MACHINE_CONTAINS.MID=MACHINE.M_ID join SFILE on SFILE.F_ID=MACHINE_CONTAINS.FID where SFILE.CHKSUM=?;");
-		listTrackersStatement      = c.prepareStatement("select IP, PORT, ENDPORT, LAST_ACTIVE from TRACKER;");
+		listTrackersStatement      = c.prepareStatement("select IP, PORT, ENDPORT, LAST_ACTIVE, KEEPS_FILES from TRACKER;");
 		listAllMachinesStatement   = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE LIMIT ? OFFSET ?;");
-		listCommentsStatement      = c.prepareStatement("select SENT, RATING, MESSAGE, IDENT from RATING_COMMENT join MACHINE on OID=MACHINE.M_ID where DID=(select M_ID from MACHINE where ident=?);");
+		listCommentsStatement      = c.prepareStatement("select SENT, RATING, MESSAGE, IDENT from RATING_COMMENT join MACHINE on OID=MACHINE.M_ID where DID=(select M_ID from MACHINE where ident=?) LIMIT ? OFFSET ?;");
 		postCommentStatement       = c.prepareStatement("merge into RATING_COMMENT key (OID, DID) values((select C_ID from RATING_COMMENT where OID=? and DID=?), ?, ?, ?, ?, ?);");
 		getMachineStatement        = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, KEYSTR, MNAME from MACHINE where IDENT=?;");
 		machineFoundStatement      = c.prepareStatement("merge into MACHINE key (IDENT) values((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?);");
@@ -143,6 +143,7 @@ public class TrackerStore implements Closeable
 			addTrackerStatement.setInt(ndx++, entry.getBeginPort());
 			addTrackerStatement.setInt(ndx++, entry.getEndPort());
 			addTrackerStatement.setLong(ndx++, System.currentTimeMillis());
+			addTrackerStatement.setBoolean(ndx++, entry.supportsMetaData());
 
 			addTrackerStatement.execute();
 		}
@@ -180,8 +181,9 @@ public class TrackerStore implements Closeable
 				int port  = results.getInt(ndx++);
 				int endport = results.getInt(ndx++);
 				long lastActive = results.getLong(ndx++);
+				boolean keepsFiles = results.getBoolean(ndx++);
 				
-				tracker.set(ip, port, endport);
+				tracker.set(ip, port, endport, keepsFiles);
 				listener.receive(tracker);
 			}
 		}
@@ -229,13 +231,15 @@ public class TrackerStore implements Closeable
 		}
 	}
 	
-	public void listComments(MachineEntry entry, Receiver<CommentEntry> generator)
+	public void listComments(MachineEntry entry, Receiver<CommentEntry> generator, int offset)
 	{
 		String did = entry.getIdentifer();
 		
 		try
 		{
 			listCommentsStatement.setString(1, did);
+			listCommentsStatement.setInt   (2, TrackerEntry.MACHINE_PAGE_SIZE);
+			listCommentsStatement.setInt   (3, offset);
 			try (ResultSet results = listCommentsStatement.executeQuery())
 			{
 				CommentEntry comment = new CommentEntry();

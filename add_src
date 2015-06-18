@@ -4,3 +4,6 @@ git add Tracker/src/org/cnv/shr/
 git add ConvenienceShare/src/org/cnv/shr/
 git add scripts/build.xml
 git add help/UserManual.tex
+git add add_src
+git add ConvenienceShare/src/res/create_h2.sql
+git add Tracker/src/res/create.sql

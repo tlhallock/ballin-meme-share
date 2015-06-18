@@ -28,6 +28,7 @@ package org.cnv.shr.gui;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -58,6 +59,7 @@ import org.cnv.shr.msg.GetPermission;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
 import org.cnv.shr.trck.MachineEntry;
+import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 
@@ -180,6 +182,10 @@ public class UserActions
 
 	public static void findMachines(final Machine m)
 	{
+		findMachines(m, new HashSet<String>());
+	}
+	public static void findMachines(final Machine m, HashSet<String> foundUrls)
+	{
 		Services.userThreads.execute(new Runnable()
 		{
 			@Override
@@ -188,6 +194,16 @@ public class UserActions
 				try
 				{
 					LogWrapper.getLogger().info("Requesting peers from " + m.getName());
+
+					String url = m.getIp() + ":" + m.getPort();
+					synchronized (foundUrls)
+					{
+						if (!foundUrls.add(url))
+						{
+							return;
+						}
+					}
+					
 					Communication openConnection = Services.networkManager.openConnection(m, false);
 					if (openConnection == null)
 					{
@@ -398,6 +414,9 @@ public class UserActions
 			@Override
 			public void run()
 			{
+				HashSet<String> foundUrls = new HashSet<>();
+				foundUrls.add(Services.localMachine.getIp() + ":" + Services.localMachine.getPort());
+				
 				LinkedList<ClientTrackerClient> list = new LinkedList<>();
 				synchronized (Services.trackers)
 				{
@@ -405,21 +424,21 @@ public class UserActions
 				}
 				for (ClientTrackerClient client : list)
 				{
-					findMachines(origin, client);
+					findMachines(origin, client, foundUrls);
 				}
 				
 				try (DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();)
 				{
 					while (listRemoteMachines.hasNext())
 					{
-						findMachines(listRemoteMachines.next());
+						findMachines(listRemoteMachines.next(), foundUrls);
 					}
 				}
 			}
 		});
 	}
 
-	static void findMachines(JFrame origin, ClientTrackerClient client)
+	static void findMachines(JFrame origin, ClientTrackerClient client, HashSet<String> foundUrls)
 	{
 		int currentPage = 0;
 		boolean hasMore = true;
@@ -442,21 +461,28 @@ public class UserActions
 					{
 						continue;
 					}
+					String url = next.getIp() + ":" + next.getPortBegin();
+					if (!foundUrls.add(url))
+					{
+						continue;
+					}
 					
 					if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
 							origin,
-							"Found a machine at address " + machine.getIp() + ".\n"
-									+ "The machine's name is " + machine.getName() + ".\n"
+							"Found a machine at address " + url + ".\n"
+									+ "The machine's name is " + next.getName() + ".\n"
 									+ "Would you like to add it?", 
 									"Found a machine",
 									JOptionPane.YES_NO_OPTION))
 					{
-						AddMachine addMachine = new AddMachine(machine.getIp() + ":" + machine.getPort());
+						AddMachine addMachine = new AddMachine(url);
 						addMachine.setLocation(origin.getLocation());
 						addMachine.setVisible(true);
 						addMachine.setAlwaysOnTop(true);
 					}
 				}
+				
+				currentPage += TrackerEntry.MACHINE_PAGE_SIZE;
 			}
 			catch (Exception e)
 			{
@@ -531,6 +557,8 @@ public class UserActions
 		viewer.setVisible(true);
 		LogWrapper.getLogger().info("Showing remote " + machine.getName());
 
-		syncPermissions(machine);
+		Services.userThreads.execute(new Runnable() { public void run() {
+			syncPermissions(machine);
+		}});
 	}
 }

@@ -40,8 +40,8 @@ import org.cnv.shr.dmn.Services;
 
 public class Machine extends DbObject<Integer>
 {
-	private static final QueryWrapper MEREGE1 = new QueryWrapper("merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
-	private static final QueryWrapper MERGE2  = new QueryWrapper("merge into MACHINE key(IS_LOCAL) values ((select M_ID from MACHINE where IS_LOCAL=true), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+	private static final QueryWrapper MEREGE1 = new QueryWrapper("merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+	private static final QueryWrapper MERGE2  = new QueryWrapper("merge into MACHINE key(IS_LOCAL) values ((select M_ID from MACHINE where IS_LOCAL=true), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	private String ip;
 	private int port;
 	
@@ -58,6 +58,8 @@ public class Machine extends DbObject<Integer>
 	private SharingState weShareToThem;
 	private SharingState sharesWithUs;
 	
+	private boolean pin;
+	
 	public Machine(String identifier)
 	{
 		super(null);
@@ -65,7 +67,7 @@ public class Machine extends DbObject<Integer>
 		weShareToThem = SharingState.valueOf(Services.settings.defaultPermission.get());
 	}
 
-	public Machine(String ip2, int port2, int nports2, String name2, String identifier2, boolean allowsMessages2, SharingState weShareToThem2, SharingState sharesWithUs2)
+	public Machine(String ip2, int port2, int nports2, String name2, String identifier2, boolean allowsMessages2, SharingState weShareToThem2, SharingState sharesWithUs2, boolean pin)
 	{
 		super(null);
 		
@@ -77,6 +79,7 @@ public class Machine extends DbObject<Integer>
 		this.allowsMessages = allowsMessages2;
 		this.weShareToThem = weShareToThem2;
 		this.sharesWithUs = sharesWithUs2;
+		this.pin = pin;
 	}
 	
 	protected Machine() { super(null); }
@@ -100,6 +103,7 @@ public class Machine extends DbObject<Integer>
 		  identifier     = row.getString ("IDENT");
 		  allowsMessages = row.getBoolean("MESSAGES");
 		  acceptPeers    = row.getBoolean("ACCEPT_PEERS");
+		  pin            = row.getBoolean("PIN");
 	}
 
 	@Override
@@ -139,6 +143,17 @@ public class Machine extends DbObject<Integer>
 		stmt.setBoolean(ndx++, isLocal());
 		stmt.setBoolean(ndx++, getAllowsMessages());
 		stmt.setBoolean(ndx++, getAcceptPeers());
+		stmt.setBoolean(ndx++, isPinned());
+	}
+	
+	public boolean isPinned()
+	{
+		return pin;
+	}
+
+	public void setPinned(boolean selected)
+	{
+		this.pin = selected;
 	}
 
 	public int getNumberOfPorts()
@@ -296,10 +311,18 @@ public class Machine extends DbObject<Integer>
 			throw new UnsupportedOperationException("This is the local machine.");
 		}
 
+		public void setPinned(boolean selected) {}
+
 		@Override
 		public long getLastActive()
 		{
 			return System.currentTimeMillis();
+		}
+		
+		@Override
+		public boolean isPinned()
+		{
+			return true;
 		}
 		
 		@Override

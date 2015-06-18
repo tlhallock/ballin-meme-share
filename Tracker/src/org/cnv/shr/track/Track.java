@@ -56,6 +56,7 @@ public class Track
 	public static TrackerEntry LOCAL_TRACKER = getLocalTracker();
 	public static Path rootDirectory = Paths.get(/*"..", "instances",*/ "tracker");
 	public static boolean storesMetaData = true;
+	public static boolean showGui = true;
 	
 	
 	private static void parseArgs(String[] args)
@@ -65,6 +66,10 @@ public class Track
 			if (args[i].equals("-d") && i < args.length - 1)
 			{
 				rootDirectory = Paths.get(args[i + 1]);
+			}
+			else if (args[i].equals("-q"))
+			{
+				showGui = false;
 			}
 		}
 	}
@@ -90,14 +95,17 @@ public class Track
 		timer = new Timer();
 		
 		Class.forName("org.h2.Driver");
-//		deleteDb();
+		deleteDb();
 		createDb();
 		keys = new KeysService();
 		
 		ensureLocalTrackerIsPresent();
 		
-		gui = new TrackerGui();
-		gui.setVisible(true);
+		if (showGui)
+		{
+			gui = new TrackerGui();
+			gui.setVisible(true);
+		}
 		
 		for (int port = TrackerEntry.TRACKER_PORT_BEGIN; port < TrackerEntry.TRACKER_PORT_END; port++)
 		{
@@ -118,7 +126,7 @@ public class Track
 		{
 			return new TrackerEntry(
 					InetAddress.getLocalHost().getHostAddress(),
-					TrackerEntry.TRACKER_PORT_BEGIN, TrackerEntry.TRACKER_PORT_END);
+					TrackerEntry.TRACKER_PORT_BEGIN, TrackerEntry.TRACKER_PORT_END, Track.storesMetaData);
 		}
 		catch (UnknownHostException e)
 		{

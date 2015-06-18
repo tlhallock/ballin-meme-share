@@ -165,41 +165,21 @@ public class DownloadBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsremoteMachine = true;
-		boolean needsremoteDirectory = true;
-		boolean needsremotePath = true;
-		boolean needschecksum = true;
-		boolean needscurrentDownloadState = true;
 		boolean needsfileSize = true;
 		boolean needslastModified = true;
 		boolean needsadded = true;
 		boolean needspriority = true;
 		boolean needschunkSize = true;
+		boolean needsremoteMachine = true;
+		boolean needsremoteDirectory = true;
+		boolean needsremotePath = true;
+		boolean needschecksum = true;
+		boolean needscurrentDownloadState = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsremoteMachine)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteMachine");
-				}
-				if (needsremoteDirectory)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteDirectory");
-				}
-				if (needsremotePath)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remotePath");
-				}
-				if (needschecksum)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
-				}
-				if (needscurrentDownloadState)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentDownloadState");
-				}
 				if (needsfileSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
@@ -220,10 +200,55 @@ public class DownloadBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
 				}
+				if (needsremoteMachine)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteMachine");
+				}
+				if (needsremoteDirectory)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteDirectory");
+				}
+				if (needsremotePath)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remotePath");
+				}
+				if (needschecksum)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
+				}
+				if (needscurrentDownloadState)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentDownloadState");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "fileSize":
+				needsfileSize = false;
+				fileSize = Long.parseLong(parser.getString());
+				break;
+			case "lastModified":
+				needslastModified = false;
+				lastModified = Long.parseLong(parser.getString());
+				break;
+			case "added":
+				needsadded = false;
+				added = Long.parseLong(parser.getString());
+				break;
+			case "priority":
+				needspriority = false;
+				priority = Integer.parseInt(parser.getString());
+				break;
+			case "chunkSize":
+				needschunkSize = false;
+				chunkSize = Long.parseLong(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -249,31 +274,6 @@ public class DownloadBackup implements Jsonable
 			case "currentDownloadState":
 				needscurrentDownloadState = false;
 				currentDownloadState = parser.getString();
-				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "fileSize":
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
-				break;
-			case "lastModified":
-				needslastModified = false;
-				lastModified = Long.parseLong(parser.getString());
-				break;
-			case "added":
-				needsadded = false;
-				added = Long.parseLong(parser.getString());
-				break;
-			case "priority":
-				needspriority = false;
-				priority = Integer.parseInt(parser.getString());
-				break;
-			case "chunkSize":
-				needschunkSize = false;
-				chunkSize = Long.parseLong(parser.getString());
 				break;
 			}
 			break;

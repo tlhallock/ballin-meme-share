@@ -292,7 +292,14 @@ public class Communication implements Closeable
 	
 	private void scheduleTimerCloseTask()
 	{
-		Services.timer.schedule(new TimerTask() { public void run() { closeDaConnection(); } }, CLOSE_TIMEOUT);
+		try
+		{
+			Services.timer.schedule(new TimerTask() { public void run() { closeDaConnection(); } }, CLOSE_TIMEOUT);
+		}
+		catch (Exception ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to schedule shutdown timer", ex);
+		}
 	}
 	
 	public void closeDaConnection()

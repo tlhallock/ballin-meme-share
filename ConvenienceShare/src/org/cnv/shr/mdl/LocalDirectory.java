@@ -185,15 +185,15 @@ public class LocalDirectory extends RootDirectory
 		{
 			int ndx = 1;
 			
-			stmt.setLong(ndx++, getPathElement().getId());
+			stmt.setLong  (ndx++, getPathElement().getId());
 			stmt.setString(ndx++, getTags());
 			stmt.setString(ndx++, getDescription());
-			stmt.setLong(ndx++, totalFileSize);
-			stmt.setLong(ndx++, totalNumFiles);
+			stmt.setLong  (ndx++, totalFileSize);
+			stmt.setLong  (ndx++, totalNumFiles);
 			stmt.setString(ndx++, getName());
-			stmt.setInt(ndx++, getDefaultSharingState().getDbValue());
-			stmt.setLong(ndx++, minFSize);
-			stmt.setLong(ndx++, maxFSize);
+			stmt.setInt   (ndx++, getDefaultSharingState().getDbValue());
+			stmt.setLong  (ndx++, minFSize);
+			stmt.setLong  (ndx++, maxFSize);
 			
 			stmt.setInt(ndx++, id);
 			

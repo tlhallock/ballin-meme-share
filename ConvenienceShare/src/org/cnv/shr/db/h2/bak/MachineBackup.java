@@ -59,6 +59,7 @@ public class MachineBackup implements Jsonable
 	private boolean allowsMessages;
 	private SharingState weShareToThem;
 	private SharingState sharesWithUs;
+	private boolean pin;
 	private JsonStringList keys = new JsonStringList();
 	private JsonStringMap roots = new JsonStringMap();
 	
@@ -99,7 +100,8 @@ public class MachineBackup implements Jsonable
 				identifier,
 				allowsMessages,
 				weShareToThem,
-				sharesWithUs);
+				sharesWithUs,
+				pin);
 		
 		try
 		{
@@ -155,6 +157,7 @@ public class MachineBackup implements Jsonable
 		generator.write("allowsMessages", allowsMessages);
 		generator.write("weShareToThem",weShareToThem.name());
 		generator.write("sharesWithUs",sharesWithUs.name());
+		generator.write("pin", pin);
 		{
 			generator.writeStartArray("keys");
 			keys.generate(generator);
@@ -169,15 +172,16 @@ public class MachineBackup implements Jsonable
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsallowsMessages = true;
+		boolean needspin = true;
+		boolean needsroots = true;
+		boolean needsport = true;
+		boolean needsnports = true;
+		boolean needskeys = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsidentifier = true;
 		boolean needsweShareToThem = true;
 		boolean needssharesWithUs = true;
-		boolean needskeys = true;
-		boolean needsroots = true;
-		boolean needsport = true;
-		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -187,9 +191,33 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
 				}
+				if (needspin)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
+				}
 				if (needsallowsMessages)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
+				}
+				if (needspin)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
+				}
+				if (needsroots)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
+				}
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
+				if (needskeys)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
 				}
 				if (needsip)
 				{
@@ -211,38 +239,61 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
 				}
-				if (needskeys)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
-				}
-				if (needsroots)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
-				}
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsnports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 		case VALUE_FALSE:
 			if (key==null) break;
-			if (key.equals("allowsMessages")) {
+			switch(key) {
+			case "allowsMessages":
 				needsallowsMessages = false;
 				allowsMessages = false;
+				break;
+			case "pin":
+				needspin = false;
+				pin = false;
+				break;
 			}
 			break;
 		case VALUE_TRUE:
 			if (key==null) break;
-			if (key.equals("allowsMessages")) {
+			switch(key) {
+			case "allowsMessages":
 				needsallowsMessages = false;
 				allowsMessages = true;
+				break;
+			case "pin":
+				needspin = false;
+				pin = true;
+				break;
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("roots")) {
+				needsroots = false;
+				roots.parse(parser);
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+				break;
+			case "nports":
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
+				break;
+			}
+			break;
+		case START_ARRAY:
+			if (key==null) break;
+			if (key.equals("keys")) {
+				needskeys = false;
+				keys.parse(parser);
 			}
 			break;
 		case VALUE_STRING:
@@ -267,33 +318,6 @@ public class MachineBackup implements Jsonable
 			case "sharesWithUs":
 				needssharesWithUs = false;
 				sharesWithUs = SharingState.valueOf(parser.getString());
-				break;
-			}
-			break;
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("keys")) {
-				needskeys = false;
-				keys.parse(parser);
-			}
-			break;
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("roots")) {
-				needsroots = false;
-				roots.parse(parser);
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;

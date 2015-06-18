@@ -34,7 +34,6 @@ import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.LogWrapper;
 
@@ -104,11 +103,11 @@ public class DbPermissions
 		return current == null ? SharingState.valueOf(Services.settings.defaultPermission.get()) : current;
 	}
 
-	public static SharingState getCurrentPermissions(RemoteDirectory root)
-	{
-		SharingState current = isSharing(Services.localMachine, root);
-		return current == null ? SharingState.DO_NOT_SHARE : current;
-	}
+//	public static SharingState getCurrentPermissions(LocalDirectory root)
+//	{
+//		SharingState current = isSharing(Services.localMachine, root);
+//		return current == null ? SharingState.DO_NOT_SHARE : current;
+//	}
 	
 	public static SharingState getCurrentPermissions(Machine machine, LocalDirectory root)
 	{

@@ -23,14 +23,7 @@
 
 package org.cnv.shr.gui;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-
 import org.cnv.shr.mdl.PathElement.CollectingFilesMonitor;
-import org.cnv.shr.util.LogWrapper;
 
 /**
  *
@@ -40,46 +33,36 @@ public class CollectingFiles extends javax.swing.JFrame implements CollectingFil
 
     private Boolean input;
 
-    private Lock lock = new ReentrantLock();
-    private Condition condition = lock.newCondition();
+    private int soFar;
+    private boolean continueDownloading = true;
     
     /**
      * Creates new form CollectingFiles
      */
-    public CollectingFiles() {
+    public CollectingFiles()
+    {
         initComponents();
+    		jButton1.setEnabled(false);
+    		jButton2.setEnabled(true);
     }
 
-	public void found(int currentNumber)
+		@Override
+	public void found()
 	{
-		jLabel2.setText(String.valueOf(currentNumber));
+		soFar++;
+		jLabel2.setText(String.valueOf(soFar));
 	}
 
-    boolean confirm()
+		@Override
+    public boolean continueDownloading()
     {
-        jButton1.setEnabled(true);
-        
-        lock.lock();
-        try
-        {
-        	while (input == null)
-        	{
-        		try
-						{
-							condition.await(10, TimeUnit.SECONDS);
-						}
-						catch (InterruptedException e)
-						{
-							LogWrapper.getLogger().log(Level.INFO, "Interrupted while sleeping.", e);
-							return false;
-						}
-        	}
-          return input;
-        }
-        finally
-        {
-        	lock.unlock();
-        }
+    	return continueDownloading;
+    }
+    
+    void done()
+    {
+    	jButton2.setEnabled(false);
+    	jButton1.setEnabled(true);
     }
     
     /**
@@ -154,36 +137,11 @@ public class CollectingFiles extends javax.swing.JFrame implements CollectingFil
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        lock.lock();
-        try
-        {
-        	while (input == null)
-        	{
-        		input = false;
-        		condition.signalAll();
-        	}
-        }
-        finally
-        {
-        	lock.unlock();
-        }
-        dispose();
+      continueDownloading = false;  
+      dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-      lock.lock();
-      try
-      {
-      	while (input == null)
-      	{
-      		input = true;
-      		condition.signalAll();
-      	}
-      }
-      finally
-      {
-      	lock.unlock();
-      }
       dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 

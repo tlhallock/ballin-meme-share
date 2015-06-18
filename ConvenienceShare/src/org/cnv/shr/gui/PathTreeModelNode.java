@@ -140,10 +140,10 @@ public class PathTreeModelNode implements TaskListener
 	public synchronized void syncFully()
 	{
 		syncFully(true);
-		setToSource();
 	}
 	public synchronized void syncFully(boolean val)
 	{
+		lastSync = 0;
 		syncFully = val;
 		if (children != null)
 		{
@@ -151,6 +151,10 @@ public class PathTreeModelNode implements TaskListener
 			{
 				node.syncFully(val);
 			}
+		}
+		if (sourceChildren != null)
+		{
+			setToSource();
 		}
 	}
 	

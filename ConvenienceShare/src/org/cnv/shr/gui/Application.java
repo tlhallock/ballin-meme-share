@@ -103,15 +103,18 @@ import org.cnv.shr.util.TextAreaHandler;
  */
 public class Application extends javax.swing.JFrame implements NotificationListener
 {
+	public static final int GUI_REFRESH_RATE = 1000;
+	
     private LinkedList<ConnectionStatus> connections = new LinkedList<>();
     private TextAreaHandler logHandler;
-    
     
     private LocalTable locals;
     private MachineTable remotes;
     private MessageTable messages;
     private DownloadTable downloads;
     private ServeTable serves;
+    
+    private TimerTask refresh;
     
 	/**
 	 * Creates new form Application
@@ -154,17 +157,27 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 				logHandler.setLogLines((Integer) logLines.getValue());
 			}});
 		LogWrapper.getLogger().addHandler(logHandler);
-		
+
+    
+    refresh = new TimerTask() {
+			@Override
+			public void run()
+			{
+				downloads.refresh();
+				serves.refresh();
+				refreshConnections();
+			}};
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e)
 			{
 				LogWrapper.getLogger().removeHandler(logHandler);
+				refresh.cancel();
 			}
 		});
 		Services.notifications.add(this);
-                
-                refreshKeys();
+
+		refreshKeys();
                 
 		jPanel14.setLayout(new FlowLayout());
         jPanel14.setComponentOrientation(
@@ -203,6 +216,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             Services.settings.defaultPermission.set(state.name());
         }
     });
+    
+//    Services.timer.scheduleAtFixedRate(refresh, GUI_REFRESH_RATE, GUI_REFRESH_RATE);
 	}
 
 	private void initializeSettings()
@@ -401,7 +416,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jMenu7 = new javax.swing.JMenu();
         jMenuItem17 = new javax.swing.JMenuItem();
         jMenuItem16 = new javax.swing.JMenuItem();
-        jCheckBoxMenuItem4 = new javax.swing.JCheckBoxMenuItem();
+        jMenuItem20 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jMenuItem5 = new javax.swing.JMenuItem();
         jMenuItem6 = new javax.swing.JMenuItem();
@@ -1085,14 +1100,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         });
         jMenu7.add(jMenuItem16);
 
-        jCheckBoxMenuItem4.setSelected(true);
-        jCheckBoxMenuItem4.setText("Find Machines");
-        jCheckBoxMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItem20.setText("Find Machines");
+        jMenuItem20.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItem4ActionPerformed(evt);
+                jMenuItem20ActionPerformed(evt);
             }
         });
-        jMenu7.add(jCheckBoxMenuItem4);
+        jMenu7.add(jMenuItem20);
 
         jMenuBar1.add(jMenu7);
 
@@ -1502,9 +1516,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         Services.h2DbCache.flush();
     }//GEN-LAST:event_jMenuItem19ActionPerformed
 
-    private void jCheckBoxMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem4ActionPerformed
+    private void jMenuItem20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem20ActionPerformed
         UserActions.findMachines(this);
-    }//GEN-LAST:event_jCheckBoxMenuItem4ActionPerformed
+    }//GEN-LAST:event_jMenuItem20ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
@@ -1527,7 +1541,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem2;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem3;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem4;
     private javax.swing.JComboBox jComboBox1;
     private javax.swing.JComboBox jComboBox2;
     private javax.swing.JLabel jLabel1;
@@ -1555,6 +1568,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenuItem jMenuItem18;
     private javax.swing.JMenuItem jMenuItem19;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem20;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
@@ -1768,38 +1782,19 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			}
 
 			@Override
-			public void dbException(Exception ex)
-			{
-				// TODO Auto-generated method stub
-			}
-
+			public void dbException(Exception ex) {}
 			@Override
-			public void permissionFailure(PermissionFailureEvent event)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-
+			public void permissionFailure(PermissionFailureEvent event) {}
 			@Override
-			public void fileAdded(SharedFile file)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-
+			public void fileAdded(SharedFile file) {}
 			@Override
-			public void fileChanged(SharedFile file)
-			{
-				// TODO Auto-generated method stub
-				
-			}
-
+			public void fileChanged(SharedFile file) {}
 			@Override
-			public void fileDeleted(SharedFile file)
-			{
-				// TODO Auto-generated method stub
-				
-			}
+			public void fileDeleted(SharedFile file) {}
+			@Override
+			public void permissionsChanged(Machine remote) {}
+			@Override
+			public void permissionsChanged(RemoteDirectory remote) {}
 
 	void refreshKeys()
 	{

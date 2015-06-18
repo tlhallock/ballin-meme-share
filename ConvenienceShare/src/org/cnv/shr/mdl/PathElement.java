@@ -25,11 +25,12 @@
 
 package org.cnv.shr.mdl;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
@@ -42,7 +43,9 @@ import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.db.h2.RStringBuilder;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.sync.FileSource;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class PathElement extends DbObject<Long>
@@ -191,22 +194,42 @@ public class PathElement extends DbObject<Long>
 
 	public interface CollectingFilesMonitor
 	{
-		public void found(int currentNumber);
+		public boolean continueDownloading();
+		public void found();
 	}
 	
-	public void collectAllCachedFiles(RootDirectory root, List<SharedFile> accumulator, CollectingFilesMonitor monitor)
+	public void downloadAllCurrentlyCached(RootDirectory root, CollectingFilesMonitor monitor)
 	{
+		if (!monitor.continueDownloading())
+		{
+			return;
+		}
 		SharedFile file = DbFiles.getFile(root, this);
 		if (file != null)
 		{
-			accumulator.add(file);
-			monitor.found(accumulator.size());
+			if (file.isLocal())
+			{
+				return;
+			}
+			try
+			{
+				Services.downloads.download(file);
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to download " + file, e);
+			}
+			monitor.found();
 			return;
 		}
 		
 		for (PathElement child : list(root))
 		{
-			child.collectAllCachedFiles(root, accumulator, monitor);
+			if (child.equals(this))
+			{
+				continue;
+			}
+			child.downloadAllCurrentlyCached(root, monitor);
 		}
 	}
 	

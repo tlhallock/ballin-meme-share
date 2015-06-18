@@ -270,7 +270,8 @@ public class Tracker implements Runnable
 		}
 
 		LogWrapper.getLogger().info("Tracker action: " + action.name());
-		
+
+		int offset = 0;
 		FileEntry file;
 		MachineEntry other;
 		CommentEntry comment;
@@ -288,7 +289,7 @@ public class Tracker implements Runnable
 		case CLAIM_FILE:
 			if (!Track.storesMetaData)
 			{
-				fail("This tracker does not store metadata.");
+				fail("This tracker does not store metadata.", input, output);
 			}
 			file = new FileEntry();
 			TrackObjectUtils.openArray(input);
@@ -303,7 +304,6 @@ public class Tracker implements Runnable
 			}
 			break;
 		case LIST_ALL_MACHINES:
-			int offset = 0;
 			String param = request.getParam("offset");
 			if (param != null)
 			{
@@ -321,7 +321,7 @@ public class Tracker implements Runnable
 		case LIST_FILES:
 			if (!Track.storesMetaData)
 			{
-				fail("This tracker does not store metadata.");
+				fail("This tracker does not store metadata.", input, output);
 			}
 			other = store.getMachine(request.getParam("other"));
 			store.listFiles(other, new Lister<FileEntry>(output));
@@ -332,11 +332,26 @@ public class Tracker implements Runnable
 			{
 				fail("List ratings without a machine", input, output);
 			}
-			
+			param = request.getParam("offset");
+			if (param != null)
+			{
+				try
+				{
+					offset = Integer.parseInt(param);
+				}
+				catch (NumberFormatException ex)
+				{
+					LogWrapper.getLogger().info("Bad offset: " + param);
+				}
+			}
 			new NumFilesMessage(store.getNumFiles(other)).generate(output, null);
-			store.listComments(other, new Lister<CommentEntry>(output));
+			store.listComments(other, new Lister<CommentEntry>(output), offset);
 			break;
 		case LIST_SEEDERS:
+			if (!Track.storesMetaData)
+			{
+				fail("This tracker does not store metadata.", input, output);
+			}
 			file = new FileEntry();
 			if (!TrackObjectUtils.read(input, file))
 			{

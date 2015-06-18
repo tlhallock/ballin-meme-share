@@ -28,7 +28,6 @@ package org.cnv.shr.dmn.trk;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -47,9 +46,9 @@ public class Trackers
 {
 	private HashMap<String, ClientTrackerClient> trackers = new HashMap<>();
 
-	public void add(String url, int portBegin, int portEnd)
+	public void add(String url, int portBegin, int portEnd, boolean supportsMetadata)
 	{
-		ClientTrackerClient client = new ClientTrackerClient(new TrackerEntry(url, portBegin, portEnd));
+		ClientTrackerClient client = new ClientTrackerClient(new TrackerEntry(url, portBegin, portEnd, supportsMetadata));
 		trackers.put(client.getAddress(), client);
 	}
 
@@ -96,14 +95,6 @@ public class Trackers
 		}
 	}
 	
-	public static void main(String[] args)
-	{
-		Trackers trackers = new Trackers();
-		trackers.load(Paths.get("foobar.json"));
-		trackers.add("127.0.0.1", 15, 56);
-		trackers.save(Paths.get("foobar.json"));
-	}
-
     public Collection<ClientTrackerClient> getClients()
     {
         return trackers.values();

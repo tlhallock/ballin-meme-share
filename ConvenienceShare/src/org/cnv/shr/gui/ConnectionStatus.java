@@ -33,25 +33,26 @@ import org.cnv.shr.util.ConnectionStatistics;
  *
  * @author thallock
  */
-public class ConnectionStatus extends javax.swing.JPanel {
+public class ConnectionStatus extends javax.swing.JPanel
+{
+	private Communication connection;
 
-    
-    private Communication connection;
-    /**
-     * Creates new form ConnectionStatus
-     */
-    public ConnectionStatus(Communication connection) {
-        this.connection = connection;
-        initComponents();
-        refresh();
-    }
-    
-    boolean shows(Communication c)
-    {
-    	return connection.equals(c);
-    }
-    
-    void refresh()
+	/**
+	 * Creates new form ConnectionStatus
+	 */
+	public ConnectionStatus(Communication connection)
+	{
+		this.connection = connection;
+		initComponents();
+		refresh();
+	}
+
+	boolean shows(Communication c)
+	{
+		return connection.equals(c);
+	}
+
+	void refresh()
 	{
 		ConnectionStatistics statistics = connection.getStatistics();
 		long now = System.currentTimeMillis();

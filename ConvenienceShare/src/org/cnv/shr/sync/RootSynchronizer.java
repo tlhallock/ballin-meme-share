@@ -98,6 +98,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 	@Override
 	public void run()
 	{
+		String currentName = Thread.currentThread().getName();
 		Thread.currentThread().setName("Root Synchronizer [" + local.getName() + "]");
 		SynchronizationTask task = null;
 		try
@@ -128,6 +129,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		{
 			listener.syncDone();
 		}
+		Thread.currentThread().setName(currentName);
 	}
 	
 	private void synchronize(final SynchronizationTask task)

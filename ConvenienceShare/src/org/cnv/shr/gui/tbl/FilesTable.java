@@ -54,6 +54,7 @@ public class FilesTable extends DbJTable<SharedFile>
 	private LinkedList<SharedFile> currentlyDisplaying = new LinkedList<>();
 	private String currentRootName;
 	private String currentMachineIdent;
+	private String filter;
 	
 	public FilesTable(JTable table, final JFrame origin)
 	{

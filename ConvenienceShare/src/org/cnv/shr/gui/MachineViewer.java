@@ -36,8 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.PublicKey;
-import java.sql.SQLException;
-import java.util.LinkedList;
 import java.util.logging.Level;
 
 import javax.swing.JFileChooser;
@@ -54,7 +52,6 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
@@ -117,6 +114,23 @@ public class MachineViewer extends javax.swing.JFrame
         pack();
 		
         addPermissionListeners();
+        
+        pin.addChangeListener(new ChangeListener()
+				{
+					@Override
+					public void stateChanged(ChangeEvent e)
+					{
+						Machine machine = getMachine();
+						boolean selected = pin.isSelected();
+						if (machine == null || machine.isLocal() || machine.isPinned() == selected)
+						{
+							return;
+						}
+						LogWrapper.getLogger().info("Setting pin of " + machine.getName() + " to " + selected);
+						machine.setPinned(selected);
+						machine.tryToSave();
+					}
+				});
 		
 			addWindowListener(new WindowAdapter()
 			{
@@ -259,27 +273,15 @@ public class MachineViewer extends javax.swing.JFrame
             public void actionPerformed(ActionEvent ae) {
                 final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                LinkedList<SharedFile> accumulator = new LinkedList<>();
-                CollectingFiles display = new CollectingFiles();
-                display.setLocation(getLocation());
-                display.setVisible(true);
-                n.getPathElement().collectAllCachedFiles(getRootDirectory(), accumulator, display);
-                if (!display.confirm())
+                Services.userThreads.execute(new Runnable() { public void run()
                 {
-                	return;
-                }
-                
-                for (SharedFile file : accumulator)
-                {
-                	try
-									{
-										Services.downloads.download(file);
-									}
-									catch (IOException e)
-									{
-										LogWrapper.getLogger().log(Level.INFO, "Unable to download " + file, e);
-									}
-                }
+                  CollectingFiles display = new CollectingFiles();
+                  display.setLocation(getLocation());
+                  display.setVisible(true);
+                  display.setAlwaysOnTop(true);
+                  n.getPathElement().downloadAllCurrentlyCached(getRootDirectory(), display);
+                  display.done();
+                }});
             }
         });
         menu.add(item);
@@ -419,6 +421,7 @@ public class MachineViewer extends javax.swing.JFrame
             isMessaging.setSelected(true); isMessaging.setEnabled(false);
             jButton3.setEnabled(false); // cannot sync roots to local
             jButton6.setEnabled(false); jButton5.setEnabled(false);
+            pin.setSelected(true); pin.setEnabled(false);
         }
         else
         {
@@ -427,6 +430,7 @@ public class MachineViewer extends javax.swing.JFrame
             isMessaging.setSelected(machine.getAllowsMessages()); isMessaging.setEnabled(true);
             jButton3.setEnabled(true);
             jButton6.setEnabled(true); jButton5.setEnabled(true);
+            pin.setSelected(machine.isPinned()); pin.setEnabled(true);
         }
     }
 
@@ -477,18 +481,16 @@ public class MachineViewer extends javax.swing.JFrame
         rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(false);
         requestDownloadButton.setEnabled(false);
         requestShareButton.setEnabled(false);
-        pin.setSelected(true); pin.setEnabled(false);
     }
     
     private void updatePermissionBoxesRemote(RemoteDirectory remote)
     {
-    	SharingState state = DbPermissions.getCurrentPermissions(remote);
+    	SharingState state = remote.getSharesWithUs();
         changePathButton.setEnabled(true);
         rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(state.listable());
         rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(state.downloadable());
         requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
         requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
-        pin.setEnabled(true);
     }
 
     /**
@@ -1064,15 +1066,8 @@ public class MachineViewer extends javax.swing.JFrame
 			DbPaths.pathDoesNotLieIn(remoteDir.getPathElement(), remoteDir);
 			DbPaths.pathLiesIn(pathElement, remoteDir);
 			remoteDir.setLocalMirror(pathElement);
-			try
-			{
-				remoteDir.save(Services.h2DbCache.getThreadConnection());
+				remoteDir.tryToSave();
 	      this.pathField.setText(remoteDir.getPathElement().getFullPath());
-			}
-			catch (SQLException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to change local mirror for remote directory " + remoteDir, e);
-			}
     }//GEN-LAST:event_changePathButtonActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
