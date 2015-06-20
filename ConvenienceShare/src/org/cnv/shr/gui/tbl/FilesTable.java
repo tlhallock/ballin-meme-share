@@ -25,7 +25,7 @@
 
 package org.cnv.shr.gui.tbl;
 
-import java.io.IOException;
+import java.util.AbstractSequentialList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,7 +54,7 @@ public class FilesTable extends DbJTable<SharedFile>
 	private LinkedList<SharedFile> currentlyDisplaying = new LinkedList<>();
 	private String currentRootName;
 	private String currentMachineIdent;
-	private String filter;
+	private String filter = "";
 	
 	public FilesTable(JTable table, final JFrame origin)
 	{
@@ -175,23 +175,47 @@ public class FilesTable extends DbJTable<SharedFile>
 	{
 		return new CloseableIterator<SharedFile>()
 		{
-			// Not synchronized on currently displaying...
-			Iterator<SharedFile> delegate = currentlyDisplaying.iterator();
+			Iterator<SharedFile> delegate; 
+			SharedFile next;
+			
+			{
+				synchronized (currentlyDisplaying)
+				{
+					delegate = ((AbstractSequentialList<SharedFile>) currentlyDisplaying.clone()).iterator();
+				}
+				getNext();
+			}
 			
 			@Override
 			public boolean hasNext()
 			{
-				return delegate.hasNext();
+				return next != null;
 			}
 
 			@Override
 			public SharedFile next()
 			{
-				return delegate.next();
+				SharedFile returnValue = next;
+				getNext();
+				return returnValue;
+			}
+
+			private void getNext()
+			{
+				next = null;
+				while (delegate.hasNext() && next == null)
+				{
+					SharedFile next2 = delegate.next();
+					if (!next2.getPath().getFullPath().contains(filter))
+					{
+						continue;
+					}
+					next = next2;
+				}
 			}
 
 			@Override
-			public void close() throws IOException {}
+			public void close() {}
 		};
 	}
 
@@ -222,5 +246,11 @@ public class FilesTable extends DbJTable<SharedFile>
           return canEdit [columnIndex];
       }
   	};
+	}
+
+	public void setFilter(String text)
+	{
+		filter = text;
+		refresh();
 	}
 }

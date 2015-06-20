@@ -50,6 +50,10 @@ public class UserMessageMessage extends Message
 	{
             this.type = m.getType();
             this.messageStr = m.getMessage();
+        		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
+        		{
+        			messageStr = messageStr.substring(0, UserMessage.MAX_MESSAGE_LENGTH);
+        		}
 	}
 
 	public UserMessageMessage(InputStream i) throws IOException
@@ -73,10 +77,6 @@ public class UserMessageMessage extends Message
 	@Override
 	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
 	{
-		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
-		{
-			messageStr = messageStr.substring(0, UserMessage.MAX_MESSAGE_LENGTH);
-		}
 		buffer.append(type);
 		buffer.append(messageStr);
 	}

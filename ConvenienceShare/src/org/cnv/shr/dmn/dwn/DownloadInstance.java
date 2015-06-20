@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
-import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
@@ -49,6 +49,7 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
@@ -58,10 +59,11 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
-public class DownloadInstance
+public class DownloadInstance implements Runnable
 {
 	static final Random random = new Random();
 	static int NUM_PENDING_CHUNKS = 10;
@@ -91,17 +93,29 @@ public class DownloadInstance
 		recover();
 	}
 
-	public synchronized void continueDownload() throws UnknownHostException, IOException
+	public synchronized void continueDownload()
 	{
-		DownloadState state = download.getState();
-		if (state.hasYetTo(DownloadState.REQUESTING_METADATA))
+		Services.downloads.downloadThreads.execute(this);
+	}
+	
+	public void run()
+	{
+		try
 		{
-			getMetaData();
-			return;
+			DownloadState state = download.getState();
+			if (state.hasYetTo(DownloadState.REQUESTING_METADATA))
+			{
+				getMetaData();
+				return;
+			}
+
+			queue();
+			requestSeeders();
 		}
-		
-		queue();
-		requestSeeders();
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to continue download", e);
+		}
 	}
 
 	private synchronized void getMetaData() throws UnknownHostException, IOException
@@ -133,23 +147,26 @@ public class DownloadInstance
 
 	private void requestSeeders()
 	{
-//		download.setState(DownloadState.FINDING_PEERS);
 		if (Math.random() < 2)
 		{
 			LogWrapper.getLogger().info("Currently not requesting seeders.");
 			return;
 		}
-//		Services.userThreads.execute(new Runnable() {
-//			@Override
-//			public void run()
-//			{
-//				FileEntry fileEntry = remoteFile.getFileEntry();
-//				for (ClientTrackerClient client : Services.trackers.getClients())
-//				{
-//					client.requestSeeders(fileEntry, seeders);
-//				}
-//			}
-//		});
+		Services.downloads.downloadThreads.execute(new Runnable() {
+			@Override
+			public void run()
+			{
+				LinkedList<Seeder> allSeeders = new LinkedList<>();
+				allSeeders.addAll(freeSeeders);
+				allSeeders.addAll(pendingSeeders.values());
+				
+				FileEntry fileEntry = remoteFile.getFileEntry();
+				for (ClientTrackerClient client : Services.trackers.getClients())
+				{
+					client.requestSeeders(fileEntry, allSeeders);
+				}
+			}
+		});
 	}
 
 	public synchronized void addSeeder(Machine machine, Communication connection)
@@ -181,16 +198,7 @@ public class DownloadInstance
 			download.setState(DownloadState.DOWNLOADING);
 		}
 
-		Services.userThreads.execute(new Runnable() { @Override public void run() {
-				try
-				{
-					continueDownload();
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to continue download.", e);
-				}
-			}});
+		continueDownload();
 	}
 	
 	private synchronized void recover()
@@ -290,20 +298,17 @@ public class DownloadInstance
 	{
 		if (pendingSeeders.isEmpty() && DbChunks.hasAllChunks(download))
 		{
-			// Should be using ScheduledThreadPoolExecutor
-			
 			// This needs to happen a while later.
 			// If this was the last chunk, then all seeders will be removed, including the one that inspired this queue (maybe a download chunk).
-			// If we do it later, we can hope to terminate peacefully.
-			Services.timer.schedule(new TimerTask() {
+			// If we do it later, we can hope to terminate the connection peacefully.
+			Services.downloads.downloadThreads.schedule(new Runnable()
+			{
 				@Override
 				public void run()
 				{
-					// complete can take a long time, so don't have it on the timer :)
-					Services.userThreads.execute(new Runnable() { public void run() {
-						complete();
-					}});
-				}}, 1000);
+					complete();
+				}
+			}, 1, TimeUnit.SECONDS);
 		}
 		return;
 	}

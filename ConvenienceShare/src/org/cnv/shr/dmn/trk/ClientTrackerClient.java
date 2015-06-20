@@ -104,7 +104,7 @@ public class ClientTrackerClient extends TrackerClient
 					continue;
 				}
 
-				Services.userThreads.execute(new Runnable()
+				Services.downloads.downloadThreads.execute(new Runnable()
 				{
 					@Override
 					public void run()

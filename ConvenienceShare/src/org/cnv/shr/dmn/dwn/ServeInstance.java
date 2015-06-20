@@ -238,7 +238,7 @@ public class ServeInstance extends TimerTask
 	@Override
 	public void run()
 	{
-		Services.userThreads.execute(new Runnable()
+		Services.downloads.downloadThreads.execute(new Runnable()
 		{
 			@Override
 			public void run()

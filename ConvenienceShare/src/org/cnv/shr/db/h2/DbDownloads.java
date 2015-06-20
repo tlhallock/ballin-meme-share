@@ -71,16 +71,16 @@ public class DbDownloads
     public static void clearCompleted()
     {
 //		DbChunks.allChunksDone(download);
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(DELETE1))
-		{
-			stmt.setInt(1, DownloadState.ALL_DONE.toInt());
-			stmt.execute();
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to clear completed download chunks", e);
-		}
+//		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+//				StatementWrapper stmt = c.prepareStatement(DELETE1))
+//		{
+//			stmt.setInt(1, DownloadState.ALL_DONE.toInt());
+//			stmt.execute();
+//		}
+//		catch (SQLException e)
+//		{
+//			LogWrapper.getLogger().log(Level.INFO, "Unable to clear completed download chunks", e);
+//		}
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(DELETE2))
 		{

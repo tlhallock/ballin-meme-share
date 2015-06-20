@@ -140,7 +140,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list:", e);
 		}
 	}
 	public void refresh(T t)

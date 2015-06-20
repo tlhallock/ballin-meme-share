@@ -29,7 +29,8 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.logging.Level;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.JOptionPane;
 
@@ -50,6 +51,7 @@ public class DownloadManager
 	HashMap<FileEntry, DownloadInstance> downloads = new HashMap<>();
 	DownloadInitiator initiator = new DownloadInitiator();
 	ChecksumRequester requester = new ChecksumRequester();
+	public ScheduledExecutorService downloadThreads = Executors.newSingleThreadScheduledExecutor();
 
 	public DownloadInstance download(SharedFile remoteFile) throws UnknownHostException, IOException
 	{
@@ -77,22 +79,7 @@ public class DownloadManager
 		{
 			return false;
 		}
-//		// Need to make a frame for this to keep all when several turn out to be the same.
-//		// Should just copy the local file...
-//		// Need to make show local copy...
-//		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(Services.notifications.getCurrentContext(), 
-//				"The file you requested to download is similar to you have locally.\n"
-//				+ "Remote file: " + remoteFile + ".\n"
-//				+ "Local file: " + file + ".\n"
-//				+ "Both checksums are " + checksum + " and both file sizes are " + remoteFile.getFileSize() + " (" + Misc.formatDiskUsage(remoteFile.getFileSize()) + ").\n"
-//				+ "Are you sure you would like to download the remote file?",
-//				"Downloading file that you may already have.",
-//				JOptionPane.YES_NO_OPTION,
-//				JOptionPane.WARNING_MESSAGE))
-//		{
-//			return false;
-//		}
-		
+
 		AlreadyDownloadedFrame.showAlreadyPresent((RemoteFile) remoteFile, file);
 
 		return true;
@@ -135,22 +122,7 @@ public class DownloadManager
 		LogWrapper.getLogger().info("Creating download instance");
 		DownloadInstance instance = new DownloadInstance(d);
 		Services.notifications.downloadAdded(instance);
-		downloads.put(d.getFile().getFileEntry(), instance);
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					instance.continueDownload();
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to download.", e);
-				}
-			}
-		});
+		instance.continueDownload();
 		return instance;
 	}
 

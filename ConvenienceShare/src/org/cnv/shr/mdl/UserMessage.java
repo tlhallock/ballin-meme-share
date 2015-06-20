@@ -96,6 +96,11 @@ public class UserMessage extends DbObject<Integer>
 	{
 		if (machine == null)
 			return false;
+		
+		if (message != null && message.length() > UserMessage.MAX_MESSAGE_LENGTH)
+		{
+			message = message.substring(0, UserMessage.MAX_MESSAGE_LENGTH);
+		}
 
 		try (StatementWrapper stmt = c.prepareStatement(INSERT1, Statement.RETURN_GENERATED_KEYS);)
 		{

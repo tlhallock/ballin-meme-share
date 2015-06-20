@@ -557,6 +557,11 @@ public class UserActions
 		viewer.setVisible(true);
 		LogWrapper.getLogger().info("Showing remote " + machine.getName());
 
+		if (machine.isLocal())
+		{
+			return;
+		}
+		
 		Services.userThreads.execute(new Runnable() { public void run() {
 			syncPermissions(machine);
 		}});

@@ -41,6 +41,7 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.key.OpenConnection;
 import org.cnv.shr.msg.key.WhoIAm;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class ConnectionManager
 {
@@ -67,6 +68,15 @@ public class ConnectionManager
 			final PublicKey remoteKey, 
 			boolean acceptAnyKeys) throws UnknownHostException, IOException
 	{
+		if (Misc.collectIps().contains(ip)
+				&&  (portBegin            >= Services.localMachine.getPort() && portBegin            <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts())
+						||
+						(portBegin + numPorts >= Services.localMachine.getPort() && portBegin + numPorts <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts()))
+		{
+			LogWrapper.getLogger().info("Can't connect to local machine. No reason for this.");
+			return null;
+		}
+		
 		Authenticator authentication = new Authenticator(acceptAnyKeys, remoteKey, Services.keyManager.getPublicKey());
 		class TmpObject
 		{

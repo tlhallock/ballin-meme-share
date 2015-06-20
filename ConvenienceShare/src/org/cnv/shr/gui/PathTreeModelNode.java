@@ -261,7 +261,7 @@ public class PathTreeModelNode implements TaskListener
 		}
 	}
 	
-	public List<SharedFile> getFileList()
+	public List<SharedFile> getFileList(boolean recursive)
 	{
 		if (isLeaf())
 		{
@@ -272,6 +272,12 @@ public class PathTreeModelNode implements TaskListener
 		
 		if (children == null)
 		{
+			return list;
+		}
+
+		if (recursive)
+		{
+			element.getFilesList(model.rootDirectory, list);
 			return list;
 		}
 		

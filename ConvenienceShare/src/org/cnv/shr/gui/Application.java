@@ -354,7 +354,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         machinesList = new javax.swing.JTable();
         jButton10 = new javax.swing.JButton();
         jButton17 = new javax.swing.JButton();
-        jToggleButton1 = new javax.swing.JToggleButton();
+        jButton13 = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jButton1 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
@@ -546,10 +546,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
-        jToggleButton1.setText("Find Machines");
-        jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButton13.setText("Find machines");
+        jButton13.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton1ActionPerformed(evt);
+                jButton13ActionPerformed(evt);
             }
         });
 
@@ -563,7 +563,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jToggleButton1)
+                        .addComponent(jButton13)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton17)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -580,9 +580,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton2)
                     .addComponent(jButton10)
                     .addComponent(jButton17)
-                    .addComponent(jToggleButton1))
+                    .addComponent(jButton13))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 399, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1428,10 +1428,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
       UserActions.findTrackers();
     }//GEN-LAST:event_jButton17ActionPerformed
 
-    private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
-       UserActions.findMachines(this);
-    }//GEN-LAST:event_jToggleButton1ActionPerformed
-
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         Main.restart();
     }//GEN-LAST:event_jMenuItem2ActionPerformed
@@ -1520,6 +1516,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         UserActions.findMachines(this);
     }//GEN-LAST:event_jMenuItem20ActionPerformed
 
+    private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
+        UserActions.findMachines(this);
+    }//GEN-LAST:event_jButton13ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1528,6 +1528,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JButton jButton10;
     private javax.swing.JButton jButton11;
     private javax.swing.JButton jButton12;
+    private javax.swing.JButton jButton13;
     private javax.swing.JButton jButton17;
     private javax.swing.JButton jButton18;
     private javax.swing.JButton jButton2;
@@ -1603,7 +1604,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
-    private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JTable localsView;
     private javax.swing.JSpinner logLines;
     private javax.swing.JTextArea logTextArea;
