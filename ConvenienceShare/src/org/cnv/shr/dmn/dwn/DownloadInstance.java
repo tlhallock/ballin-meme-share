@@ -100,6 +100,7 @@ public class DownloadInstance implements Runnable
 	
 	public void run()
 	{
+		LogWrapper.getLogger().fine("Continuing download " + download);
 		try
 		{
 			DownloadState state = download.getState();
@@ -120,6 +121,7 @@ public class DownloadInstance implements Runnable
 
 	private synchronized void getMetaData() throws UnknownHostException, IOException
 	{
+		LogWrapper.getLogger().info("Requesting more metadata");
 		download.setState(DownloadState.REQUESTING_METADATA);
 		
 		if (DbChunks.hasAllChunks(download))
@@ -152,10 +154,12 @@ public class DownloadInstance implements Runnable
 			LogWrapper.getLogger().info("Currently not requesting seeders.");
 			return;
 		}
+		
 		Services.downloads.downloadThreads.execute(new Runnable() {
 			@Override
 			public void run()
 			{
+				LogWrapper.getLogger().info("Requesting seeders for " + download);
 				LinkedList<Seeder> allSeeders = new LinkedList<>();
 				allSeeders.addAll(freeSeeders);
 				allSeeders.addAll(pendingSeeders.values());
@@ -177,8 +181,11 @@ public class DownloadInstance implements Runnable
 
 	public synchronized void foundChunks(Machine machine, List<Chunk> chunks) throws IOException
 	{
-		if (remoteFile.getRootDirectory().getMachine().getId() != machine.getId())
+		Integer expected = remoteFile.getRootDirectory().getMachine().getId();
+		Integer found = machine.getId();
+		if (expected != found)
 		{
+			LogWrapper.getLogger().info("Machine id did not macth. Excepted " + expected + " found " + found);
 			return;
 		}
 		download.setState(DownloadState.RECEIVING_METADATA);
@@ -191,6 +198,7 @@ public class DownloadInstance implements Runnable
 				continue;
 			}
 			DbChunks.addChunk(download, chunk);
+			LogWrapper.getLogger().fine("Added chunk " + chunk);
 		}
 		
 		if (DbChunks.hasAllChunks(download))
@@ -255,6 +263,8 @@ public class DownloadInstance implements Runnable
 	
 	private synchronized void queue()
 	{
+		LogWrapper.getLogger().info("Queue " + download);
+		
 		List<Chunk> upComing = DbChunks.getNextChunks(download, NUM_PENDING_CHUNKS - pendingSeeders.size());
 		if (upComing.isEmpty())
 		{

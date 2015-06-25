@@ -40,6 +40,7 @@ import org.cnv.shr.json.JsonList;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class ChunkList extends DownloadMessage
 {
@@ -88,6 +89,8 @@ public class ChunkList extends DownloadMessage
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor(), connection);
 		if (downloadInstance == null)
 		{
+			LogWrapper.getLogger().info("Found chunks, but download no longer present.");
+			connection.finish();
 			return;
 		}
 		downloadInstance.foundChunks(connection.getMachine(), chunks);

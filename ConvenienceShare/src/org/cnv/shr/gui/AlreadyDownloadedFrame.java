@@ -10,6 +10,8 @@ import java.awt.GridLayout;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import javax.swing.SwingUtilities;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
@@ -37,7 +39,14 @@ public class AlreadyDownloadedFrame extends javax.swing.JFrame {
         jPanel1.repaint();
         if (list.isEmpty())
         {
-            setVisible(false);
+        	// Removing deadlock
+					SwingUtilities.invokeLater(new Runnable()
+					{
+						public void run()
+						{
+							setVisible(false);
+						}
+					});
         }
         else
         {

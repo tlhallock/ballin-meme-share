@@ -51,7 +51,7 @@ public class DownloadManager
 	HashMap<FileEntry, DownloadInstance> downloads = new HashMap<>();
 	DownloadInitiator initiator = new DownloadInitiator();
 	ChecksumRequester requester = new ChecksumRequester();
-	public ScheduledExecutorService downloadThreads = Executors.newSingleThreadScheduledExecutor();
+	public ScheduledExecutorService downloadThreads = Executors.newScheduledThreadPool(0);
 
 	public DownloadInstance download(SharedFile remoteFile) throws UnknownHostException, IOException
 	{
@@ -121,6 +121,7 @@ public class DownloadManager
 
 		LogWrapper.getLogger().info("Creating download instance");
 		DownloadInstance instance = new DownloadInstance(d);
+		downloads.put(d.getFile().getFileEntry(), instance);
 		Services.notifications.downloadAdded(instance);
 		instance.continueDownload();
 		return instance;
