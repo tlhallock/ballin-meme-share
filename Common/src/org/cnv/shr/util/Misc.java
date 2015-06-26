@@ -412,19 +412,24 @@ public class Misc
 		}
 
 		LinkedList<String> returnValue = new LinkedList<>();
+		String string = f.toString();
 		switch (system)
 		{
 		case Windows:
 			returnValue.add("explorer.exe");
-			if (Files.isRegularFile(f))
+			if (string.contains(" "))
+			{
+				LogWrapper.getLogger().info("Opening path with a space");
+			}
+			if (Files.isRegularFile(f) && showInDirectory)
 			{
 				// With this argument the file itself is actually opened...
 				returnValue.add(f.getParent().toString());
-				returnValue.add("/select," + f.toString());
+				returnValue.add("/select," + string);
 			}
 			else
 			{
-				returnValue.add(f.toString());
+				returnValue.add(string);
 			}
 			break;
 		case Linux:
@@ -439,7 +444,7 @@ public class Misc
 			{
 				f = f.getParent();
 			}
-			returnValue.add(f.toString());
+			returnValue.add(string);
 		}
 		
 		

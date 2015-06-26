@@ -101,22 +101,30 @@ public class Track
 		
 		ensureLocalTrackerIsPresent();
 		
-		if (showGui)
-		{
-			gui = new TrackerGui();
-			gui.setVisible(true);
-		}
-		
+		boolean ableToStart = false;
 		for (int port = TrackerEntry.TRACKER_PORT_BEGIN; port < TrackerEntry.TRACKER_PORT_END; port++)
 		{
 			try
 			{
 				new Thread(new Tracker(new ServerSocket(port))).start();
+				ableToStart = true;
 			}
 			catch (SQLException | IOException e)
 			{
 				LogWrapper.getLogger().log(Level.INFO, "Unable to start on port " + port, e);
 			}
+		}
+		
+		if (!ableToStart)
+		{
+			LogWrapper.getLogger().severe("Unable to start, all ports are busy.");
+			System.exit(-1);
+		}
+		
+		if (showGui)
+		{
+			gui = new TrackerGui();
+			gui.setVisible(true);
 		}
 	}
 

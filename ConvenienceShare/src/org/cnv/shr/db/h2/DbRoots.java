@@ -27,7 +27,7 @@ package org.cnv.shr.db.h2;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -240,22 +240,32 @@ public class DbRoots
 			return this.patterns;
 		}
 		
-		public boolean blocks(String path)
+		public boolean blocks(Path path)
 		{
+			if (Files.isDirectory(path))
+			{
+				return false;
+			}
+			if (!Files.isRegularFile(path))
+			{
+				return true;
+			}
+			String pathString = path.toString();
 			for (String pattern : patterns)
 			{
-				if (path.contains(pattern))
+				if (pathString.contains(pattern))
 				{
 					return true;
 				}
 			}
 			try
 			{
-				if (minFileSize >= 0 && Files.size(Paths.get(path)) < minFileSize)
+				long fileSize = Files.size(path);
+				if (minFileSize >= 0 && fileSize < minFileSize)
 				{
 					return true;
 				}
-				if (maxFileSize >= 0 && Files.size(Paths.get(path)) > maxFileSize)
+				if (maxFileSize >= 0 && fileSize > maxFileSize)
 				{
 					return true;
 				}

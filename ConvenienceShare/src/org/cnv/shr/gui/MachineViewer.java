@@ -57,6 +57,7 @@ import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.gui.tbl.FilesTable;
+import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
@@ -285,6 +286,7 @@ public class MachineViewer extends javax.swing.JFrame
     }
     private void addPopupMenu()
     {
+    	MachineViewer v = this;
         class LastPopupClick { int x; int y; }; final LastPopupClick lastPopupClick = new LastPopupClick();
         final JPopupMenu menu = new JPopupMenu();
         JMenuItem item = new JMenuItem("Download all currently cached");
@@ -362,6 +364,34 @@ public class MachineViewer extends javax.swing.JFrame
                 final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
                 n.syncFully();
+            }
+        });
+        menu.add(item);
+        item = new JMenuItem("Set tags...");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+            	RootDirectory root = getRootDirectory();
+            	if (!(root instanceof LocalDirectory))
+            	{
+            		JOptionPane.showMessageDialog(
+            				v,
+            				"It is only possible to set tags of a local directory. You either have not selected a directory or are viewing a remote directory",
+            				"Can only set local tags.",
+            				JOptionPane.INFORMATION_MESSAGE);
+            		return;
+            	}
+            	LocalDirectory local = (LocalDirectory) root;
+            	
+                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
+                final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+                Services.userThreads.execute(new Runnable() { public void run()
+                {
+                	LogWrapper.getLogger().info("Settings tags of files in " + local + "." + n.getPathElement().getFullPath());
+                	SetTagsFrame setTagsFrame = new SetTagsFrame(local, n.getFileList(true));
+                	Services.notifications.registerWindow(setTagsFrame);
+                	setTagsFrame.setVisible(true);
+                }});
             }
         });
         menu.add(item);
@@ -455,6 +485,9 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void viewNoDirectory() {
         this.rootDirectoryName = null;
+        jCheckBox1.setEnabled(false);
+        jTextField1.setEnabled(false);
+        jTextField2.setEnabled(false);
         this.descriptionLabel.setText("Select a directory.");
         this.tagsLabel.setText("Select a directory.");
         this.numFilesLabel.setText("Select a directory.");
@@ -473,6 +506,9 @@ public class MachineViewer extends javax.swing.JFrame
     		return;
     	}
         LogWrapper.getLogger().info("Showing directory " + directory.getPathElement());
+        jCheckBox1.setEnabled(true); jCheckBox1.setSelected(false);
+        jTextField1.setEnabled(true); jTextField1.setText("");
+        jTextField2.setEnabled(true); jTextField2.setText("");
         this.rootDirectoryName = directory.getName();
         this.rootNameLabel.setText(directory.getName());
         this.rootNameLabel.setText(directory.getPathElement().getFullPath());
@@ -482,6 +518,7 @@ public class MachineViewer extends javax.swing.JFrame
         this.pathField.setText(directory.getPathElement().getFullPath());
         this.diskSpaceLabel.setText(directory.getTotalFileSize());
         ((PathTreeModel) filesTree.getModel()).setRoot(directory);
+        filesManager.setFilters("", "");
         filesManager.refresh();
         if (directory.isLocal())
         {
@@ -538,6 +575,8 @@ public class MachineViewer extends javax.swing.JFrame
         jScrollPane3 = new javax.swing.JScrollPane();
         filesTable = new javax.swing.JTable();
         jCheckBox1 = new javax.swing.JCheckBox();
+        jLabel6 = new javax.swing.JLabel();
+        jTextField2 = new javax.swing.JTextField();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         filesTree = new javax.swing.JTree();
@@ -628,7 +667,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         jSplitPane2.setDividerLocation(200);
 
-        jLabel5.setText("Filter:");
+        jLabel5.setText("Filter paths:");
 
         jTextField1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -641,19 +680,32 @@ public class MachineViewer extends javax.swing.JFrame
 
         jCheckBox1.setText("Recurse");
 
+        jLabel6.setText("Filter tags:");
+
+        jTextField2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextField2ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 455, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextField1)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jCheckBox1)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jTextField1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jCheckBox1))
+                    .addComponent(jTextField2))
                 .addContainerGap())
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -664,7 +716,11 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(jLabel5)
                     .addComponent(jCheckBox1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE))
         );
 
         jSplitPane2.setRightComponent(jPanel3);
@@ -919,10 +975,10 @@ public class MachineViewer extends javax.swing.JFrame
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(sharingWithRemoteMachine, 0, 163, Short.MAX_VALUE)
@@ -954,7 +1010,7 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(jButton1)
                     .addComponent(jLabel3)
                     .addComponent(remoteSharingWithUs)
-                    .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(machineLabel)
                     .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1010,8 +1066,7 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
-        // filter files table
-    	filesManager.setFilter(jTextField1.getText());
+        filterFilesTable();
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
@@ -1154,6 +1209,16 @@ public class MachineViewer extends javax.swing.JFrame
         }
     }//GEN-LAST:event_jButton6ActionPerformed
 
+    private void jTextField2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField2ActionPerformed
+    	filterFilesTable();
+    }//GEN-LAST:event_jTextField2ActionPerformed
+
+    private void filterFilesTable()
+    {
+    	filesManager.setFilters(jTextField1.getText(), jTextField2.getText());
+    }
+    
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton changePathButton;
     private javax.swing.JLabel descriptionLabel;
@@ -1180,6 +1245,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
@@ -1194,6 +1260,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField jTextField2;
     private javax.swing.JLabel machineLabel;
     private javax.swing.JLabel numFilesLabel;
     private javax.swing.JTextField pathField;

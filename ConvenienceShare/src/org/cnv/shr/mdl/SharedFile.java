@@ -177,6 +177,10 @@ public abstract class SharedFile extends DbObject<Integer>
 
 	public String getTags()
 	{
+		if (tags == null)
+		{
+			tags = "";
+		}
 		return tags;
 	}
 

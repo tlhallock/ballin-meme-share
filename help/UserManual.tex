@@ -313,33 +313,25 @@ for security no symbolic links are added, and all files should remain inside the
 
 First:
 \begin{itemize}
-\item connection statistics need to work
 \item get the mapper working again
 \item finish about pane
-\item make sure downloads are reinitiated
-\item implement verify integrity
-\item add button to request all others to update their code...
-\item debug already running
 \item use json for messages (reencrypt the streams)
 \item finish user manual
 \item when cannot connect to machine ask tracker if the ip has changed
 \item automatically sync synced trackers
 \item test change path of mirror
-\item test the min file size
 \item test what happens with two locals by the same name...
 \item test tracker gui with remote tracker
 \item add tracker import directory
-\item make tracker gui a parameter
-\item make parameter for tracker gui to not store file metadata
 \item make urls bigger: tracker, machine, update
-\item don't start tracker if already started
-\item Find Machines is a toggle button?
-\item update downloads often
 \item add statement to delete all local machines aside from Services.localMachine
 \item take root synchronizer off user thread in pathTreeModel
 \end{itemize}
 Later:
 \begin{itemize}
+\item test the min file size
+\item debug already running
+\item add button to request all others to update their code...
 \item finish getLogs
 \item implement find trackers on machine (maybe put in findMachines?), clear browsing data
 \item connections need to be revisited
@@ -352,6 +344,7 @@ Later:
 \item always use offset in byte array
 \item add synchronization to tracker gui's tracker store
 \item start on startup
+\item test verify integrity
 \item use IOUtils.copy
 \item make sure sockets close
 \item dbl check connection caching
@@ -364,7 +357,9 @@ Later:
 \item run it for a long time
 \item write TONS more tests
 \item make the seeders work again
+
 \item close root synchronizer on inactivity
+\item change directory name while it is open in the machine viewer
 \end{itemize}
 Maybe:
 \begin{itemize}

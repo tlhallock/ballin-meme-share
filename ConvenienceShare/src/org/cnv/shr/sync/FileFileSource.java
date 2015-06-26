@@ -69,7 +69,7 @@ public class FileFileSource implements FileSource
 	@Override
 	public boolean stillExists()
 	{
-		return f.toFile().exists() && !patterns.blocks(f.toFile().getAbsolutePath());
+		return f.toFile().exists() && !patterns.blocks(f);
 	}
 
 	@Override
@@ -113,7 +113,7 @@ public class FileFileSource implements FileSource
 				while (it.hasNext())
 				{
 					Path maybeNext = it.next();
-					if (patterns.blocks(maybeNext.toFile().getAbsolutePath()))
+					if (patterns.blocks(maybeNext))
 					{
 						continue;
 					}

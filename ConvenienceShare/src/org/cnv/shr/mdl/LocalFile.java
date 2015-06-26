@@ -220,4 +220,9 @@ public class LocalFile extends SharedFile
 	{
 		return (LocalDirectory) locals.getObject(c, DbTables.DbObjects.LROOT, rootId);
 	}
+
+    public void setTags(String tags)
+    {
+        this.tags = tags;
+    }
 }

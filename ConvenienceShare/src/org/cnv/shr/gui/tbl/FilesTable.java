@@ -47,6 +47,7 @@ import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.CloseableIterator;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class FilesTable extends DbJTable<SharedFile>
@@ -55,6 +56,7 @@ public class FilesTable extends DbJTable<SharedFile>
 	private String currentRootName;
 	private String currentMachineIdent;
 	private String filter = "";
+  private String tagsFilter = "";
 	
 	public FilesTable(JTable table, final JFrame origin)
 	{
@@ -165,7 +167,7 @@ public class FilesTable extends DbJTable<SharedFile>
 		 currentRow.put("Name",           String.valueOf(name)                );
 		 currentRow.put("Size",           new DiskUsage(next.getFileSize())   );
 		 currentRow.put("Checksum",       String.valueOf(next.getChecksum())  );
-		 currentRow.put("Description",    String.valueOf(next.getTags())      );
+		 currentRow.put("Tags",           String.valueOf(next.getTags())      );
 		 currentRow.put("Modified",       new Date(next.getLastUpdated())     );
 		 currentRow.put("Extension",      String.valueOf(ext)                 );
 	}
@@ -210,6 +212,10 @@ public class FilesTable extends DbJTable<SharedFile>
 					{
 						continue;
 					}
+					if (!next2.getTags().contains(tagsFilter))
+					{
+						continue;
+					}
 					next = next2;
 				}
 			}
@@ -226,7 +232,7 @@ public class FilesTable extends DbJTable<SharedFile>
 
       },
       new String [] {
-          "Path", "Name", "Size", "Checksum", "Description", "Modified", "Extension"
+          "Path", "Name", "Size", "Checksum", "Tags", "Modified", "Extension"
       }
   ) {
       Class[] types = new Class [] {
@@ -247,10 +253,12 @@ public class FilesTable extends DbJTable<SharedFile>
       }
   	};
 	}
-
-	public void setFilter(String text)
+	
+	public void setFilters(String string, String string2)
 	{
-		filter = text;
+		filter = string;
+		tagsFilter = string2;
+		LogWrapper.getLogger().info("Filtering files table by path=" + filter + " and tags=" + tagsFilter);
 		refresh();
 	}
 }

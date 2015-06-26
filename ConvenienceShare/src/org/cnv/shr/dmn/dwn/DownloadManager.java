@@ -46,6 +46,7 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class DownloadManager
 {
@@ -63,11 +64,14 @@ public class DownloadManager
 	{
 		if (remoteFile.isLocal())
 		{
+			LocalFile localFile = (LocalFile) remoteFile;
 			JOptionPane.showMessageDialog(Services.notifications.getCurrentContext(),
-					"Unable to download local file: " + remoteFile.getRootDirectory().getPathElement().getFullPath() + ":" + remoteFile.getPath().getFullPath(),
+					"Unable to download local file: " + remoteFile.getRootDirectory().getPathElement().getFullPath() + ":" + remoteFile.getPath().getFullPath() + "\n" +
+					"Instead we will open it.",
 					"Unable to download local file.",
 					JOptionPane.INFORMATION_MESSAGE);
 			LogWrapper.getLogger().info("Trying to download local file " + remoteFile);
+			Misc.nativeOpen(localFile.getFsFile(), false);
 			return null;
 		}
 		LogWrapper.getLogger().info("Trying to download " + remoteFile);

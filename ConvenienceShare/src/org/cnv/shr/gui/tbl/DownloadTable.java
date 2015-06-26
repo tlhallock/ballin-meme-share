@@ -208,7 +208,7 @@ public class DownloadTable extends DbJTable<Download>
 		SharedFile file = download.getFile();
 		RootDirectory directory = file.getRootDirectory();
 		Machine machine = directory.getMachine();
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(download);
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(file.getFileEntry());
 		
 		currentRow.put("Machine",           machine.getName()                                                         );
 		currentRow.put("Directory",         directory.getName()                                                       );

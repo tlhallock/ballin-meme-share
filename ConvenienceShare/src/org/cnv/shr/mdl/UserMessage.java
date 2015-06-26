@@ -263,7 +263,7 @@ public class UserMessage extends DbObject<Integer>
 		}
 		JOptionPane.showMessageDialog(Services.notifications.getCurrentContext(), 
 				"Machine " + machine.getName() + " says \"" + message + "\"",
-				"Message sent on " + new Date(sent),
+				"Message received on " + new Date(sent),
 				JOptionPane.INFORMATION_MESSAGE);
 	}
 
