@@ -106,7 +106,6 @@ public class UserActions
 						{
 							// enable messaging
 							machine.setAllowsMessages(true);
-							machine.tryToSave();
 						}
 	
 						if (params.visible)
@@ -114,14 +113,20 @@ public class UserActions
 							if (params.share)
 							{
 								machine.setWeShare(SharingState.DOWNLOADABLE);
-								machine.tryToSave();
 							}
 							else
 							{
 								machine.setWeShare(SharingState.SHARE_PATHS);
-								machine.tryToSave();
 							}
 						}
+						
+						if (params.pin)
+						{
+							machine.setPinned(true);
+							machine.tryToSave();
+						}
+						
+						machine.tryToSave();
 					}
 					finally
 					{

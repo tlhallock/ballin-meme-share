@@ -39,6 +39,7 @@ public class AddMachine extends javax.swing.JFrame {
         public boolean visible;
         public boolean message;
 				public boolean open;
+				public boolean pin = true;
         
         public AddMachineParams()
         {
