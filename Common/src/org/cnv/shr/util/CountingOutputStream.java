@@ -25,6 +25,7 @@
 
 package org.cnv.shr.util;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -44,13 +45,15 @@ public final class CountingOutputStream extends OutputStream
 	
 	
 
-private OutputStream logFile; 
+private BufferedWriter logFile; 
 { 
   Map<String, Object> properties = new HashMap<>(1);
   properties.put(JsonGenerator.PRETTY_PRINTING, true);
 	try
 	{
-		logFile = Files.newOutputStream(Paths.get("log.out." + System.currentTimeMillis() + "." + Math.random() + ".txt"));
+		String string = "log.out." + System.currentTimeMillis() + "." + Math.random() + ".txt";
+		System.out.println("Logging to " + string);
+		logFile = Files.newBufferedWriter(Paths.get(string));
 	}
 	catch (IOException e)
 	{
@@ -120,6 +123,7 @@ private OutputStream logFile;
 	public void close() throws IOException
 	{
 		stopOtherSide();
+		logFile.write("<Stopping other side>");
 	}
 	
 	public void actuallyClose() throws IOException

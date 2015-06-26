@@ -129,7 +129,7 @@ public class ClientTrackerClient extends TrackerClient
 		
 		try
 		{
-			Communication openConnection = Services.networkManager.openConnection(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false);
+			Communication openConnection = Services.networkManager.openConnection(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false, "Download file");
 			if (openConnection == null)
 			{
 				return;

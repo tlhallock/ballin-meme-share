@@ -127,6 +127,7 @@ public abstract class Message implements Jsonable
 		c.finish();
 		throw new PermissionException(action);
 	}
-	
+
+	public abstract String toDebugString();
 	public abstract String getJsonKey();
 }

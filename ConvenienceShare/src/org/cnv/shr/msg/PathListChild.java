@@ -25,6 +25,7 @@
 
 package org.cnv.shr.msg;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.json.stream.JsonGenerator;
@@ -36,6 +37,7 @@ import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
@@ -172,5 +174,12 @@ public class PathListChild implements Jsonable
 	public static String getJsonName() { return "PathListChild"; }
 	public String getJsonKey() { return getJsonName(); }
 	public PathListChild(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

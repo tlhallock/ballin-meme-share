@@ -214,7 +214,7 @@ public class DbTables
 	}
 	
 
-	private static final DbObjects[] ALL_TABLES  = new DbObjects[]
+	public static final DbObjects[] ALL_TABLES  = new DbObjects[]
 	{
 		DbObjects.PUBLIC_KEY      ,
 		DbObjects.PELEM           ,

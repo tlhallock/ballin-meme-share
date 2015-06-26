@@ -127,7 +127,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 
 		for (SynchronizationListener listener : listeners)
 		{
-			listener.syncDone();
+			listener.syncDone(this);
 		}
 		Thread.currentThread().setName(currentName);
 	}
@@ -330,6 +330,6 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		void fileAdded(SharedFile f);
 		void fileRemoved(SharedFile f);
 		void fileUpdated(SharedFile f);
-		void syncDone();
+		void syncDone(RootSynchronizer rootSynchronizer);
 	}
 }

@@ -97,6 +97,13 @@ public class ServeTable extends DbJTable<ServeInstance>
 		{
 			Class[] types = new Class[] { java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class };
 
+      boolean[] canEdit = new boolean [] {
+          false, false, false, false
+      };
+
+      public boolean isCellEditable(int rowIndex, int columnIndex) {
+          return canEdit [columnIndex];
+      }
 			public Class getColumnClass(int columnIndex)
 			{
 				return types[columnIndex];

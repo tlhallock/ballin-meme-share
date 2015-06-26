@@ -25,6 +25,7 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.io.ByteArrayOutputStream;
 import java.security.PublicKey;
 import java.sql.SQLException;
 import java.util.Map.Entry;
@@ -45,6 +46,7 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
@@ -85,7 +87,12 @@ public class MachineBackup implements Jsonable
 			while (iterator.hasNext())
 			{
 				RootDirectory next = iterator.next();
-				roots.put(next.getName(), next.getPathElement().getFullPath());
+				String fullPath = next.getPathElement().getFullPath();
+				if (!fullPath.endsWith("/"))
+				{
+					fullPath = fullPath + "/";
+				}
+				roots.put(next.getName(), fullPath);
 			}
 		}
 	}
@@ -110,6 +117,7 @@ public class MachineBackup implements Jsonable
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to restore machine: " + identifier, e);
+			return;
 		}
 		
 		for (String key : keys)
@@ -125,18 +133,19 @@ public class MachineBackup implements Jsonable
 			if (root == null)
 			{
 				root = new RemoteDirectory(machine, dirName, null, null, SharingState.DO_NOT_SHARE);
+				try
+				{
+					root.save(wrapper);
+				}
+				catch (SQLException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to save root directory: " + dirName, e);
+					continue;
+				}
 			}
 			PathElement pathElement = DbPaths.getPathElement(path);
 			root.setLocalMirror(pathElement);
 			DbPaths.pathLiesIn(pathElement, root);
-			try
-			{
-				root.save(wrapper);
-			}
-			catch (SQLException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to save root directory: " + dirName, e);
-			}
 		}
 	}
 	
@@ -328,5 +337,12 @@ public class MachineBackup implements Jsonable
 	public static String getJsonName() { return "MachineBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public MachineBackup(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

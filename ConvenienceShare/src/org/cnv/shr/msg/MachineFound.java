@@ -25,6 +25,7 @@
 
 package org.cnv.shr.msg;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -37,6 +38,7 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
@@ -216,5 +218,12 @@ public class MachineFound extends Message
 	public static String getJsonName() { return "MachineFound"; }
 	public String getJsonKey() { return getJsonName(); }
 	public MachineFound(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

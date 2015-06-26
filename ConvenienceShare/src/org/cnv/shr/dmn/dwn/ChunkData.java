@@ -41,6 +41,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.cnv.shr.dmn.ChecksumManager;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.util.LogWrapper;
 
 
 // TODO: java nio
@@ -153,6 +154,7 @@ public class ChunkData
 				int nread = toRead.read(buffer);
 				if (nread < 0 && offset < numberOfBytes)
 				{
+					LogWrapper.getLogger().info("Hit end of file too early (at " + offset + ") while calculating checksum of " + chunk);
 					return null;
 				}
 				buffer.flip();
@@ -167,6 +169,11 @@ public class ChunkData
 	
 	public static boolean test(Chunk chunk, Path f) throws IOException, NoSuchAlgorithmException
 	{
-		return getChecksum(chunk, f).equals(chunk.getChecksum());
+		String checksum = getChecksum(chunk, f);
+		if (checksum == null)
+		{
+			return false;
+		}
+		return checksum.equals(chunk.getChecksum());
 	}
 }

@@ -89,7 +89,7 @@ public class UserActions
 			{
 				try
 				{
-					Communication openConnection = Services.networkManager.openConnection(url, params.acceptKeys);
+					Communication openConnection = Services.networkManager.openConnection(url, params.acceptKeys, "Add machine");
 					if (openConnection == null)
 					{
 						Services.keyManager.addPendingAuthentication(
@@ -159,7 +159,7 @@ public class UserActions
 		try
 		{
       LogWrapper.getLogger().info("Synchronizing roots with " + m.getName());
-			Communication openConnection = Services.networkManager.openConnection(m, false);
+			Communication openConnection = Services.networkManager.openConnection(m, false, "Synchronize roots");
 			if (openConnection == null)
 			{
 				return;
@@ -204,7 +204,7 @@ public class UserActions
 						}
 					}
 					
-					Communication openConnection = Services.networkManager.openConnection(m, false);
+					Communication openConnection = Services.networkManager.openConnection(m, false, "Find more machines");
 					if (openConnection == null)
 					{
 						return;
@@ -321,13 +321,9 @@ public class UserActions
 		m.tryToSave();
 	}
 
-	public static void shareWith(Machine m, LocalDirectory local, boolean share)
-	{
-	}
-
 	public static void download(final SharedFile remote)
 	{
-		Services.userThreads.execute(new Runnable()
+		Services.downloads.downloadThreads.execute(new Runnable()
 		{
 			@Override
 			public void run()
@@ -517,7 +513,7 @@ public class UserActions
 
 		try
 		{
-			Communication openConnection = Services.networkManager.openConnection(machine, false);
+			Communication openConnection = Services.networkManager.openConnection(machine, false, "Check permissions");
 			if (openConnection == null)
 			{
 				return;

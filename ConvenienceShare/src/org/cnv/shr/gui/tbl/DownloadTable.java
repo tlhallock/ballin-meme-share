@@ -32,6 +32,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
+import org.cnv.shr.db.h2.DbChunks;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
@@ -142,13 +143,47 @@ public class DownloadTable extends DbJTable<Download>
 			@Override
 			void perform(Download download)
 			{
-				LogWrapper.getLogger().info("Implement me!");
+				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(download);
+				if (dInstance != null)
+				{
+					dInstance.recover();
+					dInstance.continueDownload();
+				}
+				else
+				{
+					LogWrapper.getLogger().info("Implement me for the case when the download is already removed.");
+				}
 			}
 			
 			@Override
 			String getName()
 			{
 				return "Verify Integrity";
+			}
+		});
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(Download download)
+			{
+				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(download);
+				if (dInstance != null)
+				{
+					Download download2 = dInstance.getDownload();
+					DbChunks.removeAllChunks(download2);
+					download2.setState(DownloadState.REQUESTING_METADATA);
+					dInstance.continueDownload();
+				}
+				else
+				{
+					LogWrapper.getLogger().info("Implement me for the case when the download is already removed.");
+				}
+			}
+			
+			@Override
+			String getName()
+			{
+				return "Update Metadata";
 			}
 		});
 		
@@ -173,21 +208,21 @@ public class DownloadTable extends DbJTable<Download>
 		SharedFile file = download.getFile();
 		RootDirectory directory = file.getRootDirectory();
 		Machine machine = directory.getMachine();
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(file.getFileEntry());
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(download);
 		
-		currentRow.put("Machine",           machine.getName()                                                    );
-		currentRow.put("Directory",         directory.getName()                                                  );
-		currentRow.put("File",              file.getPath().getUnbrokenName()                                     );
-		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                    );
-		currentRow.put("Added on",          new Date(download.getAdded())                                        );
-		currentRow.put("Status",            download.getState().humanReadable()                                  );
-		currentRow.put("Priority",          String.valueOf(download.getPriority())                               );
-		currentRow.put("Local path",        download.getTargetFile().toString()                                  );
-		currentRow.put("Number of Mirrors", "1"                                                                  );
-		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()       );
+		currentRow.put("Machine",           machine.getName()                                                         );
+		currentRow.put("Directory",         directory.getName()                                                       );
+		currentRow.put("File",              file.getPath().getUnbrokenName()                                          );
+		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                         );
+		currentRow.put("Added on",          new Date(download.getAdded())                                             );
+		currentRow.put("Status",            download.getState().humanReadable()                                       );
+		currentRow.put("Priority",          String.valueOf(download.getPriority())                                    );
+		currentRow.put("Local path",        download.getTargetFile().toString()                                       );
+		currentRow.put("Number of Mirrors", "1"                                                                       );
+		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()            );
 		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100"         
-				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage() * 100));
-		currentRow.put("Id",                String.valueOf(download.getId())                                     );
+				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage(false) * 100));
+		currentRow.put("Id",                String.valueOf(download.getId())                                          );
 	}
 
 	@Override

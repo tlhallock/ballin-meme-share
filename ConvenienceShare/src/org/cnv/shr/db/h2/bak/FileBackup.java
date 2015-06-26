@@ -25,6 +25,7 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -38,6 +39,7 @@ import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.LogWrapper;
 
@@ -75,7 +77,9 @@ public class FileBackup implements Jsonable
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to restore file " + path, e);
+			return;
 		}
+		DbPaths.pathLiesIn(element, localByName);
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -166,5 +170,12 @@ public class FileBackup implements Jsonable
 	public static String getJsonName() { return "FileBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public FileBackup(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

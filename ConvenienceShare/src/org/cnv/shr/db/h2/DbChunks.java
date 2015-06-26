@@ -65,11 +65,13 @@ public class DbChunks
 		public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 		{
 			int ndx = 1;
+			int id = row.getInt(ndx++);
+			int downloadId = row.getInt(ndx++);
 			long begin = row.getLong(ndx++);
 			long end = row.getLong(ndx++);
 			String checksum = row.getString(ndx++);
-			chunk = new Chunk(begin, end, checksum);
 			done = row.getBoolean(ndx++);
+			chunk = new Chunk(begin, end, checksum);
 		}
 		@Override
 		public boolean save(ConnectionWrapper c) throws SQLException
@@ -195,7 +197,7 @@ public class DbChunks
 		}
 	}
 
-	public static void allChunksDone(Download d)
+	public static void removeAllChunks(Download d)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(DELETE1);)

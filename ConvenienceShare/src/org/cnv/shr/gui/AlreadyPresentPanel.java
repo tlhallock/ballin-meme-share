@@ -7,17 +7,13 @@
 package org.cnv.shr.gui;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.Download;
-import org.cnv.shr.mdl.Download.DownloadState;
+import org.cnv.shr.dmn.dwn.AlreadyDownloadedAction;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.util.LogWrapper;
@@ -268,26 +264,11 @@ public class AlreadyPresentPanel extends javax.swing.JPanel {
 			{
 				resolved();
 				
-				Thread.currentThread().setName("Move Thread for " + remote.getChecksum());
-				Download download = new Download(remote);
-				download.tryToSave();
-				Path targetFile = download.getTargetFile();
-				Misc.ensureDirectory(targetFile, true);
-				try
-				{
-					LogWrapper.getLogger().info("Moving " + local.getFsFile());
-					Files.copy(local.getFsFile(), targetFile, StandardCopyOption.REPLACE_EXISTING);
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to copy " + local.getFsFile() + " to " + targetFile, e);
-				}
-				download.setState(DownloadState.ALL_DONE);
-//				Services.notifications.downloadsChanged();
+				AlreadyDownloadedAction.copyLocalFile(remote, local);
 			}
 		});
 	}
-
+	
 	void downloadAnyway()
 	{
 		moveService.execute(new Runnable()

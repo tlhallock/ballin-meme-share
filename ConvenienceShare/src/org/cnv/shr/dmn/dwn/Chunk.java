@@ -25,6 +25,7 @@
 
 package org.cnv.shr.dmn.dwn;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -32,6 +33,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.MyParserNullable;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
@@ -195,5 +197,12 @@ public class Chunk implements Jsonable
 	public static String getJsonName() { return "Chunk"; }
 	public String getJsonKey() { return getJsonName(); }
 	public Chunk(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

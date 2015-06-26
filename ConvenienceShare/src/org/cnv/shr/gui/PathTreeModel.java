@@ -339,8 +339,12 @@ public class PathTreeModel implements TreeModel, Closeable, SynchronizationListe
 	@Override
 	public void fileUpdated(SharedFile f) {}
 	@Override
-	public void syncDone()
+	public void syncDone(RootSynchronizer sync)
 	{
+		if (synchronizer == null || !synchronizer.equals(sync))
+		{
+			return;
+		}
 		viewer.setSyncStatus(Color.RED, Color.WHITE, "Connection closed.");
 	}
 }

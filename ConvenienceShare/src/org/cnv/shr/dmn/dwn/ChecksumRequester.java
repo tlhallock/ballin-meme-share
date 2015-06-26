@@ -113,7 +113,7 @@ public class ChecksumRequester extends Thread
 			SharedFileId fileid = new SharedFileId(remote);
 			pending.add(fileid);
 			LogWrapper.getLogger().info("Requesting checksum for " + fileid);
-			Communication openConnection = Services.networkManager.openConnection(remote.getRootDirectory().getMachine(), false);
+			Communication openConnection = Services.networkManager.openConnection(remote.getRootDirectory().getMachine(), false, "Request checksum");
 			if (openConnection == null)
 			{
 				LogWrapper.getLogger().info("Unable to request checksum of " + fileid);

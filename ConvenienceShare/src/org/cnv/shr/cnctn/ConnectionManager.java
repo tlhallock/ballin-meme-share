@@ -38,6 +38,7 @@ import java.util.List;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.msg.key.ConnectionReason;
 import org.cnv.shr.msg.key.OpenConnection;
 import org.cnv.shr.msg.key.WhoIAm;
 import org.cnv.shr.util.LogWrapper;
@@ -47,26 +48,27 @@ public class ConnectionManager
 {
 	private List<ConnectionRunnable> connectionRunnables = new LinkedList<>();
 	
-	public Communication openConnection(String url, boolean acceptKeys) throws UnknownHostException, IOException
+	public Communication openConnection(String url, boolean acceptKeys, String reason) throws UnknownHostException, IOException
 	{
 		int index = url.indexOf(':');
 		if (index < 0)
 		{
 			// Should try all other ports too...
-			return openConnection(url, Services.settings.servePortBeginE.get(), 1, null, acceptKeys);
+			return openConnection(url, Services.settings.servePortBeginE.get(), 1, null, acceptKeys, reason);
 		}
-		return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), 1, null, acceptKeys);
+		return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), 1, null, acceptKeys, reason);
 	}
-	public Communication openConnection(Machine m, boolean acceptKeys) throws UnknownHostException, IOException
+	public Communication openConnection(Machine m, boolean acceptKeys, String reason) throws UnknownHostException, IOException
 	{
-		return openConnection(m.getIp(), m.getPort(), m.getNumberOfPorts(), DbKeys.getKey(m), acceptKeys);
+		return openConnection(m.getIp(), m.getPort(), m.getNumberOfPorts(), DbKeys.getKey(m), acceptKeys, reason);
 	}
 	
 	private static Communication openConnection(String ip, 
 			int portBegin,
 			int numPorts,
 			final PublicKey remoteKey, 
-			boolean acceptAnyKeys) throws UnknownHostException, IOException
+			boolean acceptAnyKeys,
+			String reason) throws UnknownHostException, IOException
 	{
 		if (Misc.collectIps().contains(ip)
 				&&  (portBegin            >= Services.localMachine.getPort() && portBegin            <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts())
@@ -95,7 +97,9 @@ public class ConnectionManager
 					{
 						return;
 					}
+					connection.setReason(reason);
 					connection.send(new WhoIAm());
+					connection.send(new ConnectionReason(reason));
 					connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
 					ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
 					connectionRunnable.run();

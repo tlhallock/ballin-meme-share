@@ -58,7 +58,7 @@ public class LogWrapper
 								}
 		            throwable = sw.toString();
 		        }
-		        return record.getMessage() + "\n" + throwable;
+		        return record.getSourceClassName() + "." + record.getSourceMethodName() + "(): " + record.getMessage() + "\n" + throwable;
 					}});
 			}
 		});

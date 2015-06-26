@@ -55,13 +55,19 @@ public class ConnectionRunnable implements Runnable
 			connection.initParser();
 			while (connection.needsMore())
 			{
-				Message request = Services.msgReader.readMsg(connection.getParser());
+				Message request = Services.msgReader.readMsg(connection.getParser(), connection.getUrl());
 				
-				if (request == null || !authentication.authenticate(request))
+				if (request == null)
+				{
+					continue;
+				}
+				if (!authentication.authenticate(request))
 				{
 					break;
 				}
 
+				connection.setLastReceived(request.getJsonKey());
+				
 				try
 				{
 					request.perform(connection);

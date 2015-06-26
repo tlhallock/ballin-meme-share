@@ -25,9 +25,9 @@
 
 package org.cnv.shr.util;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -53,13 +53,15 @@ public final class CountingInputStream extends InputStream
 	
 	
 
-private OutputStream logFile; 
+private BufferedWriter logFile; 
 { 
   Map<String, Object> properties = new HashMap<>(1);
   properties.put(JsonGenerator.PRETTY_PRINTING, true);
 	try
 	{
-		logFile = Files.newOutputStream(Paths.get("log.in." + System.currentTimeMillis() + "." + Math.random() + ".txt"));
+		String string = "log.in." + System.currentTimeMillis() + "." + Math.random() + ".txt";
+		System.out.println("Logging to " + string);
+		logFile = Files.newBufferedWriter(Paths.get(string));
 	}
 	catch (IOException e)
 	{
@@ -117,8 +119,10 @@ private OutputStream logFile;
 		soFar++;
 		int read = delegate.read();
 		logFile.write(read);
+		logFile.flush();
 		if (!rawMode && read == 13 && delegate.read() != 13)
 		{
+			logFile.write("<paused here>");
 			paused = true;
 			return -1;
 		}
@@ -177,7 +181,7 @@ private OutputStream logFile;
 		{
 			throw new NullPointerException();
 		}
-		int read =  read();
+		int read = read();
 		if (read < 0)
 		{
 			return -1;

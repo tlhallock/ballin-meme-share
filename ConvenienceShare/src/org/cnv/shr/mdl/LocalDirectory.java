@@ -233,9 +233,10 @@ public class LocalDirectory extends RootDirectory
 		return defaultShare;
 	}
 	
-	private boolean isMirror()
+	public boolean isMirror()
 	{
-		return false;
+		// TODO: do better than this...
+		return name.startsWith("mirror.");
 	}
 
 	public void setName(String text)

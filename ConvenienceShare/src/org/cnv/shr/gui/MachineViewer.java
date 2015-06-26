@@ -109,6 +109,7 @@ public class MachineViewer extends javax.swing.JFrame
         });
         filesTree.setScrollsOnExpand(true);
         filesTree.setLargeModel(true);
+        setSyncStatus(Color.GRAY, Color.WHITE, "Not viewing any root.");
         setMachine(rMachine);
         viewNoDirectory();
         
@@ -402,7 +403,6 @@ public class MachineViewer extends javax.swing.JFrame
     {
         this.machineIdent = machine.getIdentifier();
         jLabel15.setText(machineIdent);
-        setSyncStatus(Color.GRAY, Color.WHITE, "Not viewing any root.");
         sharingWithRemoteMachine.setSelectedItem(machine.sharingWithOther().humanReadable());
         remoteSharingWithUs.setText(machine.getSharesWithUs().humanReadable());
         machineLabel.setText((machine.isLocal() ? "Local machine: " : "") + machine.getName());
@@ -986,7 +986,7 @@ public class MachineViewer extends javax.swing.JFrame
   				if (machine == null) return;
       		try
       		{
-            Communication connection = Services.networkManager.openConnection(machine, false);
+            Communication connection = Services.networkManager.openConnection(machine, false, "Send share request");
             if (connection == null)
             {
             	return;
@@ -1085,7 +1085,7 @@ public class MachineViewer extends javax.swing.JFrame
 			public void run() { try {
             Machine machine = getMachine();
     				if (machine == null) return;
-						Communication connection = Services.networkManager.openConnection(machine, false);
+						Communication connection = Services.networkManager.openConnection(machine, false, "Send share root request");
             if (connection == null) {
             	return;
             }
@@ -1114,7 +1114,7 @@ public class MachineViewer extends javax.swing.JFrame
 				public void run() { try {
             Machine machine = getMachine();
     				if (machine == null) return;
-						Communication connection = Services.networkManager.openConnection(machine, false);
+						Communication connection = Services.networkManager.openConnection(machine, false, "List directories");
             if (connection == null)
             {
             	return;

@@ -177,7 +177,7 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
         
         Services.userThreads.execute(new Runnable() { public void run() {
         try {
-            Communication connection = Services.networkManager.openConnection(machine, false);
+            Communication connection = Services.networkManager.openConnection(machine, false, "Send user message");
             if (connection == null)
             {
             	return;

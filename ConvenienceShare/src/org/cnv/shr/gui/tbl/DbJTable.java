@@ -102,6 +102,37 @@ public abstract class DbJTable<T> extends MouseAdapter
 		}
 	}
 
+	public void refreshInPlace()
+	{
+		// The entire reason these classes exist is to put refreshes on the event queue
+		SwingUtilities.invokeLater(new Runnable(){
+			@Override
+			public void run()
+			{
+				synchronized (table)
+				{
+					refreshInPlaceInternal();
+				}
+			}});
+	}
+	
+	private synchronized void refreshInPlaceInternal()
+	{
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		int columnCount = model.getColumnCount();
+		HashMap<String, Object> values = new HashMap<>();
+		
+		int rowCount = table.getRowCount();
+		for (int row = 0; row < rowCount; row++)
+		{
+			fillRow(create(row), values);
+			for (int col = 0; col < columnCount; col++)
+			{
+				model.setValueAt(values.get(names[col]), row, col);
+			}
+		}
+	}
+
 	public void refresh()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
@@ -143,6 +174,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 			LogWrapper.getLogger().log(Level.INFO, "Unable to list:", e);
 		}
 	}
+	
 	public void refresh(T t)
 	{
 		SwingUtilities.invokeLater(new Runnable()
@@ -157,6 +189,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 			}
 		});
 	}
+	
 
 	private synchronized void refreshInternal(T t)
 	{

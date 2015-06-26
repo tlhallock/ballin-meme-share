@@ -25,6 +25,7 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -32,9 +33,11 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.mdl.LocalDirectory;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.LogWrapper;
 
@@ -64,6 +67,10 @@ public class LocalBackup implements Jsonable
 		this.path = root.getPathElement().getFsPath();
 		this.totalFileSize = root.diskSpace();
 		this.totalNumFiles = root.numFiles();
+		if (path.charAt(path.length() - 1) != '/')
+		{
+			path = path + "/";
+		}
 	}
 	
 	public void save(ConnectionWrapper wrapper)
@@ -85,7 +92,9 @@ public class LocalBackup implements Jsonable
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to restore local: " + name, e);
+			return;
 		}
+		DbPaths.pathLiesIn(DbPaths.getPathElement(path), local);
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -196,5 +205,12 @@ public class LocalBackup implements Jsonable
 	public static String getJsonName() { return "LocalBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public LocalBackup(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -25,6 +25,8 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.io.ByteArrayOutputStream;
+
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
@@ -35,6 +37,7 @@ import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 
 public class RootPermissionBackup implements Jsonable
@@ -121,5 +124,12 @@ public class RootPermissionBackup implements Jsonable
 	public static String getJsonName() { return "RootPermissionBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public RootPermissionBackup(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }
