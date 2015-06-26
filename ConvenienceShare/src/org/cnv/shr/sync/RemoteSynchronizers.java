@@ -53,7 +53,7 @@ public class RemoteSynchronizers
 
 	public RemoteSynchronizerQueue createRemoteSynchronizer(RemoteDirectory root) throws UnknownHostException, IOException
 	{
-		Communication c = Services.networkManager.openConnection(root.getMachine(), false);
+		Communication c = Services.networkManager.openConnection(root.getMachine(), false, "Synchronize directories");
 		if (c == null)
 		{
 			throw new IOException("Unable to connect to remote!");

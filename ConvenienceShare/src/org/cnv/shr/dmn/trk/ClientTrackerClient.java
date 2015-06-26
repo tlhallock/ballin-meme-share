@@ -104,7 +104,7 @@ public class ClientTrackerClient extends TrackerClient
 					continue;
 				}
 
-				Services.userThreads.execute(new Runnable()
+				Services.downloads.downloadThreads.execute(new Runnable()
 				{
 					@Override
 					public void run()
@@ -129,7 +129,7 @@ public class ClientTrackerClient extends TrackerClient
 		
 		try
 		{
-			Communication openConnection = Services.networkManager.openConnection(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false);
+			Communication openConnection = Services.networkManager.openConnection(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false, "Download file");
 			if (openConnection == null)
 			{
 				return;

@@ -25,6 +25,7 @@
 
 package org.cnv.shr.msg;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -35,6 +36,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.UserMessage;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
@@ -50,6 +52,10 @@ public class UserMessageMessage extends Message
 	{
             this.type = m.getType();
             this.messageStr = m.getMessage();
+        		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
+        		{
+        			messageStr = messageStr.substring(0, UserMessage.MAX_MESSAGE_LENGTH);
+        		}
 	}
 
 	public UserMessageMessage(InputStream i) throws IOException
@@ -73,10 +79,6 @@ public class UserMessageMessage extends Message
 	@Override
 	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
 	{
-		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
-		{
-			messageStr = messageStr.substring(0, UserMessage.MAX_MESSAGE_LENGTH);
-		}
 		buffer.append(type);
 		buffer.append(messageStr);
 	}
@@ -170,5 +172,12 @@ public class UserMessageMessage extends Message
 	public static String getJsonName() { return "UserMessageMessage"; }
 	public String getJsonKey() { return getJsonName(); }
 	public UserMessageMessage(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

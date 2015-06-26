@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
@@ -50,6 +53,7 @@ public class DownloadManager
 	HashMap<FileEntry, DownloadInstance> downloads = new HashMap<>();
 	DownloadInitiator initiator = new DownloadInitiator();
 	ChecksumRequester requester = new ChecksumRequester();
+	public ScheduledExecutorService downloadThreads = Executors.newScheduledThreadPool(0);
 
 	public DownloadInstance download(SharedFile remoteFile) throws UnknownHostException, IOException
 	{
@@ -77,27 +81,21 @@ public class DownloadManager
 		{
 			return false;
 		}
-//		// Need to make a frame for this to keep all when several turn out to be the same.
-//		// Should just copy the local file...
-//		// Need to make show local copy...
-//		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(Services.notifications.getCurrentContext(), 
-//				"The file you requested to download is similar to you have locally.\n"
-//				+ "Remote file: " + remoteFile + ".\n"
-//				+ "Local file: " + file + ".\n"
-//				+ "Both checksums are " + checksum + " and both file sizes are " + remoteFile.getFileSize() + " (" + Misc.formatDiskUsage(remoteFile.getFileSize()) + ").\n"
-//				+ "Are you sure you would like to download the remote file?",
-//				"Downloading file that you may already have.",
-//				JOptionPane.YES_NO_OPTION,
-//				JOptionPane.WARNING_MESSAGE))
-//		{
-//			return false;
-//		}
 		
-		AlreadyDownloadedFrame.showAlreadyPresent((RemoteFile) remoteFile, file);
-
+		switch (AlreadyDownloadedAction.getCurrentAction())
+		{
+		case Ask:
+			AlreadyDownloadedFrame.showAlreadyPresent((RemoteFile) remoteFile, file);
+			break;
+		case Copy_Local_File:
+			AlreadyDownloadedAction.copyLocalFile((RemoteFile) remoteFile, file);
+			break;
+		case Cancel_Download:
+			break;
+		}
 		return true;
 	}
-
+	
 	public DownloadInstance download(RemoteFile file, boolean force) throws UnknownHostException, IOException
 	{
 		return createDownload(new Download(file), force);
@@ -122,6 +120,7 @@ public class DownloadManager
 		if (prev != null)
 		{
 			LogWrapper.getLogger().info("Already downloading.");
+			prev.continueDownload();
 			return null;
 		}
 
@@ -134,29 +133,17 @@ public class DownloadManager
 
 		LogWrapper.getLogger().info("Creating download instance");
 		DownloadInstance instance = new DownloadInstance(d);
-		Services.notifications.downloadAdded(instance);
+		instance.allocate();
+		instance.recover();
 		downloads.put(d.getFile().getFileEntry(), instance);
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					instance.continueDownload();
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to download.", e);
-				}
-			}
-		});
+		Services.notifications.downloadAdded(instance);
+		instance.continueDownload();
 		return instance;
 	}
 
 	public synchronized void remove(DownloadInstance downloadInstance)
 	{
-		downloads.remove(new SharedFileId(downloadInstance.getDownload().getFile()));
+		downloads.remove(downloadInstance.getDownload().getFile().getFileEntry());
 		if (downloads.size() >= Services.settings.maxDownloads.get())
 		{
 			return;
@@ -177,15 +164,38 @@ public class DownloadManager
 		return returnValue;
 	}
 
+	public synchronized DownloadInstance getDownloadInstanceForGui(Download download)
+	{
+		FileEntry fileEntry = download.getFile().getFileEntry();
+		DownloadInstance downloadInstance = downloads.get(fileEntry);
+		if (downloadInstance == null)
+		{
+			DownloadInstance instance;
+			try
+			{
+				instance = new DownloadInstance(download);
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to create download.", e);
+				return null;
+			}
+			downloads.put(fileEntry, instance);
+		}
+		return downloadInstance;
+	}
+	
 	public synchronized DownloadInstance getDownloadInstanceForGui(FileEntry descriptor)
 	{
 		DownloadInstance downloadInstance = downloads.get(descriptor);
 		if (downloadInstance == null)
 		{
+			LogWrapper.getLogger().info("Unable to find download for " + descriptor);
 			return null;
 		}
 		return downloadInstance;
 	}
+	
 	public synchronized DownloadInstance getDownloadInstance(FileEntry descriptor, Communication connection)
 	{
 		DownloadInstance downloadInstance = downloads.get(descriptor);
@@ -203,8 +213,13 @@ public class DownloadManager
 
 	public void startDownloadInitiator()
 	{
-		Services.timer.scheduleAtFixedRate(initiator, 1000, 10 * 60 * 1000);
-		requester.start();
+		Services.downloads.downloadThreads.schedule(new Runnable() {
+			@Override
+			public void run()
+			{
+				Services.timer.scheduleAtFixedRate(initiator, 1000, 10 * 60 * 1000);
+				requester.start();
+			}}, 10, TimeUnit.SECONDS);
 	}
 
 	public void quitAllDownloads()

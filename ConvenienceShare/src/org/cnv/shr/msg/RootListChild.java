@@ -25,6 +25,7 @@
 
 package org.cnv.shr.msg;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.json.stream.JsonGenerator;
@@ -37,6 +38,7 @@ import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
@@ -152,5 +154,12 @@ public class RootListChild implements Jsonable
 	public static String getJsonName() { return "RootListChild"; }
 	public String getJsonKey() { return getJsonName(); }
 	public RootListChild(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

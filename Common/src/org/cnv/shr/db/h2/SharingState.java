@@ -25,9 +25,12 @@
 
 package org.cnv.shr.db.h2;
 
+import java.io.ByteArrayOutputStream;
+
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 
 public enum SharingState implements Jsonable
@@ -144,5 +147,12 @@ public enum SharingState implements Jsonable
 	}
 	public static String getJsonName() { return "SharingState"; }
 	public String getJsonKey() { return getJsonName(); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 		// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	}

@@ -30,6 +30,8 @@ import java.awt.ComponentOrientation;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
@@ -40,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EventObject;
@@ -50,6 +53,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
@@ -61,10 +65,13 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMessages;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.db.h2.DbTables;
+import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.db.h2.TrackerInfoExport;
 import org.cnv.shr.db.h2.bak.DbBackupRestore;
@@ -163,10 +170,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			@Override
 			public void run()
 			{
-				downloads.refresh();
-				serves.refresh();
-				refreshConnections();
-			}};
+				refreshChangingInfo();
+			}
+    };
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e)
@@ -216,8 +222,60 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             Services.settings.defaultPermission.set(state.name());
         }
     });
-    
-//    Services.timer.scheduleAtFixedRate(refresh, GUI_REFRESH_RATE, GUI_REFRESH_RATE);
+    makeDebugItems();
+    downloads.refresh();
+    Services.timer.scheduleAtFixedRate(refresh, GUI_REFRESH_RATE, GUI_REFRESH_RATE);
+	}
+
+	private void makeDebugItems()
+	{
+		for (DbObjects table : DbTables.ALL_TABLES)
+		{
+			JMenuItem item = new JMenuItem(table.getTableName());
+			item.addActionListener(new ActionListener()
+			{
+				@Override
+				public void actionPerformed(ActionEvent e)
+				{
+					Services.userThreads.execute(new Runnable() {
+						@Override
+						public void run()
+						{
+							try (ConnectionWrapper threadConnection = Services.h2DbCache.getThreadConnection();)
+							{
+								table.debug(threadConnection);
+							}
+							catch (SQLException e1)
+							{
+		            LogWrapper.getLogger().log(Level.INFO, "Unable to close thread connection.", e);
+							}
+						}});
+				}
+			});
+			jMenu8.add(item);
+		}
+		JMenuItem item = new JMenuItem("All");
+		item.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				Services.userThreads.execute(new Runnable() {
+					@Override
+					public void run()
+					{
+						try (ConnectionWrapper threadConnection = Services.h2DbCache.getThreadConnection();)
+						{
+							DbTables.debugDb();
+						}
+						catch (SQLException e1)
+						{
+		          LogWrapper.getLogger().log(Level.INFO, "Unable to close thread connection.", e);
+						}
+					}});
+			}
+		});
+		jMenu8.add(item);
 	}
 
 	private void initializeSettings()
@@ -295,6 +353,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			}
 		};
 	}
+	
+	private void refreshChangingInfo()
+	{
+		downloads.refreshInPlace();
+		serves.refreshInPlace();
+		refreshConnections();
+	}
 
 	public void refreshAll()
 	{
@@ -305,7 +370,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		messages.refresh();
     serves.refresh();
 		refreshConnections();
-                refreshKeys();
+    refreshKeys();
 	}
     
 	private synchronized void refreshLocal(LocalDirectory local)
@@ -354,7 +419,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         machinesList = new javax.swing.JTable();
         jButton10 = new javax.swing.JButton();
         jButton17 = new javax.swing.JButton();
-        jToggleButton1 = new javax.swing.JToggleButton();
+        jButton13 = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jButton1 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
@@ -422,7 +487,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jMenuItem6 = new javax.swing.JMenuItem();
         jMenuItem8 = new javax.swing.JMenuItem();
         jMenuItem15 = new javax.swing.JMenuItem();
-        jMenuItem7 = new javax.swing.JMenuItem();
+        jMenu8 = new javax.swing.JMenu();
         jMenuItem18 = new javax.swing.JMenuItem();
         jMenuItem19 = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
@@ -546,10 +611,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
-        jToggleButton1.setText("Find Machines");
-        jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButton13.setText("Find machines");
+        jButton13.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton1ActionPerformed(evt);
+                jButton13ActionPerformed(evt);
             }
         });
 
@@ -563,7 +628,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jToggleButton1)
+                        .addComponent(jButton13)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton17)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -580,9 +645,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton2)
                     .addComponent(jButton10)
                     .addComponent(jButton17)
-                    .addComponent(jToggleButton1))
+                    .addComponent(jButton13))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 399, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1144,13 +1209,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         });
         jMenu2.add(jMenuItem15);
 
-        jMenuItem7.setText("Debug to Logs");
-        jMenuItem7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem7ActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jMenuItem7);
+        jMenu8.setText("Debug to Logs");
+        jMenu2.add(jMenu8);
 
         jMenuItem18.setText("Debug Connections");
         jMenuItem18.addActionListener(new java.awt.event.ActionListener() {
@@ -1395,11 +1455,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		}
     }//GEN-LAST:event_jMenuItem6ActionPerformed
 
-    private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
-        // debug database
-    	UserActions.debug();
-    }//GEN-LAST:event_jMenuItem7ActionPerformed
-
     private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem8ActionPerformed
        // delete database
       if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Are you sure you want to delete the database? This cannot be undone.", "Are you sure?", JOptionPane.YES_NO_OPTION))
@@ -1427,10 +1482,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private void jButton17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton17ActionPerformed
       UserActions.findTrackers();
     }//GEN-LAST:event_jButton17ActionPerformed
-
-    private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
-       UserActions.findMachines(this);
-    }//GEN-LAST:event_jToggleButton1ActionPerformed
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         Main.restart();
@@ -1520,6 +1571,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         UserActions.findMachines(this);
     }//GEN-LAST:event_jMenuItem20ActionPerformed
 
+    private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
+        UserActions.findMachines(this);
+    }//GEN-LAST:event_jButton13ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1528,6 +1583,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JButton jButton10;
     private javax.swing.JButton jButton11;
     private javax.swing.JButton jButton12;
+    private javax.swing.JButton jButton13;
     private javax.swing.JButton jButton17;
     private javax.swing.JButton jButton18;
     private javax.swing.JButton jButton2;
@@ -1555,6 +1611,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenu jMenu5;
     private javax.swing.JMenu jMenu6;
     private javax.swing.JMenu jMenu7;
+    private javax.swing.JMenu jMenu8;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem10;
@@ -1573,7 +1630,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JMenuItem jMenuItem6;
-    private javax.swing.JMenuItem jMenuItem7;
     private javax.swing.JMenuItem jMenuItem8;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;
@@ -1603,7 +1659,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
-    private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JTable localsView;
     private javax.swing.JSpinner logLines;
     private javax.swing.JTextArea logTextArea;

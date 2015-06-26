@@ -23,6 +23,7 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -41,6 +42,7 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.LogWrapper;
 
@@ -117,11 +119,6 @@ public class DownloadBackup implements Jsonable
 			LogWrapper.getLogger().log(Level.INFO, "Unable to save remote file " + this, e);
 			return;
 		}
-
-//		if (remoteFile.getId() == null)
-//		{
-//			remoteFile.setId(DbFiles.getFile(checksum, fileSize).getId());
-//		}
 
 		DownloadState state = DownloadState.valueOf(currentDownloadState);
 		if (state == null)
@@ -284,5 +281,12 @@ public class DownloadBackup implements Jsonable
 	public static String getJsonName() { return "DownloadBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public DownloadBackup(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

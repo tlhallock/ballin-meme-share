@@ -110,7 +110,7 @@ public class DebugListener extends TimerTask implements SynchronizationListener
 	protected void changed() {}
 
 	@Override
-	public void syncDone() 
+	public void syncDone(RootSynchronizer sync) 
 	{
 		cancel();
 	}

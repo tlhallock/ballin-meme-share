@@ -232,6 +232,24 @@ public class PathElement extends DbObject<Long>
 			child.downloadAllCurrentlyCached(root, monitor);
 		}
 	}
+	public void getFilesList(RootDirectory root, LinkedList<SharedFile> files)
+	{
+		SharedFile file = DbFiles.getFile(root, this);
+		if (file != null)
+		{
+			files.add(file);
+			return;
+		}
+		
+		for (PathElement child : list(root))
+		{
+			if (child.equals(this))
+			{
+				continue;
+			}
+			child.getFilesList(root, files);
+		}
+	}
 	
 	public LinkedList<PathElement> list(RootDirectory local)
 	{

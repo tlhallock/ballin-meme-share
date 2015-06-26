@@ -27,6 +27,7 @@ package org.cnv.shr.msg;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
 
 import javax.json.stream.JsonParser;
 
@@ -38,7 +39,7 @@ import org.cnv.shr.util.LogWrapper;
 
 public class MessageReader
 {
-	public Message readMsg(JsonParser input) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	public Message readMsg(JsonParser input, String debugSource) throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		String className = null;
 		wh:
@@ -55,19 +56,24 @@ public class MessageReader
 			}
 		}
 
-		LogWrapper.getLogger().info("Received message of type " + className);
+		LogWrapper.getLogger().info("Receiving message of type " + className + " from " + debugSource);
 		Jsonable create = JsonAllocators.create(className, input);
 		if (create == null)
 		{
-			LogWrapper.getLogger().info("Ignoring unknown message type: " + className + " from ");
+			LogWrapper.getLogger().info("Ignoring unknown message type: " + className + " from " + debugSource);
 			return null;
 		}
 		if (!(create instanceof Message))
 		{
-			LogWrapper.getLogger().info("Received something that is not a message: " + className);
-			return null;
+			throw new RuntimeException("Received something that is not a message: " + className + " from " + debugSource);
 		}
-		LogWrapper.getLogger().info("Read " + create);
-		return (Message) create;
+		
+		Message m = (Message) create;
+		LogWrapper.getLogger().info("Read msg " + m.toString() + " from " + debugSource);
+		if (LogWrapper.getLogger().isLoggable(Level.FINE))
+		{
+			LogWrapper.getLogger().fine("The received message was: " + m.getJsonKey() + ":" + m.toDebugString());
+		}
+		return m;
 	}
 }

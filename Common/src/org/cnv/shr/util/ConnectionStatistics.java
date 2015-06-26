@@ -25,12 +25,18 @@
 
 package org.cnv.shr.util;
 
+import java.util.Date;
+
+
 
 public class ConnectionStatistics
 {
 	private long lastKbpsRefresh = System.currentTimeMillis();
 	private long lastInputOffset;
 	private long lastOutputOffset;
+	
+	private double speedUp;
+	private double speedDown;
 	
 	private long numBytesSent;
 	private long numBytesReceived;
@@ -39,31 +45,71 @@ public class ConnectionStatistics
 	private CountingInputStream input;
 	private CountingOutputStream output;
 	
+	private String lastSentMessageType;
+	private String lastReceivedMessageType;
+	
+	private String reason;
+
+	private long   lastActivity = System.currentTimeMillis();
+  private String lastActive = new Date(lastActivity).toString();
+  
+	
 	public ConnectionStatistics(CountingInputStream input, CountingOutputStream output)
 	{
 		this.input = input;
 		this.output = output;
 	}
 	
-	public void refresh()
+	public synchronized void refresh()
 	{
-		lastKbpsRefresh = System.currentTimeMillis();
+		long now = System.currentTimeMillis();
+		if (now - lastKbpsRefresh < 1000)
+		{
+			return;
+		}
 		long inSoFar = input.getSoFar();
 		long outSoFar = output.getSoFar();
 		
-		numBytesReceived += inSoFar - lastInputOffset;
-		numBytesSent += outSoFar - lastOutputOffset;
+		numBytesReceived = inSoFar - lastInputOffset;
+		numBytesSent = outSoFar - lastOutputOffset;
 		lastInputOffset = inSoFar;
 		lastOutputOffset = outSoFar;
+
+		speedUp   = 1000.0 * numBytesSent / (now - lastKbpsRefresh);
+		speedDown = 1000.0 * numBytesReceived / (now - lastKbpsRefresh);
+		
+		lastKbpsRefresh = now;
+
+		if (numBytesReceived > 0 || numBytesSent > 0)
+		{
+			lastActive = "now";
+			lastActivity = now;
+		}
+		else if (now - lastActivity < 5 * 1000)
+		{
+			lastActive = "now";
+		}
+		else if (now - lastActivity < 60 * 1000)
+		{
+			lastActive = "a minute ago";
+		}
+		else if (now - lastActivity < 10 * 60 * 1000)
+		{
+			lastActive = "minutes ago";
+		}
+		else
+		{
+			lastActive = new Date(lastActivity).toString();
+		}
 	}
 	
-	public String getBitsUp(long now)
+	public String getBitsUp()
 	{
-		return String.valueOf(1000.0 * numBytesSent / (now - lastKbpsRefresh));
+		return Misc.formatDiskUsage(speedUp) + "ps";
 	}
-	public String getBitsDown(long now)
+	public String getBitsDown()
 	{
-		return String.valueOf(1000.0 * numBytesReceived / (now - lastKbpsRefresh));
+		return Misc.formatDiskUsage(speedDown) + "ps";
 	}
 	public void setAuthenticated(boolean authenticated)
 	{
@@ -73,8 +119,36 @@ public class ConnectionStatistics
 	{
 		return connectionAuthenticated;
 	}
-	public boolean isActive()
+	public String getLastActive()
 	{
-		return numBytesReceived >= 0 || numBytesSent >= 0;
+		return lastActive;
+	}
+	public String getTotalDown()
+	{
+		return Misc.formatDiskUsage(input.getSoFar());
+	}
+	public String getTotalUp()
+	{
+		return Misc.formatDiskUsage(output.getSoFar());
+	}
+	public String getStatus()
+	{
+		return "Sent: \"" + lastSentMessageType + "\", Received: \"" + lastReceivedMessageType + "\""; 
+	}
+	public void setLastSent(String type)
+	{
+		lastSentMessageType = type;
+	}
+	public void setLastReceived(String type)
+	{
+		lastReceivedMessageType = type;
+	}
+	public void setReason(String reason)
+	{
+		this.reason = reason;
+	}
+	public String getReason()
+	{
+		return reason;
 	}
 }

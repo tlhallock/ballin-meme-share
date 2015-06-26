@@ -67,6 +67,7 @@ public class DbTables
 		CHUNK            ("CHUNK              ".trim(), "C_ID"),
 		ROOT_CONTAINS    ("ROOT_CONTAINS      ".trim(), ""),
 		SHARE_ROOT       ("SHARE_ROOT         ".trim(), ""),
+		CHKSUM_REQ       ("CHK_REQ            ".trim(), ""),
 		;
 		String tableName;
 		String pKey;
@@ -213,7 +214,7 @@ public class DbTables
 	}
 	
 
-	private static final DbObjects[] ALL_TABLES  = new DbObjects[]
+	public static final DbObjects[] ALL_TABLES  = new DbObjects[]
 	{
 		DbObjects.PUBLIC_KEY      ,
 		DbObjects.PELEM           ,
@@ -226,6 +227,7 @@ public class DbTables
 		DbObjects.ROOT_CONTAINS   ,
 		DbObjects.SHARE_ROOT      ,
 		DbObjects.CHUNK           ,
+		DbObjects.CHKSUM_REQ      ,
 	};
 
 	public static void debugDb()

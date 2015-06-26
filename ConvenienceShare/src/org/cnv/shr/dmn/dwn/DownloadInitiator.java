@@ -38,7 +38,7 @@ import org.cnv.shr.util.LogWrapper;
 public class DownloadInitiator extends TimerTask
 {
 	
-	private void restart(final Download next)
+	private static void restart(final Download next)
 	{
 		if (Services.downloads.downloads.size() >= Services.settings.maxDownloads.get())
 		{
@@ -47,12 +47,7 @@ public class DownloadInitiator extends TimerTask
 		
 		try
 		{
-			DownloadInstance createDownload = Services.downloads.createDownload(next, false);
-			if (createDownload == null)
-			{
-				return;
-			}
-			createDownload.continueDownload();
+			Services.downloads.createDownload(next, false);
 		}
 		catch (IOException e)
 		{
@@ -63,7 +58,7 @@ public class DownloadInitiator extends TimerTask
 	@Override
 	public void run()
 	{
-		Services.userThreads.execute(new Runnable()
+		Services.downloads.downloadThreads.execute(new Runnable()
 		{
 			@Override
 			public void run()
@@ -76,6 +71,7 @@ public class DownloadInitiator extends TimerTask
 	
 	public void initiatePendingDownloads()
 	{
+		int index = 0;
 		LogWrapper.getLogger().info("Pending downloads:");
 		LogWrapper.getLogger().info("------------------------------------------------------");
 		try (DbIterator<Download> dbIterator = DbDownloads.listPendingDownloads();)
@@ -87,18 +83,8 @@ public class DownloadInitiator extends TimerTask
 					return;
 				}
 				Download next = dbIterator.next();
-				LogWrapper.getLogger().info(next.toString());
-				
-				Services.userThreads.execute(new Runnable() {
-					@Override
-					public void run()
-					{
-						synchronized(Services.downloads)
-						{
-							restart(next);
-						}
-					}
-				});
+				LogWrapper.getLogger().info("Pending download " + index++ + ": " + next.toString());
+				restart(next);
 			}
 		}
 		LogWrapper.getLogger().info("------------------------------------------------------");

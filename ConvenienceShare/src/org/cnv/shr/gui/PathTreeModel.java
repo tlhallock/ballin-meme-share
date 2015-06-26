@@ -111,6 +111,7 @@ public class PathTreeModel implements TreeModel, Closeable, SynchronizationListe
 		this.root = new PathTreeModelNode(null, this, DbPaths.ROOT, false);
 		iterator.queueSyncTask(rootSource, DbPaths.ROOT, this.root);
 		
+		// TODO: This should not be on a user thread...
 		Services.userThreads.execute(synchronizer);
 		this.root.expand();
 		for (final TreeModelListener listener : listeners)
@@ -338,8 +339,12 @@ public class PathTreeModel implements TreeModel, Closeable, SynchronizationListe
 	@Override
 	public void fileUpdated(SharedFile f) {}
 	@Override
-	public void syncDone()
+	public void syncDone(RootSynchronizer sync)
 	{
+		if (synchronizer == null || !synchronizer.equals(sync))
+		{
+			return;
+		}
 		viewer.setSyncStatus(Color.RED, Color.WHITE, "Connection closed.");
 	}
 }

@@ -25,12 +25,14 @@
 
 package org.cnv.shr.dmn;
 
+import java.io.ByteArrayOutputStream;
 import java.security.PublicKey;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.MyParserNullable;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.KeyPairObject;
 
@@ -138,5 +140,12 @@ public class JsonableUpdateInfo implements Jsonable
 	public static String getJsonName() { return "JsonableUpdateInfo"; }
 	public String getJsonKey() { return getJsonName(); }
 	public JsonableUpdateInfo(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -23,10 +23,13 @@
 
 package org.cnv.shr.dmn.trk;
 
+import java.io.ByteArrayOutputStream;
+
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.MyParserNullable;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 
 public class NumFilesMessage implements Jsonable
@@ -80,5 +83,12 @@ public class NumFilesMessage implements Jsonable
 	public static String getJsonName() { return "NumFilesMessage"; }
 	public String getJsonKey() { return getJsonName(); }
 	public NumFilesMessage(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

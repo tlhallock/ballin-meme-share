@@ -25,6 +25,8 @@
 
 package org.cnv.shr.trck;
 
+import java.io.ByteArrayOutputStream;
+
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
@@ -210,5 +212,12 @@ public class MachineEntry extends TrackObject
 	public static String getJsonName() { return "MachineEntry"; }
 	public String getJsonKey() { return getJsonName(); }
 	public MachineEntry(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -86,7 +86,7 @@ public class IdkWhereToPutThis
 				Communication openConnection;
 				try
 				{
-					openConnection = Services.networkManager.openConnection(url, true);
+					openConnection = Services.networkManager.openConnection(url, true, "Re-attempt to add machine");
 					if (openConnection != null)
 					{
 						pendingAuthenticationRequests.remove(url);

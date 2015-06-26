@@ -159,11 +159,11 @@ public class Misc
 		return builder.toString();
 	}
 	
-	public static String formatDiskUsage(long bytes)
+	public static String formatDiskUsage(double bytes)
 	{
 		if (bytes < 1024)
 		{
-			return bytes + " b";
+			return String.format("%.2f B", bytes);
 		}
 		
 		double totalFileSize = bytes;

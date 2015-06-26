@@ -277,6 +277,10 @@ public class JsonAllocators
 				{                                                                     
 					public org.cnv.shr.msg.ShowApplication create(JsonParser p) { return new org.cnv.shr.msg.ShowApplication(p); }  
 				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.msg.key.ConnectionReason.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.ConnectionReason>()          
+				{                                                                     
+					public org.cnv.shr.msg.key.ConnectionReason create(JsonParser p) { return new org.cnv.shr.msg.key.ConnectionReason(p); }  
+				});                                                                   
 				ALLOCATORS.put(org.cnv.shr.db.h2.bak.LocalBackup.getJsonName(), new JsonAllocator<org.cnv.shr.db.h2.bak.LocalBackup>()          
 				{                                                                     
 					public org.cnv.shr.db.h2.bak.LocalBackup create(JsonParser p) { return new org.cnv.shr.db.h2.bak.LocalBackup(p); }  
@@ -300,6 +304,6 @@ public class JsonAllocators
 				ALLOCATORS.put(org.cnv.shr.db.h2.bak.DownloadBackup.getJsonName(), new JsonAllocator<org.cnv.shr.db.h2.bak.DownloadBackup>()          
 				{                                                                     
 					public org.cnv.shr.db.h2.bak.DownloadBackup create(JsonParser p) { return new org.cnv.shr.db.h2.bak.DownloadBackup(p); }  
-				});           
+				});                                    
 	}
 }

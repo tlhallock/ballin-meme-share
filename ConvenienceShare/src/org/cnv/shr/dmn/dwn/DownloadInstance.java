@@ -39,8 +39,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
-import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+
+import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbChunks;
@@ -49,6 +51,7 @@ import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
@@ -58,26 +61,26 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
-public class DownloadInstance
+public class DownloadInstance implements Runnable
 {
 	static final Random random = new Random();
 	static int NUM_PENDING_CHUNKS = 10;
 	
 	static long COMPLETION_REFRESH_RATE = 5 * 1000;
 	
-//	private HashMap<String, Seeder> seeders = new HashMap<>();
 	private LinkedList<Seeder> freeSeeders = new LinkedList<Seeder>();
 	private Map<Chunk, Seeder> pendingSeeders = new HashMap<Chunk, Seeder>();
+	private boolean quit;
 	
 	
 	private RemoteFile remoteFile;
 	
 	private Path destination;
 	
-	// These should be stored on file...
 	private Download download;
 	
 	
@@ -87,25 +90,42 @@ public class DownloadInstance
 		remoteFile = d.getFile();
 		Objects.requireNonNull(remoteFile.getChecksum(), "The remote file should already have a checksum.");
 		setDestinationFile();
-		allocate();
-		recover();
 	}
 
-	public synchronized void continueDownload() throws UnknownHostException, IOException
+	public synchronized void continueDownload()
 	{
-		DownloadState state = download.getState();
-		if (state.hasYetTo(DownloadState.REQUESTING_METADATA))
+		Services.downloads.downloadThreads.execute(this);
+	}
+	
+	public void run()
+	{
+		LogWrapper.getLogger().fine("Continuing download " + download);
+		try
 		{
-			getMetaData();
-			return;
+			DownloadState state = download.getState();
+			if (state.hasYetTo(DownloadState.REQUESTING_METADATA))
+			{
+				getMetaData();
+				return;
+			}
+
+			requestSeeders();
+			queue();
 		}
-		
-		queue();
-		requestSeeders();
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to continue download", e);
+		}
 	}
 
 	private synchronized void getMetaData() throws UnknownHostException, IOException
 	{
+		if (quit)
+		{
+			LogWrapper.getLogger().info("Already quit.");
+			return;
+		}
+		LogWrapper.getLogger().info("Requesting more metadata");
 		download.setState(DownloadState.REQUESTING_METADATA);
 		
 		if (DbChunks.hasAllChunks(download))
@@ -117,7 +137,7 @@ public class DownloadInstance
 		
 		FileRequest request = new FileRequest(remoteFile, download.getChunkSize());
 		Machine machine = remoteFile.getRootDirectory().getMachine();
-		Communication openConnection = Services.networkManager.openConnection(machine, false);
+		Communication openConnection = Services.networkManager.openConnection(machine, false, "Download file");
 		if (openConnection == null)
 		{
 			throw new IOException("Unable to authenticate to host.");
@@ -133,23 +153,33 @@ public class DownloadInstance
 
 	private void requestSeeders()
 	{
-//		download.setState(DownloadState.FINDING_PEERS);
+		if (quit)
+		{
+			LogWrapper.getLogger().info("Already quit.");
+			return;
+		}
 		if (Math.random() < 2)
 		{
 			LogWrapper.getLogger().info("Currently not requesting seeders.");
 			return;
 		}
-//		Services.userThreads.execute(new Runnable() {
-//			@Override
-//			public void run()
-//			{
-//				FileEntry fileEntry = remoteFile.getFileEntry();
-//				for (ClientTrackerClient client : Services.trackers.getClients())
-//				{
-//					client.requestSeeders(fileEntry, seeders);
-//				}
-//			}
-//		});
+		
+		Services.downloads.downloadThreads.execute(new Runnable() {
+			@Override
+			public void run()
+			{
+				LogWrapper.getLogger().info("Requesting seeders for " + download);
+				LinkedList<Seeder> allSeeders = new LinkedList<>();
+				allSeeders.addAll(freeSeeders);
+				allSeeders.addAll(pendingSeeders.values());
+				
+				FileEntry fileEntry = remoteFile.getFileEntry();
+				for (ClientTrackerClient client : Services.trackers.getClients())
+				{
+					client.requestSeeders(fileEntry, allSeeders);
+				}
+			}
+		});
 	}
 
 	public synchronized void addSeeder(Machine machine, Communication connection)
@@ -160,8 +190,16 @@ public class DownloadInstance
 
 	public synchronized void foundChunks(Machine machine, List<Chunk> chunks) throws IOException
 	{
-		if (remoteFile.getRootDirectory().getMachine().getId() != machine.getId())
+		if (quit)
 		{
+			LogWrapper.getLogger().info("Already quit.");
+			return;
+		}
+		Integer expected = remoteFile.getRootDirectory().getMachine().getId();
+		Integer found = machine.getId();
+		if (expected != found)
+		{
+			LogWrapper.getLogger().info("Machine id did not macth. Excepted " + expected + " found " + found);
 			return;
 		}
 		download.setState(DownloadState.RECEIVING_METADATA);
@@ -174,6 +212,7 @@ public class DownloadInstance
 				continue;
 			}
 			DbChunks.addChunk(download, chunk);
+			LogWrapper.getLogger().fine("Added chunk " + chunk);
 		}
 		
 		if (DbChunks.hasAllChunks(download))
@@ -181,27 +220,27 @@ public class DownloadInstance
 			download.setState(DownloadState.DOWNLOADING);
 		}
 
-		Services.userThreads.execute(new Runnable() { @Override public void run() {
-				try
-				{
-					continueDownload();
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to continue download.", e);
-				}
-			}});
+		continueDownload();
 	}
 	
-	private synchronized void recover()
+	public synchronized void recover()
 	{
-		DownloadState prev = download.getState();
+		if (quit)
+		{
+			LogWrapper.getLogger().info("Already quit.");
+			return;
+		}
+		if (destination == null)
+		{
+			throw new RuntimeException("Trying to recover with no destination set!");
+		}
 		download.setState(DownloadState.RECOVERING);
 		try (DbIterator<DbChunks.DbChunk> iterator = DbChunks.getAllChunks(download))
 		{
 			while (iterator.hasNext())
 			{
 				DbChunk next = iterator.next();
+				LogWrapper.getLogger().info("Testing chunk " + next.chunk);
 				if (ChunkData.test(next.chunk, destination))
 				{
 					if (!next.done)
@@ -220,18 +259,17 @@ public class DownloadInstance
 			LogWrapper.getLogger().log(Level.SEVERE, "No algorithm", e);
 			Services.quiter.quit();
 		}
-		catch (IOException e)
+		catch (IOException | SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to recover chunks.", e);
 		}
-		catch (SQLException e1)
+		if (isDone())
 		{
-			e1.printStackTrace();
+			download.setState(DownloadState.ALL_DONE);
 		}
-		download.setState(prev);
 	}
 	
-	private synchronized void allocate() throws IOException
+	synchronized void allocate() throws IOException
 	{
 		if (!download.getState().hasYetTo(DownloadState.ALLOCATING) && Files.size(destination) == remoteFile.getFileSize())
 		{
@@ -247,6 +285,13 @@ public class DownloadInstance
 	
 	private synchronized void queue()
 	{
+		if (quit)
+		{
+			LogWrapper.getLogger().info("Already quit.");
+			return;
+		}
+		LogWrapper.getLogger().info("Queue " + download);
+		
 		List<Chunk> upComing = DbChunks.getNextChunks(download, NUM_PENDING_CHUNKS - pendingSeeders.size());
 		if (upComing.isEmpty())
 		{
@@ -288,24 +333,26 @@ public class DownloadInstance
 
 	private void checkIfDone()
 	{
-		if (pendingSeeders.isEmpty() && DbChunks.hasAllChunks(download))
+		if (!isDone())
 		{
-			// Should be using ScheduledThreadPoolExecutor
-			
-			// This needs to happen a while later.
-			// If this was the last chunk, then all seeders will be removed, including the one that inspired this queue (maybe a download chunk).
-			// If we do it later, we can hope to terminate peacefully.
-			Services.timer.schedule(new TimerTask() {
-				@Override
-				public void run()
-				{
-					// complete can take a long time, so don't have it on the timer :)
-					Services.userThreads.execute(new Runnable() { public void run() {
-						complete();
-					}});
-				}}, 1000);
+			return;
 		}
-		return;
+		// This needs to happen a while later.
+		// If this was the last chunk, then all seeders will be removed, including the one that inspired this queue (maybe a download chunk).
+		// If we do it later, we can hope to terminate the connection peacefully.
+		Services.downloads.downloadThreads.schedule(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				complete();
+			}
+		}, 1, TimeUnit.SECONDS);
+	}
+
+	private boolean isDone()
+	{
+		return pendingSeeders.isEmpty() && DbChunks.hasAllChunks(download);
 	}
 
 	public synchronized void download(Chunk chunk, Communication connection, boolean compressed) throws IOException, NoSuchAlgorithmException
@@ -320,13 +367,29 @@ public class DownloadInstance
 		
 		resquestedSeeder.requestCompleted(null, chunk);
 		connection.beginReadRaw();
-		boolean successful = ChunkData.read(chunk, destination.toFile(), connection.getIn(), compressed);
-		connection.endReadRaw();
-		if (successful)
+		try
 		{
-			DbChunks.chunkDone(download, chunk, true);
+			boolean successful = ChunkData.read(chunk, destination.toFile(), connection.getIn(), compressed);
+			connection.endReadRaw();
+			if (successful)
+			{
+				DbChunks.chunkDone(download, chunk, true);
+			}
+			connection.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage(true)));
 		}
-		connection.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage()));
+		catch (IOException e)
+		{
+			if (e.getMessage().contains("No space"))
+			{
+				Services.userThreads.execute(new Runnable() {
+					@Override
+					public void run()
+					{
+						JOptionPane.showConfirmDialog(null, "There is no space left on the filesystem!", "No space left", JOptionPane.ERROR_MESSAGE);
+					}});
+			}
+			throw e;
+		}
 		
 		queue();
 	}
@@ -339,17 +402,25 @@ public class DownloadInstance
 		}
 
 		download.setState(DownloadState.VERIFYING_COMPLETED_DOWNLOAD);
+		LogWrapper.getLogger().info("Verifying checksum of " + download);
 		try
 		{
-			if (!checkChecksum())
+			if (checkChecksum())
+			{
+				download.setState(DownloadState.ALL_DONE);
+			}
+			else
 			{
 				LogWrapper.getLogger().info("Checksums did not match!!!");
+				download.setState(DownloadState.FAILED);
 			}
 		}
 		catch (IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate checksum", e);
+			download.setState(DownloadState.FAILED);
 		}
+
 
 //		download.setState(DownloadState.PLACING_IN_FS);
 //		try
@@ -361,8 +432,7 @@ public class DownloadInstance
 //			LogWrapper.getLogger().log(Level.INFO, "Unable to move downloaded file.", e);
 //		}
 		
-		String localMirrorName = remoteFile.getRootDirectory().getLocalMirrorName();
-		LocalDirectory local = DbRoots.getLocalByName(localMirrorName);
+		LocalDirectory local = getLocalDirectory();
 		if (local != null)
 		{
 			try
@@ -379,32 +449,40 @@ public class DownloadInstance
 		
 		Services.downloads.remove(this);
 		Services.notifications.downloadDone(this);
-		download.setState(DownloadState.ALL_DONE);
-		// maybe we shouldn't delete the chunks till the download is removed, remember the verify?
-//		DbChunks.allChunksDone(download);
+	}
+
+	private LocalDirectory getLocalDirectory()
+	{
+		Path localRoot = remoteFile.getRootDirectory().getLocalRoot();
+		Misc.ensureDirectory(localRoot, true);
+		
+		LocalDirectory local = DbRoots.getLocal(localRoot.toString());
+		if (local == null)
+		{
+			local = UserActions.addLocalImmediately(localRoot, remoteFile.getRootDirectory().getLocalMirrorName());
+			if (local == null)
+			{
+				fail("Unable to create local mirror");
+			}
+		}
+		return local;
 	}
 
 	public synchronized void setDestinationFile()
 	{
-		Path localRoot = remoteFile.getRootDirectory().getLocalRoot();
-		destination = PathSecurity.secureMakeDirs(localRoot, Paths.get(remoteFile.getPath().getFullPath()));
+		LocalDirectory localDirectory = getLocalDirectory();
+		if (localDirectory == null)
+		{
+			return;
+		}
+		Path path = Paths.get(localDirectory.getPathElement().getFsPath());
+		destination = PathSecurity.secureMakeDirs(path, Paths.get(remoteFile.getPath().getFullPath()));
 		if (destination == null)
 		{
 			fail("Unable to get destination file " + destination);
 		}
 		download.setDestination(destination);
 		
-		String localMirrorName = remoteFile.getRootDirectory().getLocalMirrorName();
-		LocalDirectory local = DbRoots.getLocalByName(localMirrorName);
-		if (local == null)
-		{
-			local = UserActions.addLocalImmediately(localRoot, localMirrorName);
-			if (local == null)
-			{
-				fail("Unable to create local mirror");
-			}
-		}
-		Misc.ensureDirectory(localRoot, true);
 		LogWrapper.getLogger().info("Downloading \"" + remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" + destination + "\"");
 	}
 
@@ -442,10 +520,10 @@ public class DownloadInstance
 
 	private long lastCountRefresh;
 	private double completionSatus;
-	public double getCompletionPercentage()
+	public double getCompletionPercentage(boolean force)
 	{
 		long now = System.currentTimeMillis();
-		if (lastCountRefresh + COMPLETION_REFRESH_RATE > now)
+		if (!force && lastCountRefresh + COMPLETION_REFRESH_RATE > now)
 		{
 			return completionSatus;
 		}
@@ -459,7 +537,7 @@ public class DownloadInstance
 		{
 			try
 			{
-				seeder.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage()));
+				seeder.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage(false)));
 			}
 			catch (IOException e)
 			{
@@ -470,13 +548,15 @@ public class DownloadInstance
 	
 	public synchronized void fail(String string)
 	{
-		System.out.println(string);
+		LogWrapper.getLogger().info("Quiting download: " + string);
+		quit = true;
 		for (Seeder seeder : pendingSeeders.values())
 			seeder.done();
 		for (Seeder seeder : freeSeeders)
 			seeder.done();
 		Services.downloads.remove(this);
 		Services.notifications.downloadRemoved(this);
+		download.setState(DownloadState.FAILED);
 	}
 
 	public synchronized void removePeer(Communication connection)

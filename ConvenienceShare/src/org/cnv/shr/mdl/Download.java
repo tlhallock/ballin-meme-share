@@ -215,6 +215,7 @@ public class Download extends DbObject<Integer>
 	{
 		QUEUED                       ( 1),
 //		NOT_STARTED                   (2),
+		FAILED                       ( 2),
 		ALLOCATING                   ( 3),
 		RECOVERING                   ( 4),
 		REQUESTING_METADATA          ( 5),

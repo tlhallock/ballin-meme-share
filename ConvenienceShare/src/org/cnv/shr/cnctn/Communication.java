@@ -86,6 +86,8 @@ public class Communication implements Closeable
 	
 	private ConnectionStatistics stats;
 	
+	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = true;
+	
 	/** Initiator **/
 	public Communication(Authenticator authentication, String ip, int port) throws UnknownHostException, IOException
 	{
@@ -116,7 +118,7 @@ public class Communication implements Closeable
 		needsMore = true;
 		this.authentication = authentication;
 
-		generator = TrackObjectUtils.createGenerator(outputOrig);
+		generator = TrackObjectUtils.createGenerator(outputOrig, PRETTY_PRINT_ALL_COMMUNICATION);
 		generator.writeStartObject();
 		generator.flush();
 	}
@@ -154,8 +156,13 @@ public class Communication implements Closeable
 		
 		authentication.assertCanSend(m);
 		
-		LogWrapper.getLogger().info("Sending message \"" + m + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
-
+		LogWrapper.getLogger().info("Sending message \"" + m.toString() + "\" to " + socket.getInetAddress() + ":" + socket.getPort());
+		if (LogWrapper.getLogger().isLoggable(Level.FINE))
+		{
+			LogWrapper.getLogger().fine("The sent message was: " + m.getJsonKey() + ":" + m.toDebugString());
+		}
+		stats.setLastSent(m.getJsonKey());
+		
 		synchronized (getOutput())
 		{
 			// Should re-encrypt every so often...
@@ -173,7 +180,6 @@ public class Communication implements Closeable
 
 	public ConnectionStatistics getStatistics()
 	{
-		stats.refresh();
 		return stats;
 	}
 
@@ -260,7 +266,10 @@ public class Communication implements Closeable
 		{
 			try
 			{
-				socket.shutdownOutput();
+				if (!socket.isOutputShutdown())
+				{
+					socket.shutdownOutput();
+				}
 			}
 			catch (Exception e)
 			{
@@ -344,7 +353,7 @@ public class Communication implements Closeable
 		send(new NewAesKey(key, authentication.getRemoteKey()));
 		generator.writeEnd();
 		generator.close();
-		generator = TrackObjectUtils.createGenerator(outputOrig);// = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
+		generator = TrackObjectUtils.createGenerator(outputOrig, PRETTY_PRINT_ALL_COMMUNICATION);// = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
 		generator.writeStartObject();
 		generator.flush();
 	}
@@ -375,7 +384,7 @@ public class Communication implements Closeable
 	public void endWriteRaw() throws IOException
 	{
 		outputOrig.setRawMode(false);
-		generator = TrackObjectUtils.createGenerator(outputOrig);
+		generator = TrackObjectUtils.createGenerator(outputOrig, PRETTY_PRINT_ALL_COMMUNICATION);
 		generator.writeStartObject();
 		generator.flush();
 	}
@@ -401,5 +410,13 @@ public class Communication implements Closeable
 	public InetSocketAddress getRemoteSocketAddress()
 	{
 		return (InetSocketAddress) socket.getRemoteSocketAddress();
+	}
+	void setLastReceived(String jsonKey)
+	{
+		stats.setLastReceived(jsonKey);
+	}
+	public void setReason(String reason)
+	{
+		stats.setReason(reason);
 	}
 }

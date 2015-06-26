@@ -25,12 +25,14 @@
 
 package org.cnv.shr.json;
 
+import java.io.ByteArrayOutputStream;
 import java.util.LinkedList;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 
 public class JsonList<T extends Jsonable> extends LinkedList<T> 
@@ -69,5 +71,13 @@ public class JsonList<T extends Jsonable> extends LinkedList<T>
 				return;
 			}
 		}
+	}
+	
+	public String toDebugString() {
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator);
+		}
+		return new String(output.toByteArray());
 	}
 }

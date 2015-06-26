@@ -87,6 +87,7 @@ import org.cnv.shr.msg.dwn.NewAesKey;
 import org.cnv.shr.msg.dwn.RequestCompletionStatus;
 import org.cnv.shr.msg.key.ConnectionOpenAwk;
 import org.cnv.shr.msg.key.ConnectionOpened;
+import org.cnv.shr.msg.key.ConnectionReason;
 import org.cnv.shr.msg.key.KeyChange;
 import org.cnv.shr.msg.key.KeyFailure;
 import org.cnv.shr.msg.key.KeyNotFound;
@@ -208,6 +209,7 @@ public class GenerateParserCode
 				UpdateInfoRequest.class          ,
 				UpdateInfoRequestRequest.class   ,
 				ShowApplication.class            ,
+				ConnectionReason.class           ,
 				
 				org.cnv.shr.db.h2.bak.LocalBackup.class,
 				org.cnv.shr.db.h2.bak.MachineBackup.class,
@@ -672,6 +674,7 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 						printParser(output, c);
 						printType(output, c);
 						printConstructor(output, c);
+						printToString(output, c);
 //						printValidator(output, c);
 						output.println(line);
 						state = 2;
@@ -689,6 +692,17 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 			}
 		}
 		Files_move(backup, original);
+	}
+
+	private static void printToString(PrintStream output, Class<?> c)
+	{
+		output.println("\tpublic String toDebugString() {                                                    ");
+		output.println("\t\tByteArrayOutputStream output = new ByteArrayOutputStream();                      ");
+		output.println("\t\ttry (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {");
+		output.println("\t\t\tgenerate(generator, null);                                                     ");
+		output.println("\t\t}                                                                                ");
+		output.println("\t\treturn new String(output.toByteArray());                                         ");
+		output.println("\t}                                                                                  ");
 	}
 
 	private static void printConstructor(PrintStream ps, Class<?> c)

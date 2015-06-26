@@ -23,6 +23,7 @@
 
 package org.cnv.shr.db.h2.bak;
 
+import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -33,6 +34,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.UserMessage;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.LogWrapper;
 
@@ -149,5 +151,12 @@ public class MessageBackup implements Jsonable
 	public static String getJsonName() { return "MessageBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public MessageBackup(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

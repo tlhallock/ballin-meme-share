@@ -57,7 +57,7 @@
 		</javac>
 	</target>
 
-	<target name="convenienceshare" depends="common,src">
+	<target name="convenienceshare" depends="common">
 		<javac debug="true" srcdir="../ConvenienceShare/src/" destdir="classes/convenience/" excludes="**/MainTest.java **/GenerateKey.java">
 			<classpath refid="others" />
 		</javac>
@@ -123,7 +123,7 @@
 	</target>
 
 
-	<target name="installer" depends="clean,convenienceshare,updater,tracker">
+	<target name="installer" depends="clean,convenienceshare,src,updater,tracker">
 		<javac debug="true" srcdir="../Installer/" destdir="classes/install/">
 			<classpath refid="others" />
 		</javac>
