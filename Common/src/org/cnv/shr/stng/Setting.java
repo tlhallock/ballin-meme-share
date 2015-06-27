@@ -29,6 +29,8 @@ import java.awt.Component;
 import java.util.LinkedList;
 import java.util.Properties;
 
+import javax.swing.JComponent;
+
 import org.cnv.shr.util.LogWrapper;
 
 public abstract class Setting<T>
@@ -135,7 +137,7 @@ public abstract class Setting<T>
 	}
 
 	abstract T parse(String vString);
-	protected abstract Component createInput();
+	protected abstract JComponent createInput();
 
 	public SettingsEditor getEditor()
 	{
@@ -163,9 +165,9 @@ public abstract class Setting<T>
     
     public class SettingsEditor
     {
-    	Component c;
+    	JComponent c;
     	
-    	SettingsEditor(Component c)
+    	SettingsEditor(JComponent c)
     	{
     		this.c = c;
     	}

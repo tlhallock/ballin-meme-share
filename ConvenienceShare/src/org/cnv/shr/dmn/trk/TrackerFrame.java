@@ -36,9 +36,6 @@ import org.cnv.shr.trck.TrackerEntry;
 
 public class TrackerFrame extends BrowserFrame
 {
-	{
-		Services.notifications.registerWindow(this);
-	}
 	@Override
 	protected void runLater(Runnable runnable)
 	{

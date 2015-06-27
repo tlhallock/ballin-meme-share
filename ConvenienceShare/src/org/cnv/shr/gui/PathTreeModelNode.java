@@ -134,6 +134,10 @@ public class PathTreeModelNode implements TaskListener
 
 	public SharedFile getFile()
 	{
+		if (model.rootDirectory == null)
+		{
+			return null;
+		}
 		return DbFiles.getFile(model.rootDirectory, element);
 	}
 	
@@ -263,6 +267,11 @@ public class PathTreeModelNode implements TaskListener
 	
 	public List<SharedFile> getFileList(boolean recursive)
 	{
+		if (model.rootDirectory == null)
+		{
+			return Collections.emptyList();
+		}
+		
 		if (isLeaf())
 		{
 			return Collections.singletonList(getFile());

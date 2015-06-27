@@ -384,8 +384,13 @@ public class UserActions
 	{
 		
 	}
-
+	
 	public static void showGui()
+	{
+		showGui(null);
+	}
+
+	public static void showGui(SplashScreen screen)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -398,6 +403,11 @@ public class UserActions
 					Services.notifications.registerWindow(application);
 					application.setVisible(true);
 					application.refreshAll();
+					
+					if (screen != null)
+					{
+						screen.dispose();
+					}
 				}
 				catch (Exception ex)
 				{

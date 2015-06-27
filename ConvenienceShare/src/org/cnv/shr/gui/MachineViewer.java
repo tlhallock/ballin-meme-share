@@ -37,8 +37,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.util.logging.Level;
-
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -46,7 +46,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.TreePath;
-
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
@@ -286,9 +285,10 @@ public class MachineViewer extends javax.swing.JFrame
     }
     private void addPopupMenu()
     {
-    	MachineViewer v = this;
+    		MachineViewer v = this;
         class LastPopupClick { int x; int y; }; final LastPopupClick lastPopupClick = new LastPopupClick();
         final JPopupMenu menu = new JPopupMenu();
+        pathsTable.setComponentPopupMenu(menu);
         JMenuItem item = new JMenuItem("Download all currently cached");
         item.addActionListener(new ActionListener() {
             @Override
@@ -581,7 +581,7 @@ public class MachineViewer extends javax.swing.JFrame
         jScrollPane2 = new javax.swing.JScrollPane();
         filesTree = new javax.swing.JTree();
         jLabel2 = new javax.swing.JLabel();
-        syncStatus = new javax.swing.JLabel();
+        syncStatus = new JLabel() {};
         jPanel2 = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();

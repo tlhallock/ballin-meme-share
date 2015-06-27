@@ -25,10 +25,10 @@
 
 package org.cnv.shr.stng;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JComponent;
 import javax.swing.JTextField;
 
 public class StringSetting extends Setting<String> {
@@ -44,7 +44,7 @@ public class StringSetting extends Setting<String> {
 	}
 
 	@Override
-	public Component createInput() {
+	public JComponent createInput() {
 		final JTextField field = new JTextField();
 		field.setText(get().toString());
 		addListener(new SettingListener()

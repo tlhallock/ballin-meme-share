@@ -80,6 +80,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
         jButton5.setText(getMachineText1());
         jButton3.setText(getMachineText2());
         jButton2.setText(getTrackerText1());
+        jList1.setComponentPopupMenu(jPopupMenu1);
     }
 
 	public final void refreshTrackers()

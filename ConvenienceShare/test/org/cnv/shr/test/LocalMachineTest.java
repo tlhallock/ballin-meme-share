@@ -44,7 +44,7 @@ public class LocalMachineTest
 			args.showGui = true;
 		
 			Services.isAlreadyRunning(args);
-		Services.initialize(args);
+		Services.initialize(args, null);
 
 		return new Closeable() {
 			@Override

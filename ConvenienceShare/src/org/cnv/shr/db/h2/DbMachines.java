@@ -35,7 +35,6 @@ import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.util.LogWrapper;
 
 public class DbMachines
@@ -45,8 +44,9 @@ public class DbMachines
 	private static final QueryWrapper SELECT2   = new QueryWrapper("select * from MACHINE where IDENT = ?");
 	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from MACHINE where MACHINE.IS_LOCAL = false");
 	private static final QueryWrapper SELECT1_5 = new QueryWrapper("select * from MACHINE");
-
-
+	private static final QueryWrapper DELETE2   = new QueryWrapper("delete MACHINE where IS_LOCAL=true and not IDENT = ?;");
+	private static final QueryWrapper GET_STATS = new QueryWrapper("select count(NFILES), sum(TSPACE) from ROOT where MID=?;");
+	
 	public static DbIterator<Machine> listMachines()
 	{
 		ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
@@ -149,6 +149,20 @@ public class DbMachines
 			LogWrapper.getLogger().log(Level.INFO, "Unable to delete machine " + remote, e);
 		}
 	}
+
+	public static void cleanOldLocalMachine()
+	{
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE2))
+		{
+			stmt.setString(1, Services.localMachine.getIdentifier());
+			stmt.execute();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to clean old local machines", e);
+		}
+	}
 	
 	// Should be in the same transaction...
 	public static void updateMachineInfo(
@@ -186,29 +200,68 @@ public class DbMachines
 		}
 	}
 
-	public static long getTotalNumFiles(Machine machine)
+	public static class Stats
 	{
-		long returnValue = 0;
-		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
+		public final long numberOfFiles;
+		public final long totalDiskSpace;
+		
+		private Stats(long nFiles, long dSpace)
 		{
-			while (list.hasNext())
-			{
-				returnValue += list.next().numFiles();
-			}
+			this.numberOfFiles = nFiles;
+			this.totalDiskSpace = dSpace;
 		}
-		return returnValue;
+		private Stats()
+		{
+			this(-1, -1);
+		}
 	}
 	
-	public static long getTotalDiskspace(Machine machine)
+	public static Stats getCachedStats(Machine machine)
 	{
-		long returnValue = 0;
-		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(GET_STATS))
 		{
-			while (list.hasNext())
+			stmt.setInt(1, machine.getId());
+			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
-				returnValue += list.next().diskSpace();
+				if (!executeQuery.next())
+				{
+					return new Stats();
+				}
+				return new Stats(executeQuery.getLong(1), executeQuery.getLong(2));
 			}
 		}
-		return returnValue;
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to stats for machine " + machine.getName(), e);
+			return new Stats();
+		}
 	}
+	
+//	
+//	public static long getTotalNumFiles(Machine machine)
+//	{
+//		long returnValue = 0;
+//		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
+//		{
+//			while (list.hasNext())
+//			{
+//				returnValue += list.next().numFiles();
+//			}
+//		}
+//		return returnValue;
+//	}
+//	
+//	public static long getTotalDiskspace(Machine machine)
+//	{
+//		long returnValue = 0;
+//		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
+//		{
+//			while (list.hasNext())
+//			{
+//				returnValue += list.next().diskSpace();
+//			}
+//		}
+//		return returnValue;
+//	}
 }

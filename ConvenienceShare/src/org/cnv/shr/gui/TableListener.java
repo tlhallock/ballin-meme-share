@@ -47,6 +47,7 @@ public class TableListener extends MouseAdapter
 		this.table = table;
 		jPopupMenu = new JPopupMenu();
 		table.addMouseListener(this);
+		table.setComponentPopupMenu(jPopupMenu);
 	}
 	
 	void setDoubleClick(TableRowListener listener)

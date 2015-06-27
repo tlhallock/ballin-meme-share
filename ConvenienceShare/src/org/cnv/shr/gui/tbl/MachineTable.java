@@ -32,6 +32,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbMachines.Stats;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.gui.DiskUsage;
@@ -110,14 +111,15 @@ public class MachineTable extends DbJTable<Machine>
 	@Override
 	protected void fillRow(Machine machine, HashMap<String, Object> currentRow)
 	{
+		Stats stats = DbMachines.getCachedStats(machine);
 		if (machine.isLocal())
 		{
 			currentRow.put("Name",              "Local machine: " + Services.localMachine.getName()                  );
 			currentRow.put("Current Address",   Services.localMachine.getIp() + ":" + Services.localMachine.getPort());
 			currentRow.put("Id",                Services.localMachine.getIdentifier()                                );
 			currentRow.put("Sharing",           String.valueOf(Services.localMachine.sharingWithOther())             );
-			currentRow.put("Number of files",   new NumberOfFiles(DbMachines.getTotalNumFiles(Services.localMachine)));
-			currentRow.put("Total files size",  new DiskUsage(DbMachines.getTotalDiskspace(Services.localMachine))   );
+			currentRow.put("Number of files",   new NumberOfFiles(stats.numberOfFiles)                               );
+			currentRow.put("Total files size",  new DiskUsage(stats.totalDiskSpace)                                  );
 			currentRow.put("Last Ip",           Services.settings.getLocalIp()                                       );
 			currentRow.put("Port",              Services.settings.servePortBeginE.get()                              );
 			currentRow.put("Number of ports",   Services.settings.numHandlers.get()                                  );
@@ -128,8 +130,8 @@ public class MachineTable extends DbJTable<Machine>
   		currentRow.put("Current Address",   machine.getIp() + ":" + machine.getPort()              );
   		currentRow.put("Id",                machine.getIdentifier()                                );
       currentRow.put("Sharing",           String.valueOf(machine.sharingWithOther())             );
-      currentRow.put("Number of files",   new NumberOfFiles(DbMachines.getTotalNumFiles(machine)));
-      currentRow.put("Total files size",  new DiskUsage(DbMachines.getTotalDiskspace(machine))   );
+			currentRow.put("Number of files",   new NumberOfFiles(stats.numberOfFiles)                 );
+			currentRow.put("Total files size",  new DiskUsage(stats.totalDiskSpace)                    );
       currentRow.put("Last Ip",           machine.getIp()                                        );
       currentRow.put("Port",              machine.getPort()                                      );
       currentRow.put("Number of ports",   machine.getNumberOfPorts()                             );

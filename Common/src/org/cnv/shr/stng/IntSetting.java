@@ -25,8 +25,7 @@
 
 package org.cnv.shr.stng;
 
-import java.awt.Component;
-
+import javax.swing.JComponent;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
@@ -60,7 +59,7 @@ public class IntSetting extends Setting<Integer>
 	}
 
 	@Override
-	public Component createInput()
+	public JComponent createInput()
 	{
 		JSpinner spinner = new JSpinner();
 		final SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(get().intValue(), min, max, 1);

@@ -231,7 +231,7 @@ public class PathTreeModel implements TreeModel, Closeable, SynchronizationListe
 	{
 		public NoPath()
 		{
-			super(null);
+			super(-1L);
 		}
 		
 		@Override

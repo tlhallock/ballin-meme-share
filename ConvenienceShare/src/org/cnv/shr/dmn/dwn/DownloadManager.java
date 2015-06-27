@@ -194,7 +194,7 @@ public class DownloadManager
 		DownloadInstance downloadInstance = downloads.get(descriptor);
 		if (downloadInstance == null)
 		{
-			LogWrapper.getLogger().info("Unable to find download for " + descriptor);
+			LogWrapper.getLogger().fine("Unable to find download for " + descriptor);
 			return null;
 		}
 		return downloadInstance;

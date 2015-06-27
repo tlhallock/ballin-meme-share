@@ -25,9 +25,8 @@
 
 package org.cnv.shr.stng;
 
-import java.awt.Component;
-
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -44,7 +43,7 @@ public class BooleanSetting extends Setting<Boolean>
 	}
 
 	@Override
-	public Component createInput()
+	public JComponent createInput()
 	{
 		final JCheckBox spinner = new JCheckBox();
 		spinner.setSelected(get());

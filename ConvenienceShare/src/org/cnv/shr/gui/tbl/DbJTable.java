@@ -63,6 +63,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 	{
 		this.table = table;
 		jPopupMenu = new JPopupMenu();
+		table.setComponentPopupMenu(jPopupMenu);
 		table.addMouseListener(this);
 		table.setAutoCreateRowSorter(true);
 		this.keyName = keyName;

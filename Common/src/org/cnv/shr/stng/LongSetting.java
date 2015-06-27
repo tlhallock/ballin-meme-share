@@ -25,8 +25,7 @@
 
 package org.cnv.shr.stng;
 
-import java.awt.Component;
-
+import javax.swing.JComponent;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
@@ -47,7 +46,7 @@ public class LongSetting extends Setting<Long>
 	}
 
 	@Override
-	public Component createInput()
+	public JComponent createInput()
 	{
 		JSpinner spinner = new JSpinner();
 		final SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(get().intValue(), -1, Long.MAX_VALUE, 1);

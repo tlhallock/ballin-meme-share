@@ -450,6 +450,7 @@ public class Notifications implements WindowFocusListener
 	{
         frame.setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
         frame.addWindowFocusListener(this);
+				Services.colors.setColors(frame);
 //		try
 //		{
 //			frame.setIconImage(Misc.getIcon());

@@ -44,6 +44,8 @@ public class SetTagsFrame extends javax.swing.JFrame {
                file.getTags(),
            });
        }
+       
+       jTable1.setComponentPopupMenu(jPopupMenu2);
     }
     
     /**

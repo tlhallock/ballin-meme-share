@@ -68,7 +68,6 @@ public class PortMapperFrame extends javax.swing.JFrame {
             }
         });
         refresh();
-        Services.notifications.registerWindow(this);
     }
 
     public final void refresh()

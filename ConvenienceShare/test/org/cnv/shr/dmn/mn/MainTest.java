@@ -23,7 +23,7 @@ public class MainTest
 		try
 		{
 			Services.isAlreadyRunning(a);
-			Services.initialize(a);
+			Services.initialize(a, null);
 			if (a.testIp != null && a.testPort != null)
 			{
 				handleTestStream(a);

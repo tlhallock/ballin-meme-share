@@ -51,6 +51,7 @@ import javax.swing.ImageIcon;
 import org.cnv.shr.cnctn.ConnectionManager;
 import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.bak.DbBackupRestore;
 import org.cnv.shr.dmn.dwn.DownloadManager;
 import org.cnv.shr.dmn.dwn.ServeManager;
@@ -60,8 +61,10 @@ import org.cnv.shr.dmn.mn.Quiter;
 import org.cnv.shr.dmn.not.Notifications;
 import org.cnv.shr.dmn.trk.TrackerFrame;
 import org.cnv.shr.dmn.trk.Trackers;
+import org.cnv.shr.gui.SplashScreen;
 import org.cnv.shr.gui.TaskMenu;
 import org.cnv.shr.gui.UserActions;
+import org.cnv.shr.gui.color.ColorSetter;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.Machine.LocalMachine;
 import org.cnv.shr.msg.MessageReader;
@@ -102,8 +105,9 @@ public class Services
 	public static UpdateManager updateManager;
 	public static UpdateInfo codeUpdateInfo;
 	public static Trackers trackers;
+	public static ColorSetter colors;
 	
-	public static void initialize(Arguments args) throws Exception
+	public static void initialize(Arguments args, SplashScreen screen) throws Exception
 	{
 		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
 			@Override
@@ -124,7 +128,11 @@ public class Services
 		
 		if (args.showGui)
 		{
-			UserActions.showGui();
+			UserActions.showGui(screen);
+		}
+		else if (screen != null)
+		{
+			screen.dispose();
 		}
 		
 		System.out.println(Misc.INITIALIZED_STRING);
@@ -135,10 +143,13 @@ public class Services
 	
 	private static void createServices(Settings stgs) throws Exception
 	{
+		colors = new ColorSetter();
+		colors.read();
 		notifications = new Notifications();
 		keyManager = new KeysService();
 		keyManager.readKeys(Services.settings.keysFile.getPath(), Services.settings.keySize.get());
 		localMachine = new Machine.LocalMachine();
+		DbMachines.cleanOldLocalMachine();
 		if (!localMachine.tryToSave())
 		{
 			localMachine.setId();
@@ -253,7 +264,9 @@ public class Services
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				new TrackerFrame().setVisible(true);
+				TrackerFrame trackerFrame = new TrackerFrame();
+				Services.notifications.registerWindow(trackerFrame);
+				trackerFrame.setVisible(true);
 			}});
 		menu.add(item);
 		item = new MenuItem("Quit");
@@ -333,7 +346,6 @@ public class Services
 	public static boolean isAlreadyRunning(Arguments args) throws FileNotFoundException, IOException
 	{
 		quiter = args.quiter;
-		args.settings.read();
 
 		settings = args.settings;
 		settings.write();

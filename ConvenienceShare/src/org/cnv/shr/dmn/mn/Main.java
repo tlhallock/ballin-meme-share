@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.SplashScreen;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.ShowApplication;
 import org.cnv.shr.stng.Settings;
@@ -44,14 +45,16 @@ public class Main
 {
 	public static void main(String[] args) throws Exception
 	{
+		SplashScreen screen = SplashScreen.showSplash();
 		Arguments a = new Arguments();
 		a.parseArgs(args);
 		Settings settings;
 		
-		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
-		a.settings.applicationDirectory.set(Paths.get("another\\apps"));
+//		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
+//		a.settings.applicationDirectory.set(Paths.get("another\\apps"));
 
-//		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
+		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
+		a.settings.read();
 		a.settings.setDefaultApplicationDirectoryStructure();
 		a.showGui = true;
 
@@ -77,7 +80,7 @@ public class Main
 		
 		try
 		{
-			Services.initialize(a);
+			Services.initialize(a, screen);
 		}
 		catch (Exception ex)
 		{
@@ -87,7 +90,6 @@ public class Main
 				Services.quiter.quit();
 			}
 		}
-		
 		
 //		for (;;)
 //		{

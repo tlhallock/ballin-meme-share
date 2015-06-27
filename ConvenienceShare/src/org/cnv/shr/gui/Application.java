@@ -554,7 +554,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton8))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel14, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addContainerGap(15, Short.MAX_VALUE))
         );
 
         jLabel4.setText("Default permissions for new Machines/Directories:");
@@ -582,7 +582,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(331, Short.MAX_VALUE))
+                .addContainerGap(329, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Home", jPanel11);
@@ -1411,11 +1411,15 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jMenuItem13ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-    	new TrackerFrame().setVisible(true);
+    	TrackerFrame trackerFrame = new TrackerFrame();
+    	Services.notifications.registerWindow(trackerFrame);
+			trackerFrame.setVisible(true);
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
     private void jMenuItem11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem11ActionPerformed
-    	new PortMapperFrame().setVisible(true);
+    	PortMapperFrame frame = new PortMapperFrame();
+    	Services.notifications.registerWindow(frame);
+    	frame.setVisible(true);
     }//GEN-LAST:event_jMenuItem11ActionPerformed
 
     private void jCheckBoxMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem1ActionPerformed

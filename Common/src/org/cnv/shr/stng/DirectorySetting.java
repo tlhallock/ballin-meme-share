@@ -25,9 +25,9 @@
 
 package org.cnv.shr.stng;
 
-import java.awt.Component;
 import java.io.File;
 
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 
 import org.cnv.shr.gui.ChangeFile;
@@ -39,7 +39,7 @@ public class DirectorySetting extends FileSetting
 	}
 
 	@Override
-	public Component createInput() {
+	public JComponent createInput() {
 		return new ChangeFile(this, JFileChooser.DIRECTORIES_ONLY);
 	}
 
