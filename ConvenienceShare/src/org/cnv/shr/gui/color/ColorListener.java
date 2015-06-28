@@ -25,6 +25,11 @@ class ColorListener
 	{
 		setter.listeners.get(component.getClass().getName()).remove(this);
 	}
+	
+	void setOpaque(boolean isOpaque)
+	{
+		component.setOpaque(isOpaque);
+	}
 
 	void setForeground(Color color)
 	{

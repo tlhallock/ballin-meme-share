@@ -22,11 +22,28 @@ import java.util.TimerTask;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import org.cnv.shr.util.LogWrapper;
+
 public class SplashScreen extends JFrame
 {
+	private String additionalText = "";
+	public void setStatus(String text)
+	{
+		additionalText = text;
+		if (additionalText == null)
+		{
+			additionalText = "";
+		}
+	}
+	
 	public static SplashScreen showSplash()
 	{
 		Timer timer = new Timer();
+		TimerTask startUpMonitor = new TimerTask() { public void run() {
+				LogWrapper.getLogger().info("Unable to start main application within one minute!!!!");
+				System.exit(-1);
+			}};
+		timer.schedule(startUpMonitor, 60 * 1000);
 		SplashScreen screen = new SplashScreen();
 
     Rectangle screenBounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().getBounds();
@@ -40,8 +57,9 @@ public class SplashScreen extends JFrame
 		screen.setUndecorated(true);
 		screen.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(WindowEvent e)
+			public void windowClosed(WindowEvent e)
 			{
+				LogWrapper.getLogger().info("Splash screen closed.");
 				timer.cancel();
 			}
 		});
@@ -67,21 +85,26 @@ public class SplashScreen extends JFrame
 				{
 					c.draw(g);
 				}
+				
+				int textOffset = getHeight() / 2;
+				textOffset += writeText((Graphics2D) g, "ConvenienceShare is starting...",  textOffset) + 10;
+				textOffset += writeText((Graphics2D) g, screen.additionalText,  textOffset) + 10;
+			}
 
-				Graphics2D graphics2D = (Graphics2D) g;
-				AttributedString attributedString = new AttributedString("ConvenienceShare is starting...");
+			private float writeText(Graphics2D graphics2D, String text, float height)
+			{
+				AttributedString attributedString = new AttributedString(text);
 				attributedString.addAttribute(TextAttribute.FOREGROUND, Color.white);
 		    AttributedCharacterIterator characterIterator = attributedString.getIterator();
 		    FontRenderContext fontRenderContext = graphics2D.getFontRenderContext();
 		    LineBreakMeasurer lbm = new LineBreakMeasurer(characterIterator, fontRenderContext);
 		    TextLayout textLayout = lbm.nextLayout(Integer.MAX_VALUE);
-		    double width = textLayout.getBounds().getWidth();
-		    double height = textLayout.getBounds().getHeight();
-				
-				textLayout.draw(graphics2D, (float) (getWidth() - width) / 2, (float) (getHeight() - height) / 2 );
+		    double textWidth = textLayout.getBounds().getWidth();
+		    double textHeight = textLayout.getBounds().getHeight();
+				textLayout.draw(graphics2D, (float) (getWidth() - textWidth) / 2, height - (float) textHeight / 2);
+				return (float) textHeight;
 			}
 		});
-
 		screen.setVisible(true);
 		
 		return screen;

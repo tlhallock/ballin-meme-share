@@ -154,14 +154,7 @@ public class Settings implements SettingListener
 		}
 		catch (IOException ex)
 		{
-//			if (Services.logger == null)
-			{
-				System.out.println("No settings file found.");
-			}
-//			else
-//			{
-//				LogWrapper.getLogger().info("No settings file found.");
-//			}
+				LogWrapper.getLogger().info("No settings file found.");
 		}
 		read(properties);
 		if (machineIdentifier.get().length() != MACHINE_ID_LENGTH)

@@ -117,15 +117,17 @@ public class Services
 			}
 		});
 		
-		testStartUp();
-		createServices(args.settings);
+		testStartUp(screen);
+		createServices(args.settings, screen);
 		if (args.restoreFile != null)
 		{
 			DbBackupRestore.restoreDatabase(null, args.restoreFile);
 		}
-		checkIfUpdateManagerIsRunning(args);
-		startServices();
-		
+		checkIfUpdateManagerIsRunning(args, screen);
+		startServices(screen);
+
+		if (screen != null)
+			screen.setStatus("Starting gui");
 		if (args.showGui)
 		{
 			UserActions.showGui(screen);
@@ -141,8 +143,10 @@ public class Services
 	}
 	
 	
-	private static void createServices(Settings stgs) throws Exception
+	private static void createServices(Settings stgs, SplashScreen screen) throws Exception
 	{
+		if (screen != null)
+			screen.setStatus("Creating services");
 		colors = new ColorSetter();
 		colors.read();
 		notifications = new Notifications();
@@ -179,12 +183,14 @@ public class Services
 				60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
 		checksums = new ChecksumManager();
 		
-		startSystemTray();
+		startSystemTray(screen);
 	}
 
 
-	private static void checkIfUpdateManagerIsRunning(Arguments a) throws Exception
+	private static void checkIfUpdateManagerIsRunning(Arguments a, SplashScreen screen) throws Exception
 	{
+		if (screen != null)
+			screen.setStatus("Checking if update manager is running");
 		if (a.updateManagerDirectory == null)
 		{
 			return;
@@ -193,9 +199,10 @@ public class Services
 		codeUpdateInfo = new UpdateInfoImpl(a.updateManagerDirectory);
 	}
 	
-	private static void initializeLogging()
+	private static void initializeLogging(SplashScreen screen)
 	{
-//		LogWrapper.initialize();
+		if (screen != null)
+			screen.setStatus("Initializing logging.");
 		SettingListener listener = new SettingListener() {
 			@Override
 			public void settingChanged()
@@ -209,7 +216,6 @@ public class Services
 		settings.logFile.addListener(listener);
 		settings.logToFile.addListener(listener);
 		settings.logLength.addListener(listener);
-		
 
 //		if (ex instanceof SQLException && Services.notifications != null)
 //		{
@@ -217,8 +223,10 @@ public class Services
 //		}
 	}
 
-	private static void startServices()
+	private static void startServices(SplashScreen screen)
 	{
+		if (screen != null)
+			screen.setStatus("Starting services");
 		notifications.start();
 		// Now start other threads...
 		checksums.start(); checksums.kick();
@@ -248,8 +256,10 @@ public class Services
 //		Also need to attempt remote authentications...
 	}
 	
-	private static void startSystemTray() throws IOException, AWTException
+	private static void startSystemTray(SplashScreen screen) throws IOException, AWTException
 	{
+		if (screen != null)
+			screen.setStatus("Starting system tray");
 		PopupMenu menu = new PopupMenu();
 		MenuItem item = new MenuItem("Show application");
 		item.addActionListener(new ActionListener() {
@@ -332,8 +342,10 @@ public class Services
 		LogWrapper.close();
 	}
 	
-	public static void testStartUp() throws Exception
+	public static void testStartUp(SplashScreen screen) throws Exception
 	{
+		if (screen != null)
+			screen.setStatus("Testing startup");
 		"foo".getBytes(Settings.encoding);
 //		if (!SystemTray.isSupported())
 //		{
@@ -343,17 +355,19 @@ public class Services
 	}
 
 
-	public static boolean isAlreadyRunning(Arguments args) throws FileNotFoundException, IOException
+	public static boolean isAlreadyRunning(Arguments args, SplashScreen screen) throws FileNotFoundException, IOException
 	{
 		quiter = args.quiter;
 
 		settings = args.settings;
+		settings.read();
 		settings.write();
 		settings.listenToSettings();
-		initializeLogging();
+		initializeLogging(screen);
 		
+		if (screen != null)
+			screen.setStatus("Checking if update manager is running");
 		Misc.ensureDirectory(settings.applicationDirectory.get(), false);
-//		Misc.ensureDirectory(settings.stagingDirectory.get(), false);
 		Misc.ensureDirectory(settings.downloadsDirectory.get(), false);
 		
 		try (Socket socket = new Socket(InetAddress.getLocalHost().getHostAddress(), settings.servePortBeginI.get());)
@@ -365,11 +379,14 @@ public class Services
 			LogWrapper.getLogger().log(Level.INFO, "Unable to connect to begin port. Good.\n" + ex.getMessage());
 		}
 		
-
+		if (screen != null)
+			screen.setStatus("Creating log file");
 		LogWrapper.logToFile(
 				Services.settings.logToFile.get() ? Services.settings.logFile.getPath() : null,
 				Services.settings.logLength.get());
 
+		if (screen != null)
+			screen.setStatus("Creating serve handlers");
 		int numServeThreads = Math.max(1, settings.numHandlers.get());
 		sockets = new ServerSocket[numServeThreads];
 		int successCount = 0;
@@ -391,6 +408,8 @@ public class Services
 			return true;
 		}
 
+		if (screen != null)
+			screen.setStatus("Creating database");
 		try
 		{
 			h2DbCache = new DbConnectionCache(args);

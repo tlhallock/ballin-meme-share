@@ -105,6 +105,11 @@ public class NewAesKey extends Message
 		}
 		return Services.keyManager.encrypt(key, byteArrayOutputStream.toByteArray());
 	}
+	
+	public String toString()
+	{
+		return "Here is a new AES key to encrypt with.";
+	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override

@@ -42,7 +42,7 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 
 public class FlushableEncryptionStreams
 {
-	public static int BUFFER_SIZE = 1024;
+	public static int BUFFER_SIZE = Misc.BUFFER_SIZE;
 	
 	// maybe we should change keys
 	
@@ -55,12 +55,6 @@ public class FlushableEncryptionStreams
 	{
 		return new FlushableEncryptionInputStream(aesKey, old);
 	}
-	
-	
-	
-	
-	
-	
 
 	private static final class MyByteArrayOutputStream extends OutputStream
 	{
@@ -82,18 +76,24 @@ public class FlushableEncryptionStreams
 			output.write(index >> 16 & 0xff);
 			output.write(index >>  8 & 0xff);
 			output.write(index >>  0 & 0xff);
-
-			for (int i = 0; i < index; i++)
-			{
-				output.write(array[i] & 0xff);
-			}
+			
+			output.write(array, 0, index);
 			index = 0;
 		}
 
 		@Override
 		public void write(int b) throws IOException
 		{
-			array[index++] = (byte) (b & 0xff);
+			array[index++] = (byte) b;
+		}
+		@Override
+		public void write(byte[] arr, int offset, int len) throws IOException
+		{
+			int end = offset + len;
+			for (int i=offset; i<end;i++)
+			{
+				array[index++] = arr[i];
+			}
 		}
 		
 		@Override
@@ -132,9 +132,15 @@ public class FlushableEncryptionStreams
 				{
 					throw new IOException("Improperly formated stream.");
 				}
-				for (int i = 0; i < currentLength; i++)
+
+				int o = 0;
+				while (o < currentLength)
 				{
-					array[i] = (byte) delegate.read();
+					int nread = delegate.read(array, o, currentLength - o);
+					if (nread > 0)
+					{
+						o += nread;
+					}
 				}
 				index = 0;
 			}
@@ -152,13 +158,33 @@ public class FlushableEncryptionStreams
 			return array[index++] & 0xff;
 		}
 		
+		// Should finish this sometime...
+//		public int read(byte[] arr, int off, int len)
+//		{
+//			while ()
+//			{
+//				int amountToRead = Math.min(currentLength - index, len);
+//				if (amountToRead <= 0 && len > 0)
+//				{
+//					
+//				}
+//				
+//				index += amountToRead;
+//				off   += amountToRead;
+//				len   -= amountToRead;
+//			}
+//		}
+		
 		@Override
-		public void close()
-		{
-			
-		}
+		public void close() {}
 	}
 
+	/*
+	 * These need to be sped up
+	 */
+	
+	
+	
 	public static class FlushableEncryptionInputStream extends InputStream
 	{
 		private InputStream delegate;
@@ -182,25 +208,10 @@ public class FlushableEncryptionStreams
 			int read;
 			while (cipherStream == null || (read = cipherStream.read()) < 0)
 			{
-				if (cipherStream != null)
-				{
-					cipherStream.close();
-				}
-				if (!buffer.fill(delegate))
+				if (!fillCipher())
 				{
 					return -1;
 				}
-
-				cipher = createCipher();
-				try
-				{
-					cipher.init(Cipher.DECRYPT_MODE, aesKey);
-				}
-				catch (InvalidKeyException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Found a bad key.", e);
-				}
-				cipherStream = new CipherInputStream(buffer, cipher);
 			}
 			return read;
 		}
@@ -214,32 +225,69 @@ public class FlushableEncryptionStreams
 			}
 			delegate.close();
 		}
+
+		private boolean fillCipher() throws IOException
+		{
+			if (cipherStream != null)
+			{
+				cipherStream.close();
+			}
+			if (!buffer.fill(delegate))
+			{
+				return false;
+			}
+			cipher = createCipher();
+			try
+			{
+				cipher.init(Cipher.DECRYPT_MODE, aesKey);
+			}
+			catch (InvalidKeyException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Found a bad key.", e);
+				return false;
+			}
+			cipherStream = new CipherInputStream(buffer, cipher);
+			return true;
+		}
 		
+		/*
+		 * This is so tricky, because the InputStreamReader tries to read all the way up to the number of available bytes.
+		 * It will hang if you say too many.
+		 * On the other hand, saying too few will make the whole thing very slow.
+		 */
 		public int available() throws IOException
 		{
 			// rough guess
-			int retVal1 = cipherStream.available();
-			if (retVal1 != 0)
+			if (cipherStream == null && !fillCipher())
 			{
-				return retVal1;
+				return 0;
 			}
-			return delegate.available();
+//			while (cipherStream.available() == 0)
+//			{
+//				fillCipher();
+//			}
+			int returnValue = cipherStream.available();
+			if (returnValue == 0 && delegate.available() > Integer.SIZE + 1)
+			{
+				return 1;
+			}
+			return returnValue;
 		}
 
-		public int read(byte b[], int off, int len) throws IOException
-		{
-			if (b == null || b.length < 1)
-			{
-				throw new NullPointerException();
-			}
-			int read =  read();
-			if (read < 0)
-			{
-				return -1;
-			}
-			b[0] = (byte) read;
-			return 1;
-		}
+//		public int read(byte b[], int off, int len) throws IOException
+//		{
+//			if (b == null || b.length < 1)
+//			{
+//				throw new NullPointerException();
+//			}
+//			int read =  read();
+//			if (read < 0)
+//			{
+//				return -1;
+//			}
+//			b[off] = (byte) read;
+//			return 1;
+//		}
 	}
 
 	public static class FlushableEncryptionOutputStream extends OutputStream
@@ -274,13 +322,31 @@ public class FlushableEncryptionStreams
 			length++;
 			cipherStream.write(b);
 		}
+		
+		public void write(byte[] bytes, int offset, int len) throws IOException
+		{
+			while (offset < len)
+			{
+				int amountToWrite = Math.min(BUFFER_SIZE - length, len);
+				if (amountToWrite <= 0 && len > 0)
+				{
+					flush();
+					continue;
+				}
+				cipherStream.write(bytes, offset, amountToWrite);
+				length += amountToWrite;
+				offset += amountToWrite;
+				len    -= amountToWrite;
+			}
+		}
+		
 
 		@Override
 		public void flush() throws IOException
 		{
+			cipherStream.close();
 			buffer.flush(delegate);
 			delegate.flush();
-			cipherStream.close();
 
 			cipher = createCipher();
 			try
@@ -313,7 +379,8 @@ public class FlushableEncryptionStreams
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e1)
 		{
-			e1.printStackTrace();
+			LogWrapper.getLogger().log(Level.SEVERE, "Unable to create aes cipher! Quiting.", e1);
+			System.exit(-1);
 			return null;
 		}
 	}

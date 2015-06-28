@@ -114,6 +114,11 @@ public class GotPermission extends Message
 			Services.notifications.permissionsChanged(remote);
 		}
 	}
+	
+	public String toString()
+	{
+		return "Your permission for " + rootName + " is " + permission;
+	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override

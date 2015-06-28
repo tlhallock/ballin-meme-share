@@ -53,7 +53,6 @@ public abstract class DbJTable<T> extends MouseAdapter
 	
 	private JPopupMenu jPopupMenu;
 	private TableRightClickListener dblClick;
-	private int[] selectedRows2;
 	private JTable table;
 	private String keyName;
 	private String[] names;
@@ -311,10 +310,11 @@ public abstract class DbJTable<T> extends MouseAdapter
 //		});
 //	}
 	
-	private void setSelectedRows()
+	private int[] getSelectedRows()
 	{
-		selectedRows2 = table.getSelectedRows();
+		int[] selectedRows2 = table.getSelectedRows();
 		Arrays.sort(selectedRows2);
+		return selectedRows2;
 	}
 
 	
@@ -347,7 +347,6 @@ public abstract class DbJTable<T> extends MouseAdapter
 		{
 			return;
 		}
-		setSelectedRows();
 		table.rowAtPoint(me.getPoint());
 		jPopupMenu.show(me.getComponent(), me.getX(), me.getY());
 		jPopupMenu.setVisible(true);
@@ -384,10 +383,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 		
 		if (me.getClickCount() >= 2 && dblClick != null)
 		{
-			selectedRows2 = new int[] { nRow };
-			for (int i = selectedRows2.length - 1; i >= 0; i--)
+			int[] selectedRows = new int[] { nRow };
+			for (int i = selectedRows.length - 1; i >= 0; i--)
 			{
-				dblClick.perform(create(selectedRows2[i]));
+				dblClick.perform(create(selectedRows[i]));
 			}
 		}
 		else
@@ -412,6 +411,12 @@ public abstract class DbJTable<T> extends MouseAdapter
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
+			int[] selectedRows2 = getSelectedRows();
+			if (selectedRows2 == null)
+			{
+				LogWrapper.getLogger().info("No rows selected!");
+				return;
+			}
 			for (int i = selectedRows2.length - 1; i >= 0; i--)
 			{
 				final T create = create(selectedRows2[i]);

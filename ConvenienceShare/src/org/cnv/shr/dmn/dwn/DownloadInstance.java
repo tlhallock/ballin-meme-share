@@ -76,12 +76,11 @@ public class DownloadInstance implements Runnable
 	private Map<Chunk, Seeder> pendingSeeders = new HashMap<Chunk, Seeder>();
 	private boolean quit;
 	
-	
 	private RemoteFile remoteFile;
-	
 	private Path destination;
-	
 	private Download download;
+	private Seeder primarySeeder;
+	private boolean requestedMetaData;
 	
 	
 	DownloadInstance(Download d) throws IOException
@@ -118,6 +117,22 @@ public class DownloadInstance implements Runnable
 		}
 	}
 
+	private void ensurePrimarySeeder() throws UnknownHostException, IOException
+	{
+		if (primarySeeder != null)
+		{
+			return;
+		}
+		Machine machine = remoteFile.getRootDirectory().getMachine();
+		Communication openConnection = Services.networkManager.openConnection(machine, false, "Download file");
+		if (openConnection == null)
+		{
+			throw new IOException("Unable to authenticate to host.");
+		}
+		primarySeeder = new Seeder(machine, openConnection);
+		freeSeeders.addLast(primarySeeder);
+	}
+
 	private synchronized void getMetaData() throws UnknownHostException, IOException
 	{
 		if (quit)
@@ -134,30 +149,32 @@ public class DownloadInstance implements Runnable
 			continueDownload();
 			return;
 		}
-		
-		FileRequest request = new FileRequest(remoteFile, download.getChunkSize());
-		Machine machine = remoteFile.getRootDirectory().getMachine();
-		Communication openConnection = Services.networkManager.openConnection(machine, false, "Download file");
-		if (openConnection == null)
+
+		if (requestedMetaData)
 		{
-			throw new IOException("Unable to authenticate to host.");
+			LogWrapper.getLogger().info("Already requested metadata.");
+			return;
 		}
 		
-		Seeder seeder = new Seeder(machine, openConnection);
-		freeSeeders.addLast(seeder);
-		seeder.send(request);
+		FileRequest request = new FileRequest(remoteFile, download.getChunkSize());
 
+		ensurePrimarySeeder();
+		primarySeeder.send(request);
+		
 		// this should have a time out before it goes back to requesting meta data
 		download.setState(DownloadState.RECEIVING_METADATA);
+		requestedMetaData = true;
 	}
 
-	private void requestSeeders()
+	private void requestSeeders() throws UnknownHostException, IOException
 	{
 		if (quit)
 		{
 			LogWrapper.getLogger().info("Already quit.");
 			return;
 		}
+		ensurePrimarySeeder();
+		
 		if (Math.random() < 2)
 		{
 			LogWrapper.getLogger().info("Currently not requesting seeders.");
@@ -363,7 +380,6 @@ public class DownloadInstance implements Runnable
 			LogWrapper.getLogger().info("Some seeder gave an unknown chunk.");
 			return;
 		}
-		freeSeeders.addLast(resquestedSeeder);
 		
 		resquestedSeeder.requestCompleted(null, chunk);
 		connection.beginReadRaw();
@@ -371,6 +387,8 @@ public class DownloadInstance implements Runnable
 		{
 			boolean successful = ChunkData.read(chunk, destination.toFile(), connection.getIn(), compressed);
 			connection.endReadRaw();
+			freeSeeders.addLast(resquestedSeeder);
+			
 			if (successful)
 			{
 				DbChunks.chunkDone(download, chunk, true);

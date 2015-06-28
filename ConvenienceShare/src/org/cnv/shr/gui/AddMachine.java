@@ -119,6 +119,12 @@ public class AddMachine extends javax.swing.JFrame {
 
         jLabel1.setText("Url:");
 
+        jTextField1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextField1ActionPerformed(evt);
+            }
+        });
+
         share.setSelected(true);
         share.setText("Let machine download from shared folders");
 
@@ -195,7 +201,11 @@ public class AddMachine extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        
+        add();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void add()
+    {
         AddMachineParams params = new AddMachineParams();
         params.acceptKeys = addKeys.isSelected();
         params.share = share.isSelected();
@@ -205,9 +215,9 @@ public class AddMachine extends javax.swing.JFrame {
         String url = jTextField1.getText();
         dispose();
         
-				UserActions.addMachine(url, params);
-    }//GEN-LAST:event_jButton1ActionPerformed
-
+	UserActions.addMachine(url, params);
+    }
+    
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -215,6 +225,10 @@ public class AddMachine extends javax.swing.JFrame {
     private void visibleStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_visibleStateChanged
         updateBoxes();
     }//GEN-LAST:event_visibleStateChanged
+
+    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
+        add();
+    }//GEN-LAST:event_jTextField1ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -195,9 +195,6 @@ public class DbBackupRestore
 				 JsonParser parser = TrackObjectUtils.createParser(newInputStream);
 				 ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();)
 		{
-			// Should break up the counting input stream class into two different classes...
-			newInputStream.setRawMode(true);
-			
 			String key = null;
 			while (parser.hasNext())
 			{

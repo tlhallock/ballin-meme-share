@@ -104,6 +104,11 @@ public class GetPermission extends Message
 		
 		connection.send(new GotPermission(rootName, permission));
 	}
+	
+	public String toString()
+	{
+		return "What permissions do I have for " + rootName;
+	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override

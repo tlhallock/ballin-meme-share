@@ -25,113 +25,28 @@
 
 package org.cnv.shr.util;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.json.stream.JsonGenerator;
 
 public final class CountingInputStream extends InputStream
 {
 	private InputStream delegate;
 	private long soFar;
-	private boolean paused;
-	
-	boolean rawMode;
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-private BufferedWriter logFile; 
-{ 
-  Map<String, Object> properties = new HashMap<>(1);
-  properties.put(JsonGenerator.PRETTY_PRINTING, true);
-	try
-	{
-		String string = "log.in." + System.currentTimeMillis() + "." + Math.random() + ".txt";
-		System.out.println("Logging to " + string);
-		logFile = Files.newBufferedWriter(Paths.get(string));
-	}
-	catch (IOException e)
-	{
-		e.printStackTrace();
-	}
-}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	public CountingInputStream(InputStream newInputStream)
 	{
 		this.delegate = newInputStream;
 	}
-
-	public void setRawMode(boolean rawMode)
-	{
-		this.rawMode = rawMode;
-	}
 	
 	@Override
 	public int read() throws IOException
 	{
-		if (paused)
-		{
-			return -1;
-		}
-		soFar++;
 		int read = delegate.read();
-		logFile.write(read);
-		logFile.flush();
-		if (!rawMode && read == 13 && delegate.read() != 13)
+		if (read > 0)
 		{
-			logFile.write("<paused here>");
-			paused = true;
-			return -1;
+			soFar++;
 		}
 		return read;
-	}
-	
-	public void startAgain()
-	{
-		paused = false;
 	}
 	
 	public long getSoFar()
@@ -151,7 +66,7 @@ private BufferedWriter logFile;
 
 	public void close() throws IOException
 	{
-//		delegate.close();
+		delegate.close();
 	}
 
 	public synchronized void mark(int readlimit)
@@ -171,23 +86,11 @@ private BufferedWriter logFile;
 	
 	public int read(byte b[], int off, int len) throws IOException
 	{
-		if (rawMode)
+		int read = delegate.read(b, off, len);
+		if (read > 0)
 		{
-			int read = delegate.read(b, off, len);
 			soFar += read;
-			return read;
 		}
-		if (b == null || b.length < 1)
-		{
-			throw new NullPointerException();
-		}
-		int read = read();
-		if (read < 0)
-		{
-			return -1;
-		}
-		b[off] = (byte) read;
-		soFar++;
-		return 1;
+		return read;
 	}
 }

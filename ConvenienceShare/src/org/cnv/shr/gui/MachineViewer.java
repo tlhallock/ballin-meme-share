@@ -26,6 +26,7 @@
 package org.cnv.shr.gui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.util.logging.Level;
+
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -46,6 +48,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.TreePath;
+
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
@@ -89,24 +92,52 @@ public class MachineViewer extends javax.swing.JFrame
     	machineIdent = rMachine.getIdentifier();
         initComponents();
         syncStatus.setOpaque(true);
-        filesManager = new FilesTable(filesTable, this);
+        filesManager = new FilesTable(filesTable, this, numFilesShowingLabel);
 
         pathsTable.setAutoCreateRowSorter(true);
 
         addPathsListener();
         addPopupMenu();
         
+//        class MyTreeUI extends BasicTreeUI
+//        {
+//        	@Override
+//        	public void toggleExpandState(TreePath path)
+//        	{
+//        		super.toggleExpandState(path);
+//        	}
+//        }
+        
         filesTree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(final MouseEvent e) {
                 filesTree.setVisibleRowCount(filesTree.getRowCount());
                 if (e.getClickCount() >= 2) {
-                    final TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
-                    currentFilesNode = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                    filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, currentFilesNode.getFileList(jCheckBox1.isSelected()));
+                  final TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
+                  currentFilesNode = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+                  // Try our best to toggle...
+//                  TreeUI ui = filesTree.getUI();
+//                  if (ui instanceof MyTreeUI)
+//                  {
+//                  	((MyTreeUI) ui).toggleExpandState(pathForLocation);
+//                  }
+//                  else 
+                  if (filesTree.isExpanded(pathForLocation))
+                  {
+                  	filesTree.collapsePath(pathForLocation);
+                  }
+                  else
+                  {
+                  	filesTree.expandPath(pathForLocation);
+                  }
+                  filesTree.expandPath(pathForLocation);
+                  filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, currentFilesNode.getFileList(jCheckBox1.isSelected()));
                 }
             }
         });
+//        filesTree.setUI(new MyTreeUI());
+        // Otherwise the tree changes before we can get the location of the node the user clicked on.
+      	filesTree.setToggleClickCount(99999999);
         filesTree.setScrollsOnExpand(true);
         filesTree.setLargeModel(true);
         setSyncStatus(Color.GRAY, Color.WHITE, "Not viewing any root.");
@@ -138,7 +169,7 @@ public class MachineViewer extends javax.swing.JFrame
 			addWindowListener(new WindowAdapter()
 			{
 				@Override
-				public void windowClosing(WindowEvent e)
+				public void windowClosed(WindowEvent e)
 				{
 					model.close();
 				}
@@ -288,7 +319,6 @@ public class MachineViewer extends javax.swing.JFrame
     		MachineViewer v = this;
         class LastPopupClick { int x; int y; }; final LastPopupClick lastPopupClick = new LastPopupClick();
         final JPopupMenu menu = new JPopupMenu();
-        pathsTable.setComponentPopupMenu(menu);
         JMenuItem item = new JMenuItem("Download all currently cached");
         item.addActionListener(new ActionListener() {
             @Override
@@ -396,6 +426,7 @@ public class MachineViewer extends javax.swing.JFrame
         });
         menu.add(item);
         filesTree.add(menu);
+        filesTree.setComponentPopupMenu(menu);
 
         filesTree.addMouseListener(new MouseAdapter() {
             public void doPopup(MouseEvent e) {
@@ -510,12 +541,11 @@ public class MachineViewer extends javax.swing.JFrame
         jTextField1.setEnabled(true); jTextField1.setText("");
         jTextField2.setEnabled(true); jTextField2.setText("");
         this.rootDirectoryName = directory.getName();
-        this.rootNameLabel.setText(directory.getName());
-        this.rootNameLabel.setText(directory.getPathElement().getFullPath());
+        this.rootNameLabel.setText(rootDirectoryName); rootNameLabel.setMinimumSize(new Dimension(5, 5));
         this.descriptionLabel.setText(directory.getDescription());
         this.tagsLabel.setText(directory.getTags());
         this.numFilesLabel.setText(directory.getTotalNumberOfFiles());
-        this.pathField.setText(directory.getPathElement().getFullPath());
+        this.pathField.setText(directory.getPathElement().getFullPath()); pathField.setMinimumSize(new Dimension(5, 5));
         this.diskSpaceLabel.setText(directory.getTotalFileSize());
         ((PathTreeModel) filesTree.getModel()).setRoot(directory);
         filesManager.setFilters("", "");
@@ -577,6 +607,10 @@ public class MachineViewer extends javax.swing.JFrame
         jCheckBox1 = new javax.swing.JCheckBox();
         jLabel6 = new javax.swing.JLabel();
         jTextField2 = new javax.swing.JTextField();
+        jButton8 = new javax.swing.JButton();
+        jLabel16 = new javax.swing.JLabel();
+        numFilesShowingLabel = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         filesTree = new javax.swing.JTree();
@@ -688,23 +722,48 @@ public class MachineViewer extends javax.swing.JFrame
             }
         });
 
+        jButton8.setText("Filter!");
+        jButton8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton8ActionPerformed(evt);
+            }
+        });
+
+        jLabel16.setText("Showing");
+
+        numFilesShowingLabel.setText("0");
+
+        jLabel17.setText("file(s).");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 455, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jTextField1)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jCheckBox1))
-                    .addComponent(jTextField2))
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addComponent(jTextField1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jCheckBox1))
+                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addComponent(jTextField2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton8))))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel16)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(numFilesShowingLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jLabel17)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -718,9 +777,15 @@ public class MachineViewer extends javax.swing.JFrame
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton8))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel16)
+                    .addComponent(numFilesShowingLabel)
+                    .addComponent(jLabel17))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 271, Short.MAX_VALUE))
         );
 
         jSplitPane2.setRightComponent(jPanel3);
@@ -1213,6 +1278,10 @@ public class MachineViewer extends javax.swing.JFrame
     	filterFilesTable();
     }//GEN-LAST:event_jTextField2ActionPerformed
 
+    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+        filterFilesTable();
+    }//GEN-LAST:event_jButton8ActionPerformed
+
     private void filterFilesTable()
     {
     	filesManager.setFilters(jTextField1.getText(), jTextField2.getText());
@@ -1233,6 +1302,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
+    private javax.swing.JButton jButton8;
     private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
@@ -1241,6 +1311,8 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1263,6 +1335,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JTextField jTextField2;
     private javax.swing.JLabel machineLabel;
     private javax.swing.JLabel numFilesLabel;
+    private javax.swing.JLabel numFilesShowingLabel;
     private javax.swing.JTextField pathField;
     private javax.swing.JTable pathsTable;
     private javax.swing.JCheckBox pin;

@@ -26,6 +26,7 @@
 package org.cnv.shr.mdl;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -323,5 +324,10 @@ public class PathElement extends DbObject<Long>
 			c = c.getParent();
 		}
 		return c;
+	}
+
+	public boolean isAbsolute()
+	{
+		return getUnbrokenName().equals("/") || getId() == 0 || getUnbrokenName().contains(":") || Paths.get(getUnbrokenName()).isAbsolute();
 	}
 }

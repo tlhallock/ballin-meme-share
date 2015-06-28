@@ -70,6 +70,8 @@ public class DoneMessage extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		connection.send(new DoneResponse());
+		// Give the other size a sec to receive DoneResponse
+		Thread.sleep(1000);
 		connection.setDone();
 	}
 	

@@ -50,41 +50,39 @@ import org.cnv.shr.util.Misc;
  *
  * @author thallock
  */
-public class NewMachineFrame extends javax.swing.JFrame {
+public class NewMachineFrame extends javax.swing.JFrame
+{
+	/**
+	 * Creates new form NewMachineFrame
+	 */
+	public NewMachineFrame() throws IOException
+	{
+		initComponents();
+		// setIconImage(Misc.getIcon());
+		name.setText(System.getProperty("user.name") + "'s Machine");
+		application.setText(System.getProperty("user.home") + File.separator + "Applications" + File.separator + "ConvenienceShare");
+		downloads.setText(System.getProperty("user.home") + File.separator + "Downloads" + File.separator + "ConvenienceShare");
+		share.setSelected(true);
+	}
 
-    /**
-     * Creates new form NewMachineFrame
-     */
-    public NewMachineFrame() throws IOException {
-        initComponents();
-//        setIconImage(Misc.getIcon());
-        name.setText(System.getProperty("user.name") +"'s Machine");
-        application.setText(System.getProperty("user.home") + File.separator + "Applications" + File.separator + "ConvenienceShare");
-        downloads.setText(System.getProperty("user.home") + File.separator + "Downloads" + File.separator + "ConvenienceShare");
-        share.setSelected(true);
-    }
-    
-    private void error(String message)
-    {
-		JOptionPane.showMessageDialog(this, 
-				message,
-				"Unable to install.",
-				JOptionPane.INFORMATION_MESSAGE);
-                System.exit(0);
-    }
-    
-    private File getFile(String path)
-    {
-    	File f = new File(path);
-    	Misc.ensureDirectory(path, true);
-    	if (!f.getParentFile().exists())
-    	{
-    		error("Unable to create required file: " + path);
-    	}
-    	return f;
-    }
-    
-    public void installSneaky(String append, int port)
+	private void error(String message)
+	{
+		JOptionPane.showMessageDialog(this, message, "Unable to install.", JOptionPane.INFORMATION_MESSAGE);
+		System.exit(0);
+	}
+
+	// private File getFile(String path)
+	// {
+//    	File f = new File(path);
+//    	Misc.ensureDirectory(path, true);
+//    	if (!f.getParentFile().exists())
+//    	{
+//    		error("Unable to create required file: " + path);
+//    	}
+//    	return f;
+//	}
+
+	public void installSneaky(String append, int port)
 	{
 		application.setText(application.getText() + append);
 		downloads.setText(downloads.getText() + append);
@@ -92,25 +90,27 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		endSpinner.setValue(new Integer(port + 10));
 		name.setText(Misc.getRandomName());
 		install(false);
-    }
-    
-    private void install()
-    {
-    	install(true);
-    }
-    
-    private void install(boolean die)
-    {
-    	disableInput();
-    	
+	}
+
+	private void install()
+	{
+		install(true);
+	}
+
+	private void install(boolean die)
+	{
+		disableInput();
+
 		Path root = Paths.get(application.getText());
 		Settings stgs = new Settings(root.resolve(Settings.DEFAULT_SETTINGS_FILE));
 		stgs.applicationDirectory.set(root.resolve("app"));
 		stgs.downloadsDirectory.set(Paths.get(downloads.getText()));
 		stgs.setDefaultApplicationDirectoryStructure();
-		
+
 		int beginPort = ((Number) this.beginSpinner.getValue()).intValue();
-		int endPort =   ((Number) this.endSpinner.  getValue()).intValue();
+		int endPort = ((Number) this.endSpinner.getValue()).intValue();
+		
+		LogWrapper.getLogger().info("Found begin port " + beginPort);
 
 		if (endPort <= beginPort)
 		{
@@ -122,10 +122,9 @@ public class NewMachineFrame extends javax.swing.JFrame {
 		stgs.servePortBeginE.set(beginPort);
 		stgs.numHandlers.set(endPort - beginPort);
 		stgs.machineIdentifier.set(Misc.getRandomString(50));
-//		stgs.shareWithEveryone.set(share.isSelected());
+		// stgs.shareWithEveryone.set(share.isSelected());
 		stgs.defaultPermission.set((share.isSelected() ? SharingState.DOWNLOADABLE : SharingState.DO_NOT_SHARE).name());
-		
-		
+
 		try
 		{
 			stgs.write();
@@ -135,7 +134,6 @@ public class NewMachineFrame extends javax.swing.JFrame {
 			LogWrapper.getLogger().log(Level.WARNING, "Unable to write settings", e);
 			error("Unable to write settings file.");
 		}
-		
 
 		try (Scanner scanner = new Scanner(ClassLoader.getSystemResourceAsStream("dist/install_files.txt"));)
 		{
@@ -161,7 +159,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
 				{
 					try (InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream("dist/" + file);)
 					{
-						
+
 						Path resolve = root.resolve(location).resolve(file);
 						LogWrapper.getLogger().info("Extracting " + file + " to " + resolve);
 						Files.copy(systemResourceAsStream, resolve, StandardCopyOption.REPLACE_EXISTING);
@@ -178,7 +176,7 @@ public class NewMachineFrame extends javax.swing.JFrame {
 			LogWrapper.getLogger().log(Level.WARNING, "Unable to install list.", e1);
 			error("Unable to find install list " + root);
 		}
-		
+
 		LinkedList<String> args = new LinkedList<>();
 		args.add("java");
 		args.add("-jar");
@@ -217,20 +215,20 @@ public class NewMachineFrame extends javax.swing.JFrame {
 	private void disableInput()
 	{
 		application.setEnabled(false);
-    	downloads.setEnabled(false);
-    	beginSpinner.setEnabled(false);
-    	endSpinner.setEnabled(false);
-    	jButton1.setEnabled(false);
-    	jButton2.setEnabled(false);
-    	jButton3.setEnabled(false);
-    	jButton4.setEnabled(false);
-    	share.setEnabled(false);
-    	jTextArea1.setEditable(false);
-    	jTextArea1.setEnabled(false);
-    	jTextArea2.setEditable(false);
-    	jTextArea2.setEnabled(false);
-    	name.setEnabled(false);
-    	name.setEditable(false);
+		downloads.setEnabled(false);
+		beginSpinner.setEnabled(false);
+		endSpinner.setEnabled(false);
+		jButton1.setEnabled(false);
+		jButton2.setEnabled(false);
+		jButton3.setEnabled(false);
+		jButton4.setEnabled(false);
+		share.setEnabled(false);
+		jTextArea1.setEditable(false);
+		jTextArea1.setEnabled(false);
+		jTextArea2.setEditable(false);
+		jTextArea2.setEnabled(false);
+		name.setEnabled(false);
+		name.setEditable(false);
 	}
 	
 	/**

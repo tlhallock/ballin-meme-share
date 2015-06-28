@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -57,10 +58,12 @@ public class FilesTable extends DbJTable<SharedFile>
 	private String currentMachineIdent;
 	private String filter = "";
   private String tagsFilter = "";
+  private JLabel numFilesLabel;
 	
-	public FilesTable(JTable table, final JFrame origin)
+	public FilesTable(JTable table, final JFrame origin, JLabel numFilesShowingLabel)
 	{
 		super(table, "I don't think this is used yet.");
+		numFilesLabel = numFilesShowingLabel;
 
 		addListener(new TableRightClickListener()
 		{
@@ -175,6 +178,12 @@ public class FilesTable extends DbJTable<SharedFile>
 	@Override
 	protected CloseableIterator<SharedFile> list()
 	{
+		class Counter
+		{
+			int numberOfFiles = 0;
+		}
+		Counter c = new Counter();
+		numFilesLabel.setText(String.valueOf(c.numberOfFiles));
 		return new CloseableIterator<SharedFile>()
 		{
 			Iterator<SharedFile> delegate; 
@@ -217,6 +226,7 @@ public class FilesTable extends DbJTable<SharedFile>
 						continue;
 					}
 					next = next2;
+					numFilesLabel.setText(Misc.formatNumberOfFiles(++c.numberOfFiles));
 				}
 			}
 

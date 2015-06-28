@@ -25,21 +25,22 @@
 
 package org.cnv.shr.dmn.mn;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.SplashScreen;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.ShowApplication;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.OutputByteWriter;
 
 public class Main
 {
@@ -52,28 +53,32 @@ public class Main
 		
 //		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
 //		a.settings.applicationDirectory.set(Paths.get("another\\apps"));
-
+//
 		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
-		a.settings.read();
 		a.settings.setDefaultApplicationDirectoryStructure();
 		a.showGui = true;
 
 		System.out.println("Settings file: " + a.settings.getSettingsFile());
 		
-		if (Services.isAlreadyRunning(a))
+		if (Services.isAlreadyRunning(a, screen))
 		{
+			screen.setStatus("ConvenienceShare is already running!!! Will close soon.");
+			
 			LogWrapper.getLogger().info("Application must already be running.");
 			String address = InetAddress.getLocalHost().getHostAddress();
 			try (Socket socket = new Socket(address, a.settings.servePortBeginI.get());
-					InputStream input = socket.getInputStream();
-					OutputStream outputStream = socket.getOutputStream();
-					OutputByteWriter outputByteWriter = new OutputByteWriter(outputStream);)
+					JsonParser input = TrackObjectUtils.createParser(socket.getInputStream());
+					JsonGenerator outputStream = TrackObjectUtils.createGenerator(socket.getOutputStream());)
 			{
-				new ShowApplication().write(null, outputByteWriter);
-				new DoneMessage().write(null, outputByteWriter);
+				ShowApplication showApplication = new ShowApplication();
+				DoneMessage doneMessage = new DoneMessage();
+				outputStream.writeStartObject();
+				showApplication.generate(outputStream, showApplication.getJsonKey());
+				doneMessage.generate(outputStream, doneMessage.getJsonKey());
+				outputStream.writeEnd();
 				outputStream.flush();
 				LogWrapper.getLogger().info("Message sent. Waiting...");
-				Thread.sleep(10000);
+				Thread.sleep(5000);
 			}
 			return;
 		}

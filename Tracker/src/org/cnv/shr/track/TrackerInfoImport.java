@@ -21,9 +21,6 @@ public class TrackerInfoImport
 		try (CountingInputStream newInputStream = new CountingInputStream(Files.newInputStream(f));
 				 JsonParser parser = TrackObjectUtils.createParser(newInputStream);)
 		{
-			// Should break up the counting input stream class into two different classes...
-			newInputStream.setRawMode(true);
-			
 			String key = null;
 			while (parser.hasNext())
 			{

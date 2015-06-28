@@ -95,8 +95,16 @@ public class Track
 		timer = new Timer();
 		
 		Class.forName("org.h2.Driver");
-		deleteDb();
-		createDb();
+		try
+		{
+			deleteDb();
+			createDb();
+		}
+		catch (Exception ex)
+		{
+			LogWrapper.getLogger().log(Level.SEVERE, "Unable to initialize database. Quiting.", ex);
+			System.exit(-1);
+		}
 		keys = new KeysService();
 		
 		ensureLocalTrackerIsPresent();

@@ -131,7 +131,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		initComponents();
 		initializeSettings();
 		
-		setTitle("Convenience Share " + Settings.getVersion(Main.class));
+		setTitle("Convenience Share " + Settings.getVersion(Main.class) + " Machine " + Services.localMachine.getName());
 
 		locals = new LocalTable(this, localsView);
 		remotes = new MachineTable(this, machinesList);
@@ -175,7 +175,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     };
 		addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(WindowEvent e)
+			public void windowClosed(WindowEvent e)
 			{
 				LogWrapper.getLogger().removeHandler(logHandler);
 				refresh.cancel();

@@ -39,6 +39,7 @@ import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.Pair;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
+import org.cnv.shr.util.LogWrapper;
 
 public class PathTreeModelNode implements TaskListener
 {
@@ -201,7 +202,7 @@ public class PathTreeModelNode implements TaskListener
 		// Should clean this one up...
 		for (final PathElement e : list)
 		{
-			if (e.getId() == 0)
+			if (e.isAbsolute())
 			{
 				list.remove(e);
 				break;
@@ -235,7 +236,12 @@ public class PathTreeModelNode implements TaskListener
 		for (final Pair p : sourceChildren)
 		{
 			final PathElement pathElement = p.getPathElement();
-			accountedFor.add(pathElement.getUnbrokenName());
+			String unbrokenName = pathElement.getUnbrokenName();
+			if (pathElement.isAbsolute())
+			{
+				continue;
+			}
+			accountedFor.add(unbrokenName);
 			PathTreeModelNode node = new PathTreeModelNode(this, model, pathElement, syncFully);
 			allChildren.add(node);
 			model.iterator.queueSyncTask(p.getSource(), pathElement, node);
@@ -267,6 +273,7 @@ public class PathTreeModelNode implements TaskListener
 	
 	public List<SharedFile> getFileList(boolean recursive)
 	{
+		LogWrapper.getLogger().info("Finding children of \"" + element.getFullPath() + "\"");
 		if (model.rootDirectory == null)
 		{
 			return Collections.emptyList();
@@ -278,15 +285,15 @@ public class PathTreeModelNode implements TaskListener
 		}
 		
 		final LinkedList<SharedFile> list = new LinkedList<>();
-		
-		if (children == null)
-		{
-			return list;
-		}
 
 		if (recursive)
 		{
 			element.getFilesList(model.rootDirectory, list);
+			return list;
+		}
+		
+		if (children == null)
+		{
 			return list;
 		}
 		

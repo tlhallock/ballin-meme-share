@@ -664,4 +664,7 @@ public class Misc
 	}
 
 	public static final String CONVENIENCE_SHARE_JAR = "ConvenienceShare.jar";
+	
+	// This comes from Files.BUFFER_SIZE
+	public static final int BUFFER_SIZE = 8192;
 }

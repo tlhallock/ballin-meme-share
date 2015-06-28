@@ -28,7 +28,7 @@ class ColorWindowListener extends WindowAdapter
 	}
 	
 	@Override
-	public void windowClosing(WindowEvent e)
+	public void windowClosed(WindowEvent e)
 	{
 		for (ColorListener child : children)
 		{

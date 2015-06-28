@@ -25,9 +25,15 @@
 
 package org.cnv.shr.trck;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,7 +77,65 @@ public class TrackObjectUtils
 	}
 	public static JsonParser createParser(InputStream input)
 	{
-		return parserFactory.createParser(input, UTF_8);
+		
+
+		BufferedWriter logFile; 
+		{ 
+			try
+			{
+				String string = "log.jsonParser." + System.currentTimeMillis() + "." + Math.random() + ".txt";
+				Path absolutePath = Paths.get(string).toAbsolutePath();
+				Map<String, Object> properties = new HashMap<>(1);
+				properties.put(JsonGenerator.PRETTY_PRINTING, true);
+				System.out.println("Logging to " + absolutePath);
+				logFile = Files.newBufferedWriter(absolutePath);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+				return null;
+			}
+		}
+		
+		// OMG, java is #!@%*&-up.
+		// The default InputStreamReader will try to read past the end of what is available.
+		// This results in stream hanging, even though it has bytes to return.
+		// To fix this, we create our own parser that is 10x smarter.
+		return parserFactory.createParser(new InputStreamReader(input, UTF_8)
+		{
+			public int read() throws IOException
+			{
+				int read = super.read();
+				logFile.write(read); logFile.flush();
+				return read;
+			}
+			@Override
+			public int read(char[] cbuf, int offset, int length) throws IOException
+			{
+				int amountToRead = length;
+				if (amountToRead > input.available())
+				{
+					amountToRead = input.available();
+				}
+				// We have to read 1 byte, because the json parser pukes otherwise.
+				// This doesn't hurt, because we can block for 1 byte: we aren't waiting while we have something to return.
+				if (amountToRead < 1)
+				{
+					amountToRead = 1;
+				}
+				int read = super.read(cbuf, offset, amountToRead);
+				
+				logFile.write(cbuf, offset, read); logFile.flush();
+				
+				if (read == 0)
+				{
+					LogWrapper.getLogger().severe("Read 0 byte from input!!!!");
+				}
+				
+				return read;
+			}
+		});
+//		return parserFactory.createParser(input, UTF_8);
 	}
 	
 	

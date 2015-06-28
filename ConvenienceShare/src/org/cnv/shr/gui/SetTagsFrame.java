@@ -206,9 +206,10 @@ public class SetTagsFrame extends javax.swing.JFrame {
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
        int[] rows = jTable1.getSelectedRows();
        Arrays.sort(rows);
+       DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
        for (int row = rows.length-1;row >= 0; row--)
        {
-           jTable1.removeRowSelectionInterval(rows[row], rows[row]);
+      	 model.removeRow(rows[row]);
        }
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 

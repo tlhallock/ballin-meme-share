@@ -25,75 +25,17 @@
 
 package org.cnv.shr.util;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.json.stream.JsonGenerator;
 
 public final class CountingOutputStream extends OutputStream
 {
 	private OutputStream delegate;
 	private long soFar;
 
-	boolean rawMode;
-	
-	
-	
-
-private BufferedWriter logFile; 
-{ 
-  Map<String, Object> properties = new HashMap<>(1);
-  properties.put(JsonGenerator.PRETTY_PRINTING, true);
-	try
-	{
-		String string = "log.out." + System.currentTimeMillis() + "." + Math.random() + ".txt";
-		System.out.println("Logging to " + string);
-		logFile = Files.newBufferedWriter(Paths.get(string));
-	}
-	catch (IOException e)
-	{
-		e.printStackTrace();
-	}
-}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	public CountingOutputStream(OutputStream newInputStream)
 	{
 		this.delegate = newInputStream;
-	}
-	
-	public void setRawMode(boolean rawMode)
-	{
-		this.rawMode = rawMode;
-	}
-	
-	public void stopOtherSide() throws IOException
-	{
-		delegate.write(13);
-		delegate.write(0);
 	}
 
 	public long getSoFar()
@@ -106,43 +48,23 @@ private BufferedWriter logFile;
 	{
 		soFar++;
 		delegate.write(b);
-		if (b == 13 && !rawMode)
-		{
-			delegate.write(b);
-		}
-		logFile.write(b);
 	}
 
 	public void flush() throws IOException
 	{
 		delegate.flush();
-		logFile.flush();
 	}
 	
 	@Override
 	public void close() throws IOException
 	{
-		stopOtherSide();
-		logFile.write("<Stopping other side>");
-	}
-	
-	public void actuallyClose() throws IOException
-	{
 		delegate.close();
-		logFile.close();
 	}
 	
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException
 	{
-		if (rawMode)
-		{
-			soFar += len;
-			delegate.write(b, off, len);
-		}
-		else
-		{
-			super.write(b, off, len);
-		}
+		soFar += len;
+		delegate.write(b, off, len);
 	}
 }

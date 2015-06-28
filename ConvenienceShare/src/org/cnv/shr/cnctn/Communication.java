@@ -54,6 +54,8 @@ import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.CountingOutputStream;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.PausableInputStream;
+import org.cnv.shr.util.PausableOutputStream;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
@@ -63,14 +65,18 @@ public class Communication implements Closeable
 {
 	private static final int CLOSE_TIMEOUT = 1 * 60 * 1000;
 
-
 	// The streams
 	private Socket socket;
 	
+	// output wrapper layers
+	private CountingInputStream countingInput;
+	private CountingOutputStream countingOutput;
 	
-	// output wrappers
-	private CountingInputStream inputOrig;
-	private CountingOutputStream outputOrig;
+	private PausableInputStream pausableInput;
+	private PausableOutputStream pausableOutput;
+	
+	private InputStream encryptedInput;
+	private OutputStream encryptedOutput;
 	
 	// json stuff
 	private JsonParser parser;
@@ -110,22 +116,25 @@ public class Communication implements Closeable
 	private Communication(Socket socket, Authenticator authentication) throws IOException
 	{
 		this.socket = socket;
-		inputOrig  = new CountingInputStream(socket.getInputStream());
-		outputOrig = new CountingOutputStream(socket.getOutputStream());
+		countingInput  = new CountingInputStream(socket.getInputStream());
+		countingOutput = new CountingOutputStream(socket.getOutputStream());
 
-		stats = new ConnectionStatistics(inputOrig, outputOrig);
+		stats = new ConnectionStatistics(countingInput, countingOutput);
+		
+		pausableInput = new PausableInputStream(countingInput);
+		pausableOutput = new PausableOutputStream(countingOutput);
 		
 		needsMore = true;
 		this.authentication = authentication;
 
-		generator = TrackObjectUtils.createGenerator(outputOrig, PRETTY_PRINT_ALL_COMMUNICATION);
+		generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
 		generator.writeStartObject();
 		generator.flush();
 	}
 	
 	void initParser()
 	{
-		parser = TrackObjectUtils.createParser(inputOrig);
+		parser = TrackObjectUtils.createParser(pausableInput);
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{
 			throw new RuntimeException("Expected start object!");
@@ -168,14 +177,14 @@ public class Communication implements Closeable
 			// Should re-encrypt every so often...
 			m.generate(generator, m.getJsonKey());
 			generator.flush();
-			outputOrig.flush();
+			pausableOutput.flush();
 		}
 	}
 
 	public void flush() throws IOException
 	{
 		generator.flush();
-		outputOrig.flush();
+		pausableOutput.flush();
 	}
 
 	public ConnectionStatistics getStatistics()
@@ -192,13 +201,13 @@ public class Communication implements Closeable
 	{
 		return generator;
 	}
-	public OutputStream getOutput()
+	public PausableOutputStream getOutput()
 	{
-		return outputOrig;
+		return pausableOutput;
 	}
-	public InputStream getIn()
+	public PausableInputStream getIn()
 	{
-		return inputOrig;
+		return pausableInput;
 	}
 
 	public void setRemoteIdentifier(String remoteIdentifier)
@@ -353,7 +362,30 @@ public class Communication implements Closeable
 		send(new NewAesKey(key, authentication.getRemoteKey()));
 		generator.writeEnd();
 		generator.close();
-		generator = TrackObjectUtils.createGenerator(outputOrig, PRETTY_PRINT_ALL_COMMUNICATION);// = FlushableEncryptionStreams.createEncryptedOutputStream(outputOrig, key));
+		
+//		encryptedOutput = FlushableEncryptionStreams.createEncryptedOutputStream(countingOutput, key);
+//		pausableOutput.setDelegate(encryptedOutput);
+//		generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
+
+		encryptedOutput = new OutputStream() {
+			@Override
+			public void flush() throws IOException
+			{
+				countingOutput.flush();
+			}
+			@Override
+			public void write(int b) throws IOException
+			{
+				countingOutput.write(b);
+			}
+			@Override
+			public void write(byte[] b, int off, int len) throws IOException
+			{
+				countingOutput.write(b, off, len);
+			}};
+		pausableOutput.setDelegate(encryptedOutput);
+		generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
+		
 		generator.writeStartObject();
 		generator.flush();
 	}
@@ -365,8 +397,30 @@ public class Communication implements Closeable
 			throw new RuntimeException("Expected end object!");
 		}
 		parser.close();
-		inputOrig.startAgain();
-		parser = TrackObjectUtils.createParser(inputOrig);// = FlushableEncryptionStreams.createEncryptedInputStream(inputOrig, key));
+		
+//		encryptedInput = FlushableEncryptionStreams.createEncryptedInputStream(countingInput, key);
+//		pausableInput.startAgain(encryptedInput);
+//		parser = TrackObjectUtils.createParser(pausableInput);
+
+		encryptedInput = new InputStream() {
+			@Override
+			public int read() throws IOException
+			{
+				return countingInput.read();
+			}
+			@Override
+			public int available() throws IOException
+			{
+				return countingInput.available();
+			}	
+			public int read(byte[] arr, int off, int len) throws IOException
+			{
+				return countingInput.read(arr, off, len);
+			}
+		};
+		pausableInput.startAgain(encryptedInput);
+		parser = TrackObjectUtils.createParser(pausableInput);
+		
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{
 			throw new RuntimeException("Expected start object!");
@@ -379,12 +433,12 @@ public class Communication implements Closeable
 	{
 		generator.writeEnd();
 		generator.close();
-		outputOrig.setRawMode(true);
+		pausableOutput.setRawMode(true);
 	}
 	public void endWriteRaw() throws IOException
 	{
-		outputOrig.setRawMode(false);
-		generator = TrackObjectUtils.createGenerator(outputOrig, PRETTY_PRINT_ALL_COMMUNICATION);
+		pausableOutput.setRawMode(false);
+		generator = TrackObjectUtils.createGenerator(encryptedOutput == null ? countingOutput : encryptedOutput, PRETTY_PRINT_ALL_COMMUNICATION);
 		generator.writeStartObject();
 		generator.flush();
 	}
@@ -395,13 +449,13 @@ public class Communication implements Closeable
 			throw new RuntimeException("Expected end object!");
 		}
 		parser.close();
-		inputOrig.startAgain();
-		inputOrig.setRawMode(true);
+		pausableInput.startAgain(encryptedInput == null ? countingInput : encryptedInput);
+		pausableInput.setRawMode(true);
 	}
 	public void endReadRaw() throws IOException
 	{
-		inputOrig.setRawMode(false);
-		parser = TrackObjectUtils.createParser(inputOrig);
+		pausableInput.setRawMode(false);
+		parser = TrackObjectUtils.createParser(encryptedInput == null ? countingInput : encryptedInput);
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{
 			throw new RuntimeException("Expected start object!");

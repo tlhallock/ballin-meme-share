@@ -42,6 +42,7 @@ import java.util.zip.GZIPOutputStream;
 import org.cnv.shr.dmn.ChecksumManager;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 
 // TODO: java nio
@@ -59,7 +60,7 @@ public class ChunkData
 			long offset = chunk.getBegin();
 			toWrite.seek(offset);
 
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[Misc.BUFFER_SIZE];
 
 			while (offset < end)
 			{
@@ -79,7 +80,6 @@ public class ChunkData
 				offset += nread;
 			}
 		}
-		
 		
 		if (compressed)
 		{
@@ -104,7 +104,7 @@ public class ChunkData
 			toRead.seek(chunk.getBegin());
 			long numberOfBytes = chunk.getSize();
 
-			int bufferSize = 8196;
+			int bufferSize = Misc.BUFFER_SIZE;
 			if (bufferSize > chunk.getSize())
 			{
 				bufferSize = (int) chunk.getSize();

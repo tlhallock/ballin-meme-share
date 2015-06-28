@@ -22,7 +22,7 @@ public class MainTest
 		parseArgs(args, a);
 		try
 		{
-			Services.isAlreadyRunning(a);
+			Services.isAlreadyRunning(a, null);
 			Services.initialize(a, null);
 			if (a.testIp != null && a.testPort != null)
 			{
