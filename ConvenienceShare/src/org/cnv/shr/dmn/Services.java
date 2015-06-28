@@ -76,6 +76,7 @@ import org.cnv.shr.updt.UpdateInfoImpl;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.PortMapper;
 
 public class Services
 {
@@ -140,6 +141,22 @@ public class Services
 		System.out.println(Misc.INITIALIZED_STRING);
 		System.out.println("-------------------------------------------------------------------------");
 		System.out.flush();
+		
+		userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				if (settings.runTrackerOnStart.get())
+				{
+					Trackers.launchTracker(false);
+				}
+				if (settings.autoMapPorts.get())
+				{
+					PortMapper.addDesiredPorts(settings.getLocalIp(), System.out);
+				}
+			}
+		});
 	}
 	
 	

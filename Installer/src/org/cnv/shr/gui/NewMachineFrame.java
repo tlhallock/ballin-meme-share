@@ -45,6 +45,7 @@ import org.cnv.shr.inst.MonitorThread;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.ProcessInfo;
 
 /**
  *
@@ -110,7 +111,7 @@ public class NewMachineFrame extends javax.swing.JFrame
 		int beginPort = ((Number) this.beginSpinner.getValue()).intValue();
 		int endPort = ((Number) this.endSpinner.getValue()).intValue();
 		
-		LogWrapper.getLogger().info("Found begin port " + beginPort);
+		LogWrapper.getLogger().log(Level.INFO, "Found begin port {0}", beginPort);
 
 		if (endPort <= beginPort)
 		{
@@ -161,7 +162,7 @@ public class NewMachineFrame extends javax.swing.JFrame
 					{
 
 						Path resolve = root.resolve(location).resolve(file);
-						LogWrapper.getLogger().info("Extracting " + file + " to " + resolve);
+						LogWrapper.getLogger().log(Level.INFO, "Extracting {0} to {1}", new Object[]{file, resolve});
 						Files.copy(systemResourceAsStream, resolve, StandardCopyOption.REPLACE_EXISTING);
 					}
 					catch (IOException e1)
@@ -178,21 +179,21 @@ public class NewMachineFrame extends javax.swing.JFrame
 		}
 
 		LinkedList<String> args = new LinkedList<>();
-		args.add("java");
+		args.add(ProcessInfo.getJavaBinary());
 		args.add("-jar");
 		args.add("ConvenienceShare.jar");
 		args.add("-f");
 		args.add(stgs.getSettingsFile());
 		args.add("-d");
 		args.add("-g");
-
+                if (jCheckBox1.isSelected())
+                {
+                    args.add("-l");
+                }
 		System.out.println("Restarting from:");
 		System.out.println(root);
 		System.out.println("with:");
-		for (String str : args)
-		{
-			System.out.println(str);
-		}
+                System.out.println(args);
 
 		ProcessBuilder builder = new ProcessBuilder();
 		builder.command(args);
@@ -262,6 +263,8 @@ public class NewMachineFrame extends javax.swing.JFrame
         jLabel4 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         share = new javax.swing.JCheckBox();
+        jCheckBox1 = new javax.swing.JCheckBox();
+        jCheckBox2 = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -269,16 +272,14 @@ public class NewMachineFrame extends javax.swing.JFrame
 
         application.setEditable(false);
         application.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 applicationActionPerformed(evt);
             }
         });
 
         jButton2.setText("Browse...");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
@@ -320,8 +321,7 @@ public class NewMachineFrame extends javax.swing.JFrame
 
         jButton3.setText("Browse...");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
             }
         });
@@ -390,8 +390,7 @@ public class NewMachineFrame extends javax.swing.JFrame
 
         jButton4.setText("Test ports");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
             }
         });
@@ -446,13 +445,19 @@ public class NewMachineFrame extends javax.swing.JFrame
 
         jButton1.setText("Install");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
+        share.setSelected(true);
         share.setText("Share with anybody (Can be changed later.)");
+
+        jCheckBox1.setSelected(true);
+        jCheckBox1.setText("Launch on startup");
+
+        jCheckBox2.setText("Create Start Menu");
+        jCheckBox2.setEnabled(false);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -467,9 +472,10 @@ public class NewMachineFrame extends javax.swing.JFrame
                     .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton1, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(share, javax.swing.GroupLayout.Alignment.TRAILING))))
+                        .addComponent(jButton1))
+                    .addComponent(share, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jCheckBox1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jCheckBox2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -483,9 +489,13 @@ public class NewMachineFrame extends javax.swing.JFrame
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(share)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 114, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBox1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBox2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 73, Short.MAX_VALUE)
                 .addComponent(jButton1)
                 .addContainerGap())
         );
@@ -540,6 +550,8 @@ public class NewMachineFrame extends javax.swing.JFrame
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
+    private javax.swing.JCheckBox jCheckBox1;
+    private javax.swing.JCheckBox jCheckBox2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

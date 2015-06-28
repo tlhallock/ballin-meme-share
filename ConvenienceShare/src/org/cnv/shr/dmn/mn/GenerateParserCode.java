@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
@@ -129,13 +128,6 @@ public class GenerateParserCode
 	private static final HashSet<String> keys = new HashSet<>();
 	
 	
-	private static final String[] IGNORES = new String[]
-	{
-		
-	};
-	
-	
-
 	public static void main(String[] args) throws IOException
 	{
 		for (Class<?> c : new Class[]
@@ -242,6 +234,7 @@ public class GenerateParserCode
 	private static void printParser(PrintStream output, Class<?> c)
 	{
 		HashMap<Event, List<Parser>> parsers = getParsersFor(c);
+		// if none, we can make it cooler
 		printParsers(parsers, output);
 	}
 
@@ -307,23 +300,20 @@ public class GenerateParserCode
 		ps.println("\t@Override                                    ");
 		ps.println("\tpublic void parse(JsonParser parser) {       ");
 		ps.println("\t\tString key = null;                         ");
-		for (Entry<JsonParser.Event, List<Parser>> entry : parsers.entrySet())
-		{
-			entry.getValue().get(0).printDecls(ps);
-		}
+                parsers.entrySet().stream().forEach((entry) -> {
+                    entry.getValue().get(0).printDecls(ps);
+                });
 		ps.println("\t\twhile (parser.hasNext()) {                 ");
 		ps.println("\t\t\tJsonParser.Event e = parser.next();      ");
 		ps.println("\t\t\tswitch (e)                               ");
 		ps.println("\t\t\t{                                        ");
 		ps.println("\t\t\tcase END_OBJECT:                         ");
 //		ps.println("\t\t\t\tvalidate();                            ");
-		for (Entry<JsonParser.Event, List<Parser>> entry : parsers.entrySet())
-		{
-			for (Parser p : entry.getValue())
-			{
-				p.printValidator(ps);
-			}
-		}
+                parsers.entrySet().stream().forEach((entry) -> {
+                    entry.getValue().stream().forEach((Parser p) -> {
+                        p.printValidator(ps);
+                    });
+            });
 		ps.println("\t\t\t\treturn;                                ");
 		if (parsers.isEmpty())
 		{
@@ -336,13 +326,11 @@ public class GenerateParserCode
 		ps.println("\t\t\tcase KEY_NAME:                           ");
 		ps.println("\t\t\t	key = parser.getString();              ");
 		ps.println("\t\t\t	break;                                 ");
-		for (Entry<JsonParser.Event, List<Parser>> entry : parsers.entrySet())
-		{
-			for (Parser p : entry.getValue())
-			{
-				p.print(ps);
-			}
-		}
+                parsers.entrySet().stream().forEach((entry) -> {
+                    entry.getValue().stream().forEach((p) -> {
+                        p.print(ps);
+                    });
+            });
 		ps.println("\t\t\tdefault: break;");
 		ps.println("\t\t\t}");
 		ps.println("\t\t}");
@@ -370,29 +358,23 @@ public class GenerateParserCode
 		
 		public void printDecls(PrintStream ps)
 		{
-			for (Field f : fields)
-			{
-				if (f.isAnnotationPresent(MyParserNullable.class))
-				{
-					continue;
-				}
-				ps.println("\t\tboolean needs" + f.getName() + " = true;");
-			}
+                    fields.stream().filter((f) -> !(f.isAnnotationPresent(MyParserNullable.class))).forEach((f) -> {
+                        ps.println("\t\tboolean needs" + f.getName() + " = true;");
+                    });
 		}
 		public void printValidator(PrintStream ps)
 		{
 			HashSet<String> printed = new HashSet<>();
-			for (Field f : fields)
-			{
-				if (!printed.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))
-				{
-					continue;
-				}
-				ps.println("\t\t\t\tif (needs" + f.getName() + ")");
-				ps.println("\t\t\t\t{");
-				ps.println("\t\t\t\t\tthrow new org.cnv.shr.util.IncompleteMessageException(\"Message needs " + f.getName() + "\");");
-				ps.println("\t\t\t\t}");
-			}
+                        fields.stream().filter((f) -> !(!printed.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))).map((f) -> {
+                            ps.println("\t\t\t\tif (needs" + f.getName() + ")");
+                        return f;
+                    }).map((f) -> {
+                        ps.println("\t\t\t\t{");
+                        ps.println("\t\t\t\t\tthrow new org.cnv.shr.util.IncompleteMessageException(\"Message needs " + f.getName() + "\");");
+                        return f;
+                    }).forEach((_item) -> {
+                        ps.println("\t\t\t\t}");
+                    });
 		}
 
 		public void print(PrintStream ps)
@@ -402,15 +384,18 @@ public class GenerateParserCode
 
 			if (fields.size() == 1)
 			{
-				for (Field f : fields)
-				{
-					ps.println("\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
-					if (!f.isAnnotationPresent(MyParserNullable.class))
-					{
-						ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
-					}
-					ps.println("\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
-				}
+                            fields.stream().map((f) -> {
+                                ps.println("\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
+                                return f;
+                            }).map((f) -> {
+                                if (!f.isAnnotationPresent(MyParserNullable.class))
+                                {
+                                    ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
+                                }
+                                return f;
+                            }).forEach((f) -> {
+                                ps.println("\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
+                            });
 			}
 			else
 			{

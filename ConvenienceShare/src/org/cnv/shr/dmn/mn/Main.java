@@ -51,10 +51,9 @@ public class Main
 		a.parseArgs(args);
 		Settings settings;
 		
-//		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
-//		a.settings.applicationDirectory.set(Paths.get("another\\apps"));
-//
-		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
+		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
+		
+//		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
 		a.settings.setDefaultApplicationDirectoryStructure();
 		a.showGui = true;
 
@@ -96,6 +95,10 @@ public class Main
 			}
 		}
 		
+		if (a.launchOnStart)
+		{
+			RunOnStartUp.runOnStartup();
+		}
 //		for (;;)
 //		{
 //			synchronized (System.out)

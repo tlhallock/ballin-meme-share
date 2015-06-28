@@ -79,8 +79,10 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.dmn.mn.RunOnStartUp;
 import org.cnv.shr.dmn.not.NotificationListener;
 import org.cnv.shr.dmn.trk.TrackerFrame;
+import org.cnv.shr.dmn.trk.Trackers;
 import org.cnv.shr.gui.tbl.DownloadTable;
 import org.cnv.shr.gui.tbl.LocalTable;
 import org.cnv.shr.gui.tbl.MachineTable;
@@ -101,7 +103,6 @@ import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
-import org.cnv.shr.util.PortMapper;
 import org.cnv.shr.util.TextAreaHandler;
 
 /**
@@ -204,14 +205,12 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 }
                 Services.settings.setLocalAddress(ip);
                 refreshSettings();
-                PortMapper.ip = ip;
             }
         });
         boolean isCurrentLocal = ip.equals(Services.settings.getLocalIp());
         if (isCurrentLocal)
         {
         	button.setSelected(true);
-        	PortMapper.ip = ip;
         }
     }
     
@@ -465,13 +464,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jButton3 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu6 = new javax.swing.JMenu();
-        jMenuItem12 = new javax.swing.JMenuItem();
-        jCheckBoxMenuItem3 = new javax.swing.JCheckBoxMenuItem();
         jMenuItem14 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
         jMenuItem13 = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
+        jMenuItem21 = new javax.swing.JMenuItem();
         jMenuItem3 = new javax.swing.JMenuItem();
+        jMenuItem7 = new javax.swing.JMenuItem();
         jMenu4 = new javax.swing.JMenu();
         jMenuItem11 = new javax.swing.JMenuItem();
         jCheckBoxMenuItem1 = new javax.swing.JCheckBoxMenuItem();
@@ -647,7 +646,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton17)
                     .addComponent(jButton13))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)
+                .addComponent(jScrollPane4)
                 .addContainerGap())
         );
 
@@ -843,7 +842,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton5)
                     .addComponent(jButton9))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 399, Short.MAX_VALUE)
+                .addComponent(jScrollPane7)
                 .addContainerGap())
         );
 
@@ -1052,23 +1051,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jMenu6.setText("App");
 
-        jMenuItem12.setText("Check for updates");
-        jMenuItem12.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem12ActionPerformed(evt);
-            }
-        });
-        jMenu6.add(jMenuItem12);
-
-        jCheckBoxMenuItem3.setSelected(true);
-        jCheckBoxMenuItem3.setText("Run on startup");
-        jCheckBoxMenuItem3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItem3ActionPerformed(evt);
-            }
-        });
-        jMenu6.add(jCheckBoxMenuItem3);
-
         jMenuItem14.setText("Hide");
         jMenuItem14.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1097,6 +1079,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jMenu1.setText("Util");
 
+        jMenuItem21.setText("Check for Updates");
+        jMenuItem21.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem21ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem21);
+
         jMenuItem3.setText("Show Trackers");
         jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1105,7 +1095,15 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         });
         jMenu1.add(jMenuItem3);
 
-        jMenu4.setText("Port mappings");
+        jMenuItem7.setText("Configure Run on Startup...");
+        jMenuItem7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem7ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem7);
+
+        jMenu4.setText("Port Mappings");
 
         jMenuItem11.setText("Launch port mapper");
         jMenuItem11.addActionListener(new java.awt.event.ActionListener() {
@@ -1394,18 +1392,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
        Services.userThreads.execute(new Runnable() { public void run() { refreshKeys(); } });
     }//GEN-LAST:event_jButton18ActionPerformed
 
-    private void jMenuItem12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem12ActionPerformed
-      UpdateFrame u = new UpdateFrame(this);
-      Services.notifications.registerWindow(u);
-      u.setAlwaysOnTop(true);
-      u.setVisible(true);
-    }//GEN-LAST:event_jMenuItem12ActionPerformed
-
-    private void jCheckBoxMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem3ActionPerformed
-    	LogWrapper.getLogger().info("Implement run on startup!");
-        
-    }//GEN-LAST:event_jCheckBoxMenuItem3ActionPerformed
-
     private void jMenuItem13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem13ActionPerformed
     	Services.quiter.quit();
     }//GEN-LAST:event_jMenuItem13ActionPerformed
@@ -1423,15 +1409,16 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jMenuItem11ActionPerformed
 
     private void jCheckBoxMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem1ActionPerformed
-        LogWrapper.getLogger().info("Implement me.");
+        Services.settings.autoMapPorts.set(jCheckBoxMenuItem1.isSelected());
     }//GEN-LAST:event_jCheckBoxMenuItem1ActionPerformed
 
     private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
-        // launch tracker
+        Trackers.launchTracker(true);
     }//GEN-LAST:event_jMenuItem4ActionPerformed
 
     private void jCheckBoxMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem2ActionPerformed
-    	LogWrapper.getLogger().info("Implement launch tracker on startup!");
+        Services.settings.runTrackerOnStart.set(jCheckBoxMenuItem2.isSelected());
+        
     }//GEN-LAST:event_jCheckBoxMenuItem2ActionPerformed
 
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
@@ -1579,6 +1566,65 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         UserActions.findMachines(this);
     }//GEN-LAST:event_jButton13ActionPerformed
 
+    private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+        Boolean isEnabled = RunOnStartUp.isEnabled();
+		if (isEnabled == null)
+		{
+			int response = JOptionPane.showConfirmDialog(
+					this,
+					"ConvenienceShare was not able to see if run on startup is already enabled.\n" 
+							+ "More information can be found in the logs.\n" 
+							+ "Would you like it to be enabled?\n", 
+							"Unable to determine if ConvenienceShare is enabled.", 
+					JOptionPane.YES_NO_CANCEL_OPTION);
+			switch (response)
+			{
+			case JOptionPane.YES_OPTION:
+				RunOnStartUp.runOnStartup();
+				break;
+			case JOptionPane.NO_OPTION:
+				RunOnStartUp.doNotRunOnStartup();
+				break;
+			case JOptionPane.CANCEL_OPTION:
+			case JOptionPane.CLOSED_OPTION:
+				LogWrapper.getLogger().info("Cancelled");
+				break;
+			default:
+				LogWrapper.getLogger().info("Unkown option chosen " + response);
+			}
+			return;
+		}
+		if (isEnabled)
+		{
+			if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
+					this,
+					"ConvenienceShare is currently set to run on startup.\n"
+							+ "Would you like it to be disabled?\n", 
+							"Disable run on startup", 
+					JOptionPane.YES_NO_OPTION))
+			{
+				RunOnStartUp.doNotRunOnStartup();
+			}
+			return;
+		}
+		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
+				this,
+				"ConvenienceShare is currently not set to run on startup.\n"
+						+ "Would you like it to be enabled?\n", 
+						"Enable run on startup", 
+				JOptionPane.YES_NO_OPTION))
+		{
+			RunOnStartUp.runOnStartup();
+		}
+    }//GEN-LAST:event_jMenuItem7ActionPerformed
+
+    private void jMenuItem21ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem21ActionPerformed
+              UpdateFrame u = new UpdateFrame(this);
+      Services.notifications.registerWindow(u);
+      u.setAlwaysOnTop(true);
+      u.setVisible(true);
+    }//GEN-LAST:event_jMenuItem21ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1600,7 +1646,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JButton jButton9;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem2;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem3;
     private javax.swing.JComboBox jComboBox1;
     private javax.swing.JComboBox jComboBox2;
     private javax.swing.JLabel jLabel1;
@@ -1620,7 +1665,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem10;
     private javax.swing.JMenuItem jMenuItem11;
-    private javax.swing.JMenuItem jMenuItem12;
     private javax.swing.JMenuItem jMenuItem13;
     private javax.swing.JMenuItem jMenuItem14;
     private javax.swing.JMenuItem jMenuItem15;
@@ -1630,10 +1674,12 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenuItem jMenuItem19;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem20;
+    private javax.swing.JMenuItem jMenuItem21;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JMenuItem jMenuItem6;
+    private javax.swing.JMenuItem jMenuItem7;
     private javax.swing.JMenuItem jMenuItem8;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JPanel jPanel1;

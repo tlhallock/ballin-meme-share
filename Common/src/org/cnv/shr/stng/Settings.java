@@ -84,6 +84,8 @@ public class Settings implements SettingListener
 	public BooleanSetting    logToFile                = new BooleanSetting   ("logToFile             ".trim(), true                                                                             , false,  true, "Should log messages be written to file.                                         ".trim()); { settings.add(logToFile            );  }
 	public BooleanSetting    acceptNewKeys            = new BooleanSetting   ("acceptNewKeys         ".trim(), false                                                                            , false,  true, "True if all new keys should be accepted.                                        ".trim()); { settings.add(acceptNewKeys        );  }
 	public BooleanSetting    shareWithEveryone        = new BooleanSetting   ("shareWithEveryone     ".trim(), false                                                                            , false,  true, "True you would like to let anyone download from this machine.                   ".trim()); { settings.add(shareWithEveryone    );  }
+	public BooleanSetting    runTrackerOnStart        = new BooleanSetting   ("runTrackerOnStart     ".trim(), false                                                                            ,  true,  true, "Run a tracker when ConvenienceShare starts.                                     ".trim()); { settings.add(runTrackerOnStart    );  }
+	public BooleanSetting    autoMapPorts             = new BooleanSetting   ("autoMapPorts          ".trim(), false                                                                            ,  true,  true, "Automatically run the portmapper when ConvenienceShare starts.                  ".trim()); { settings.add(autoMapPorts         );  }
 	public StringSetting     downloadPresentAction    = new StringSetting    ("downloadPresentAction ".trim(), "Ask"                                                                            , false,  true, "What to do when a user-requested download is already on the local filesystem.   ".trim()); { settings.add(downloadPresentAction);  }
 	public DirectorySetting  downloadsDirectory       = new DirectorySetting ("downloadsDirectory    ".trim(), new File("."                                  + File.separator + "downloads"    ), false,  true, "Directory to put downloaded files.                                              ".trim()); { settings.add(downloadsDirectory   );  }
 	public DirectorySetting  applicationDirectory     = new DirectorySetting ("applicationDirectory  ".trim(), new File("."                                  + File.separator + "app"          ), false,  true, "Directory to put application files.                                             ".trim()); { settings.add(applicationDirectory );  }
@@ -100,14 +102,58 @@ public class Settings implements SettingListener
 	{
 		this.settingsFile = settingsFile;
 		
+		int level = Integer.MIN_VALUE;
 		for (String ip : Misc.collectIps())
 		{
-			if (localAddress == null || ip.contains("192"))
+			int localIpConfidenceLevel = getLocalIpConfidenceLevel(ip);
+			if (localIpConfidenceLevel > level)
 			{
 				localAddress = ip;
+				level = localIpConfidenceLevel;
 			}
 		}
+		if (localAddress == null)
+		{
+			LogWrapper.getLogger().severe("Unable to find local host.");
+			System.exit(-1);
+		}
+		// need to save this, in case the user set it, and give that the highest priority
 		System.out.println("Local host is " + localAddress);
+	}
+	
+	private static int getLocalIpConfidenceLevel(String ip)
+	{
+		// Get your bs here: 0 down and no payments for the first month.
+		int level = 0;
+		if (!ip.startsWith("192."))
+		{
+			level+=4;
+		}
+		if (ip.startsWith("192.168."))
+		{
+			level+=4;
+		}
+		if (ip.startsWith("192.168.0."))
+		{
+			level+=4;
+		}
+		if (ip.startsWith("192.168.1."))
+		{
+			level+=3;
+		}
+		if (ip.startsWith("192.168.0.1"))
+		{
+			level+=2;
+		}
+		if (ip.startsWith("192.168.1.1"))
+		{
+			level+=1;
+		}
+		if (ip.startsWith("127.0.0.1"))
+		{
+			level+=-164;
+		}
+		return level;
 	}
 	
 	public void setDefaultApplicationDirectoryStructure()

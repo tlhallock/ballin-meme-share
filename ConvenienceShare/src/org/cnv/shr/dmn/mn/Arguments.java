@@ -50,6 +50,7 @@ public class Arguments
 		}};
 	String testIp;
 	String testPort;
+	public boolean launchOnStart;
 	
 	public String updateManagerDirectory;
 	
@@ -63,6 +64,10 @@ public class Arguments
 				deleteDb = true;
 			}
 			if (args[i].equals("-g"))
+			{
+				showGui = true;
+			}
+			if (args[i].equals("-l"))
 			{
 				showGui = true;
 			}

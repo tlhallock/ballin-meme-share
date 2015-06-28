@@ -27,6 +27,7 @@ package org.cnv.shr.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.jar.Manifest;
@@ -111,5 +112,48 @@ public class ProcessInfo
 				return true;
 			}
 		}
+	}
+
+	private static boolean isBinaryFile(Path exe)
+	{
+		return exe != null && Files.exists(exe) && Files.isRegularFile(exe) && Files.isExecutable(exe);
+	}
+	private static Path javaBinary = null;
+	public synchronized static String getJavaBinary()
+	{
+		if (isBinaryFile(javaBinary))
+		{
+			return javaBinary.toString();
+		}
+		
+		String javaHome = System.getProperty("java.home");
+		if (javaHome == null)
+		{
+			return "java"; // This is as good as we can do
+		}
+		Path homePath = Paths.get(javaHome);
+		if (!Files.exists(homePath))
+		{
+			return "java";
+		}
+		Path binDir = homePath.resolve("bin");
+		if (!Files.exists(binDir))
+		{
+			return "java";
+		}
+		for (String exeName : new String[] {
+				"java",
+				"java.exe",
+				"javaw",
+				"javaw.exe",
+		})
+		{
+			Path exe = binDir.resolve(exeName);
+			if (isBinaryFile(exe))
+			{
+				return (javaBinary = exe).toString();
+			}
+		}
+		return "java";
 	}
 }

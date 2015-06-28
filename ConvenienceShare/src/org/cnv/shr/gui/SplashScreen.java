@@ -93,6 +93,10 @@ public class SplashScreen extends JFrame
 
 			private float writeText(Graphics2D graphics2D, String text, float height)
 			{
+				if (text == null || text.length() == 0)
+				{
+					return 0;
+				}
 				AttributedString attributedString = new AttributedString(text);
 				attributedString.addAttribute(TextAttribute.FOREGROUND, Color.white);
 		    AttributedCharacterIterator characterIterator = attributedString.getIterator();

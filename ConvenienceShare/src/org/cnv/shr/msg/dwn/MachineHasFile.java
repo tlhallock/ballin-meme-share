@@ -35,7 +35,6 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
-import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -47,18 +46,10 @@ public class MachineHasFile extends DownloadMessage
 	
 	public static int TYPE = 17;
 	
-	public MachineHasFile(SharedFile file)
+	public MachineHasFile(FileEntry entry, boolean hasFile)
 	{
-		super(file.getFileEntry());
-		
-		if (file == null)
-		{
-			hasFile = false;
-		}
-		else
-		{
-			hasFile = true;
-		}
+		super(entry);
+		this.hasFile = hasFile;
 	}
 
 	public MachineHasFile(InputStream stream) throws IOException

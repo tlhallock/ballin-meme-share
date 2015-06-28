@@ -30,16 +30,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
+import javax.swing.JOptionPane;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.ProcessInfo;
 
 
 public class Trackers
@@ -119,4 +123,37 @@ public class Trackers
 			}
 			return clientTrackerClient;
 		}
+
+	public static void launchTracker(boolean interactive)
+	{
+		LogWrapper.getLogger().info("Launching tracker.");
+		Path jarPath = ProcessInfo.getJarPath(Main.class);
+		Path trackerJar = jarPath.resolve("Tracker.jar").toAbsolutePath();
+		if (!Files.exists(trackerJar))
+		{
+			LogWrapper.getLogger().info("Unable to find tracker. Should be at " + trackerJar);
+			if (interactive)
+			{
+				JOptionPane.showMessageDialog(Services.notifications.getCurrentContext(), "Could not find tracker jar at " + trackerJar, "Could not find tracker.", JOptionPane.WARNING_MESSAGE);
+			}
+			return;
+		}
+
+		LinkedList<String> arguments = new LinkedList<>();
+		arguments.add(ProcessInfo.getJavaBinary());
+		arguments.add("-jar");
+		arguments.add(trackerJar.toString());
+
+		ProcessBuilder builder = new ProcessBuilder();
+		builder.directory(jarPath.toFile());
+		builder.command(arguments);
+		try
+		{
+			builder.start();
+		}
+		catch (IOException ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to launch tracker", ex);
+		}
+	}
 }

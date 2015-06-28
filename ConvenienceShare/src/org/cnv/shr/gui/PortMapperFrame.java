@@ -30,15 +30,19 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.PortMapper;
+import org.cnv.shr.util.ProcessInfo;
 
 
 
@@ -55,7 +59,7 @@ public class PortMapperFrame extends javax.swing.JFrame {
      */
     public PortMapperFrame() {
         initComponents();
-        logStream = new PrintStream( new OutputStream() {
+        logStream = new PrintStream(new OutputStream() {
             @Override
             public void write(int b) throws IOException
             {
@@ -70,33 +74,41 @@ public class PortMapperFrame extends javax.swing.JFrame {
         refresh();
     }
 
-    public final void refresh()
-    {
-        is.setText(String.valueOf(Services.settings.servePortBeginI.get()));
-        ie.setText(String.valueOf(Services.settings.servePortBeginI.get()
-             + Services.settings.numHandlers.get()));
-        es.setText(String.valueOf(Services.settings.servePortBeginE.get()));
-        ee.setText(String.valueOf(Services.settings.servePortBeginE.get()
-             + Services.settings.numHandlers.get()));
-    }
+	public final void refresh()
+	{
+		is.setText(String.valueOf(Services.settings.servePortBeginI.get()));
+		ie.setText(String.valueOf(Services.settings.servePortBeginI.get() + Services.settings.numHandlers.get()));
+		es.setText(String.valueOf(Services.settings.servePortBeginE.get()));
+		ee.setText(String.valueOf(Services.settings.servePortBeginE.get() + Services.settings.numHandlers.get()));
+
+		String localIp = Services.settings.getLocalIp();
+		HashSet<String> collectIps = Misc.collectIps();
+		collectIps.add(localIp);
+		jComboBox1.setModel(new DefaultComboBoxModel(collectIps.toArray(new String[0])));
+		jComboBox1.setSelectedItem(localIp);
+	}
     
 	private boolean checkForMapper()
 	{
-		if (PortMapper.ip == null)
-		{
-			IpTester tester = new IpTester();
-			PortMapper.ip = tester.getIpFromCanYouSeeMeDotOrg();
-			logStream.println("Found ip to be " + PortMapper.ip);
-		}
+//		if (PortMapper.ip == null)
+//		{
+//			IpTester tester = new IpTester();
+//			PortMapper.ip = tester.getIpFromCanYouSeeMeDotOrg();
+//			logStream.println("Found ip to be " + PortMapper.ip);
+//		}
 		if (!Files.exists(Paths.get(PortMapper.portMapperJar)))
 		{
-			JOptionPane.showConfirmDialog(this, "Portmapper was not found!\nExpected to be at " + Paths.get(PortMapper.portMapperJar).toAbsolutePath(), "Unable to map ports.", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, 
+                                "Portmapper was not found!\nExpected to be at " + Paths.get(PortMapper.portMapperJar).toAbsolutePath(), 
+                                "Unable to map ports.",
+                                JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		return true;
 	}
     
-    private void updateTextArea() {
+    private void updateTextArea()
+    {
         jTextArea1.setText(builder.toString());
     }
     
@@ -121,6 +133,9 @@ public class PortMapperFrame extends javax.swing.JFrame {
         ie = new javax.swing.JLabel();
         ee = new javax.swing.JLabel();
         jButton4 = new javax.swing.JButton();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jComboBox1 = new javax.swing.JComboBox();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -161,6 +176,12 @@ public class PortMapperFrame extends javax.swing.JFrame {
             }
         });
 
+        jLabel6.setText("Your IP:");
+
+        jLabel8.setText("This must be set correctly.");
+
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "192.168.0.100" }));
+
         jMenu1.setText("Ports");
 
         jMenuItem1.setText("Push mappings to router");
@@ -190,7 +211,6 @@ public class PortMapperFrame extends javax.swing.JFrame {
         jMenu1.add(jMenuItem3);
 
         jMenuItem4.setText("Refresh desired ports from settings");
-        jMenuItem4.setActionCommand("Refresh desired ports from settings");
         jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem4ActionPerformed(evt);
@@ -218,55 +238,62 @@ public class PortMapperFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButton4))
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel3)
                             .addComponent(jLabel2))
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel5))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.LEADING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(ee, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(ee, javax.swing.GroupLayout.DEFAULT_SIZE, 594, Short.MAX_VALUE)
                             .addComponent(es, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(ie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(is, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 549, Short.MAX_VALUE)
-                        .addComponent(jButton4)))
+                            .addComponent(is, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jComboBox1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jLabel8)))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(91, 91, 91)
-                        .addComponent(jButton4))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel2)
-                            .addComponent(is))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(ie))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel4)
-                            .addComponent(es))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel5)
-                            .addComponent(ee))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel1)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(is))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 410, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(ie))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(es))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(ee))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(jLabel8)
+                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton4)
+                    .addComponent(jLabel1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -279,9 +306,9 @@ public class PortMapperFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
-               ProcessBuilder builder = new ProcessBuilder();
+        ProcessBuilder builder = new ProcessBuilder();
         LinkedList<String> args = new LinkedList<>();
-        args.add("java");
+        args.add(ProcessInfo.getJavaBinary());
         args.add("-jar");
         args.add(PortMapper.portMapperJar);
         builder.command(args);
@@ -304,7 +331,7 @@ public class PortMapperFrame extends javax.swing.JFrame {
         Services.userThreads.execute(new Runnable() {
             @Override
             public void run() {
-                PortMapper.addDesiredPorts(logStream);
+                PortMapper.addDesiredPorts((String) jComboBox1.getSelectedItem(), logStream);
             }
         });
     }//GEN-LAST:event_jMenuItem1ActionPerformed
@@ -327,15 +354,14 @@ public class PortMapperFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-                Services.userThreads.execute(new Runnable() {
+            Services.userThreads.execute(new Runnable() {
             @Override
             public void run() {
                 IpTester tester = new IpTester();
-                if (PortMapper.ip == null)
-                {
-                    PortMapper.ip = tester.getIpFromCanYouSeeMeDotOrg();
-                }
-                tester.testIp(PortMapper.ip, Services.settings.servePortBeginE.get());
+                String ip = tester.getIpFromCanYouSeeMeDotOrg();
+                LogWrapper.getLogger().info("Canyouseeme.org says our ip is " + ip);
+                String testIp = tester.testIp(ip, Services.settings.servePortBeginE.get());
+                LogWrapper.getLogger().info("Connection status is " + testIp);
             }
         });
     }//GEN-LAST:event_jMenuItem3ActionPerformed
@@ -346,11 +372,14 @@ public class PortMapperFrame extends javax.swing.JFrame {
     private javax.swing.JLabel ie;
     private javax.swing.JLabel is;
     private javax.swing.JButton jButton4;
+    private javax.swing.JComboBox jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
@@ -361,6 +390,4 @@ public class PortMapperFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea jTextArea1;
     // End of variables declaration//GEN-END:variables
-
-
 }

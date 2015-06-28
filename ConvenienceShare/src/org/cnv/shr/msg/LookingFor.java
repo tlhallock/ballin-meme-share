@@ -36,13 +36,14 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.msg.dwn.DownloadMessage;
 import org.cnv.shr.msg.dwn.MachineHasFile;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 
-public class LookingFor extends Message
+public class LookingFor extends DownloadMessage
 {
 	public static int TYPE = 28;
 	
@@ -52,6 +53,7 @@ public class LookingFor extends Message
 	
 	public LookingFor(FileEntry file)
 	{
+		super(file);
 		checksum = file.getChecksum();
 		fileSize = file.getFileSize();
 	}
@@ -59,18 +61,6 @@ public class LookingFor extends Message
 	public LookingFor(InputStream stream) throws IOException
 	{
 		super(stream);
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer)
-	{
-
 	}
 
 	@Override
@@ -85,7 +75,7 @@ public class LookingFor extends Message
 		SharedFile file = DbFiles.getFile(checksum, fileSize);
 		Machine machine = connection.getMachine();
 		checkPermissionsViewable(connection, machine, "Reporting file");
-		connection.send(new MachineHasFile(file));
+		connection.send(new MachineHasFile(descriptor, file != null));
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -150,4 +140,18 @@ public class LookingFor extends Message
 		return new String(output.toByteArray());                                         
 	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+
+	@Override
+	protected void finishParsing(ByteReader reader) throws IOException
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void finishWriting(AbstractByteWriter buffer) throws IOException
+	{
+		// TODO Auto-generated method stub
+		
+	}
 }

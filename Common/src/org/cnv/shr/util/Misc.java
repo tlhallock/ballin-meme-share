@@ -48,6 +48,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -667,4 +668,53 @@ public class Misc
 	
 	// This comes from Files.BUFFER_SIZE
 	public static final int BUFFER_SIZE = 8192;
+	
+	
+	
+	
+	
+	public static String join(String sep, Iterable<String> list)
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		Iterator<String> iterator = list.iterator();
+		if (iterator.hasNext())
+		{
+			builder.append(iterator.next());
+		}
+		
+		while (iterator.hasNext())
+		{
+			builder.append(sep);
+			builder.append(iterator.next());
+		}
+		
+		return builder.toString();
+	}
+	
+	
+	public static Boolean grep(Path p, String needle)
+	{
+		if (!Files.exists(p) && Files.isRegularFile(p))
+		{
+			return null;
+		}
+		try (BufferedReader reader = Files.newBufferedReader(p))
+		{
+			String hayStack;
+			while ((hayStack = reader.readLine()) != null)
+			{
+				if (hayStack.contains(needle))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		catch (IOException ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to grep " + p + " for " + needle, ex);
+			return null;
+		}
+	}
 }

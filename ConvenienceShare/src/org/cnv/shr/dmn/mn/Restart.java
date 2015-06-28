@@ -58,7 +58,7 @@ public class Restart extends Quiter
 		try
 		{
 			LinkedList<String> args = new LinkedList<>();
-			args.add("java");
+			args.add(ProcessInfo.getJavaBinary());
 			args.add("-jar");
 			args.add(launchDir.resolve(Misc.CONVENIENCE_SHARE_JAR).toString());
 			args.add("-f");
