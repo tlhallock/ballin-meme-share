@@ -87,35 +87,41 @@ public class LookingFor extends DownloadMessage
 			generator.writeStartObject();
 		generator.write("checksum", checksum);
 		generator.write("fileSize", fileSize);
+		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsfileSize = true;
+		boolean needsdescriptor = true;
 		boolean needschecksum = true;
+		boolean needsfileSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsfileSize)
+				if (needsdescriptor)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				if (needschecksum)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
+				if (needsfileSize)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
+		case START_OBJECT:
 			if (key==null) break;
-			if (key.equals("fileSize")) {
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
 			}
 			break;
 		case VALUE_STRING:
@@ -123,6 +129,13 @@ public class LookingFor extends DownloadMessage
 			if (key.equals("checksum")) {
 				needschecksum = false;
 				checksum = parser.getString();
+			}
+			break;
+		case VALUE_NUMBER:
+			if (key==null) break;
+			if (key.equals("fileSize")) {
+				needsfileSize = false;
+				fileSize = Long.parseLong(parser.getString());
 			}
 			break;
 			default: break;

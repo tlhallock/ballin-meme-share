@@ -59,6 +59,7 @@ import org.cnv.shr.dmn.mn.Arguments;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.dmn.mn.Quiter;
 import org.cnv.shr.dmn.not.Notifications;
+import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.dmn.trk.TrackerFrame;
 import org.cnv.shr.dmn.trk.Trackers;
 import org.cnv.shr.gui.SplashScreen;
@@ -71,6 +72,7 @@ import org.cnv.shr.msg.MessageReader;
 import org.cnv.shr.stng.SettingListener;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.sync.RemoteSynchronizers;
+import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.updt.UpdateInfo;
 import org.cnv.shr.updt.UpdateInfoImpl;
 import org.cnv.shr.util.KeysService;
@@ -142,6 +144,12 @@ public class Services
 		System.out.println("-------------------------------------------------------------------------");
 		System.out.flush();
 		
+		runStartupServices();
+	}
+
+
+	private static void runStartupServices()
+	{
 		userThreads.execute(new Runnable()
 		{
 			@Override
@@ -151,9 +159,38 @@ public class Services
 				{
 					Trackers.launchTracker(false);
 				}
+			}
+		});
+		userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
 				if (settings.autoMapPorts.get())
 				{
 					PortMapper.addDesiredPorts(settings.getLocalIp(), System.out);
+				}
+			}
+		});
+		userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				for (ClientTrackerClient client : trackers.getClients())
+				{
+					TrackerEntry entry = client.getEntry();
+					if (entry.shouldSync() && entry.supportsMetaData())
+					{
+						try
+						{
+							client.sync();
+						}
+						catch (Exception ex)
+						{
+							LogWrapper.getLogger().log(Level.INFO, "Unable to sync to " + entry.toDebugString(), ex);
+						}
+					}
 				}
 			}
 		});

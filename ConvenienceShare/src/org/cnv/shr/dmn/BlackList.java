@@ -25,12 +25,56 @@
 
 package org.cnv.shr.dmn;
 
-import org.cnv.shr.mdl.Machine;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+
+import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class BlackList
 {
-	public boolean contains(Machine claimedMachine)
+	Path blackListFile = Services.settings.applicationDirectory.getPath().resolve("blackList.txt");
 	{
-		return false;
+		Misc.ensureDirectory(blackListFile, true);
+		if (!Files.exists(blackListFile))
+		{
+			try
+			{
+				Files.createFile(blackListFile);
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to create blacklist file at " + blackListFile, e);
+			}
+		}
+	}
+	
+	public synchronized boolean contains(String machineId)
+	{
+		Boolean grep = Misc.grep(blackListFile, machineId);
+		boolean blackListed = grep == null || grep;
+		LogWrapper.getLogger().info(machineId + " is " + (blackListed? "" : "not") + " blacklisted");
+		return blackListed;
+	}
+	public synchronized void add(String machineId)
+	{
+		LogWrapper.getLogger().info("Blacklisting " + machineId);
+		Path backup = Paths.get(blackListFile.toString() + ".back");
+		if (Misc.sed(blackListFile, backup, null, null))
+		{
+			Misc.sed(backup, blackListFile, machineId, null);
+		}
+	}
+	public synchronized void remove(String machineId)
+	{
+		LogWrapper.getLogger().info("Un-blacklisting " + machineId);
+		Path backup = Paths.get(blackListFile.toString() + ".back");
+		if (Misc.sed(blackListFile, backup, null, null))
+		{
+			Misc.sed(backup, blackListFile, null, machineId);
+		}
 	}
 }

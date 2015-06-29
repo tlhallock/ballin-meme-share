@@ -29,6 +29,8 @@ public class ColorSetter
 {
 	final Properties properties = new Properties();
 	final HashMap<String, LinkedList<ColorListener>> listeners = new HashMap<>();
+	final HashMap<JFrame, ColorWindowListener> windowListeners = new HashMap<>();
+	final HashMap<JComponent, ColorListener> colorListeners  = new HashMap<>();
 
 	public void read()
 	{
@@ -57,36 +59,108 @@ public class ColorSetter
 		}
 	}
 	
+	
+	private ColorWindowListener getWindowListener(JFrame window)
+	{
+		synchronized (windowListeners)
+		{
+			ColorWindowListener windowListener = windowListeners.get(window);
+			if (windowListener != null)
+			{
+				return windowListener;
+			}
+			windowListener = new ColorWindowListener(this, window);
+			windowListeners.put(window, windowListener);
+			window.addWindowListener(windowListener);
+			return windowListener;
+		}
+	}
+	
 	public void setColors(JFrame window)
 	{
-		ColorWindowListener windowListener = new ColorWindowListener(this);
-		window.addWindowListener(windowListener);
-		setColor(window.getRootPane(), windowListener, true);
+		ColorWindowListener windowListener = getWindowListener(window);
+		synchronized (windowListener)
+		{
+			setColor(null, window.getRootPane(), windowListener, true);
+		}
 		store();
 	}
+	
+	public void setImage(JFrame window)
+	{
+		ColorWindowListener windowListener;
+		synchronized (windowListeners)
+		{
+			windowListener = windowListeners.get(window);
+		}
+		if (windowListener == null)
+		{
+			setColors(window);
+			synchronized (windowListeners)
+			{
+				windowListener = windowListeners.get(window);
+			}
+		}
+		synchronized (windowListener)
+		{
+			for (ColorListener listener : windowListener.children)
+			{
+				listener.setOpaque(false);
+			}
+			window.getRootPane().setBackground(Color.pink);
+		}
+	}
+	
+	public void childrenChanged(JFrame window, JComponent component)
+	{
+		ColorWindowListener windowListener;
+		synchronized (windowListeners)
+		{
+			windowListener = windowListeners.get(window);
+		}
+		if (windowListener == null)
+		{
+			setColors(window);
+			return;
+		}
+		synchronized (windowListener)
+		{
+			ColorListener listener = colorListeners.get(component);
+			if (listener != null)
+			{
+				listener.removeAllChildren();
+			}
+			setChildrenColors(listener, windowListener, true);
+		}
+	}
+	
 
-	private void setColor(JComponent component, ColorWindowListener stack, boolean addPopups)
+	private void setColor(ColorListener parent, JComponent component, ColorWindowListener stack, boolean addPopups)
 	{
 		ColorListener listener = new ColorListener(this, component);
+		if (parent != null)
+		{
+			parent.addChild(listener);
+		}
 		stack.add(listener);
 		addPopups = addPopups && ColorUtils.shouldAddPopups(component) && addPopupMenu(listener);
 		listener.updateColors();
-		setChildrenColors(component, stack, addPopups);
+		setChildrenColors(listener, stack, addPopups);
 	}
 
-	private void setChildrenColors(JComponent component, ColorWindowListener stack, boolean addPopups)
+	private void setChildrenColors(ColorListener parent, ColorWindowListener stack, boolean addPopups)
 	{
-		if (!ColorUtils.descend(component))
+		if (!ColorUtils.descend(parent.component))
 		{
 			return;
 		}
-		synchronized (component.getTreeLock())
+		synchronized (parent.component.getTreeLock())
 		{
-			for (Component c : component.getComponents())
+			for (Component c : parent.component.getComponents())
 			{
 				if (c instanceof JComponent)
 				{
-					setColor((JComponent) c, stack, addPopups);
+					setColor(parent, (JComponent) c, stack, addPopups);
 				}
 			}
 		}

@@ -55,4 +55,26 @@ public enum AlreadyDownloadedAction
 		LogWrapper.getLogger().info("Current action for downloads already present on local filesystem is " + valueOf.name());
 		return valueOf;
 	}
+
+	public static void downloadEmptyFile(RemoteFile remote)
+	{
+		String prevName = Thread.currentThread().getName();
+		Thread.currentThread().setName("Move thread for " + remote.getChecksum());
+		Download download = new Download(remote);
+		download.tryToSave();
+		Path targetFile = download.getTargetFile();
+		Misc.ensureDirectory(targetFile, true);
+		try
+		{
+			LogWrapper.getLogger().info("touching " + targetFile);
+			Files.createFile(targetFile);
+			download.setState(DownloadState.ALL_DONE);
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to touch " + targetFile, e);
+		}
+		// Services.notifications.downloadsChanged();
+		Thread.currentThread().setName(prevName);
+	}
 }

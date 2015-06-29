@@ -79,7 +79,7 @@ public class MachineInfo
 		
 		LinkedList<String> args = new LinkedList<>();
 		
-		args.add("java");
+		args.add(ProcessInfo.getJavaBinary());
 		args.add("-cp");
 		args.add(ProcessInfo.getTestClassPath());
 		// Should be in TestUtils

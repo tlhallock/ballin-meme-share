@@ -98,6 +98,8 @@ import org.cnv.shr.msg.key.WhoIAm;
 import org.cnv.shr.msg.swup.UpdateInfoMessage;
 import org.cnv.shr.msg.swup.UpdateInfoRequest;
 import org.cnv.shr.msg.swup.UpdateInfoRequestRequest;
+import org.cnv.shr.prts.JsonPortMapping;
+import org.cnv.shr.prts.PortMapArguments;
 import org.cnv.shr.trck.CommentEntry;
 import org.cnv.shr.trck.Done;
 import org.cnv.shr.trck.FileEntry;
@@ -140,6 +142,9 @@ public class GenerateParserCode
 				
 				
 				
+				PortMapArguments.class           ,
+				JsonPortMapping.class            ,
+				
 				
 				
 				
@@ -151,7 +156,7 @@ public class GenerateParserCode
 				SharingState.class               ,
 				PathListChild.class              ,
 				RootListChild.class              ,
-				JsonableUpdateInfo.class                 ,
+				JsonableUpdateInfo.class         ,
 				
 				TrackerRequest.class             ,
 				

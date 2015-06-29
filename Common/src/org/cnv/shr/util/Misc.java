@@ -28,6 +28,7 @@ package org.cnv.shr.util;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -715,6 +716,34 @@ public class Misc
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to grep " + p + " for " + needle, ex);
 			return null;
+		}
+	}
+	public static boolean sed(Path p, Path backup, String toInsert, String toRemove)
+	{
+		try (BufferedReader reader = Files.newBufferedReader(p); BufferedWriter writer = Files.newBufferedWriter(backup);)
+		{
+			String line;
+			while ((line = reader.readLine()) != null)
+			{
+				if (toRemove != null && line.equals(toRemove))
+				{
+					continue;
+				}
+				writer.write(line);
+				writer.write("\n");
+			}
+
+			if (toInsert != null)
+			{
+				writer.write(toInsert);
+				writer.write("\n");
+			}
+			return true;
+		}
+		catch (IOException ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to insert " + toInsert + " into " + p, ex);
+			return false;
 		}
 	}
 }

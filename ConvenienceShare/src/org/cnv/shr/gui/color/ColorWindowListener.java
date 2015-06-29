@@ -4,14 +4,18 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.LinkedList;
 
+import javax.swing.JFrame;
+
 class ColorWindowListener extends WindowAdapter
 {
 	LinkedList<ColorListener> children = new LinkedList<>();
+	JFrame window;
 	ColorSetter setter;
 	
-	ColorWindowListener(ColorSetter setter)
+	ColorWindowListener(ColorSetter setter, JFrame window)
 	{
 		this.setter = setter;
+		this.window = window;
 	}
 	
 	void add(ColorListener listener)
@@ -25,14 +29,22 @@ class ColorWindowListener extends WindowAdapter
 			setter.listeners.put(key, linkedList);
 		}
 		linkedList.add(listener);
+		setter.colorListeners.put(listener.component, listener);
 	}
 	
 	@Override
 	public void windowClosed(WindowEvent e)
 	{
-		for (ColorListener child : children)
+		synchronized (setter.windowListeners)
 		{
-			child.remove();
+			setter.windowListeners.remove(window);
+		}
+		synchronized (this)
+		{
+			for (ColorListener child : children)
+			{
+				child.remove();
+			}
 		}
 	}
 }

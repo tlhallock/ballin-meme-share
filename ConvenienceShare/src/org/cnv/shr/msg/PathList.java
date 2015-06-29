@@ -59,7 +59,13 @@ public class PathList extends Message
 	private String name;
 	private String currentPath;
 	private JsonStringList subDirs = new JsonStringList();
-	private JsonList<PathListChild> children = new JsonList<>(PathListChild.getJsonName());
+	private JsonList<PathListChild> children = new JsonList<>(
+			new JsonList.Allocator<PathListChild>()
+			{
+				public PathListChild create(JsonParser parser)
+				{
+					return new PathListChild(parser);
+				}});
 
 	public PathList(final InputStream input) throws IOException
 	{

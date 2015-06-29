@@ -114,6 +114,11 @@ public class DownloadManager
 			requester.requestChecksum(d.getFile());
 			return null;
 		}
+		if (d.getFile().getFileSize() == 0)
+		{
+			AlreadyDownloadedAction.downloadEmptyFile(d.getFile());
+			return null;
+		}
 		
 		if (!force && alreadyHaveCopy(d.getFile(), checksum, d.getFile().getFileSize()))
 		{

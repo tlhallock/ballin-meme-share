@@ -35,6 +35,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.strt.RunOnStartUp;
 import org.cnv.shr.gui.SplashScreen;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.ShowApplication;
@@ -46,14 +47,18 @@ public class Main
 {
 	public static void main(String[] args) throws Exception
 	{
-		SplashScreen screen = SplashScreen.showSplash();
 		Arguments a = new Arguments();
 		a.parseArgs(args);
+		SplashScreen screen = null;
+		if (a.showGui)
+		{
+			screen = SplashScreen.showSplash();
+		}
 		Settings settings;
 		
-		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
+//		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
 		
-//		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
+		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
 		a.settings.setDefaultApplicationDirectoryStructure();
 		a.showGui = true;
 
@@ -61,7 +66,12 @@ public class Main
 		
 		if (Services.isAlreadyRunning(a, screen))
 		{
-			screen.setStatus("ConvenienceShare is already running!!! Will close soon.");
+			if (!a.showOther)
+			{
+				return;
+			}
+			if (screen != null)
+				screen.setStatus("ConvenienceShare is already running!!! Will close soon.");
 			
 			LogWrapper.getLogger().info("Application must already be running.");
 			String address = InetAddress.getLocalHost().getHostAddress();

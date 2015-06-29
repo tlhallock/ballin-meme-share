@@ -59,17 +59,20 @@ public class KeyPanel extends javax.swing.JPanel {
         jLabel4.setText(text);
         this.key = key;
         this.app = app;
-        
-        Services.userThreads.execute(new Runnable() {
-					@Override
-					public void run()
-					{
-		        if (KeyPairObject.serialize(Services.keyManager.getPublicKey()).equals(KeyPairObject.serialize(key.getPublicKey())))
-		        {
-		        	setBackground(Color.lightGray);
-		        }
-					}});
     }
+
+		public void setColor()
+		{
+			Services.userThreads.execute(new Runnable() {
+				@Override
+				public void run()
+				{
+			    if (KeyPairObject.serialize(Services.keyManager.getPublicKey()).equals(KeyPairObject.serialize(key.getPublicKey())))
+			    {
+			    	setBackground(Color.lightGray);
+			    }
+				}});
+		}
 
     /**
      * This method is called from within the constructor to initialize the form.

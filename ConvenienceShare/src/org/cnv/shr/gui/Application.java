@@ -79,7 +79,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.dmn.mn.Main;
-import org.cnv.shr.dmn.mn.RunOnStartUp;
+import org.cnv.shr.dmn.mn.strt.RunOnStartUp;
 import org.cnv.shr.dmn.not.NotificationListener;
 import org.cnv.shr.dmn.trk.TrackerFrame;
 import org.cnv.shr.dmn.trk.Trackers;
@@ -189,6 +189,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		jPanel14.setLayout(new FlowLayout());
         jPanel14.setComponentOrientation(
                 ComponentOrientation.LEFT_TO_RIGHT);
+        
+        
 
     for (String ip : Misc.collectIps())
     {
@@ -275,6 +277,11 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			}
 		});
 		jMenu8.add(item);
+                
+                
+                
+                
+                logHandler.setScrollOnUpdate(jCheckBox1.isSelected());
 	}
 
 	private void initializeSettings()
@@ -462,6 +469,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jLabel5 = new javax.swing.JLabel();
         jComboBox2 = new javax.swing.JComboBox();
         jButton3 = new javax.swing.JButton();
+        jCheckBox1 = new javax.swing.JCheckBox();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu6 = new javax.swing.JMenu();
         jMenuItem14 = new javax.swing.JMenuItem();
@@ -797,7 +805,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton11)
                     .addComponent(jButton12))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 410, Short.MAX_VALUE))
+                .addComponent(jSplitPane1))
         );
 
         jTabbedPane2.addTab("Downloads", jPanel3);
@@ -1011,6 +1019,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
+        jCheckBox1.setSelected(true);
+        jCheckBox1.setText("Scroll on update");
+        jCheckBox1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
         jPanel8.setLayout(jPanel8Layout);
         jPanel8Layout.setHorizontalGroup(
@@ -1021,6 +1037,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jCheckBox1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1041,7 +1059,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jLabel3)
                     .addComponent(jLabel5)
                     .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton3))
+                    .addComponent(jButton3)
+                    .addComponent(jCheckBox1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
                 .addContainerGap())
@@ -1625,6 +1644,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
       u.setVisible(true);
     }//GEN-LAST:event_jMenuItem21ActionPerformed
 
+    private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
+        logHandler.setScrollOnUpdate(jCheckBox1.isSelected());
+    }//GEN-LAST:event_jCheckBox1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1644,6 +1667,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
     private javax.swing.JButton jButton9;
+    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem2;
     private javax.swing.JComboBox jComboBox1;
@@ -1853,9 +1877,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			public void connectionOpened(Communication c)
 			{
 				ConnectionStatus connectionStatus = new ConnectionStatus(c);
-				connectionStatus.setVisible(true);
 				connectionsPanel.add(connectionStatus);
 				connections.add(connectionStatus);
+				Services.colors.childrenChanged(this, connectionsPanel);
+				connectionStatus.setVisible(true);
 				refreshConnections();
 			}
 
@@ -1877,6 +1902,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 						break;
 					}
 				}
+				Services.colors.childrenChanged(this, connectionsPanel);
 				refreshConnections();
 			}
 
@@ -1920,12 +1946,16 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			}});
 
 		jPanel13.setLayout(new GridLayout(0, 1));
+		
 		jPanel13.removeAll();
 		for (KeyPairObject pair : allKeys)
 		{
 			KeyPanel panel = new KeyPanel(this, pair);
+			
 			jPanel13.add(panel);
 			panel.setVisible(true);
 		}
+
+		Services.colors.childrenChanged(this, jPanel13);
 	}
 }

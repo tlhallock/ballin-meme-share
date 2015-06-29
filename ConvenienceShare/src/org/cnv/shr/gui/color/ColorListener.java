@@ -1,6 +1,7 @@
 package org.cnv.shr.gui.color;
 
 import java.awt.Color;
+import java.util.LinkedList;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -10,10 +11,13 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.JTableHeader;
 
+import org.cnv.shr.gui.KeyPanel;
+
 class ColorListener
 {
 	JComponent component;
 	ColorSetter setter;
+	private LinkedList<ColorListener> children = new LinkedList<>();
 
 	ColorListener(ColorSetter setter, JComponent component2)
 	{
@@ -24,6 +28,7 @@ class ColorListener
 	void remove()
 	{
 		setter.listeners.get(component.getClass().getName()).remove(this);
+		setter.colorListeners.remove(component);
 	}
 	
 	void setOpaque(boolean isOpaque)
@@ -77,6 +82,10 @@ class ColorListener
 			tableHeader.setOpaque(true);
 			tableHeader.setBackground(color);
 		}
+		if (component instanceof KeyPanel)
+		{
+			((KeyPanel) component).setColor();
+		}
 	}
 
 	private Color getBackground()
@@ -118,5 +127,20 @@ class ColorListener
 			return JPanel.class.getName();
 		}
 		return component.getClass().getName();
+	}
+	
+	
+	void addChild(ColorListener child)
+	{
+		children.add(child);
+	}
+	void removeAllChildren()
+	{
+		for (ColorListener child : children)
+		{
+			child.remove();
+			child.removeAllChildren();
+		}
+		children.clear();
 	}
 }

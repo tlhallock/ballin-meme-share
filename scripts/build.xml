@@ -14,6 +14,7 @@
         
         <target name="src">
             <zip destfile="dist/src.zip">
+                <fileset dir="../PortMapperLauncher/src/"/>
                 <fileset dir="../ConvenienceShare/src/"/>
                 <fileset dir="../Common/src/"/>
                 <fileset dir="../Tracker/src/"/>
@@ -33,6 +34,7 @@
 		<mkdir dir="classes/track/" />
 		<mkdir dir="classes/update/" />
 		<mkdir dir="classes/install/" />
+                <mkdir dir="classes/portmapperpatch/" />
 		<mkdir dir="dist/" />
 	</target>
 
@@ -41,7 +43,6 @@
 		<copy file="../libs/CoDec-build17-jdk13.jar"        todir="dist/libs" />
 		<copy file="../libs/portmapper-2.0.0-alpha1.jar"    todir="dist/libs" />
 		<copy file="../libs/h2-1.4.187.jar"                 todir="dist/libs" />
-<!-- 		<copy file="../lib/javax.json-1.0.2.jar"           todir="dist/libs" /> -->
 	</target>
 
 
@@ -55,6 +56,14 @@
 		<javac srcdir="../Common/src" destdir="classes/common/">
 			<classpath refid="jars" />
 		</javac>
+                
+                
+		<jar destfile="dist/libs/common.jar">
+			<manifest>
+				<attribute name="Implementation-Version" value="${version}.${build.number}"/>
+			</manifest>
+			<fileset dir="classes/common/" />
+		</jar>
 	</target>
 
 	<target name="convenienceshare" depends="common">
@@ -72,11 +81,10 @@
                            libs/FlexiProvider-1.7p7.signed.jar 
                            libs/CoDec-build17-jdk13.jar
                            libs/h2-1.4.187.jar
-                           libs/javax.json-1.0.2.jar" />
+                           libs/common.jar" />
 				<attribute name="Implementation-Version" value="${version}.${build.number}"/>
 			</manifest>
 			<fileset dir="classes/convenience/" />
-			<fileset dir="classes/common/" />
 			<zipfileset dir="../ConvenienceShare/src/res/" prefix="res"/>
 		</jar>
 	</target>
@@ -93,10 +101,10 @@
 				<attribute name="Main-Class" value="org.cnv.shr.updt.Updater" />
 				<attribute name="Class-Path" value="
                            libs/FlexiProvider-1.7p7.signed.jar 
-                           libs/CoDec-build17-jdk13.jar" />
+                           libs/CoDec-build17-jdk13.jar
+                           libs/common.jar" />
 			</manifest>
 			<fileset dir="classes/update/" />
-			<fileset dir="classes/common/" />
 		</jar>
 	</target>
 
@@ -110,20 +118,33 @@
 		<jar destfile="dist/Tracker.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.cnv.shr.track.Track" />
-				<attribute name="Class-Path" value="lib/javax.json-1.0.2.jar
+				<attribute name="Class-Path" value="
                            libs/FlexiProvider-1.7p7.signed.jar 
                            libs/CoDec-build17-jdk13.jar
                            libs/h2-1.4.187.jar
-                           libs/javax.json-1.0.2.jar" />
+                           libs/common.jar" />
 			</manifest>
 			<fileset dir="classes/track/" />
-			<fileset dir="classes/common/" />
 			<zipfileset dir="../Tracker/src/res/" prefix="res"/>
+		</jar>
+	</target>
+	<target name="portmapperpatch" depends="common">
+		<javac debug="true" srcdir="../PortMapperLauncher/src" destdir="classes/portmapperpatch/" includes="org/cnv/shr/util/PortMapper3.java">
+			<classpath refid="others" />
+		</javac>
+
+
+		<jar destfile="dist/portmapper-patch.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.cnv.shr.util.PortMapper3" />
+                                <attribute name="Class-Path" value="libs/portmapper-2.0.0-alpha1.jar libs/common.jar" />
+			</manifest>
+			<fileset dir="classes/portmapperpatch/" />
 		</jar>
 	</target>
 
 
-	<target name="installer" depends="clean,convenienceshare,src,updater,tracker">
+	<target name="installer" depends="clean,portmapperpatch,convenienceshare,tracker,src,updater">
 		<javac debug="true" srcdir="../Installer/" destdir="classes/install/">
 			<classpath refid="others" />
 		</javac>
@@ -153,8 +174,10 @@
 	<target name="update" depends="clean,convenienceshare,updater,tracker">
 		<mkdir dir="../instances/updater/updates/" />
 		<zip destfile="../instances/updater/updates/updates.zip">
+			<zipfileset file="dist/libs/common.jar"/>
 			<zipfileset file="dist/ConvenienceShare.jar"/>
 			<zipfileset file="dist/Tracker.jar"/>
+                        <!-- Should add help. -->
 		</zip>
 	</target>
 

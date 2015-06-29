@@ -39,9 +39,10 @@ public class Arguments
 	// needs to have a quitting and testing...
 	public boolean connectedToTestStream = false;
 	public boolean deleteDb = false;
-	public boolean showGui = false;
+	public boolean showGui = true;
 	public Settings settings = new Settings(Settings.DEFAULT_SETTINGS_FILE);
 	public Path restoreFile;
+	
 	public Quiter quiter = new Quiter() {
 		@Override
 		public void doFinal()
@@ -50,7 +51,8 @@ public class Arguments
 		}};
 	String testIp;
 	String testPort;
-	public boolean launchOnStart;
+	boolean launchOnStart;
+	boolean showOther = true;
 	
 	public String updateManagerDirectory;
 	
@@ -59,6 +61,10 @@ public class Arguments
 	{
 		for (int i = 0; i < args.length; i++)
 		{
+			if (args[i].equals("-ns"))
+			{
+				showOther = false;
+			}
 			if (args[i].equals("-d"))
 			{
 				deleteDb = true;
@@ -66,6 +72,10 @@ public class Arguments
 			if (args[i].equals("-g"))
 			{
 				showGui = true;
+			}
+			if (args[i].equals("-q"))
+			{
+				showGui = false;
 			}
 			if (args[i].equals("-l"))
 			{

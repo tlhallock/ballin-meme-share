@@ -32,6 +32,7 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
 import javax.swing.JTextArea;
+import javax.swing.text.DefaultCaret;
 
 public class TextAreaHandler extends Handler
 {
@@ -45,6 +46,12 @@ public class TextAreaHandler extends Handler
     	this.logArea = area;
     	this.logArea.setEditable(false);
     	logLines = initialNumLines;
+    }
+    
+    public void setScrollOnUpdate(boolean yes)
+    {
+    	DefaultCaret caret = (DefaultCaret) logArea.getCaret();
+    	caret.setUpdatePolicy(yes ? DefaultCaret.ALWAYS_UPDATE : DefaultCaret.NEVER_UPDATE);
     }
 
 	private void log(String line)

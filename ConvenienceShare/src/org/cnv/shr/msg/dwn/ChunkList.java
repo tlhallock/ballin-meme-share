@@ -46,7 +46,13 @@ import org.cnv.shr.util.LogWrapper;
 
 public class ChunkList extends DownloadMessage
 {
-	private JsonList<Chunk> chunks = new JsonList<>(Chunk.getJsonName());
+	private JsonList<Chunk> chunks = new JsonList<>(
+			new JsonList.Allocator<Chunk>()
+			{
+				public Chunk create(JsonParser parser)
+				{
+					return new Chunk(parser);
+				}});
 
 	public static int TYPE = 11;
 	
@@ -130,37 +136,37 @@ public class ChunkList extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdescriptor = true;
 		boolean needschunks = true;
+		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdescriptor)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
-				}
 				if (needschunks)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
+				}
+				if (needsdescriptor)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-			}
-			break;
 		case START_ARRAY:
 			if (key==null) break;
 			if (key.equals("chunks")) {
 				needschunks = false;
 				chunks.parse(parser);
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
 			}
 			break;
 			default: break;

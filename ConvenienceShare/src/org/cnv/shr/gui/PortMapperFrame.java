@@ -33,10 +33,9 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
-
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
-
+import javax.swing.text.DefaultCaret;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;
@@ -86,6 +85,10 @@ public class PortMapperFrame extends javax.swing.JFrame {
 		collectIps.add(localIp);
 		jComboBox1.setModel(new DefaultComboBoxModel(collectIps.toArray(new String[0])));
 		jComboBox1.setSelectedItem(localIp);
+                
+                    	DefaultCaret caret = (DefaultCaret) jTextArea1.getCaret();
+    	caret.setUpdatePolicy(jCheckBox1.isSelected() ? DefaultCaret.ALWAYS_UPDATE : DefaultCaret.NEVER_UPDATE);
+                
 	}
     
 	private boolean checkForMapper()
@@ -96,10 +99,12 @@ public class PortMapperFrame extends javax.swing.JFrame {
 //			PortMapper.ip = tester.getIpFromCanYouSeeMeDotOrg();
 //			logStream.println("Found ip to be " + PortMapper.ip);
 //		}
-		if (!Files.exists(Paths.get(PortMapper.portMapperJar)))
+		if (!Files.exists(Paths.get(PortMapper.portMapperJar)) || !Files.exists(Paths.get(PortMapper.patchedPortMapperJar)))
 		{
 			JOptionPane.showMessageDialog(this, 
-                                "Portmapper was not found!\nExpected to be at " + Paths.get(PortMapper.portMapperJar).toAbsolutePath(), 
+                                "Portmapper was not found!\nExpected to be at " 
+                                		+ Paths.get(PortMapper.portMapperJar).toAbsolutePath() +"\n and"
+                                		+ Paths.get(PortMapper.patchedPortMapperJar).toAbsolutePath(),
                                 "Unable to map ports.",
                                 JOptionPane.ERROR_MESSAGE);
 			return false;
@@ -136,6 +141,7 @@ public class PortMapperFrame extends javax.swing.JFrame {
         jLabel6 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
         jComboBox1 = new javax.swing.JComboBox();
+        jCheckBox1 = new javax.swing.JCheckBox();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -181,6 +187,14 @@ public class PortMapperFrame extends javax.swing.JFrame {
         jLabel8.setText("This must be set correctly.");
 
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "192.168.0.100" }));
+
+        jCheckBox1.setSelected(true);
+        jCheckBox1.setText("Scroll on update");
+        jCheckBox1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox1ActionPerformed(evt);
+            }
+        });
 
         jMenu1.setText("Ports");
 
@@ -241,6 +255,8 @@ public class PortMapperFrame extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBox1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton4))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -291,7 +307,8 @@ public class PortMapperFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton4)
-                    .addComponent(jLabel1))
+                    .addComponent(jLabel1)
+                    .addComponent(jCheckBox1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
                 .addContainerGap())
@@ -366,12 +383,18 @@ public class PortMapperFrame extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
+    private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
+    	DefaultCaret caret = (DefaultCaret) jTextArea1.getCaret();
+    	caret.setUpdatePolicy(jCheckBox1.isSelected() ? DefaultCaret.ALWAYS_UPDATE : DefaultCaret.NEVER_UPDATE);
+    }//GEN-LAST:event_jCheckBox1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel ee;
     private javax.swing.JLabel es;
     private javax.swing.JLabel ie;
     private javax.swing.JLabel is;
     private javax.swing.JButton jButton4;
+    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JComboBox jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

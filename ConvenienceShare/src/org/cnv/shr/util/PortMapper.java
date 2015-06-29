@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
@@ -35,14 +36,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.prts.PortMapArguments;
+import org.cnv.shr.prts.PortMapperAction;
 import org.cnv.shr.stng.SettingListener;
 
 public class PortMapper
 {
-	public static final String portMapperJar = "lib/portmapper-2.0.0-alpha1.jar";
-	static final String PORT_MAPPING_DESCRIPTION = "PortMapper";
+	public static final String portMapperJar = "libs/portmapper-2.0.0-alpha1.jar";
+	public static final String patchedPortMapperJar = "portmapper-patch.jar";
+	static final String PORT_MAPPING_DESCRIPTION = "ConvenienceShare";
 	static final Pattern EXISTING_MAPPING_PATTERN = Pattern.compile(
 			"TCP :([0-9]*) -> ([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):([0-9]*) enabled");
+	
+	
+	private static boolean ALL_AT_ONCE_WITH_PORTMAPPER_PATCH = true;
+	private static final Path JSON_ARGS_PATH = Services.settings.applicationDirectory.getPath().resolve("portMappings.json").toAbsolutePath();
 
 	// I am guessing this is supposed to be the 192.168.0.x, which is why this is
 	// not workings...
@@ -52,13 +61,18 @@ public class PortMapper
 		HashMap<Integer, Integer> returnValue = new HashMap<>();
 
 		LinkedList<String> arguments = new LinkedList<>();
-		arguments.add("java");
+		arguments.add(ProcessInfo.getJavaBinary());
+		
 		arguments.add("-jar");
-		arguments.add(new File(portMapperJar).getAbsolutePath());
+		arguments.add(ProcessInfo.getJarPath(Main.class).resolve(portMapperJar).toAbsolutePath().toString());
 		arguments.add("-list");
+		
 		ProcessBuilder builder = new ProcessBuilder();
 		builder.directory(new File("."));
 		builder.command(arguments);
+		
+		LogWrapper.getLogger().info("Executing " + arguments);
+		
 		final Process p = builder.start();
 
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));)
@@ -95,9 +109,10 @@ public class PortMapper
 	{
 		logStream.println("Mapping port " + gateway + " to " + local + " on " + knownIp);
 		LinkedList<String> arguments = new LinkedList<>();
-		arguments.add("java");
+		arguments.add(ProcessInfo.getJavaBinary());
 		arguments.add("-jar");
-		arguments.add(new File(portMapperJar).getAbsolutePath());
+		arguments.add(ProcessInfo.getJarPath(Main.class).resolve(portMapperJar).toAbsolutePath().toString());
+		arguments.add("-list");
 		arguments.add("-add");
 		arguments.add("-externalPort");
 		arguments.add(String.valueOf(gateway));
@@ -115,24 +130,10 @@ public class PortMapper
 		builder.directory(new File("."));
 		builder.command(arguments);
 
-		Process p = builder.start();
+		LogWrapper.getLogger().info("Executing " + arguments);
 
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));)
-		{
-			String line;
-			while ((line = reader.readLine()) != null)
-			{
-				if (line.contains("Shutdown registry"))
-				{
-					p.destroy();
-				}
-				logStream.println(line);
-			}
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to map ports", e);
-		}
+		Process p = builder.start();
+		tail(p, logStream);
 
 		return listPorts(logStream).containsKey(new Integer(gateway));
 	}
@@ -140,9 +141,9 @@ public class PortMapper
 	static boolean removeMapping(int externalPort, PrintStream logStream) throws InterruptedException, IOException
 	{
 		LinkedList<String> arguments = new LinkedList<>();
-		arguments.add("java");
+		arguments.add(ProcessInfo.getJavaBinary());
 		arguments.add("-jar");
-		arguments.add(new File(portMapperJar).getAbsolutePath());
+		arguments.add(ProcessInfo.getJarPath(Main.class).resolve(portMapperJar).toAbsolutePath().toString());
 		arguments.add("-delete");
 		arguments.add("-externalPort");
 		arguments.add(String.valueOf(externalPort));
@@ -152,24 +153,10 @@ public class PortMapper
 		builder.directory(new File("."));
 		builder.command(arguments);
 
+		LogWrapper.getLogger().info("Executing " + arguments);
 		Process p = builder.start();
+		tail (p, logStream);
 
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));)
-		{
-			String line;
-			while ((line = reader.readLine()) != null)
-			{
-				if (line.contains("Shutdown registry"))
-				{
-					p.destroy();
-				}
-				logStream.println(line);
-			}
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to remove port mapping", e);
-		}
 		return !listPorts(logStream).containsKey(new Integer(externalPort));
 	}
 
@@ -177,6 +164,27 @@ public class PortMapper
 	{
 		logStream.println("Removing port mappings.");
 		HashMap<Integer, Integer> listPorts = listPorts(logStream);
+
+		if (ALL_AT_ONCE_WITH_PORTMAPPER_PATCH)
+		{
+			new PortMapArguments(PortMapperAction.Delete, null, listPorts).saveTo(JSON_ARGS_PATH);
+			
+			LinkedList<String> arguments = new LinkedList<>();
+			arguments.add(ProcessInfo.getJavaBinary());
+			arguments.add("-jar");
+			arguments.add(ProcessInfo.getJarPath(Main.class).resolve(patchedPortMapperJar).toAbsolutePath().toString());
+			arguments.add(JSON_ARGS_PATH.toString());
+
+			ProcessBuilder builder = new ProcessBuilder();
+			builder.directory(ProcessInfo.getJarPath(Main.class).toAbsolutePath().toFile());
+			builder.command(arguments);
+
+			LogWrapper.getLogger().info("Executing " + arguments);
+			builder.start();
+			
+			return;
+		}
+		
 		for (Integer remote : listPorts.keySet())
 		{
 			removeMapping(remote, logStream);
@@ -238,6 +246,30 @@ public class PortMapper
 		}
 		logStream.println("Current mappings did not match.");
 		removeAllMappings(logStream);
+		
+
+		if (ALL_AT_ONCE_WITH_PORTMAPPER_PATCH)
+		{
+			new PortMapArguments(PortMapperAction.Add, knownIp, ports).saveTo(JSON_ARGS_PATH);
+			
+			LinkedList<String> arguments = new LinkedList<>();
+			arguments.add(ProcessInfo.getJavaBinary());
+			arguments.add("-jar");
+			arguments.add(ProcessInfo.getJarPath(Main.class).resolve(patchedPortMapperJar).toAbsolutePath().toString());
+			arguments.add(JSON_ARGS_PATH.toString());
+
+			ProcessBuilder builder = new ProcessBuilder();
+			builder.directory(ProcessInfo.getJarPath(Main.class).toAbsolutePath().toFile());
+			builder.command(arguments);
+
+			LogWrapper.getLogger().info("Executing " + arguments);
+			Process start = builder.start();
+			tail(start, logStream);
+			
+			return currentRulesMatch(ports, logStream);
+		}
+		
+		
 		for (Entry<Integer, Integer> port : ports.entrySet())
 		{
 			if (!mapPort(port.getKey(), port.getValue(), knownIp, logStream))
@@ -255,6 +287,26 @@ public class PortMapper
 		{
 			// restart server threads too...
 			addDesiredPorts(Services.settings.getLocalIp(), System.out);
+		}
+	}
+	
+	private static void tail(Process p, PrintStream logStream)
+	{
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));)
+		{
+			String line;
+			while ((line = reader.readLine()) != null)
+			{
+				if (line.contains("Shutdown registry"))
+				{
+					p.destroy();
+				}
+				logStream.println(line);
+			}
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to remove port mapping", e);
 		}
 	}
 }

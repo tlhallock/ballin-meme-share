@@ -37,11 +37,16 @@ import org.cnv.shr.util.Jsonable;
 
 public class JsonList<T extends Jsonable> extends LinkedList<T> 
 {
-	private String className;
+	private Allocator<T> allocator;
 	
-	public JsonList(String name)
+	public interface Allocator<T>
 	{
-		this.className = name;
+		T create(JsonParser parser);
+	}
+	
+	public JsonList(Allocator<T> allocator)
+	{
+		this.allocator = allocator;
 	}
 
 	public void generate(JsonGenerator generator)
@@ -52,7 +57,6 @@ public class JsonList<T extends Jsonable> extends LinkedList<T>
 		{
 			t.generate(generator, null);
 		}
-		
 		generator.writeEnd();
 	}
 
@@ -65,7 +69,7 @@ public class JsonList<T extends Jsonable> extends LinkedList<T>
 			switch (next)
 			{
 			case START_OBJECT:
-				add((T) JsonAllocators.create(className, parser));
+				add(allocator.create(parser));
 				break;
 			case END_ARRAY:
 				return;

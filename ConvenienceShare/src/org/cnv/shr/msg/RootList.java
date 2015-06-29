@@ -52,7 +52,14 @@ public class RootList extends Message
 {
 	public static int TYPE = 3;
 	
-	private JsonList<RootListChild> sharedDirectories = new JsonList<>(RootListChild.getJsonName());
+	private JsonList<RootListChild> sharedDirectories = new JsonList<>(
+			new JsonList.Allocator<RootListChild>()
+			{
+				public RootListChild create(JsonParser parser)
+				{
+					return new RootListChild(parser);
+				}
+			});
 
 	public RootList()
 	{
