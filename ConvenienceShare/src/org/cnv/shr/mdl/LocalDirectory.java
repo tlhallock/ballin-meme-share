@@ -33,6 +33,8 @@ import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.swing.JFrame;
+
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -160,7 +162,7 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	protected RootSynchronizer createSynchronizer() throws IOException, InterruptedException
+	protected RootSynchronizer createSynchronizer(JFrame origin) throws IOException, InterruptedException
 	{
 		File f = new File(getPathElement().getFullPath());
 		// This is probably not necessary...

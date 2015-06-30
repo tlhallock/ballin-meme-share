@@ -58,6 +58,7 @@ import org.cnv.shr.msg.DoneResponse;
 import org.cnv.shr.msg.EmptyMessage;
 import org.cnv.shr.msg.Failure;
 import org.cnv.shr.msg.FindMachines;
+import org.cnv.shr.msg.FindTrackers;
 import org.cnv.shr.msg.GetPermission;
 import org.cnv.shr.msg.GotPermission;
 import org.cnv.shr.msg.HeartBeat;
@@ -70,6 +71,7 @@ import org.cnv.shr.msg.PathListChild;
 import org.cnv.shr.msg.RootList;
 import org.cnv.shr.msg.RootListChild;
 import org.cnv.shr.msg.ShowApplication;
+import org.cnv.shr.msg.TrackerFound;
 import org.cnv.shr.msg.UserMessageMessage;
 import org.cnv.shr.msg.Wait;
 import org.cnv.shr.msg.dwn.ChecksumRequest;
@@ -95,6 +97,8 @@ import org.cnv.shr.msg.key.OpenConnection;
 import org.cnv.shr.msg.key.PermissionFailure;
 import org.cnv.shr.msg.key.RevokeKey;
 import org.cnv.shr.msg.key.WhoIAm;
+import org.cnv.shr.msg.swup.GetLogs;
+import org.cnv.shr.msg.swup.GotLogs;
 import org.cnv.shr.msg.swup.UpdateInfoMessage;
 import org.cnv.shr.msg.swup.UpdateInfoRequest;
 import org.cnv.shr.msg.swup.UpdateInfoRequestRequest;
@@ -106,6 +110,7 @@ import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.trck.TrackerRequest;
+import org.cnv.shr.updt.LastVersionEntry;
 
 public class GenerateParserCode
 {
@@ -146,10 +151,13 @@ public class GenerateParserCode
 				JsonPortMapping.class            ,
 				
 				
+				GotLogs.class                    ,
+				GetLogs.class                    ,
+				LastVersionEntry.class           ,
 				
 				
-				
-				
+				FindTrackers.class               ,
+				TrackerFound.class               ,
 				
 				Chunk.class                      ,
 				SharedFileId.class               ,
@@ -257,8 +265,7 @@ public class GenerateParserCode
 				List<Parser> parser = getParser(parsers, field);
 				if (parser == null)
 				{
-					System.err.println("Need parser type for " + field.getName());
-					continue;
+					throw new RuntimeException("Need parser type for " + field.getName());
 				}
 				for (Parser p : parser)
 				{
@@ -452,7 +459,8 @@ public class GenerateParserCode
 			return " = new Chunk(parser)";
 		case "java.security.PublicKey":
 			return " = KeyPairObject.deSerializePublicKey(parser.getString())";
-
+		case "org.cnv.shr.trck.TrackerEntry":
+			return " = new TrackerEntry(parser)";
 		case "java.lang.Boolean":
 		case "boolean":
 			switch (jsonType)
@@ -476,7 +484,7 @@ public class GenerateParserCode
 		case "java.lang.String": return " = parser.getString()";
 		default:
 		}
-		return null;
+		throw new RuntimeException("Need an assignment for " + f.getType().getName());
 	}
 
 	private static Event getJsonType(String fieldName)
@@ -494,6 +502,7 @@ public class GenerateParserCode
 		case "org.cnv.shr.msg.RootListChild":
 		case "class org.cnv.shr.msg.PathList":
 		case "org.cnv.shr.trck.FileEntry":
+		case "org.cnv.shr.trck.TrackerEntry":
 		case "org.cnv.shr.dmn.dwn.SharedFileId":
 		case "org.cnv.shr.dmn.dwn.Chunk":
 		case "java.util.HashMap":
@@ -503,6 +512,7 @@ public class GenerateParserCode
 		case "boolean":
 			return JsonParser.Event.VALUE_TRUE;
 
+		case "java.lang.Integer":
 		case "java.lang.Long":
 		case "int":
 		case "long":
@@ -578,6 +588,7 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 		output.println("\t\t\t" + fieldName + ".generate(generator);");
 		output.println("\t\t}");
 		return;
+	case "org.cnv.shr.trck.TrackerEntry":
 	case "org.cnv.shr.msg.RootListChild":
 	case "org.cnv.shr.dmn.dwn.Chunk":
 	case "org.cnv.shr.dmn.dwn.SharedFileId":

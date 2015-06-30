@@ -39,7 +39,7 @@ public class JsonStringMap extends HashMap<String, String>
 
 	public void generate(JsonGenerator generator)
 	{
-//		generator.writeStartArray();
+//		generator.writeStartObject();
 		for (java.util.Map.Entry<String, String> entry : entrySet())
 		{
 			generator.write(entry.getKey(), entry.getValue());

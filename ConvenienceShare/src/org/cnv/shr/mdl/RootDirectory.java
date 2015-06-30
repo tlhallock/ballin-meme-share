@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.logging.Level;
 
+import javax.swing.JFrame;
+
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -156,11 +158,11 @@ public abstract class RootDirectory extends DbObject<Integer>
 		return machine;
 	}
 	
-	public final void synchronize(final List<? extends SynchronizationListener> listeners)
+	public final void synchronize(JFrame origin, final List<? extends SynchronizationListener> listeners)
 	{
 		LogWrapper.getLogger().info("Synchronizing " + getPathElement().getFullPath());
 
-		try (RootSynchronizer localSynchronizer = createSynchronizer())
+		try (RootSynchronizer localSynchronizer = createSynchronizer(origin))
 		{
 			if (!startSynchronizing(this, localSynchronizer))
 			{
@@ -271,7 +273,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	}
 
 	public abstract boolean pathIsSecure(Path canonicalPath);
-	protected abstract RootSynchronizer createSynchronizer() throws IOException, InterruptedException;
+	protected abstract RootSynchronizer createSynchronizer(JFrame origin) throws IOException, InterruptedException;
 	protected abstract void sendNotifications();
 	
 	

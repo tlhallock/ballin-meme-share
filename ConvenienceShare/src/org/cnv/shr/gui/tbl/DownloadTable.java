@@ -29,7 +29,9 @@ import java.util.Date;
 import java.util.HashMap;
 
 import javax.swing.JOptionPane;
+import javax.swing.JSpinner;
 import javax.swing.JTable;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbChunks;
@@ -43,6 +45,7 @@ import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -186,6 +189,34 @@ public class DownloadTable extends DbJTable<Download>
 				return "Update Metadata";
 			}
 		});
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(Download download)
+			{
+				SpinnerNumberModel sModel = new SpinnerNumberModel();
+				JSpinner spinner = new JSpinner(sModel);
+				if (JOptionPane.OK_OPTION != JOptionPane.showOptionDialog(
+						app,
+						spinner,
+						"Priority for " + download.getId(),
+						JOptionPane.OK_CANCEL_OPTION,
+						JOptionPane.QUESTION_MESSAGE,
+						null, null, null))
+				{
+					return;
+				}
+				int priority = ((Number) sModel.getValue()).intValue();
+				download.setPriority(priority);
+				download.tryToSave();
+			}
+			
+			@Override
+			String getName()
+			{
+				return "Set Priority";
+			}
+		});
 		
 		table.setEnabled(true);
 	}
@@ -208,7 +239,9 @@ public class DownloadTable extends DbJTable<Download>
 		SharedFile file = download.getFile();
 		RootDirectory directory = file.getRootDirectory();
 		Machine machine = directory.getMachine();
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(file.getFileEntry());
+		
+		FileEntry fileEntry = file.getFileEntry();
+		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(fileEntry);
 		
 		currentRow.put("Machine",           machine.getName()                                                         );
 		currentRow.put("Directory",         directory.getName()                                                       );

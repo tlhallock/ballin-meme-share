@@ -35,11 +35,14 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
+import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.msg.Wait;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class ChunkRequest extends DownloadMessage
 {
@@ -83,9 +86,23 @@ public class ChunkRequest extends DownloadMessage
 		if (local == null)
 		{
 			// lost the file...
+			LogWrapper.getLogger().info("Lost file " + descriptor);
+			connection.finish();
 		}
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Sending chunk.");
-		Services.server.getServeInstance(connection).serve(chunk, pleaseCompress);
+		ServeInstance serveInstance = Services.server.getServeInstance(connection);
+		if (serveInstance == null)
+		{
+			LogWrapper.getLogger().info("Currently not serving on this connection.");
+			serveInstance = Services.server.serve(local, connection);
+			if (serveInstance == null)
+			{
+				connection.send(new Wait());
+				connection.finish();
+				return;
+			}
+		}
+		serveInstance.serve(chunk, pleaseCompress);
 	}
 
 	public Chunk getChunk()

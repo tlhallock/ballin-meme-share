@@ -295,7 +295,12 @@ public class KeysService
 
 	public PrivateKey getPrivateKey(PublicKey publicKey)
 	{
-		return keys.get(KeyPairObject.hashObject(publicKey)).privateKey;
+		KeyPairObject keyPairObject = keys.get(KeyPairObject.hashObject(publicKey));
+		if (keyPairObject == null)
+		{
+			return null;
+		}
+		return keyPairObject.privateKey;
 	}
 	
 	public static RijndaelKey createAesKey()
@@ -340,4 +345,9 @@ public class KeysService
         	}
         }
     }
+
+		public long getLastKeyTimeStamp()
+		{
+			return primaryKey.timeStamp;
+		}
 }

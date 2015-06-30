@@ -132,37 +132,37 @@ public class UserMessageMessage extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsmessageStr = true;
 		boolean needstype = true;
+		boolean needsmessageStr = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsmessageStr)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs messageStr");
-				}
 				if (needstype)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs type");
+				}
+				if (needsmessageStr)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs messageStr");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("messageStr")) {
-				needsmessageStr = false;
-				messageStr = parser.getString();
-			}
-			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("type")) {
 				needstype = false;
 				type = Integer.parseInt(parser.getString());
+			}
+			break;
+		case VALUE_STRING:
+			if (key==null) break;
+			if (key.equals("messageStr")) {
+				needsmessageStr = false;
+				messageStr = parser.getString();
 			}
 			break;
 			default: break;

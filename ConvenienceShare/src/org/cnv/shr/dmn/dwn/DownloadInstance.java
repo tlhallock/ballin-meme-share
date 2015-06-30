@@ -124,12 +124,12 @@ public class DownloadInstance implements Runnable
 			return;
 		}
 		Machine machine = remoteFile.getRootDirectory().getMachine();
-		Communication openConnection = Services.networkManager.openConnection(machine, false, "Download file");
+		Communication openConnection = Services.networkManager.openConnection(null, machine, false, "Download file");
 		if (openConnection == null)
 		{
 			throw new IOException("Unable to authenticate to host.");
 		}
-		primarySeeder = new Seeder(machine, openConnection);
+		primarySeeder = new Seeder(this, machine, openConnection);
 		freeSeeders.addLast(primarySeeder);
 	}
 
@@ -201,7 +201,7 @@ public class DownloadInstance implements Runnable
 
 	public synchronized void addSeeder(Machine machine, Communication connection)
 	{
-		freeSeeders.add(new Seeder(machine, connection));
+		freeSeeders.add(new Seeder(this, machine, connection));
 		queue();
 	}
 
@@ -309,6 +309,8 @@ public class DownloadInstance implements Runnable
 		}
 		LogWrapper.getLogger().info("Queue " + download);
 		
+		dblCheckConnections();
+		
 		List<Chunk> upComing = DbChunks.getNextChunks(download, NUM_PENDING_CHUNKS - pendingSeeders.size());
 		if (upComing.isEmpty())
 		{
@@ -345,6 +347,33 @@ public class DownloadInstance implements Runnable
 			{
 				LogWrapper.getLogger().log(Level.INFO, "Unable to request chunk", e);
 			}
+		}
+	}
+
+	private synchronized void dblCheckConnections()
+	{
+		for (Seeder seeder : (Iterable<Seeder>) freeSeeders.clone())
+		{
+			if (seeder.checkConnection())
+			{
+				continue;
+			}
+			freeSeeders.remove(seeder);
+		}
+		LinkedList<Map.Entry<Chunk, Seeder>> list = new LinkedList<>();
+		list.addAll(pendingSeeders.entrySet());
+		for (Map.Entry<Chunk, Seeder> seeder : list)
+		{
+			if (seeder.getValue().checkConnection())
+			{
+				continue;
+			}
+			pendingSeeders.remove(seeder.getKey());
+		}
+
+		if (freeSeeders.size() + pendingSeeders.size() == 0)
+		{
+			fail("There are no more seeders left!");
 		}
 	}
 

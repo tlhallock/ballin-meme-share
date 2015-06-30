@@ -41,16 +41,15 @@ import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerAction;
 import org.cnv.shr.trck.TrackerEntry;
+import org.cnv.shr.trck.TrackerRequest;
 import org.cnv.shr.util.LogWrapper;
 
 public class ClientTrackerClient extends TrackerClient
 {
-
 	public ClientTrackerClient(TrackerEntry entry)
 	{
 		super(entry);
 	}
-
 
 	public void keyChanged()
 	{
@@ -190,5 +189,31 @@ public class ClientTrackerClient extends TrackerClient
 		{
 			Logger.getLogger(TrackerClient.class.getName()).log(Level.INFO, "Unable to list trackers.", ex);
 		}
+	}
+	
+	
+
+	public MachineEntry getUpdatedMachineInfo(String machineIdentifier)
+	{
+		TrackerRequest trackerRequest = new TrackerRequest(TrackerAction.GET_MACHINE);
+		trackerRequest.setParameter("other", machineIdentifier);
+		try (TrackerConnection connection = connect(trackerRequest))
+		{
+			MachineEntry entry = new MachineEntry();
+			TrackObjectUtils.openArray(connection.parser);
+			if (TrackObjectUtils.next(connection.parser, entry))
+			{
+				LogWrapper.getLogger().info("Found " + entry);
+				return entry;
+			}
+			connection.generator.writeEnd();
+			connection.generator.flush();
+			connection.parser.next();
+		}
+		catch (Exception ex)
+		{
+			Logger.getLogger(TrackerClient.class.getName()).log(Level.INFO, "Unable to list trackers.", ex);
+		}
+		return null;
 	}
 }

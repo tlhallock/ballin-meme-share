@@ -68,6 +68,11 @@ public class ChecksumRequester extends Thread
 	{
 		return pending.remove(id);
 	}
+
+	public void fileHasChecksum(RemoteFile d)
+	{
+		waiter.fileHasChecksum(new SharedFileId(d));
+	}
 	
 	@Override
 	public void run()
@@ -113,7 +118,7 @@ public class ChecksumRequester extends Thread
 			SharedFileId fileid = new SharedFileId(remote);
 			pending.add(fileid);
 			LogWrapper.getLogger().info("Requesting checksum for " + fileid);
-			Communication openConnection = Services.networkManager.openConnection(remote.getRootDirectory().getMachine(), false, "Request checksum");
+			Communication openConnection = Services.networkManager.openConnection(null, remote.getRootDirectory().getMachine(), false, "Request checksum");
 			if (openConnection == null)
 			{
 				LogWrapper.getLogger().info("Unable to request checksum of " + fileid);
@@ -137,17 +142,17 @@ public class ChecksumRequester extends Thread
 		}
 	}
 	
-	
-	
 	private class ConnectionWaiter extends NotificationListenerAdapter
 	{
 		private Communication openConnection;
 		private ReentrantLock lock = new ReentrantLock();
 		private Condition condition = lock.newCondition();
 		private boolean requestCompleted;
+		private SharedFileId fileId;
 		
 		public void waitForConnectionToClose(Communication connection, SharedFileId fileid) throws InterruptedException
 		{
+			this.fileId = fileid;
 			requestCompleted = false;
 			openConnection = connection;
 			
@@ -182,6 +187,26 @@ public class ChecksumRequester extends Thread
 			try
 			{
 				requestCompleted = true;
+				condition.signalAll();
+			}
+			finally
+			{
+				lock.unlock();
+			}
+		}
+
+		public void fileHasChecksum(SharedFileId sharedFileId)
+		{
+			if (!sharedFileId.equals(fileId))
+			{
+				return;
+			}
+
+			lock.lock();
+			try
+			{
+				requestCompleted = true;
+				condition.signalAll();
 			}
 			finally
 			{

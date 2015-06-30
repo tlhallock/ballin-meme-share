@@ -25,19 +25,24 @@
 
 package org.cnv.shr.updt;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Properties;
 import java.util.logging.Level;
 
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
+
+import org.cnv.shr.json.JsonStringMap;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 
@@ -45,19 +50,23 @@ public class UpdateInfoImpl implements UpdateInfo
 {
 	private Path propsFile;
 	private Path keysFile;
+	private Path versionsFile;
+	private JsonStringMap lastKnownVersions = new JsonStringMap();
 	
 	private long timeStamp;
 	private Properties props;
 	private KeysService keys;
 	public static final String KEYS_TXT = "keys.txt";
 	public static final String INFO_PROPS = "info.props";
+	public static final String VERSIONS_TXT = "versions.txt";
 	
-	public UpdateInfoImpl(String updateManagerRoot) throws Exception
+	public UpdateInfoImpl(Path updateManagerRoot) throws Exception
 	{
-		this.propsFile = Paths.get(updateManagerRoot + File.separator + propsFile);
-		this.keysFile  = Paths.get(updateManagerRoot + File.separator + keysFile );
+		this.propsFile    = updateManagerRoot.resolve(INFO_PROPS);
+		this.keysFile     = updateManagerRoot.resolve(KEYS_TXT);
+		this.versionsFile = updateManagerRoot.resolve(VERSIONS_TXT);
 		
-		if (!Files.exists(propsFile) || !Files.exists(keysFile))
+		if (propsFile == null || keysFile == null || versionsFile == null || !Files.exists(propsFile) || !Files.exists(keysFile))
 		{
 			throw new Exception("Updater not running!");
 		}
@@ -65,6 +74,8 @@ public class UpdateInfoImpl implements UpdateInfo
 		props = new Properties();
 		keys = new KeysService();
 		keys.readKeys(keysFile, -1);
+		checkTime();
+		readLastKnownVersions();
 	}
 	
 	
@@ -77,7 +88,16 @@ public class UpdateInfoImpl implements UpdateInfo
 	@Override
 	public int getPort()
 	{
-		return Integer.parseInt(props.getProperty("port"));
+		String prop = props.getProperty("port");
+		try
+		{
+			return Integer.parseInt(prop);
+		}
+		catch (NumberFormatException ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get port from " + prop, ex);
+			return -1;
+		}
 	}
 
 	@Override
@@ -92,7 +112,13 @@ public class UpdateInfoImpl implements UpdateInfo
 		return keys.getPublicKey();
 	}
 	
-	private synchronized void checkTime()
+	@Override 
+	public long getLastKeyTimeStamp()
+	{
+		return keys.getLastKeyTimeStamp();
+	}
+	
+	public synchronized void checkTime()
 	{
 		long fsTime = Math.max(propsFile.toFile().lastModified(), keysFile.toFile().lastModified());
 		if (fsTime < timeStamp)
@@ -125,15 +151,80 @@ public class UpdateInfoImpl implements UpdateInfo
 		}
 	}
 	
-	public static void write(Path propsFile, String ip, int port) throws FileNotFoundException, IOException
+	public static void write(Path propsFile, String ip, int port, String string) throws FileNotFoundException, IOException
 	{
 		Properties props = new Properties();
 		props.setProperty("ip", ip);
 		props.setProperty("port", String.valueOf(port));
+		if (string == null)
+		{
+			props.setProperty("servingVersion", "None found.");
+		}
+		else
+		{
+			props.setProperty("servingVersion", string);
+		}
 		
 		try (OutputStream fileOutputStream = Files.newOutputStream(propsFile);)
 		{
 			props.store(fileOutputStream, "No comment.");
 		}
+	}
+
+	
+	private void readLastKnownVersions()
+	{
+		try (JsonParser generator = TrackObjectUtils.createParser(Files.newInputStream(versionsFile)))
+		{
+			lastKnownVersions.parse(generator);
+		}
+		catch (Exception e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to read known versionCache from " + versionsFile, e);
+			writelastKnownVersions();
+		}
+	}
+	private void writelastKnownVersions()
+	{
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(Files.newOutputStream(versionsFile), true))
+		{
+			generator.writeStartObject();
+			lastKnownVersions.generate(generator);
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to write known versionCache to " + versionsFile, e);
+		}
+	}
+
+	@Override
+	public String getLastKnownVersion(String identifier)
+	{
+		String string = lastKnownVersions.get(identifier);
+		if (string == null)
+		{
+			return "Unkown";
+		}
+		return string;
+	}
+
+
+	@Override
+	public void setLastKnownVersion(String identifier, String version)
+	{
+		lastKnownVersions.put(identifier, version);
+		writelastKnownVersions();
+	}
+
+
+	@Override
+	public void useNewKey() throws NoSuchAlgorithmException, NoSuchProviderException, IOException
+	{
+		keys.createAnotherKey(keysFile, 1024);
+	}
+
+	public String getVersionOfCodeServing()
+	{
+		return props.getProperty("servingVersion");
 	}
 }

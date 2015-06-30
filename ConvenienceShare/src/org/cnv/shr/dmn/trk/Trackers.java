@@ -30,7 +30,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.TimerTask;
 import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
@@ -39,6 +41,7 @@ import javax.swing.JOptionPane;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.LogWrapper;
@@ -49,6 +52,9 @@ import org.cnv.shr.util.ProcessInfo;
 public class Trackers
 {
 	private HashMap<String, ClientTrackerClient> trackers = new HashMap<>();
+	
+	/* We will accept trackers from these machines. */
+	private HashSet<String> acceptingTrackersFrom = new HashSet<>();
 
 	public void add(String url, int portBegin, int portEnd, boolean supportsMetadata)
 	{
@@ -155,5 +161,41 @@ public class Trackers
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to launch tracker", ex);
 		}
+	}
+	
+	public void trackersRequested(Machine machine)
+	{
+		String identifier = machine.getIdentifier();
+		synchronized (acceptingTrackersFrom)
+		{
+			acceptingTrackersFrom.add(identifier);
+		}
+		Services.timer.schedule(new TimerTask() {
+			@Override
+			public void run()
+			{
+				synchronized (acceptingTrackersFrom)
+				{
+					acceptingTrackersFrom.remove(identifier);
+				}
+			}}, 10 * 60 * 1000);
+	}
+	
+	public boolean shouldAcceptTrackersFrom(Machine machine)
+	{
+		synchronized (acceptingTrackersFrom)
+		{
+			return acceptingTrackersFrom.contains(machine.getIdentifier());
+		}
+	}
+	
+	public AlternativeAddresses findAlternativeUrls(String machineIdentifier)
+	{
+		AlternativeAddresses addresses = new AlternativeAddresses();
+		for (ClientTrackerClient client : getClients())
+		{
+			addresses.add(client.getUpdatedMachineInfo(machineIdentifier));
+		}
+		return addresses;
 	}
 }

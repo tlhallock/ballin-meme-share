@@ -27,7 +27,6 @@ package org.cnv.shr.msg.swup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.PublicKey;
 
 import javax.json.stream.JsonGenerator;
@@ -60,11 +59,6 @@ public class UpdateInfoMessage extends Message
 		pKey = Services.codeUpdateInfo.getLatestPublicKey();
 	}
 	
-	public UpdateInfoMessage(InputStream input) throws IOException
-	{
-		super(input);
-	}
-	
 	@Override
 	protected int getType()
 	{
@@ -95,8 +89,11 @@ public class UpdateInfoMessage extends Message
 		if (!connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
 		{
 			LogWrapper.getLogger().info("Update server machine failed authentication.");
+			connection.finish();
 			return;
 		}
+
+		connection.finish();
 		
 		Services.updateManager.updateInfo(ip, port, pKey);
 		Services.updateManager.checkForUpdates(null, true);
@@ -118,15 +115,19 @@ public class UpdateInfoMessage extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsport = true;
 		boolean needsip = true;
 		boolean needspKey = true;
 		boolean needsdecryptedNaunce = true;
-		boolean needsport = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
 				if (needsip)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
@@ -139,14 +140,17 @@ public class UpdateInfoMessage extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			if (key.equals("port")) {
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -162,13 +166,6 @@ public class UpdateInfoMessage extends Message
 				needsdecryptedNaunce = false;
 				decryptedNaunce = Misc.format(parser.getString());
 				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("port")) {
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
 			}
 			break;
 			default: break;

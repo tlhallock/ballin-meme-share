@@ -25,6 +25,9 @@
 
 package org.cnv.shr.updt;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -34,6 +37,14 @@ public interface UpdateInfo
 	public int getPort();
 	public PrivateKey getPrivateKey(PublicKey usedKey);
 	public PublicKey getLatestPublicKey();
+	public long getLastKeyTimeStamp();
+	public void useNewKey() throws NoSuchAlgorithmException, NoSuchProviderException, IOException;
+	
+	public String getVersionOfCodeServing();
+	
+	public String getLastKnownVersion(String identifier);
+	public void setLastKnownVersion(String identifier, String version);
 	
 	public static final int DEFAULT_UPDATE_PORT = 7005;
+
 }

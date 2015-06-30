@@ -60,6 +60,7 @@ public class Main
 		
 		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
 		a.settings.setDefaultApplicationDirectoryStructure();
+		a.updateManagerDirectory = Paths.get("/home/thallock/Applications/ConvenienceShare1/updater");
 		a.showGui = true;
 
 		System.out.println("Settings file: " + a.settings.getSettingsFile());
@@ -71,7 +72,9 @@ public class Main
 				return;
 			}
 			if (screen != null)
+			{
 				screen.setStatus("ConvenienceShare is already running!!! Will close soon.");
+			}
 			
 			LogWrapper.getLogger().info("Application must already be running.");
 			String address = InetAddress.getLocalHost().getHostAddress();
@@ -89,6 +92,10 @@ public class Main
 				LogWrapper.getLogger().info("Message sent. Waiting...");
 				Thread.sleep(5000);
 			}
+			finally
+			{
+				System.exit(-1);
+			}
 			return;
 		}
 		
@@ -102,6 +109,10 @@ public class Main
 			if (Services.quiter != null)
 			{
 				Services.quiter.quit();
+			}
+			else
+			{
+				System.exit(-1);
 			}
 		}
 		

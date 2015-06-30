@@ -144,7 +144,7 @@
 	</target>
 
 
-	<target name="installer" depends="clean,portmapperpatch,convenienceshare,tracker,src,updater">
+	<target name="installer" depends="clean,portmapperpatch,convenienceshare,tracker,updater,src">
 		<javac debug="true" srcdir="../Installer/" destdir="classes/install/">
 			<classpath refid="others" />
 		</javac>

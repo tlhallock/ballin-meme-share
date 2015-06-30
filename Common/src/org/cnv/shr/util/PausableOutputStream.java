@@ -22,6 +22,17 @@ public class PausableOutputStream extends OutputStream
 {
 	private OutputStream delegate;
 	boolean rawMode;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private OutputStream raw;
 
 	public PausableOutputStream(OutputStream delegate)
 	{
@@ -38,6 +49,10 @@ public class PausableOutputStream extends OutputStream
 	{
 		delegate.write(b);
 		logFile.write(b); logFile.flush();
+		if (rawMode)
+		{
+			raw.write(b);
+		}
 		if (b == PausableInputStream.PAUSE_BYTE && !rawMode)
 		{
 			// Escape the pause byte
@@ -53,6 +68,29 @@ public class PausableOutputStream extends OutputStream
 	public void setRawMode(boolean rawMode)
 	{
 		this.rawMode = rawMode;
+		if (rawMode)
+		{
+			try
+			{
+				raw = Files.newOutputStream(Paths.get("Raw.out" + Math.random()));
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			try
+			{
+				raw.close();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public void stopOtherSide() throws IOException
@@ -82,6 +120,7 @@ public class PausableOutputStream extends OutputStream
 	{
 		if (rawMode)
 		{
+			raw.write(b, off, len); raw.flush();
 			delegate.write(b, off, len);
 			return;
 		}

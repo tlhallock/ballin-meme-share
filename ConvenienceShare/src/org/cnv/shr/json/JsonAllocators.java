@@ -81,6 +81,34 @@ public class JsonAllocators
 				{                                                                     
 					public org.cnv.shr.trck.Done create(JsonParser p) { return new org.cnv.shr.trck.Done(p); }  
 				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.prts.PortMapArguments.getJsonName(), new JsonAllocator<org.cnv.shr.prts.PortMapArguments>()          
+				{                                                                     
+					public org.cnv.shr.prts.PortMapArguments create(JsonParser p) { return new org.cnv.shr.prts.PortMapArguments(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.prts.JsonPortMapping.getJsonName(), new JsonAllocator<org.cnv.shr.prts.JsonPortMapping>()          
+				{                                                                     
+					public org.cnv.shr.prts.JsonPortMapping create(JsonParser p) { return new org.cnv.shr.prts.JsonPortMapping(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.msg.swup.GotLogs.getJsonName(), new JsonAllocator<org.cnv.shr.msg.swup.GotLogs>()          
+				{                                                                     
+					public org.cnv.shr.msg.swup.GotLogs create(JsonParser p) { return new org.cnv.shr.msg.swup.GotLogs(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.msg.swup.GetLogs.getJsonName(), new JsonAllocator<org.cnv.shr.msg.swup.GetLogs>()          
+				{                                                                     
+					public org.cnv.shr.msg.swup.GetLogs create(JsonParser p) { return new org.cnv.shr.msg.swup.GetLogs(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.updt.LastVersionEntry.getJsonName(), new JsonAllocator<org.cnv.shr.updt.LastVersionEntry>()          
+				{                                                                     
+					public org.cnv.shr.updt.LastVersionEntry create(JsonParser p) { return new org.cnv.shr.updt.LastVersionEntry(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.msg.FindTrackers.getJsonName(), new JsonAllocator<org.cnv.shr.msg.FindTrackers>()          
+				{                                                                     
+					public org.cnv.shr.msg.FindTrackers create(JsonParser p) { return new org.cnv.shr.msg.FindTrackers(p); }  
+				});                                                                   
+				ALLOCATORS.put(org.cnv.shr.msg.TrackerFound.getJsonName(), new JsonAllocator<org.cnv.shr.msg.TrackerFound>()          
+				{                                                                     
+					public org.cnv.shr.msg.TrackerFound create(JsonParser p) { return new org.cnv.shr.msg.TrackerFound(p); }  
+				});                                                                   
 				ALLOCATORS.put(org.cnv.shr.dmn.dwn.Chunk.getJsonName(), new JsonAllocator<org.cnv.shr.dmn.dwn.Chunk>()          
 				{                                                                     
 					public org.cnv.shr.dmn.dwn.Chunk create(JsonParser p) { return new org.cnv.shr.dmn.dwn.Chunk(p); }  
@@ -304,6 +332,6 @@ public class JsonAllocators
 				ALLOCATORS.put(org.cnv.shr.db.h2.bak.DownloadBackup.getJsonName(), new JsonAllocator<org.cnv.shr.db.h2.bak.DownloadBackup>()          
 				{                                                                     
 					public org.cnv.shr.db.h2.bak.DownloadBackup create(JsonParser p) { return new org.cnv.shr.db.h2.bak.DownloadBackup(p); }  
-				});                                    
+				});              
 	}
 }

@@ -43,12 +43,9 @@ import org.cnv.shr.util.CloseableIterator;
 
 public class MachineTable extends DbJTable<Machine>
 {
-	private Application app;
-
 	public MachineTable(Application app, JTable table)
 	{
 		super(table, "Id");
-		this.app = app;
 		
 		addListener(new TableRightClickListener()
 		{
@@ -69,7 +66,7 @@ public class MachineTable extends DbJTable<Machine>
 			@Override
 			void perform(Machine t)
 			{
-				UserActions.syncRoots(t);
+				UserActions.syncRoots(app, t);
 			}
 			
 			@Override

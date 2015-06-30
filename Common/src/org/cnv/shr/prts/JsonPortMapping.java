@@ -46,23 +46,15 @@ public class JsonPortMapping implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsprotocol = true;
-		boolean needsdescription = true;
 		boolean needsinternalPort = true;
 		boolean needsexternalPort = true;
+		boolean needsprotocol = true;
+		boolean needsdescription = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsprotocol)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs protocol");
-				}
-				if (needsdescription)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
-				}
 				if (needsinternalPort)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs internalPort");
@@ -71,10 +63,31 @@ public class JsonPortMapping implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs externalPort");
 				}
+				if (needsprotocol)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs protocol");
+				}
+				if (needsdescription)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "internalPort":
+				needsinternalPort = false;
+				internalPort = Integer.parseInt(parser.getString());
+				break;
+			case "externalPort":
+				needsexternalPort = false;
+				externalPort = Integer.parseInt(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -88,19 +101,6 @@ public class JsonPortMapping implements Jsonable
 			case "description":
 				needsdescription = false;
 				description = parser.getString();
-				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "internalPort":
-				needsinternalPort = false;
-				internalPort = Integer.parseInt(parser.getString());
-				break;
-			case "externalPort":
-				needsexternalPort = false;
-				externalPort = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;

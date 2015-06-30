@@ -244,13 +244,22 @@ public class Services
 	private static void checkIfUpdateManagerIsRunning(Arguments a, SplashScreen screen) throws Exception
 	{
 		if (screen != null)
+		{
 			screen.setStatus("Checking if update manager is running");
+		}
 		if (a.updateManagerDirectory == null)
 		{
 			return;
 		}
 		LogWrapper.getLogger().info("We have a an update manager directory.");
-		codeUpdateInfo = new UpdateInfoImpl(a.updateManagerDirectory);
+		try
+		{
+			codeUpdateInfo = new UpdateInfoImpl(a.updateManagerDirectory);
+		}
+		catch (Exception ex)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to create code update info:", ex);
+		}
 	}
 	
 	private static void initializeLogging(SplashScreen screen)

@@ -25,7 +25,6 @@
 
 package org.cnv.shr.dmn.mn;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,7 +53,7 @@ public class Arguments
 	boolean launchOnStart;
 	boolean showOther = true;
 	
-	public String updateManagerDirectory;
+	public Path updateManagerDirectory;
 	
 
 	void parseArgs(String[] args) throws FileNotFoundException, IOException
@@ -95,12 +94,11 @@ public class Arguments
 			}
 			if (args[i].equals("-u") && i < args.length - 1)
 			{
-				File directory = new File(args[i+1]);
-				if (!directory.exists() || !new File(args[i+1]).isDirectory())
+				Path directory = Paths.get(args[i+1]);
+				if (directory != null && Files.exists(directory) && Files.isDirectory(directory))
 				{
-					continue;
+					updateManagerDirectory = directory;
 				}
-				updateManagerDirectory = args[i + 1];
 			}
 		}
 	}

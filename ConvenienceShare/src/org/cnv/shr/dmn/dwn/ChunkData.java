@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -71,13 +72,21 @@ public class ChunkData
 					numToRead = (int) nRem;
 				}
 				int nread = input.read(buffer, 0, numToRead);
-				if (nread < 0 && offset < end)
+				if (nread >= 0)
+				{
+					LogWrapper.getLogger().info("Read " + (offset - chunk.getBegin()) + " to " + (offset - chunk.getBegin() + nread));
+					LogWrapper.getLogger().info(Misc.format(Arrays.copyOfRange(buffer, 0, 10)) + "..." + Misc.format(Arrays.copyOfRange(buffer, nread - 10, nread)));
+					
+					toWrite.write(buffer, 0, nread);
+					digest.update(buffer, 0, nread);
+					offset += nread;
+					continue;
+				}
+
+				if (offset < end)
 				{
 					throw new IOException("Hit end of file too early!");
 				}
-				toWrite.write(buffer, 0, nread);
-				digest.update(buffer, 0, nread);
-				offset += nread;
 			}
 		}
 		
@@ -120,14 +129,22 @@ public class ChunkData
 					nextRead = (int) (numberOfBytes - offset);
 				}
 				int nread = toRead.read(buffer, 0, nextRead);
-				if (nread < 0 && offset < numberOfBytes)
+				if (nread >= 0)
+				{
+					LogWrapper.getLogger().info("Sending " + offset + " to " + (offset + nread));
+					LogWrapper.getLogger().info(Misc.format(Arrays.copyOfRange(buffer, 0, 10)) + "..." + Misc.format(Arrays.copyOfRange(buffer, nread - 10, nread)));
+					output.write(buffer, 0, nread);
+					offset += nread;
+					continue;
+				}
+				if (offset < numberOfBytes)
 				{
 					throw new IOException("Hit end of file too early!");
 				}
-				output.write(buffer, 0, nread);
-				offset += nread;
 			}
 		}
+		
+		LogWrapper.getLogger().info("Done serving bytes chunk " + chunk);
 		
 		if (compress)
 		{
@@ -135,6 +152,8 @@ public class ChunkData
 			// this will stop the other side?? No, its in raw mode.
 			output.close();
 		}
+		
+		output.flush();
 	}
 	
 	public static String getChecksum(Chunk chunk, Path f) throws NoSuchAlgorithmException, IOException

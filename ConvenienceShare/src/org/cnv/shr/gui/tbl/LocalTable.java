@@ -102,7 +102,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 			@Override
 			void perform(LocalDirectory root)
 			{
-				UserActions.userSync(root, Collections.singletonList(app.createLocalListener(root)));
+				UserActions.userSync(app, root, Collections.singletonList(app.createLocalListener(root)));
 			}
 			@Override
 			public String getName()

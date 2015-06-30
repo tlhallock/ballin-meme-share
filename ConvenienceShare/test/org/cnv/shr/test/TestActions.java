@@ -67,7 +67,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.syncRoots(DbMachines.getMachine(ident));
+			UserActions.syncRoots(null, DbMachines.getMachine(ident));
 		}
 	};
 	public static class FIND_MACHINES extends TestAction
@@ -77,7 +77,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.findMachines(DbMachines.getMachine(ident));
+			UserActions.findMachines(null, DbMachines.getMachine(ident));
 		}
 	};
 	public static class SYNC_ALL_LOCAL extends TestAction
@@ -85,7 +85,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.syncAllLocals();
+			UserActions.syncAllLocals(null);
 		}
 	};
 	public static class SYNC_LOCAL extends TestAction
@@ -100,7 +100,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.userSync(DbRoots.getLocal(local), null);
+			UserActions.userSync(null, DbRoots.getLocal(local), null);
 		}
 	};
 	public static class ADD_LOCAL extends TestAction
@@ -136,7 +136,7 @@ public class TestActions
 		{
 			Machine machine = DbMachines.getMachine(ident);
 			RootDirectory root = DbRoots.getRoot(machine, name);
-			root.synchronize(null);
+			root.synchronize(null, null);
 		}
 	};
 	public static class REMOVE_LOCAL extends TestAction

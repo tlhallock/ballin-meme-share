@@ -44,7 +44,8 @@ public class DbDownloads
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from DOWNLOAD where DSTATE=?;");
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK join DOWNLOAD on DID = Q_ID where DSTATE=?;");
 	private static final QueryWrapper SELECTID = new QueryWrapper("select Q_ID from DOWNLOAD where FID=?;");
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from Download where DSTATE=? group by PRIORITY order by ADDED;");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from Download where DSTATE=? group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc;");
+	private static final QueryWrapper SELECT3 = new QueryWrapper("select * from Download                group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc, DSTATE asc;");
 
 	public static Integer getPendingDownloadId(SharedFile remoteFile)
 	{
@@ -122,11 +123,12 @@ public class DbDownloads
 	{
 		try
 		{
-			return new DbIterator<>(Services.h2DbCache.getThreadConnection(), DbObjects.PENDING_DOWNLOAD);
+			ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
+			return new DbIterator<Download>(connection, connection.prepareStatement(DbDownloads.SELECT3).executeQuery(), DbObjects.PENDING_DOWNLOAD);
 		}
-		catch (SQLException e)
+		catch (SQLException e1)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to get downloads", e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list downloads.", e1);
 			return new DbIterator.NullIterator<>();
 		}
 	}
@@ -142,7 +144,7 @@ public class DbDownloads
 		}
 		catch (SQLException e1)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to send checksum request.", e1);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list pending downloads.", e1);
 			return new DbIterator.NullIterator<>();
 		}
 	}

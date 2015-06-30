@@ -310,4 +310,9 @@ public class Download extends DbObject<Integer>
 		destinationFile = destinationFile2;
 		tryToSave();
 	}
+
+	public void setPriority(int priority2)
+	{
+		this.priority = priority2;
+	}
 }

@@ -25,12 +25,15 @@
 
 package org.cnv.shr.updt;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Timer;
+import java.util.logging.Level;
 
 import org.cnv.shr.util.KeysService;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class Updater
@@ -38,7 +41,7 @@ public class Updater
 	private static final long A_LONG_TIME = 7 * 24 * 60 * 60 * 1000;
 	
 	static int KEY_LENGTH = 1024;
-	static String ROOT_DIRECTORY = "../instances/updater/";
+	static String ROOT_DIRECTORY = "updater/";
 	
 	static Path keysFile;
 	static Path propsFile;
@@ -71,10 +74,23 @@ public class Updater
 		service = new KeysService();
 		service.readKeys(keysFile, KEY_LENGTH);
 		updateThread = new UpdateThread();
-		UpdateInfoImpl.write(propsFile, updateSocket.getInetAddress().getHostAddress(), updateSocket.getLocalPort());
+		updateProps();
 		updateThread.start();
 		
 		timer = new Timer();
 		timer.scheduleAtFixedRate(new KeyUpdater(), A_LONG_TIME, A_LONG_TIME);
+	}
+	
+	public static void updateProps()
+	{
+		try
+		{
+			Misc.ensureDirectory(propsFile, true);
+			UpdateInfoImpl.write(propsFile, updateSocket.getInetAddress().getHostAddress(), updateSocket.getLocalPort(), code.getVersion());
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save props", e);
+		}
 	}
 }

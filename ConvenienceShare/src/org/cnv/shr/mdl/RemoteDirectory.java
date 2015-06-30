@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.swing.JFrame;
+
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
@@ -99,9 +101,9 @@ public class RemoteDirectory extends RootDirectory
 	}
 
 	@Override
-	protected RootSynchronizer createSynchronizer() throws IOException, InterruptedException
+	protected RootSynchronizer createSynchronizer(JFrame origin) throws IOException, InterruptedException
 	{
-		final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer(this);
+		final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer(origin, this);
 		final RemoteFileSource source = new RemoteFileSource(this, createRemoteSynchronizer);
 		final ConsecutiveDirectorySyncIterator consecutiveDirectorySyncIterator = new ConsecutiveDirectorySyncIterator(this, source);
 		consecutiveDirectorySyncIterator.setCloseable(createRemoteSynchronizer);

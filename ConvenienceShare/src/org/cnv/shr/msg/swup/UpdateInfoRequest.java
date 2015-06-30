@@ -27,7 +27,7 @@ package org.cnv.shr.msg.swup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import javax.json.stream.JsonGenerator;
@@ -40,6 +40,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class UpdateInfoRequest extends Message
@@ -48,16 +49,13 @@ public class UpdateInfoRequest extends Message
 	
 	private PublicKey publicKey;
 	private byte[] naunceRequest;
+	private String action;
 	
-	public UpdateInfoRequest(InputStream input) throws IOException
-	{
-		super(input);
-	}
-	
-	public UpdateInfoRequest(PublicKey pKey, byte[] encrypted)
+	public UpdateInfoRequest(PublicKey pKey, byte[] encrypted, String action)
 	{
 		this.publicKey = pKey;
 		this.naunceRequest = encrypted;
+		this.action = action;
 	}
 
 	@Override
@@ -85,11 +83,27 @@ public class UpdateInfoRequest extends Message
 	{
 		if (Services.codeUpdateInfo == null)
 		{
+			LogWrapper.getLogger().info("No code update info. Unable to request authenticate to remote.");
 			connection.finish();
 			return;
 		}
-		byte[] decrypted = Services.keyManager.decrypt(Services.codeUpdateInfo.getPrivateKey(publicKey), naunceRequest);
-		connection.send(new UpdateInfoMessage(decrypted));
+		PrivateKey privateKey = Services.codeUpdateInfo.getPrivateKey(publicKey);
+		if (privateKey == null)
+		{
+			LogWrapper.getLogger().info("We don't have the key that the client needs! Unable to request authenticate to remote.");
+			connection.finish();
+			return;
+		}
+		
+		byte[] decrypted = Services.keyManager.decrypt(privateKey, naunceRequest);
+		switch ("action")
+		{
+		case "getLogs":
+			connection.send(new GetLogs(decrypted));
+			break;
+			default:
+				connection.send(new UpdateInfoMessage(decrypted));
+		}
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -101,6 +115,7 @@ public class UpdateInfoRequest extends Message
 			generator.writeStartObject();
 		generator.write("publicKey", KeyPairObject.serialize(publicKey));
 		generator.write("naunceRequest", Misc.format(naunceRequest));
+		generator.write("action", action);
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -108,6 +123,7 @@ public class UpdateInfoRequest extends Message
 		String key = null;                         
 		boolean needspublicKey = true;
 		boolean needsnaunceRequest = true;
+		boolean needsaction = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -120,6 +136,10 @@ public class UpdateInfoRequest extends Message
 				if (needsnaunceRequest)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
+				}
+				if (needsaction)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -135,6 +155,10 @@ public class UpdateInfoRequest extends Message
 			case "naunceRequest":
 				needsnaunceRequest = false;
 				naunceRequest = Misc.format(parser.getString());
+				break;
+			case "action":
+				needsaction = false;
+				action = parser.getString();
 				break;
 			}
 			break;

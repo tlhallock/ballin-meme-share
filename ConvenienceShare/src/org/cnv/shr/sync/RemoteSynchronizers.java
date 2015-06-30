@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Hashtable;
 
+import javax.swing.JFrame;
+
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.RemoteDirectory;
@@ -51,9 +53,9 @@ public class RemoteSynchronizers
 		return synchronizers.get(getKey(c, r));
 	}
 
-	public RemoteSynchronizerQueue createRemoteSynchronizer(RemoteDirectory root) throws UnknownHostException, IOException
+	public RemoteSynchronizerQueue createRemoteSynchronizer(JFrame origin, RemoteDirectory root) throws UnknownHostException, IOException
 	{
-		Communication c = Services.networkManager.openConnection(root.getMachine(), false, "Synchronize directories");
+		Communication c = Services.networkManager.openConnection(origin, root.getMachine(), false, "Synchronize directories");
 		if (c == null)
 		{
 			throw new IOException("Unable to connect to remote!");

@@ -25,7 +25,70 @@
 
 package org.cnv.shr.msg;
 
-public class FindTrackers
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
+
+import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.trk.ClientTrackerClient;
+import org.cnv.shr.trck.TrackObjectUtils;
+import org.cnv.shr.util.AbstractByteWriter;
+import org.cnv.shr.util.ByteReader;
+
+public class FindTrackers extends Message
 {
+	public FindTrackers() {}
+	
+	@Override
+	public void perform(Communication connection) throws Exception
+	{
+		for (ClientTrackerClient client : Services.trackers.getClients())
+		{
+			connection.send(new TrackerFound(client.getEntry()));
+		}
+	}
+
+	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	@Override
+	public void generate(JsonGenerator generator, String key) {
+		if (key!=null)
+			generator.writeStartObject(key);
+		else
+			generator.writeStartObject();
+		generator.writeEnd();
+	}
+	@Override                                    
+	public void parse(JsonParser parser) {       
+		String key = null;                         
+		while (parser.hasNext()) {                 
+			JsonParser.Event e = parser.next();      
+			switch (e)                               
+			{                                        
+			case END_OBJECT:                         
+				return;                                
+			}                                      
+		}                                        
+	}                                          
+	public static String getJsonName() { return "FindTrackers"; }
+	public String getJsonKey() { return getJsonName(); }
+	public FindTrackers(JsonParser parser) { parse(parser); }
+	public String toDebugString() {                                                    
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
+			generate(generator, null);                                                     
+		}                                                                                
+		return new String(output.toByteArray());                                         
+	}                                                                                  
+	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	@Override
+	protected int getType() { return 0; }
+	@Override
+	protected void parse(ByteReader reader) throws IOException {}
+	@Override
+	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
+
 
 }

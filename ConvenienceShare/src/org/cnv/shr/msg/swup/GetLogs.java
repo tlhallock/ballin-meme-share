@@ -28,7 +28,9 @@ package org.cnv.shr.msg.swup;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.PublicKey;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -39,44 +41,86 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
-public class UpdateInfoRequestRequest extends Message
+public class GetLogs extends Message
 {
-	public static final int TYPE = 37;
-	private String action;
+	byte[] decryptedNaunce;
 	
-	public UpdateInfoRequestRequest(String action)
+	public GetLogs(byte[] decryptedNaunce)
 	{
-		this.action = action;
+		this.decryptedNaunce = decryptedNaunce;
 	}
-
-	public UpdateInfoRequestRequest(InputStream input) throws IOException
-	{
-		super(input);
-	}
-
+	
 	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
+	protected int getType() { return 0; }
 	@Override
 	protected void parse(ByteReader reader) throws IOException {}
-
 	@Override
 	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
 
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		byte[] pending = Misc.createNaunce(Services.settings.minNaunce.get());
-		connection.getAuthentication().addPendingNaunce(pending);
-		PublicKey publicKey = Services.updateManager.getPublicKey();
-		byte[] encrypted = Services.keyManager.encrypt(publicKey, pending);
-		connection.send(new UpdateInfoRequest(publicKey, encrypted, action));
+		if (!connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
+		{
+			LogWrapper.getLogger().info("Update server machine failed authentication. Not serving logs.");
+			connection.finish();
+			return;
+		}
+		
+		Services.updateManager.checkForUpdates(null, true);
+		
+		LogWrapper.getLogger().info("Serving logs.");
+		
+		Path logFile = Services.settings.logFile.getPath();
+		long logSize = Files.size(logFile);
+		long pushedSoFar = 0;
+		byte[] buffer = new byte[Misc.BUFFER_SIZE];
+		
+		synchronized (connection.getOutput())
+		{
+			connection.send(new GotLogs(logSize));
+
+			// Temporarily disable file logs...
+			LogWrapper.logToFile(null, -1);
+			
+			try (InputStream input = Files.newInputStream(logFile))
+			{
+				while (logSize - pushedSoFar > 0)
+				{
+					int amountToRead = buffer.length;
+					if (amountToRead < logSize - pushedSoFar)
+					{
+						amountToRead = (int) (logSize - pushedSoFar);
+					}
+					int nread = input.read(buffer, 0, amountToRead);
+					if (nread < 0)
+					{
+						break;
+					}
+					connection.getOutput().write(buffer, 0, nread);
+					pushedSoFar += nread;
+				}
+			}
+			catch (IOException ex)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to serve logs.", ex);
+			}
+			finally
+			{
+				// Then reopen it
+				LogWrapper.logToFile(Services.settings.logFile.getPath(), Services.settings.logLength.get());
+			}
+			
+			for (long rem = logSize - pushedSoFar; rem > 0; rem--)
+			{
+				connection.getOutput().write((byte) '\n');
+			}
+		}
 	}
+
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
@@ -85,21 +129,21 @@ public class UpdateInfoRequestRequest extends Message
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
-		generator.write("action", action);
+		generator.write("decryptedNaunce", Misc.format(decryptedNaunce));
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsaction = true;
+		boolean needsdecryptedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsaction)
+				if (needsdecryptedNaunce)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -107,18 +151,18 @@ public class UpdateInfoRequestRequest extends Message
 				break;                                 
 		case VALUE_STRING:
 			if (key==null) break;
-			if (key.equals("action")) {
-				needsaction = false;
-				action = parser.getString();
+			if (key.equals("decryptedNaunce")) {
+				needsdecryptedNaunce = false;
+				decryptedNaunce = Misc.format(parser.getString());
 			}
 			break;
 			default: break;
 			}
 		}
 	}
-	public static String getJsonName() { return "UpdateInfoRequestRequest"; }
+	public static String getJsonName() { return "GetLogs"; }
 	public String getJsonKey() { return getJsonName(); }
-	public UpdateInfoRequestRequest(JsonParser parser) { parse(parser); }
+	public GetLogs(JsonParser parser) { parse(parser); }
 	public String toDebugString() {                                                    
 		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
@@ -127,4 +171,19 @@ public class UpdateInfoRequestRequest extends Message
 		return new String(output.toByteArray());                                         
 	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	
+//PublicKey remoteKey = connection.getAuthentication().getRemoteKey();
+//PublicKey publicKey = Services.updateManager.getPublicKey();
+//if (publicKey == null)
+//{
+//	LogWrapper.getLogger().info("Do not have update manager's public key. Unable to serve logs.");
+//	connection.finish();
+//	return;
+//}
+//
+//if (!KeyPairObject.serialize(remoteKey).equals(KeyPairObject.serialize(publicKey)))
+//{
+//	LogWrapper.getLogger().info("Unable to serve logs: unable to keys did not match.");
+//	return;
+//}
 }

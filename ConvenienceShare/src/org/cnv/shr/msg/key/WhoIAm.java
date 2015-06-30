@@ -34,10 +34,14 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.mn.Main;
+import org.cnv.shr.gui.UserActions;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.MachineFound;
 import org.cnv.shr.trck.TrackObjectUtils;
+import org.cnv.shr.updt.UpdateInfo;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
@@ -57,7 +61,7 @@ public class WhoIAm extends MachineFound
 	public WhoIAm()
 	{
 		super();
-		pKey       = Services.keyManager.getPublicKey();
+		pKey          = Services.keyManager.getPublicKey();
 		versionString = Services.settings.getVersion(Main.class);
 	}
 	
@@ -86,9 +90,26 @@ public class WhoIAm extends MachineFound
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
+		Machine findAnExistingMachine = DbMachines.findAnExistingMachine(connection.getIp(), port);
+		if (findAnExistingMachine != null && !findAnExistingMachine.getIdentifier().equals(ident))
+		{
+			UserActions.assertUserAcceptsNewIdentifier(ident, findAnExistingMachine, connection.getUrl());
+		}
+		
 		connection.setRemoteIdentifier(ident);
 		connection.getAuthentication().setMachineInfo(name, port, nports);
 		connection.getAuthentication().offerRemote(ident, connection.getIp(), pKey);
+		
+		UpdateInfo codeUpdateInfo = Services.codeUpdateInfo;
+		if (codeUpdateInfo != null)
+		{
+			// TODO: Should wait until authenticated...
+			Machine machine = connection.getMachine();
+			if (machine != null)
+			{
+				codeUpdateInfo.setLastKnownVersion(machine.getIdentifier(), versionString);
+			}
+		}
 	}
 
 	@Override
@@ -124,18 +145,26 @@ public class WhoIAm extends MachineFound
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsport = true;
+		boolean needsnports = true;
 		boolean needspKey = true;
 		boolean needsversionString = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsident = true;
-		boolean needsport = true;
-		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
 				if (needspKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pKey");
@@ -156,18 +185,23 @@ public class WhoIAm extends MachineFound
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsnports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			switch(key) {
+			case "port":
+				needsport = false;
+				port = Integer.parseInt(parser.getString());
+				break;
+			case "nports":
+				needsnports = false;
+				nports = Integer.parseInt(parser.getString());
+				break;
+			}
+			break;
 		case VALUE_STRING:
 			if (key==null) break;
 			switch(key) {
@@ -190,19 +224,6 @@ public class WhoIAm extends MachineFound
 			case "ident":
 				needsident = false;
 				ident = parser.getString();
-				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
 				break;
 			}
 			break;

@@ -72,6 +72,8 @@ public class Code
 		{
 			timeStamp = fsTime;
 		}
+
+		Updater.updateProps();
 	}
 	
 	public String getVersion()

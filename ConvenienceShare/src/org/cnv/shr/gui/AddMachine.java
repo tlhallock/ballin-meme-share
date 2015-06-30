@@ -26,6 +26,7 @@
 package org.cnv.shr.gui;
 
 
+
 /**
  *
  * @author rever
@@ -215,7 +216,7 @@ public class AddMachine extends javax.swing.JFrame {
         String url = jTextField1.getText();
         dispose();
         
-	UserActions.addMachine(url, params);
+        UserActions.addMachine(url, params);
     }
     
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed

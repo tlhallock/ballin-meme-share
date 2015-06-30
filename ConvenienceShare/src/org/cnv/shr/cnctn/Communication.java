@@ -212,6 +212,11 @@ public class Communication implements Closeable
 
 	public void setRemoteIdentifier(String remoteIdentifier)
 	{
+//		if (this.remoteIdentifier != null && !remoteIdentifier.equals(this.remoteIdentifier))
+//		{
+//			Machine machine = DbMachines.getMachine(this.remoteIdentifier);
+//			UserActions.assertUserAcceptsNewIdentifier(remoteIdentifier, machine, getUrl());
+//		}
 		this.remoteIdentifier = remoteIdentifier;
 	}
 	
@@ -418,7 +423,8 @@ public class Communication implements Closeable
 				return countingInput.read(arr, off, len);
 			}
 		};
-		pausableInput.startAgain(encryptedInput);
+		pausableInput.setDelegate(encryptedInput);
+		pausableInput.startAgain();
 		parser = TrackObjectUtils.createParser(pausableInput);
 		
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
@@ -438,7 +444,7 @@ public class Communication implements Closeable
 	public void endWriteRaw() throws IOException
 	{
 		pausableOutput.setRawMode(false);
-		generator = TrackObjectUtils.createGenerator(encryptedOutput == null ? countingOutput : encryptedOutput, PRETTY_PRINT_ALL_COMMUNICATION);
+		generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
 		generator.writeStartObject();
 		generator.flush();
 	}
@@ -449,13 +455,13 @@ public class Communication implements Closeable
 			throw new RuntimeException("Expected end object!");
 		}
 		parser.close();
-		pausableInput.startAgain(encryptedInput == null ? countingInput : encryptedInput);
+		pausableInput.startAgain();
 		pausableInput.setRawMode(true);
 	}
 	public void endReadRaw() throws IOException
 	{
 		pausableInput.setRawMode(false);
-		parser = TrackObjectUtils.createParser(encryptedInput == null ? countingInput : encryptedInput);
+		parser = TrackObjectUtils.createParser(pausableInput);
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{
 			throw new RuntimeException("Expected start object!");

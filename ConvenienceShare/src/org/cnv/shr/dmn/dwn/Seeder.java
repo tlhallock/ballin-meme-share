@@ -42,12 +42,13 @@ public class Seeder
 	double bps;
 	// Right now, only one download per peer...
 	Communication connection;
+	DownloadInstance instance;
 	
 
 	long lastRequest;
 	
 	
-	Seeder(Machine machine, Communication openConnection)
+	Seeder(DownloadInstance instance, Machine machine, Communication openConnection)
 	{
 		this.machine = machine;
 		this.connection = openConnection;
@@ -88,5 +89,10 @@ public class Seeder
 	public boolean is(Communication c)
 	{
 		return connection.equals(c);
+	}
+	
+	public boolean checkConnection()
+	{
+		return !connection.isClosed();
 	}
 }

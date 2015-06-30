@@ -55,7 +55,7 @@ public class SynchronizationTests extends RemotesTest
 			
 			UserActions.addLocalImmediately(createTempDirectory, rootName);
 			Assert.assertNotNull(DbRoots.getLocal(path));
-			UserActions.userSync(DbRoots.getLocal(path), null);
+			UserActions.userSync(null, DbRoots.getLocal(path), null);
 			
 			final long diskSpace = TestUtils.sum(makeSampleDirectories);
 			final LocalDirectory local = DbRoots.getLocal(path);
@@ -86,7 +86,7 @@ public class SynchronizationTests extends RemotesTest
 			
 			final Machine machine = DbMachines.getMachine(getMachineInfo(0).getIdent());
 			Assert.assertNotNull(machine);
-			UserActions.syncRoots(machine);
+			UserActions.syncRoots(null, machine);
 			
 			
 			
@@ -136,7 +136,7 @@ public class SynchronizationTests extends RemotesTest
 			
 			Thread.sleep(5000);
 			Assert.assertNotNull(DbRoots.getRoot(machine, rootName));
-			DbRoots.getRoot(machine, rootName).synchronize(null);
+			DbRoots.getRoot(machine, rootName).synchronize(null, null);
 
 			final long diskSpace = TestUtils.sum(makeSampleDirectories);
 			Assert.assertEquals(diskSpace, DbRoots.getRoot(machine, rootName).diskSpace());
@@ -164,7 +164,7 @@ public class SynchronizationTests extends RemotesTest
 			
 			final Machine machine = DbMachines.getMachine(getMachineInfo(0).getIdent());
 			Assert.assertNotNull(machine);
-			UserActions.syncRoots(machine);
+			UserActions.syncRoots(null, machine);
 			
 			Thread.sleep(5000);
 			Assert.assertNotNull(DbRoots.getRoot(machine, rootName));
@@ -182,7 +182,7 @@ public class SynchronizationTests extends RemotesTest
 			}
 			else
 			{
-				final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer((RemoteDirectory) rootDirectory);
+				final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer(null, (RemoteDirectory) rootDirectory);
 				rootSource = new RemoteFileSource((RemoteDirectory) rootDirectory, createRemoteSynchronizer);
 				iterator.setCloseable(createRemoteSynchronizer);
 				synchronizer = new RemoteSynchronizer((RemoteDirectory) rootDirectory, iterator);

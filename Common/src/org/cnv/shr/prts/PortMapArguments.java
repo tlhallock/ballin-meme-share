@@ -101,6 +101,12 @@ public class PortMapArguments implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+		case VALUE_NUMBER:
+			if (key==null) break;
+			if (key.equals("routerIndex")) {
+				routerIndex = Integer.parseInt(parser.getString());
+			}
+			break;
 		case START_ARRAY:
 			if (key==null) break;
 			if (key.equals("ports")) {

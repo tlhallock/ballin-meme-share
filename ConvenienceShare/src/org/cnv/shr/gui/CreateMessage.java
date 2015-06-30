@@ -165,7 +165,7 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        
+        CreateMessage message = this;
         UserMessage userMessage = UserMessage.createTextMessage(jTextArea1.getText());
         if (machine.isLocal())
         {
@@ -177,7 +177,7 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
         
         Services.userThreads.execute(new Runnable() { public void run() {
         try {
-            Communication connection = Services.networkManager.openConnection(machine, false, "Send user message");
+            Communication connection = Services.networkManager.openConnection(message, machine, false, "Send user message");
             if (connection == null)
             {
             	return;
@@ -190,10 +190,10 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
             {
             	connection.finish();
             }
+            dispose();
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to send message:", ex);
         }}});
-        dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS  MACHINE (
    M_ID INTEGER PRIMARY KEY     AUTO_INCREMENT,
    IDENT          varchar(50)   NOT NULL,
    MNAME          varchar(50)   ,
-   IP             varchar(50)   NOT NULL,
+   IP             varchar(256)  NOT NULL,
    PORT           INT           NOT NULL,
    NPORTS         INT           NOT NULL DEFAULT  1,
    LAST_ACTIVE    LONG          NOT NULL,
@@ -24,7 +24,7 @@ CREATE UNIQUE HASH INDEX IF NOT EXISTS MI ON MACHINE(IDENT);
 
 CREATE TABLE IF NOT EXISTS TRACKER (
    T_ID INTEGER PRIMARY KEY     AUTO_INCREMENT,
-   IP             varchar(50)   NOT NULL,
+   IP             varchar(256)  NOT NULL,
    PORT           INT           NOT NULL,
    ENDPORT        INT           NOT NULL,
    LAST_ACTIVE    LONG          NOT NULL,

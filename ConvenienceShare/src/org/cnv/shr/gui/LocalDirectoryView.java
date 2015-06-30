@@ -373,7 +373,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        UserActions.userSync(getLocal(), null);
+        UserActions.userSync(this, getLocal(), null);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jCheckBox1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jCheckBox1StateChanged

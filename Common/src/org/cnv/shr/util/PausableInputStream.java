@@ -3,6 +3,7 @@ package org.cnv.shr.util;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -25,6 +26,9 @@ public class PausableInputStream extends InputStream
 	private boolean paused;
 
 	boolean rawMode;
+	
+	
+	OutputStream raw;
 
 	public PausableInputStream(InputStream input)
 	{
@@ -33,11 +37,37 @@ public class PausableInputStream extends InputStream
 	public void setRawMode(boolean rawMode)
 	{
 		this.rawMode = rawMode;
+		if (rawMode)
+		{
+			try
+			{
+				raw = Files.newOutputStream(Paths.get("Raw.in" + Math.random()));
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			try
+			{
+				raw.close();
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
-	public void startAgain(InputStream delegate)
+	public void setDelegate(InputStream delegate)
+	{
+		this.delegate = delegate;
+	}
+	public void startAgain()
 	{
 		paused = false;
-		this.delegate = delegate;
 	}
 
 	@Override
@@ -55,6 +85,10 @@ public class PausableInputStream extends InputStream
 			return -1;
 		}
 		logFile.write(read); logFile.flush();
+		if (rawMode)
+		{
+			raw.write(read);
+		}
 		return read;
 	}
 
@@ -67,7 +101,9 @@ public class PausableInputStream extends InputStream
 	{
 		if (rawMode)
 		{
-			return delegate.read(b, off, len);
+			int read = delegate.read(b, off, len);
+			raw.write(b, off, read); raw.flush();
+			return read;
 		}
 		if (b == null || b.length < 1)
 		{

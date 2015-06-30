@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS  MACHINE (
    M_ID INTEGER PRIMARY KEY     AUTO_INCREMENT,
    MNAME          varchar(50)   NOT NULL,
-   IP             varchar(50)   NOT NULL,
+   IP             varchar(256)   NOT NULL,
    PORT           INT,
    NPORTS         INT           NOT NULL DEFAULT  1,
    LAST_ACTIVE    LONG,

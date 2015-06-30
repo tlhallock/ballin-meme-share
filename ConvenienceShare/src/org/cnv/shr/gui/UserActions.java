@@ -55,6 +55,7 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.FindMachines;
+import org.cnv.shr.msg.FindTrackers;
 import org.cnv.shr.msg.GetPermission;
 import org.cnv.shr.msg.ListRoots;
 import org.cnv.shr.sync.RootSynchronizer.SynchronizationListener;
@@ -146,25 +147,25 @@ public class UserActions
 		});
 	}
 
-	public static void syncRoots(final Machine m)
+	public static void syncRoots(JFrame origin, final Machine m)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
 			@Override
 			public void run()
 			{
-				syncRootsNow(m);
+				syncRootsNow(origin, m);
 			}
 		});
 	}
 	
-	private static void syncRootsNow(final Machine m)
+	private static void syncRootsNow(JFrame origin, final Machine m)
 	{
 		String url = m.getUrl();
 		try
 		{
       LogWrapper.getLogger().info("Synchronizing roots with " + m.getName());
-			Communication openConnection = Services.networkManager.openConnection(m, false, "Synchronize roots");
+			Communication openConnection = Services.networkManager.openConnection(origin, m, false, "Synchronize roots");
 			if (openConnection == null)
 			{
 				return;
@@ -185,11 +186,47 @@ public class UserActions
 		}
 	}
 
-	public static void findMachines(final Machine m)
+	public static void findMachines(JFrame origin, final Machine m)
 	{
-		findMachines(m, new HashSet<String>());
+		findMachines(origin, m, new HashSet<String>());
 	}
-	public static void findMachines(final Machine m, HashSet<String> foundUrls)
+
+
+	public static void findTrackers(JFrame origin, Machine machine)
+	{
+		Services.userThreads.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				try
+				{
+					LogWrapper.getLogger().info("Requesting trackers from " + machine.getName());
+					Services.trackers.trackersRequested(machine);
+
+					Communication openConnection = Services.networkManager.openConnection(origin, machine, false, "Find trackers");
+					if (openConnection == null)
+					{
+						return;
+					}
+					try
+					{
+						openConnection.send(new FindTrackers());
+					}
+					finally
+					{
+						openConnection.finish();
+					}
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to find trackers from " + machine.getUrl(), e);
+				}
+			}
+		});
+	}
+	
+	public static void findMachines(JFrame origin, final Machine m, HashSet<String> foundUrls)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -209,7 +246,7 @@ public class UserActions
 						}
 					}
 					
-					Communication openConnection = Services.networkManager.openConnection(m, false, "Find more machines");
+					Communication openConnection = Services.networkManager.openConnection(origin, m, false, "Find more machines");
 					if (openConnection == null)
 					{
 						return;
@@ -231,7 +268,7 @@ public class UserActions
 		});
 	}
 
-	public static void syncAllLocals()
+	public static void syncAllLocals(JFrame origin)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
@@ -247,7 +284,7 @@ public class UserActions
 					}
 					for (LocalDirectory local : locals)
 					{
-						userSync(local, null);
+						userSync(origin, local, null);
 					}
 					// Services.db.removeUnusedPaths();
 					Services.notifications.localsChanged();
@@ -256,14 +293,14 @@ public class UserActions
 		});
 	}
 
-	public static void syncRemote(final RootDirectory directory)
+	public static void syncRemote(JFrame origin, final RootDirectory directory)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
 			@Override
 			public void run()
 			{
-				directory.synchronize(null);
+				directory.synchronize(origin, null);
 			}
 		});
 	}
@@ -295,14 +332,14 @@ public class UserActions
 		}
 	}
 
-	public static void userSync(final LocalDirectory d, final List<? extends SynchronizationListener> listeners)
+	public static void userSync(JFrame origin, final LocalDirectory d, final List<? extends SynchronizationListener> listeners)
 	{
 		Services.userThreads.execute(new Runnable()
 		{
 			@Override
 			public void run()
 			{
-				d.synchronize(listeners);
+				d.synchronize(origin, listeners);
 			}
 		});
 	}
@@ -442,7 +479,7 @@ public class UserActions
 				{
 					while (listRemoteMachines.hasNext())
 					{
-						findMachines(listRemoteMachines.next(), foundUrls);
+						findMachines(origin, listRemoteMachines.next(), foundUrls);
 					}
 				}
 			}
@@ -522,13 +559,13 @@ public class UserActions
   		});
   	}
     
-	public static void syncPermissions(Machine machine)
+	public static void syncPermissions(JFrame origin, Machine machine)
 	{
-		syncRootsNow(machine);
+		syncRootsNow(origin, machine);
 
 		try
 		{
-			Communication openConnection = Services.networkManager.openConnection(machine, false, "Check permissions");
+			Communication openConnection = Services.networkManager.openConnection(origin, machine, false, "Check permissions");
 			if (openConnection == null)
 			{
 				return;
@@ -574,7 +611,22 @@ public class UserActions
 		}
 		
 		Services.userThreads.execute(new Runnable() { public void run() {
-			syncPermissions(machine);
+			syncPermissions(viewer, machine);
 		}});
+	}
+
+	public static void assertUserAcceptsNewIdentifier(String newidentifer, Machine machine, String url)
+	{
+		if (machine != null && JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(
+				Services.notifications.getCurrentContext(),
+				"While connecting to " + url + " we expected to find a machine with identifier\n"
+					+ "\"" + newidentifer + "\"\nbut instead it was\n\"" + newidentifer + "\n"
+					+ "Would you like to remove the previous machine?",
+				"Found wrong machine at " + newidentifer,
+				JOptionPane.YES_NO_OPTION))
+		{
+			throw new RuntimeException("A different machine at " + url + " already exists");
+		}
+		DbMachines.delete(machine);
 	}
 }

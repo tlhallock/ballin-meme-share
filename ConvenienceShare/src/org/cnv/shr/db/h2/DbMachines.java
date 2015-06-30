@@ -46,6 +46,7 @@ public class DbMachines
 	private static final QueryWrapper SELECT1_5 = new QueryWrapper("select * from MACHINE");
 	private static final QueryWrapper DELETE2   = new QueryWrapper("delete MACHINE where IS_LOCAL=true and not IDENT = ?;");
 	private static final QueryWrapper GET_STATS = new QueryWrapper("select count(NFILES), sum(TSPACE) from ROOT where MID=?;");
+	private static final QueryWrapper SELECT4   = new QueryWrapper("select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1;");
 	
 	public static DbIterator<Machine> listMachines()
 	{
@@ -61,6 +62,31 @@ public class DbMachines
 			LogWrapper.getLogger().log(Level.INFO, "Unable to list machines", e);
 			return new DbIterator.NullIterator<>();
 		}
+	}
+
+	public static Machine findAnExistingMachine(String ip, int port)
+	{
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+					StatementWrapper stmt = c.prepareStatement(SELECT4);)
+		{
+			stmt.setString(1, ip);
+			stmt.setInt(2, port);
+			stmt.setInt(3, port);
+
+			try (DbIterator<Machine> iterator = new DbIterator<>(c, stmt.executeQuery(), DbTables.DbObjects.RMACHINE))
+			{
+				if (iterator.hasNext())
+				{
+					return iterator.next();
+				}
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list remotes", e);
+			return null;
+		}
+		return null;
 	}
 	
 	public static DbIterator<Machine> listRemoteMachines()
@@ -177,14 +203,16 @@ public class DbMachines
 		if (machine == null)
 		{
 			machine = new Machine(ident);
-			// By default, we will accept messages from other machines...
-			machine.setAllowsMessages(true);
 		}
 		
 		machine.setIp(ip);
 		machine.setPort(port);
 		machine.setName(name);
 		machine.setNumberOfPorts(nports);
+		// By default, we will accept messages from other machines...
+		machine.setAllowsMessages(true);
+		machine.setLastActive(System.currentTimeMillis());
+		
 
 		if (!machine.tryToSave())
 		{
@@ -207,8 +235,8 @@ public class DbMachines
 		
 		private Stats(long nFiles, long dSpace)
 		{
-			this.numberOfFiles = nFiles;
-			this.totalDiskSpace = dSpace;
+			this.numberOfFiles  = Math.max(-1, nFiles);
+			this.totalDiskSpace = Math.max(-1, dSpace);
 		}
 		private Stats()
 		{

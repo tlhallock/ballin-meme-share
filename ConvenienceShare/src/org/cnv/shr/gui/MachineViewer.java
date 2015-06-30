@@ -647,6 +647,7 @@ public class MachineViewer extends javax.swing.JFrame
         jButton4 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
         jButton6 = new javax.swing.JButton();
+        jCheckBox2 = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -1021,6 +1022,13 @@ public class MachineViewer extends javax.swing.JFrame
             }
         });
 
+        jCheckBox2.setText("Blacklist");
+        jCheckBox2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox2ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -1064,7 +1072,9 @@ public class MachineViewer extends javax.swing.JFrame
                         .addComponent(isMessaging)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(pin)
-                        .addGap(0, 140, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jCheckBox2)
+                        .addGap(0, 52, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1091,7 +1101,8 @@ public class MachineViewer extends javax.swing.JFrame
                     .addComponent(isMessaging)
                     .addComponent(jButton4)
                     .addComponent(jButton5)
-                    .addComponent(jButton6))
+                    .addComponent(jButton6)
+                    .addComponent(jCheckBox2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 391, Short.MAX_VALUE))
         );
@@ -1107,7 +1118,7 @@ public class MachineViewer extends javax.swing.JFrame
   				if (machine == null) return;
       		try
       		{
-            Communication connection = Services.networkManager.openConnection(machine, false, "Send share request");
+            Communication connection = Services.networkManager.openConnection(b, machine, false, "Send share request");
             if (connection == null)
             {
             	return;
@@ -1135,13 +1146,13 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        UserActions.syncRemote(getRootDirectory());
+        UserActions.syncRemote(this, getRootDirectory());
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         Machine machine = getMachine();
 				if (machine == null) return;
-				UserActions.syncRoots(machine);
+				UserActions.syncRoots(this, machine);
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void changePathButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changePathButtonActionPerformed
@@ -1205,7 +1216,7 @@ public class MachineViewer extends javax.swing.JFrame
 			public void run() { try {
             Machine machine = getMachine();
     				if (machine == null) return;
-						Communication connection = Services.networkManager.openConnection(machine, false, "Send share root request");
+						Communication connection = Services.networkManager.openConnection(b, machine, false, "Send share root request");
             if (connection == null) {
             	return;
             }
@@ -1234,7 +1245,7 @@ public class MachineViewer extends javax.swing.JFrame
 				public void run() { try {
             Machine machine = getMachine();
     				if (machine == null) return;
-						Communication connection = Services.networkManager.openConnection(machine, false, "List directories");
+						Communication connection = Services.networkManager.openConnection(b, machine, false, "List directories");
             if (connection == null)
             {
             	return;
@@ -1259,14 +1270,20 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_requestShareButtonActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        LogWrapper.getLogger().info("Finding trackers from a machine is currently not available.");
+        Machine machine = getMachine();
+        JOptionPane.showMessageDialog(
+                this,
+                "Sending a request to list trackers to " + machine.getName(),
+                "Sending request...",
+                JOptionPane.INFORMATION_MESSAGE);
+        UserActions.findTrackers(this, machine);
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
         Machine machine = getMachine();
         if (!machine.isLocal())
         {
-            UserActions.findMachines(machine);
+            UserActions.findMachines(this, machine);
         }
         else
         {
@@ -1281,6 +1298,13 @@ public class MachineViewer extends javax.swing.JFrame
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
         filterFilesTable();
     }//GEN-LAST:event_jButton8ActionPerformed
+
+    private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
+        Machine machine = getMachine();
+        String ip = machine.getIp();
+        String ident = machine.getIdentifier();
+        Services.blackList.setBlacklisted(ident, ip, jCheckBox2.isSelected());
+    }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     private void filterFilesTable()
     {
@@ -1304,6 +1328,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
     private javax.swing.JCheckBox jCheckBox1;
+    private javax.swing.JCheckBox jCheckBox2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;

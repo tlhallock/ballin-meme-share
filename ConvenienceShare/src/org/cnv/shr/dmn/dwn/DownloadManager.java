@@ -105,7 +105,7 @@ public class DownloadManager
 		return createDownload(new Download(file), force);
 	}
 
-	synchronized DownloadInstance createDownload(Download d, boolean force) throws UnknownHostException, IOException
+	DownloadInstance createDownload(Download d, boolean force) throws UnknownHostException, IOException
 	{
 		String checksum = d.getFile().getChecksum();
 		
@@ -114,6 +114,9 @@ public class DownloadManager
 			requester.requestChecksum(d.getFile());
 			return null;
 		}
+		
+		requester.fileHasChecksum(d.getFile());
+		
 		if (d.getFile().getFileSize() == 0)
 		{
 			AlreadyDownloadedAction.downloadEmptyFile(d.getFile());
@@ -125,29 +128,32 @@ public class DownloadManager
 			return null;
 		}
 		
-		DownloadInstance prev = downloads.get(d.getFile().getFileEntry());
-		if (prev != null)
+		synchronized (this)
 		{
-			LogWrapper.getLogger().info("Already downloading.");
-			prev.continueDownload();
-			return null;
+			DownloadInstance prev = downloads.get(d.getFile().getFileEntry());
+			if (prev != null)
+			{
+				LogWrapper.getLogger().info("Already downloading.");
+				prev.continueDownload();
+				return null;
+			}
+	
+			d.tryToSave();
+	
+			if (downloads.size() >= Services.settings.maxDownloads.get())
+			{
+				return null;
+			}
+	
+			LogWrapper.getLogger().info("Creating download instance");
+			DownloadInstance instance = new DownloadInstance(d);
+			instance.allocate();
+			instance.recover();
+			downloads.put(d.getFile().getFileEntry(), instance);
+			Services.notifications.downloadAdded(instance);
+			instance.continueDownload();
+			return instance;
 		}
-
-		d.tryToSave();
-
-		if (downloads.size() >= Services.settings.maxDownloads.get())
-		{
-			return null;
-		}
-
-		LogWrapper.getLogger().info("Creating download instance");
-		DownloadInstance instance = new DownloadInstance(d);
-		instance.allocate();
-		instance.recover();
-		downloads.put(d.getFile().getFileEntry(), instance);
-		Services.notifications.downloadAdded(instance);
-		instance.continueDownload();
-		return instance;
 	}
 
 	public synchronized void remove(DownloadInstance downloadInstance)

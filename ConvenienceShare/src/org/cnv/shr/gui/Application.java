@@ -105,10 +105,6 @@ import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.TextAreaHandler;
 
-/**
- * 
- * @author John
- */
 public class Application extends javax.swing.JFrame implements NotificationListener
 {
 	public static final int GUI_REFRESH_RATE = 1000;
@@ -485,6 +481,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jMenu5 = new javax.swing.JMenu();
         jMenuItem4 = new javax.swing.JMenuItem();
         jCheckBoxMenuItem2 = new javax.swing.JCheckBoxMenuItem();
+        jMenuItem12 = new javax.swing.JMenuItem();
         jMenu7 = new javax.swing.JMenu();
         jMenuItem17 = new javax.swing.JMenuItem();
         jMenuItem16 = new javax.swing.JMenuItem();
@@ -1162,6 +1159,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
         jMenu1.add(jMenu5);
 
+        jMenuItem12.setText("Run Update Console (Must be running updater)");
+        jMenuItem12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem12ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem12);
+
         jMenuBar1.add(jMenu1);
 
         jMenu7.setText("Actions");
@@ -1296,6 +1301,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
 		private void addLocal()
 		{
+			Application app = this;
 			final JFileChooser fc = new JFileChooser();
 			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
@@ -1319,7 +1325,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 								public void run()
 								{
 									List<SynchronizationListener> singletonList = Collections.singletonList(createLocalListener(local));
-									UserActions.userSync(local, singletonList);
+									UserActions.userSync(app, local, singletonList);
 								}}, 1 * 1000);
 					}
 				});
@@ -1345,7 +1351,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 				{
 					singletonList = Collections.singletonList(createLocalListener);
 				}
-				UserActions.userSync(next, singletonList);
+				UserActions.userSync(this, next, singletonList);
 			}
 		}
 		Services.notifications.localsChanged();
@@ -1648,6 +1654,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         logHandler.setScrollOnUpdate(jCheckBox1.isSelected());
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
+    private void jMenuItem12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem12ActionPerformed
+        UpdateServerFrame frame = new UpdateServerFrame();
+        Services.notifications.registerWindow(frame);
+        frame.refresh();
+        frame.setVisible(true);
+    }//GEN-LAST:event_jMenuItem12ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1689,6 +1702,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem10;
     private javax.swing.JMenuItem jMenuItem11;
+    private javax.swing.JMenuItem jMenuItem12;
     private javax.swing.JMenuItem jMenuItem13;
     private javax.swing.JMenuItem jMenuItem14;
     private javax.swing.JMenuItem jMenuItem15;

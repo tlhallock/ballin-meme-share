@@ -89,7 +89,7 @@ public class AuthenticationTests extends RemotesTest
 			String ident = getMachineInfo(0).getIdent();
 			Machine machine = DbMachines.getMachine(ident);
 			Assert.assertNotNull(machine);
-			UserActions.syncRoots(machine);
+			UserActions.syncRoots(null, machine);
 			
 			Thread.sleep(5000);
 			

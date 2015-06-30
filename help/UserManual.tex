@@ -313,38 +313,30 @@ for security no symbolic links are added, and all files should remain inside the
 
 First:
 \begin{itemize}
+\item add tracker import directory
 \item finish about pane
 \item use json for messages (reencrypt the streams)
 \item finish user manual
-\item when cannot connect to machine ask tracker if the ip has changed
 \item test change path of mirror
 \item test what happens with two locals by the same name...
 \item test tracker gui with remote tracker
-\item add tracker import directory
-\item make urls bigger: tracker, machine, update
 \item take root synchronizer off user thread in pathTreeModel
 \item remove the old messaging system with all bytes (connectionreason)
 \item max string in json?
-\item download size 0 file
 \item debug dbbackrestore
 \item debug number of files
 \end{itemize}
 Later:
 \begin{itemize}
-\item add button to request all others to update their code...
-\item finish getLogs
-\item implement find trackers on machine (maybe put in findMachines?), clear browsing data
 \item connections need to be revisited
 \item remove all caching of db objects...
-\item launch tracker on startup
 \item check all settings listeners
 \item implement popup menu for servetable
 \item test with different port numbers
 \item profile memory
-\item always use offset in byte array
 \item add synchronization to tracker gui's tracker store
 \item test verify integrity
-\item use IOUtils.copy
+\item use IOUtils.copy + Files.mkdirs
 \item dbl check connection caching
 \item add way to change download priority, and test priority
 \item compress data (path list, txt files, tracker connection for files, tracker import/exprt, db backup/restore)
@@ -354,6 +346,7 @@ Later:
 \item run it for a long time
 \item write TONS more tests
 \item make the seeders work again
+\item download size 0 file
 
 \item close root synchronizer on inactivity
 \item change directory name while it is open in the machine viewer

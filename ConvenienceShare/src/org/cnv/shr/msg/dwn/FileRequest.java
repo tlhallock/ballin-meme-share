@@ -42,6 +42,7 @@ import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class FileRequest extends DownloadMessage
 {
@@ -83,6 +84,8 @@ public class FileRequest extends DownloadMessage
 		if (local == null)
 		{
 //			fail("Unable to find local file.");
+			LogWrapper.getLogger().info("Unable to file file " + descriptor);
+			connection.finish();
 		}
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Serve file");
 		ServeInstance serve = Services.server.serve(local, connection);
@@ -125,37 +128,37 @@ public class FileRequest extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdescriptor = true;
 		boolean needschunkSize = true;
+		boolean needsdescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdescriptor)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
-				}
 				if (needschunkSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
+				}
+				if (needsdescriptor)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-			}
-			break;
 		case VALUE_NUMBER:
 			if (key==null) break;
 			if (key.equals("chunkSize")) {
 				needschunkSize = false;
 				chunkSize = Long.parseLong(parser.getString());
+			}
+			break;
+		case START_OBJECT:
+			if (key==null) break;
+			if (key.equals("descriptor")) {
+				needsdescriptor = false;
+				descriptor = new FileEntry(parser);
 			}
 			break;
 			default: break;

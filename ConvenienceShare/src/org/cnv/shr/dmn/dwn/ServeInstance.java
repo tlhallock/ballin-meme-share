@@ -177,7 +177,7 @@ public class ServeInstance extends TimerTask
 		try
 		{
 			LogWrapper.getLogger().info("Sending chunks of size " + chunkSize);
-				serveChunks(chunkSize);
+			serveChunks(chunkSize);
 		}
 		catch (NoSuchAlgorithmException e)
 		{

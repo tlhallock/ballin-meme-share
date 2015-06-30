@@ -45,11 +45,11 @@ public class DownloadTest extends RemotesTest
 			
 			final Machine machine = DbMachines.getMachine(getMachineInfo(0).getIdent());
 			Assert.assertNotNull(machine);
-			UserActions.syncRoots(machine);
+			UserActions.syncRoots(null, machine);
 			
 			Thread.sleep(5000);
 			Assert.assertNotNull(DbRoots.getRoot(machine, rootName));
-			DbRoots.getRoot(machine, rootName).synchronize(null);
+			DbRoots.getRoot(machine, rootName).synchronize(null, null);
 			
 			// Sometimes makeSampleDirectories is empty... oops.
 			File makeFile = makeSampleDirectories.get((int) (Math.random() * makeSampleDirectories.size()));
@@ -108,7 +108,7 @@ public class DownloadTest extends RemotesTest
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 4, 2, 1024 * 1024, 5);
 			UserActions.addLocalImmediately(createTempDirectory, rootName);
-			DbRoots.getLocalByName(rootName).synchronize(null);
+			DbRoots.getLocalByName(rootName).synchronize(null, null);
 			
 			Thread.sleep(5000);
 			

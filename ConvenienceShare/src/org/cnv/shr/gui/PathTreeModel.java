@@ -137,7 +137,7 @@ public class PathTreeModel implements TreeModel, Closeable, SynchronizationListe
 			else
 			{
         viewer.setSyncStatus(Color.YELLOW, Color.BLACK, "Connecting...");
-				final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer((RemoteDirectory) rootDirectory);
+				final RemoteSynchronizerQueue createRemoteSynchronizer = Services.syncs.createRemoteSynchronizer(viewer, (RemoteDirectory) rootDirectory);
 				rootSource = new RemoteFileSource((RemoteDirectory) rootDirectory, createRemoteSynchronizer);
 				iterator.setCloseable(createRemoteSynchronizer);
 				synchronizer = new RemoteSynchronizer((RemoteDirectory) rootDirectory, iterator);

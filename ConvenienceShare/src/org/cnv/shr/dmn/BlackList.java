@@ -77,4 +77,17 @@ public class BlackList
 			Misc.sed(backup, blackListFile, null, machineId);
 		}
 	}
+	public synchronized void setBlacklisted(String machineId, String ip, boolean value)
+	{
+		if (value)
+		{
+			add(machineId);
+			add(ip);
+		}
+		else
+		{
+			remove(machineId);
+			remove(ip);
+		}
+	}
 }

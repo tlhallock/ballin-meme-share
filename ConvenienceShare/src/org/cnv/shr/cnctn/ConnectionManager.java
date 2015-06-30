@@ -35,8 +35,12 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.dmn.trk.AlternativeAddresses;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.key.ConnectionReason;
 import org.cnv.shr.msg.key.OpenConnection;
@@ -48,22 +52,42 @@ public class ConnectionManager
 {
 	private List<ConnectionRunnable> connectionRunnables = new LinkedList<>();
 	
-	public Communication openConnection(String url, boolean acceptKeys, String reason) throws UnknownHostException, IOException
+	
+	private static String getIp(String url)
 	{
 		int index = url.indexOf(':');
 		if (index < 0)
 		{
-			// Should try all other ports too...
-			return openConnection(url, Services.settings.servePortBeginE.get(), 1, null, acceptKeys, reason);
+			return url;
 		}
-		return openConnection(url.substring(0, index), Integer.parseInt(url.substring(index + 1, url.length())), 1, null, acceptKeys, reason);
+		return url.substring(0, index);
 	}
-	public Communication openConnection(Machine m, boolean acceptKeys, String reason) throws UnknownHostException, IOException
+	private static int getPort(String url)
 	{
-		return openConnection(m.getIp(), m.getPort(), m.getNumberOfPorts(), DbKeys.getKey(m), acceptKeys, reason);
+		int index = url.indexOf(':');
+		if (index < 0)
+		{
+			return Services.settings.servePortBeginE.get();
+		}
+		return Integer.parseInt(url.substring(index + 1, url.length())); 
 	}
 	
-	private static Communication openConnection(String ip, 
+	
+	
+	public Communication openConnection(String url, boolean acceptKeys, String reason) throws UnknownHostException, IOException
+	{
+		return openConnection(null, null, getIp(url), getPort(url), 1, null, acceptKeys, reason);
+	}
+
+	public Communication openConnection(JFrame origin, Machine m, boolean acceptKeys, String reason) throws UnknownHostException, IOException
+	{
+		return openConnection(origin, m.getIdentifier(), m.getIp(), m.getPort(), m.getNumberOfPorts(), DbKeys.getKey(m), acceptKeys, reason);
+	}
+	
+	private static Communication openConnection(
+			JFrame origin,
+			String identifier,
+			String ip, 
 			int portBegin,
 			int numPorts,
 			final PublicKey remoteKey, 
@@ -90,13 +114,14 @@ public class ConnectionManager
 		{
 			public void run()
 			{
-				try (Communication connection = connect(authentication, ip, portBegin, portBegin + Math.min(50, numPorts));)
+				try (Communication connection = connect(origin, identifier, authentication, ip, portBegin, portBegin + Math.min(50, numPorts));)
 				{
 					o.connection = connection;
 					if (connection == null)
 					{
 						return;
 					}
+					connection.setRemoteIdentifier(identifier);
 					connection.setReason(reason);
 					connection.send(new WhoIAm());
 					connection.send(new ConnectionReason(reason));
@@ -121,7 +146,10 @@ public class ConnectionManager
 		}
 	}
 	
-	private static Communication connect(Authenticator authentication, String ip, int portBegin, int portEnd) throws UnknownHostException, IOException
+	private static Communication connect(
+			JFrame origin,
+			String identifier,
+			Authenticator authentication, String ip, int portBegin, int portEnd) throws UnknownHostException, IOException
 	{
 		ArrayList<Integer> possibles = new ArrayList<>(portEnd - portBegin);
 		for (int port = portBegin; port < portEnd; port++)
@@ -138,6 +166,68 @@ public class ConnectionManager
 			catch (ConnectException ex)
 			{
 				LogWrapper.getLogger().info("Unable to connect to " + ip + " on port " + port + ", trying others if available. " + ex.getMessage());
+			}
+		}
+		if (origin == null)
+		{
+			return null;
+		}
+		if (identifier == null)
+		{
+			return null;
+		}
+		if (Services.trackers.getClients().isEmpty())
+		{
+			JOptionPane.showMessageDialog(origin, "ConvenienceShare was unable to connect to "
+					+ identifier + " at " + ip + "[" + portBegin + "-" + portEnd + "].\n",
+					"Unable to connect",
+					JOptionPane.INFORMATION_MESSAGE);
+			return null;
+		}
+		
+		if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(origin, "ConvenienceShare was unable to connect to "
+				+ identifier + " at " + ip + "[" + portBegin + "-" + portEnd + "].\n"
+				+ "Would you like to connect to a tracker to see if the ip address has changed?",
+				"Unable to connect",
+				JOptionPane.YES_NO_OPTION))
+		{
+			return null;
+		}
+		
+		AlternativeAddresses findAlternativeUrls = Services.trackers.findAlternativeUrls(identifier);
+		findAlternativeUrls.remove(ip, portBegin, portEnd);
+		if (findAlternativeUrls.isEmpty())
+		{
+			JOptionPane.showConfirmDialog(
+					origin, 
+					"No other addresses found.",
+					"Unable to connect.",
+					JOptionPane.WARNING_MESSAGE);
+				return null;
+		}
+		
+		for (String alternative : findAlternativeUrls.getIps())
+		{
+			if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(
+					origin, 
+					"A tracker listed another url listed for " + identifier + " at " + findAlternativeUrls.describe(alternative)
+						+ "Would you like to try this one?",
+					"Found another address",
+					JOptionPane.YES_NO_OPTION))
+			{
+				continue;
+			}
+			
+			for (Integer port : findAlternativeUrls.getPorts(alternative))
+			{
+				try
+				{
+					return new Communication(authentication, alternative, port);
+				}
+				catch (ConnectException ex)
+				{
+					LogWrapper.getLogger().info("Unable to connect to " + alternative + " on port " + port + ", trying others if available. " + ex.getMessage());
+				}
 			}
 		}
 		return null;

@@ -101,7 +101,7 @@ public class TrackObjectUtils
 		// The default InputStreamReader will try to read past the end of what is available.
 		// This results in stream hanging, even though it has bytes to return.
 		// To fix this, we create our own parser that is 10x smarter.
-		return parserFactory.createParser(new InputStreamReader(input, UTF_8)
+		JsonParser parser = parserFactory.createParser(new InputStreamReader(input, UTF_8)
 		{
 			public int read() throws IOException
 			{
@@ -119,13 +119,15 @@ public class TrackObjectUtils
 				}
 				// We have to read 1 byte, because the json parser pukes otherwise.
 				// This doesn't hurt, because we can block for 1 byte: we aren't waiting while we have something to return.
-				if (amountToRead < 1)
+				if (amountToRead < 1 && cbuf.length > 0)
 				{
 					amountToRead = 1;
 				}
 				int read = super.read(cbuf, offset, amountToRead);
-				
-				logFile.write(cbuf, offset, read); logFile.flush();
+				if (read >= 0)
+				{
+					logFile.write(cbuf, offset, read); logFile.flush();
+				}
 				
 				if (read == 0)
 				{
@@ -135,6 +137,7 @@ public class TrackObjectUtils
 				return read;
 			}
 		});
+		return parser;
 //		return parserFactory.createParser(input, UTF_8);
 	}
 	

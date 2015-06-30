@@ -161,7 +161,15 @@ public abstract class DbJTable<T> extends MouseAdapter
 			while (it.hasNext())
 			{
 				T t = it.next();
-				fillRow(t, currentRow);
+				try
+				{
+					fillRow(t, currentRow);
+				}
+				catch (Exception ex)
+				{
+					LogWrapper.getLogger().log(Level.INFO, null, ex);
+					continue;
+				}
 				for (int i = 0; i < columnCount; i++)
 				{
 					rowData[i] = currentRow.get(names[i]);
