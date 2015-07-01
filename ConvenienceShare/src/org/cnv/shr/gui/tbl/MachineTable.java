@@ -106,7 +106,7 @@ public class MachineTable extends DbJTable<Machine>
 	}
 
 	@Override
-	protected void fillRow(Machine machine, HashMap<String, Object> currentRow)
+	protected boolean fillRow(Machine machine, HashMap<String, Object> currentRow)
 	{
 		Stats stats = DbMachines.getCachedStats(machine);
 		if (machine.isLocal())
@@ -133,6 +133,7 @@ public class MachineTable extends DbJTable<Machine>
       currentRow.put("Port",              machine.getPort()                                      );
       currentRow.put("Number of ports",   machine.getNumberOfPorts()                             );
 		}
+		return true;
 	}
 
 	@Override

@@ -119,7 +119,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 	}
 
 	@Override
-	protected void fillRow(LocalDirectory local, HashMap<String, Object> currentRow)
+	protected boolean fillRow(LocalDirectory local, HashMap<String, Object> currentRow)
 	{
     currentRow.put("Path"           , local.getPathElement().getFullPath()   );
     currentRow.put("Name"           , local.getName()                        );
@@ -127,6 +127,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
     currentRow.put("Tags"           , local.getTags()                        );
     currentRow.put("Number of files", new NumberOfFiles(local.numFiles())    );
     currentRow.put("Total file size", new DiskUsage(local.diskSpace())       );
+    return true;
 	}                                                                               
 
 	@Override

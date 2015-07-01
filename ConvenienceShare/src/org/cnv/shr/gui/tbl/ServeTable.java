@@ -81,12 +81,13 @@ public class ServeTable extends DbJTable<ServeInstance>
 	}
 
 	@Override
-	protected void fillRow(ServeInstance t, HashMap<String, Object> currentRow)
+	protected boolean fillRow(ServeInstance t, HashMap<String, Object> currentRow)
 	{
 		currentRow.put("Machine", t.getMachine().getName());                    
 		currentRow.put("File",    t.getFile().getPath().getFullPath());     
 		currentRow.put("Percent", String.valueOf(t.getCompletionPercentage())); 
-		currentRow.put("Speed",   "Speed goes here...");                                
+		currentRow.put("Speed",   "Speed goes here...");
+		return true;
 	}
 
 	public static DefaultTableModel createTableModel()

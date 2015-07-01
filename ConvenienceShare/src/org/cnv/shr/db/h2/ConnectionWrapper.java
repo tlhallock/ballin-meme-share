@@ -135,7 +135,12 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		private static int nextId = 0;
 		private static synchronized int getNextQueryWrapperId()
 		{
-			return nextId++;
+			int i = nextId++;
+			if (i >= NUM_STATEMENTS)
+			{
+				throw new RuntimeException("There are too many statements, need to increase ConnectionWrapper.NUM_STATMENTS");
+			}
+			return i;
 		}
 	}
 	

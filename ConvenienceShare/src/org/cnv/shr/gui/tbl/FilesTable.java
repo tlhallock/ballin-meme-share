@@ -155,7 +155,7 @@ public class FilesTable extends DbJTable<SharedFile>
 	}
 
 	@Override
-	protected void fillRow(SharedFile next, HashMap<String, Object> currentRow)
+	protected boolean fillRow(SharedFile next, HashMap<String, Object> currentRow)
 	{
     final String path = next.getPath().getFullPath();
 
@@ -173,6 +173,8 @@ public class FilesTable extends DbJTable<SharedFile>
 		 currentRow.put("Tags",           String.valueOf(next.getTags())      );
 		 currentRow.put("Modified",       new Date(next.getLastUpdated())     );
 		 currentRow.put("Extension",      String.valueOf(ext)                 );
+		 
+		 return true;
 	}
 
 	@Override

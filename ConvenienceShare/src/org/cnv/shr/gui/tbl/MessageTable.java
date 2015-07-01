@@ -82,13 +82,14 @@ public class MessageTable extends DbJTable<UserMessage>
 	}
 
 	@Override
-	protected void fillRow(UserMessage message, HashMap<String, Object> currentRow)
+	protected boolean fillRow(UserMessage message, HashMap<String, Object> currentRow)
 	{
 		currentRow.put("Machine", message.getMachine().getName()           );
 		currentRow.put("Type",    message.getMessageType().humanReadable() );
 		currentRow.put("Date",    new Date(message.getSent())              );
 		currentRow.put("Message", message.getMessage()                     );
 		currentRow.put("Id",      String.valueOf(message.getId())          );
+		return true;
 	}
 
 	@Override

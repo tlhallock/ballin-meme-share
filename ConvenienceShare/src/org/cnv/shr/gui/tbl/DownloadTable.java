@@ -27,6 +27,7 @@ package org.cnv.shr.gui.tbl;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 import javax.swing.JSpinner;
@@ -234,14 +235,27 @@ public class DownloadTable extends DbJTable<Download>
 	}
 
 	@Override
-	protected void fillRow(Download download, HashMap<String, Object> currentRow)
+	protected boolean fillRow(Download download, HashMap<String, Object> currentRow)
 	{
 		SharedFile file = download.getFile();
 		RootDirectory directory = file.getRootDirectory();
 		Machine machine = directory.getMachine();
+
+		FileEntry fileEntry;
+		try
+		{
+			fileEntry = file.getFileEntry();
+		}
+		catch (NullPointerException ex)
+		{
+			DbDownloads.cleanUnchecksummedFiles();
+			LogWrapper.getLogger().log(Level.INFO, "Found unchecksummed file for download.", ex);
+			currentRow.clear();
+			return false;
+		}
 		
-		FileEntry fileEntry = file.getFileEntry();
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(fileEntry);
+		
 		
 		currentRow.put("Machine",           machine.getName()                                                         );
 		currentRow.put("Directory",         directory.getName()                                                       );
@@ -256,6 +270,8 @@ public class DownloadTable extends DbJTable<Download>
 		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100"         
 				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage(false) * 100));
 		currentRow.put("Id",                String.valueOf(download.getId())                                          );
+		
+		return true;
 	}
 
 	@Override

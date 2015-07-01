@@ -25,8 +25,10 @@
 
 package org.cnv.shr.dmn.mn;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.logging.Level;
@@ -71,31 +73,7 @@ public class Main
 			{
 				return;
 			}
-			if (screen != null)
-			{
-				screen.setStatus("ConvenienceShare is already running!!! Will close soon.");
-			}
-			
-			LogWrapper.getLogger().info("Application must already be running.");
-			String address = InetAddress.getLocalHost().getHostAddress();
-			try (Socket socket = new Socket(address, a.settings.servePortBeginI.get());
-					JsonParser input = TrackObjectUtils.createParser(socket.getInputStream());
-					JsonGenerator outputStream = TrackObjectUtils.createGenerator(socket.getOutputStream());)
-			{
-				ShowApplication showApplication = new ShowApplication();
-				DoneMessage doneMessage = new DoneMessage();
-				outputStream.writeStartObject();
-				showApplication.generate(outputStream, showApplication.getJsonKey());
-				doneMessage.generate(outputStream, doneMessage.getJsonKey());
-				outputStream.writeEnd();
-				outputStream.flush();
-				LogWrapper.getLogger().info("Message sent. Waiting...");
-				Thread.sleep(5000);
-			}
-			finally
-			{
-				System.exit(-1);
-			}
+			instanceAlreadyRunning(screen, a);
 			return;
 		}
 		
@@ -128,6 +106,35 @@ public class Main
 //			}
 //			Thread.sleep(1000);
 //		}
+	}
+
+	private static void instanceAlreadyRunning(SplashScreen screen, Arguments a) throws UnknownHostException, InterruptedException, IOException
+	{
+		if (screen != null)
+		{
+			screen.setStatus("ConvenienceShare is already running!!! Will close soon.");
+		}
+		
+		LogWrapper.getLogger().info("Application must already be running.");
+		String address = InetAddress.getLocalHost().getHostAddress();
+		try (Socket socket = new Socket(address, a.settings.servePortBeginI.get());
+				JsonParser input = TrackObjectUtils.createParser(socket.getInputStream());
+				JsonGenerator outputStream = TrackObjectUtils.createGenerator(socket.getOutputStream());)
+		{
+			ShowApplication showApplication = new ShowApplication();
+			DoneMessage doneMessage = new DoneMessage();
+			outputStream.writeStartObject();
+			showApplication.generate(outputStream, showApplication.getJsonKey());
+			doneMessage.generate(outputStream, doneMessage.getJsonKey());
+			outputStream.writeEnd();
+			outputStream.flush();
+			LogWrapper.getLogger().info("Message sent. Waiting...");
+			Thread.sleep(5000);
+		}
+		finally
+		{
+			System.exit(-1);
+		}
 	}
 
 	public static void restart(LinkedList<String> args)

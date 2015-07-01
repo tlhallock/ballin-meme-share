@@ -56,6 +56,7 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.db.h2.bak.CleanBrowsingHistory;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.gui.tbl.FilesTable;
@@ -567,16 +568,18 @@ public class MachineViewer extends javax.swing.JFrame
         rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(false);
         requestDownloadButton.setEnabled(false);
         requestShareButton.setEnabled(false);
+        jButton4.setEnabled(false);
     }
     
     private void updatePermissionBoxesRemote(RemoteDirectory remote)
     {
-    	SharingState state = remote.getSharesWithUs();
+    		SharingState state = remote.getSharesWithUs();
         changePathButton.setEnabled(true);
         rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(state.listable());
         rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(state.downloadable());
         requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
         requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
+        jButton4.setEnabled(true);
     }
 
     /**
@@ -1007,6 +1010,11 @@ public class MachineViewer extends javax.swing.JFrame
 
         jButton4.setText("Clear Local Cache");
         jButton4.setEnabled(false);
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
 
         jButton5.setText("Find Trackers");
         jButton5.addActionListener(new java.awt.event.ActionListener() {
@@ -1305,6 +1313,12 @@ public class MachineViewer extends javax.swing.JFrame
         String ident = machine.getIdentifier();
         Services.blackList.setBlacklisted(ident, ip, jCheckBox2.isSelected());
     }//GEN-LAST:event_jCheckBox2ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        jButton4.setEnabled(false);
+        CleanBrowsingHistory.removeAllNonEssentialData(getMachine());
+        jButton4.setEnabled(!getMachine().isLocal());
+    }//GEN-LAST:event_jButton4ActionPerformed
 
     private void filterFilesTable()
     {

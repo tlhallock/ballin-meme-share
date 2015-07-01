@@ -125,7 +125,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 		int rowCount = table.getRowCount();
 		for (int row = 0; row < rowCount; row++)
 		{
-			fillRow(create(row), values);
+			if (!fillRow(create(row), values))
+			{
+				continue;
+			}
 			for (int col = 0; col < columnCount; col++)
 			{
 				model.setValueAt(values.get(names[col]), row, col);
@@ -163,7 +166,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 				T t = it.next();
 				try
 				{
-					fillRow(t, currentRow);
+					if (!fillRow(t, currentRow))
+					{
+						continue;
+					}
 				}
 				catch (Exception ex)
 				{
@@ -213,7 +219,11 @@ public abstract class DbJTable<T> extends MouseAdapter
 			}
 		}
 		HashMap<String, Object> values = new HashMap<>();
-		fillRow(t, values);
+		if (!fillRow(t, values))
+		{
+			return;
+		}
+			
 		String needle = (String) values.get(keyName);
 		
 		int rowCount = table.getRowCount();
@@ -268,7 +278,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 	}
 
 	protected abstract T create(HashMap<String, Object> currentRow);
-	protected abstract void fillRow(T t, HashMap<String, Object> currentRow);
+	protected abstract boolean fillRow(T t, HashMap<String, Object> currentRow);
 	protected abstract CloseableIterator<T> list();
 	
 	protected void setDblClick(TableRightClickListener listener)

@@ -31,11 +31,16 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
+import org.cnv.shr.db.h2.DbChunks;
+import org.cnv.shr.db.h2.DbChunks.DbChunk;
+import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.dmn.dwn.Chunk;
+import org.cnv.shr.json.JsonList;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
 import org.cnv.shr.mdl.Machine;
@@ -66,6 +71,15 @@ public class DownloadBackup implements Jsonable
 	private int priority;
 	private long chunkSize;
 	
+	private JsonList<Chunk> chunks = new JsonList<>(new JsonList.Allocator<Chunk>()
+	{
+		@Override
+		public Chunk create(JsonParser parser)
+		{
+			return new Chunk(parser);
+		}
+	});
+	
 	public DownloadBackup(Download download)
 	{
 		RemoteFile file = download.getFile();
@@ -81,6 +95,18 @@ public class DownloadBackup implements Jsonable
 		added = download.getAdded();
 		priority = download.getPriority();
 		chunkSize = download.getChunkSize();
+		
+		try (DbIterator<DbChunk> iterator = DbChunks.getAllChunks(download))
+		{
+			while (iterator.hasNext())
+			{
+				chunks.add(iterator.next().chunk);
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().info("Unable to get chunks of " + download);
+		}
 	}
 	
 	
@@ -136,6 +162,11 @@ public class DownloadBackup implements Jsonable
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to save download " + this, e);
 		}
+		
+		for (Chunk c : chunks)
+		{
+			DbChunks.addChunk(download, c);
+		}
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -157,6 +188,10 @@ public class DownloadBackup implements Jsonable
 		generator.write("added", added);
 		generator.write("priority", priority);
 		generator.write("chunkSize", chunkSize);
+		{
+			generator.writeStartArray("chunks");
+			chunks.generate(generator);
+		}
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -167,6 +202,7 @@ public class DownloadBackup implements Jsonable
 		boolean needsadded = true;
 		boolean needspriority = true;
 		boolean needschunkSize = true;
+		boolean needschunks = true;
 		boolean needsremoteMachine = true;
 		boolean needsremoteDirectory = true;
 		boolean needsremotePath = true;
@@ -196,6 +232,10 @@ public class DownloadBackup implements Jsonable
 				if (needschunkSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
+				}
+				if (needschunks)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
 				}
 				if (needsremoteMachine)
 				{
@@ -244,6 +284,13 @@ public class DownloadBackup implements Jsonable
 				needschunkSize = false;
 				chunkSize = Long.parseLong(parser.getString());
 				break;
+			}
+			break;
+		case START_ARRAY:
+			if (key==null) break;
+			if (key.equals("chunks")) {
+				needschunks = false;
+				chunks.parse(parser);
 			}
 			break;
 		case VALUE_STRING:
