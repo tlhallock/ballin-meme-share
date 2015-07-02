@@ -100,15 +100,41 @@ public class CompressionStreams
 		return outerStream;
 	}
 
-	public static InputStream newCompressedInputStream(long numBytes, InputStream input) throws IOException
+	public static InputStream newCompressedInputStream(long numBytes, InputStream delegate) throws IOException
 	{
-		return new GZIPInputStream(new InputStream()
+		// This needs to be revisited: the point of the outer isn't really useful anymore...
+		InputStream inner = new InputStream()
+		{
+			@Override
+			public int available() throws IOException
+			{
+				return delegate.available();
+			}
+			@Override
+			public int read() throws IOException
+			{
+				return delegate.read();
+			}
+			@Override
+			public int read(byte[] buf, int off, int len) throws IOException
+			{
+				return delegate.read(buf, off, len);
+			}
+			@Override
+			public void close() throws IOException
+			{
+				// Do nothing...
+			}
+		};
+		GZIPInputStream zip = new GZIPInputStream(inner);
+
+		InputStream outer = new InputStream()
 		{
 			long remaining = numBytes;
 			@Override
 			public int available() throws IOException
 			{
-				int available = input.available();
+				int available = zip.available();
 				if (remaining < available)
 				{
 					return (int) remaining;
@@ -123,7 +149,7 @@ public class CompressionStreams
 					return -1;
 				}
 				remaining--;
-				return input.read();
+				return zip.read();
 			}
 			@Override
 			public int read(byte[] buf, int off, int len) throws IOException
@@ -136,7 +162,7 @@ public class CompressionStreams
 				{
 					len = (int) remaining;
 				}
-				int read = input.read(buf, off, len);
+				int read = zip.read(buf, off, len);
 				remaining -= read;
 				return read;
 			}
@@ -146,11 +172,12 @@ public class CompressionStreams
 				// finish the remaining bytes...
 				while (remaining > 0)
 				{
-					input.read();
+					zip.read();
 					remaining--;
 				}
 			}
-		});
+		};
+		return outer;
 	}
 	
 	public static void main(String[] args) throws IOException
@@ -169,6 +196,7 @@ public class CompressionStreams
 					{
 						if (done)
 						{
+							System.out.println("Returning -1");
 							return -1;
 						}
 						try
