@@ -102,7 +102,10 @@ public class PausableInputStream extends InputStream
 		if (rawMode)
 		{
 			int read = delegate.read(b, off, len);
-			raw.write(b, off, read); raw.flush();
+			if (read >= 0)
+			{
+				raw.write(b, off, read); raw.flush();
+			}
 			return read;
 		}
 		if (b == null || b.length < 1)

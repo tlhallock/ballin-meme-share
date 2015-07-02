@@ -53,9 +53,9 @@ public abstract class DbJTable<T> extends MouseAdapter
 	
 	private JPopupMenu jPopupMenu;
 	private TableRightClickListener dblClick;
-	private JTable table;
 	private String keyName;
 	private String[] names;
+	protected JTable table;
 	
 	
 	public DbJTable(JTable table, String keyName)

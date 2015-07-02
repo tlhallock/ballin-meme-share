@@ -137,6 +137,7 @@ public class Services
 			screen.setStatus("Starting gui");
 		if (args.showGui)
 		{
+			LogWrapper.getLogger().warning("This should only happen after the db has been restored...");
 			UserActions.showGui(screen);
 		}
 		else if (screen != null)

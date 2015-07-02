@@ -47,12 +47,8 @@
 
 
 	<target name="common" depends="cpylibs">
-            <!-- just for now... -->
-		<javac debug="true" srcdir="../Common/json" destdir="classes/common/">
-			<classpath refid="jars" />
-		</javac>
-                
-                
+		<javac debug="true" srcdir="../jsonp~git/api/src/main/java/"  destdir="classes/common/" />
+		<javac debug="true" srcdir="../jsonp~git/impl/src/main/java/" destdir="classes/common/" />
 		<javac srcdir="../Common/src" destdir="classes/common/">
 			<classpath refid="jars" />
 		</javac>
@@ -63,6 +59,7 @@
 				<attribute name="Implementation-Version" value="${version}.${build.number}"/>
 			</manifest>
 			<fileset dir="classes/common/" />
+			<zipfileset dir="../jsonp~git/impl/src/main/resources/" prefix=""/>
 		</jar>
 	</target>
 
@@ -174,7 +171,7 @@
 	<target name="update" depends="clean,convenienceshare,updater,tracker">
 		<mkdir dir="../instances/updater/updates/" />
 		<zip destfile="../instances/updater/updates/updates.zip">
-			<zipfileset file="dist/libs/common.jar"/>
+			<zipfileset file="dist/libs/common.jar" prefix="libs"/>
 			<zipfileset file="dist/ConvenienceShare.jar"/>
 			<zipfileset file="dist/Tracker.jar"/>
                         <!-- Should add help. -->

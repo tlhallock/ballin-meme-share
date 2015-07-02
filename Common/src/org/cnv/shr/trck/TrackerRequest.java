@@ -83,39 +83,39 @@ public class TrackerRequest extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsparams = true;
 		boolean needsaction = true;
+		boolean needsparams = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsparams)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs params");
-				}
 				if (needsaction)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+				}
+				if (needsparams)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs params");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case START_OBJECT:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("params")) {
-					needsparams = false;
-					params.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("action")) {
 					needsaction = false;
 					action = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("params")) {
+					needsparams = false;
+					params.parse(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

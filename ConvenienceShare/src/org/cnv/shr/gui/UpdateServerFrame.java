@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.logging.Level;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -222,7 +223,16 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 					@Override
 					public void run()
 					{
-		        for (String identifier : getSelectedIdents())
+						HashSet<String> selectedIdents = getSelectedIdents();
+						if (selectedIdents.isEmpty())
+						{
+							JOptionPane.showMessageDialog(frame,
+									"No machines selected.",
+									"You have not selected any machines.",
+									JOptionPane.INFORMATION_MESSAGE);
+							return;
+						}
+						for (String identifier : selectedIdents)
 		        {
 		            Machine machine = DbMachines.getMachine(identifier);
 		            if (machine == null)
@@ -267,7 +277,16 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 			@Override
 			public void run()
 			{
-				for (String identifier : getSelectedIdents())
+				HashSet<String> selectedIdents = getSelectedIdents();
+				if (selectedIdents.isEmpty())
+				{
+					JOptionPane.showMessageDialog(frame,
+							"No machines selected.",
+							"You have not selected any machines.",
+							JOptionPane.INFORMATION_MESSAGE);
+					return;
+				}
+				for (String identifier : selectedIdents)
 				{
 					Machine machine = DbMachines.getMachine(identifier);
 					if (machine == null)
@@ -321,7 +340,16 @@ public class UpdateServerFrame extends javax.swing.JFrame {
   			@Override
   			public void run()
   			{
-  				for (String identifier : getSelectedIdents())
+  				HashSet<String> selectedIdents = getSelectedIdents();
+  				if (selectedIdents.isEmpty())
+  				{
+  					JOptionPane.showMessageDialog(frame,
+  							"No machines selected.",
+  							"You have not selected any machines.",
+  							JOptionPane.INFORMATION_MESSAGE);
+  					return;
+  				}
+  				for (String identifier : selectedIdents)
   				{
   					Machine machine = DbMachines.getMachine(identifier);
   					if (machine == null)

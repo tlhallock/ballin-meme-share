@@ -82,36 +82,31 @@ public class PortMapArguments implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsaction = true;
 		boolean needsports = true;
+		boolean needsaction = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsaction)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
-				}
 				if (needsports)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ports");
+				}
+				if (needsaction)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
+			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "upnpLib":
-					upnpLib = parser.getString();
-					break;
-				case "action":
-					needsaction = false;
-					action = parser.getString();
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				if (key.equals("routerIndex")) {
+					routerIndex = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			case START_ARRAY:
@@ -123,12 +118,17 @@ public class PortMapArguments implements Jsonable
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case VALUE_NUMBER:
+			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("routerIndex")) {
-					routerIndex = Integer.parseInt(parser.getString());
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+				switch(key) {
+				case "upnpLib":
+					upnpLib = parser.getString();
+					break;
+				case "action":
+					needsaction = false;
+					action = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

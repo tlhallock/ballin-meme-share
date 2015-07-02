@@ -733,7 +733,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         numFilesShowingLabel.setText("0");
 
-        jLabel17.setText("file(s).");
+        jLabel17.setText("cached file(s).");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);

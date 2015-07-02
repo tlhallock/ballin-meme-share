@@ -320,7 +320,7 @@ public class UserActions
 			
 			String dbPath = Misc.sanitizePath(localDirectory.toString());
 			LocalDirectory local2 = DbRoots.getLocal(dbPath);
-			if (local2 == null)
+			if (local2 != null)
 			{
 				LogWrapper.getLogger().info("There is already a local directory at " + localDirectory);
 				return local2;
@@ -549,6 +549,7 @@ public class UserActions
 					{
 						AddMachine addMachine = new AddMachine(url);
 						addMachine.setLocation(origin.getLocation());
+						Services.colors.setColors(addMachine);
 						addMachine.setVisible(true);
 						addMachine.setAlwaysOnTop(true);
 					}

@@ -1,4 +1,5 @@
 git add Common/src/org/cnv/shr/
+git add Common/json/patch
 git add Updater/src/org/cnv/shr/
 git add Tracker/src/org/cnv/shr/
 git add Installer/src/org/cnv/shr/

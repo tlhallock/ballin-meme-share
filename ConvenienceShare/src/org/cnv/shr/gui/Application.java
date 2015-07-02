@@ -1336,11 +1336,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-		try (final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
+		LogWrapper.getLogger().info("Synchronizing all local directories.");
+                try (final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
 		{
 			while (listLocals.hasNext())
 			{
 				LocalDirectory next = listLocals.next();
+                                LogWrapper.getLogger().info("Synrchronizing local " + next);
 				DebugListener createLocalListener = createLocalListener(next);
 				List<DebugListener> singletonList = Collections.singletonList(createLocalListener);
 				if (createLocalListener == null)
@@ -1563,6 +1565,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			AddMachine addMachine = new AddMachine();
       addMachine.setAlwaysOnTop(true);
       Services.notifications.registerWindow(addMachine);
+      Services.colors.setColors(addMachine);
       addMachine.setVisible(true);
 		}
 

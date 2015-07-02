@@ -96,7 +96,7 @@ public class UpdateInfoRequest extends Message
 		}
 		
 		byte[] decrypted = Services.keyManager.decrypt(privateKey, naunceRequest);
-		switch ("action")
+		switch (action)
 		{
 		case "getLogs":
 			connection.send(new GetLogs(decrypted));

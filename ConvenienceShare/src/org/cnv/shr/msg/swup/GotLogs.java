@@ -2,6 +2,7 @@ package org.cnv.shr.msg.swup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +18,7 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -34,28 +36,44 @@ public class GotLogs extends Message
 	{
 		try
 		{
+			connection.beginReadRaw();
 			Machine machine = connection.getMachine();
 			Path log =  Paths.get("otherLogs")
 					.resolve(PathSecurity.getFsName(machine.getIdentifier()))
 					.resolve(String.valueOf(System.currentTimeMillis()));
 			
+			LogWrapper.getLogger().info("Saving logs to " + log.toAbsolutePath());
+			LogWrapper.getLogger().info("Log size is " + logSize);
+			
 			long remaining = logSize;
+			
 			byte[] buffer = new byte[Misc.BUFFER_SIZE];
 			Misc.ensureDirectory(log, true);
 			try (OutputStream output = Files.newOutputStream(log))
 			{
-				while (remaining > 0)
+				try (InputStream in = CompressionStreams.newCompressedInputStream(logSize, connection.getIn());)
 				{
-					int amountToRead = buffer.length;
-					if (amountToRead > remaining)
+					while (remaining > 0)
 					{
-						amountToRead = (int) remaining;
+						LogWrapper.getLogger().fine("remaining: " + remaining);
+						int amountToRead = buffer.length;
+						if (amountToRead > remaining)
+						{
+							amountToRead = (int) remaining;
+						}
+						int nread = in.read(buffer, 0, amountToRead);
+						if (nread < 0)
+						{
+							LogWrapper.getLogger().info("Hit end of input before expected: remaining = " + remaining);
+							break;
+						}
+						output.write(buffer, 0, nread);
+						remaining -= nread;
 					}
-					int nread = connection.getIn().read(buffer, 0, amountToRead);
-					output.write(buffer, 0, nread);
-					remaining -= nread;
 				}
 			}
+				
+			connection.endReadRaw();
 		}
 		finally
 		{

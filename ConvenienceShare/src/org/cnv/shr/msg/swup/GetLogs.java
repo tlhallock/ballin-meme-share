@@ -28,6 +28,7 @@ package org.cnv.shr.msg.swup;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
@@ -41,6 +42,7 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -70,53 +72,76 @@ public class GetLogs extends Message
 			return;
 		}
 		
-		Services.updateManager.checkForUpdates(null, true);
-		
-		LogWrapper.getLogger().info("Serving logs.");
 		
 		Path logFile = Services.settings.logFile.getPath();
+		LogWrapper.getLogger().info("Serving logs at " + logFile.toAbsolutePath());
 		long logSize = Files.size(logFile);
 		long pushedSoFar = 0;
 		byte[] buffer = new byte[Misc.BUFFER_SIZE];
-		
+
 		synchronized (connection.getOutput())
 		{
 			connection.send(new GotLogs(logSize));
 
+			connection.beginWriteRaw();
 			// Temporarily disable file logs...
 			LogWrapper.logToFile(null, -1);
-			
-			try (InputStream input = Files.newInputStream(logFile))
+
+			try (OutputStream output = CompressionStreams.newCompressedOutputStream(logSize, connection.getOutput()))
 			{
-				while (logSize - pushedSoFar > 0)
+				long rem = Math.max(0, logSize - pushedSoFar);
+
+				try (InputStream input = Files.newInputStream(logFile))
 				{
-					int amountToRead = buffer.length;
-					if (amountToRead < logSize - pushedSoFar)
+					while (rem > 0)
 					{
-						amountToRead = (int) (logSize - pushedSoFar);
+						LogWrapper.getLogger().fine("remaining: " + rem);
+						int amountToRead = buffer.length;
+						if (amountToRead > rem)
+						{
+							amountToRead = (int) rem;
+						}
+						int nread = input.read(buffer, 0, amountToRead);
+						if (nread < 0)
+						{
+							LogWrapper.getLogger().info("Hit end of input from logs too early.");
+							break;
+						}
+						output.write(buffer, 0, nread);
+						pushedSoFar += nread;
+						rem = Math.max(0, logSize - pushedSoFar);
 					}
-					int nread = input.read(buffer, 0, amountToRead);
-					if (nread < 0)
-					{
-						break;
-					}
-					connection.getOutput().write(buffer, 0, nread);
-					pushedSoFar += nread;
 				}
+				catch (IOException ex)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to serve logs.", ex);
+				}
+				finally
+				{
+					// Then reopen it
+					LogWrapper.logToFile(Services.settings.logFile.getPath(), Services.settings.logLength.get());
+				}
+				finishWritingRemainingBytes(output, rem);
 			}
-			catch (IOException ex)
+
+			connection.endWriteRaw();
+		}
+	}
+
+	private static void finishWritingRemainingBytes(OutputStream output, long rem) throws IOException
+	{
+		int paddingLength = 50;
+		StringBuilder builder = new StringBuilder(paddingLength);
+		for (int i = 0; i < paddingLength; i++)
+		{
+			builder.append('\n');
+		}
+		byte[] bytes = builder.toString().getBytes();
+		while (rem > 0)
+		{
+			for (int i = 0; i < bytes.length && rem > 0; i++, rem--)
 			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to serve logs.", ex);
-			}
-			finally
-			{
-				// Then reopen it
-				LogWrapper.logToFile(Services.settings.logFile.getPath(), Services.settings.logLength.get());
-			}
-			
-			for (long rem = logSize - pushedSoFar; rem > 0; rem--)
-			{
-				connection.getOutput().write((byte) '\n');
+				output.write(bytes[i]);
 			}
 		}
 	}
