@@ -63,6 +63,7 @@ import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class UserActions
 {
@@ -305,13 +306,36 @@ public class UserActions
 		});
 	}
 
-	public static LocalDirectory addLocalImmediately(final Path localDirectory, final String name)
+	public static LocalDirectory addLocalImmediately(Path localDirectory, String name)
 	{
 		try
 		{
 			LogWrapper.getLogger().info("Sharing " + localDirectory);
-			PathElement pathElement = DbPaths.getPathElement(localDirectory);
+			
+			localDirectory = localDirectory.toAbsolutePath();
+			if (name == null)
+			{
+				name = localDirectory.getFileName().toString();
+			}
+			
+			String dbPath = Misc.sanitizePath(localDirectory.toString());
+			LocalDirectory local2 = DbRoots.getLocal(dbPath);
+			if (local2 == null)
+			{
+				LogWrapper.getLogger().info("There is already a local directory at " + localDirectory);
+				return local2;
+			}
 
+			int currentAttempt = 1;
+			String alternative = name;
+			local2 = DbRoots.getLocalByName(name);
+			while (local2 != null)
+			{
+				local2 = DbRoots.getLocalByName(name = (alternative + ++currentAttempt));
+				LogWrapper.getLogger().info("Local directory with this name already exists.\nTrying " + name + ".");
+			}
+
+			PathElement pathElement = DbPaths.getPathElement(localDirectory);
 			LocalDirectory local = new LocalDirectory(pathElement, name);
 			local.tryToSave();
 			if (local.getId() == null)
@@ -615,18 +639,26 @@ public class UserActions
 		}});
 	}
 
-	public static void assertUserAcceptsNewIdentifier(String newidentifer, Machine machine, String url)
+	public static boolean checkIfMachineShouldNotReplaceOld(String ident, String ip, int port)
+	{
+		Machine findAnExistingMachine = DbMachines.findAnExistingMachine(ip, port);
+		return !(findAnExistingMachine == null
+				|| findAnExistingMachine.getIdentifier().equals(ident)
+				|| UserActions.userAcceptsNewIdentifier(ident, findAnExistingMachine, ip + ":" + port));
+	}
+	private static boolean userAcceptsNewIdentifier(String newidentifer, Machine machine, String url)
 	{
 		if (machine != null && JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(
 				Services.notifications.getCurrentContext(),
-				"While connecting to " + url + " we expected to find a machine with identifier\n"
-					+ "\"" + newidentifer + "\"\nbut instead it was\n\"" + newidentifer + "\n"
-					+ "Would you like to remove the previous machine?",
+				"For machine at " + url + " we expected to find an identifier of\n"
+					+ "\"" + machine.getIdentifier() + "\"\nbut instead it was\n\"" + newidentifer + "\n"
+					+ "Would you like to remove the previous machine and add the new one?",
 				"Found wrong machine at " + newidentifer,
 				JOptionPane.YES_NO_OPTION))
 		{
-			throw new RuntimeException("A different machine at " + url + " already exists");
+			return false;
 		}
 		DbMachines.delete(machine);
+		return true;
 	}
 }

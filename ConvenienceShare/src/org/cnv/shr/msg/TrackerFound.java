@@ -65,14 +65,16 @@ public class TrackerFound extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("entry")) {
-				needsentry = false;
-				entry = new TrackerEntry(parser);
-			}
-			break;
-			default: break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("entry")) {
+					needsentry = false;
+					entry = new TrackerEntry(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

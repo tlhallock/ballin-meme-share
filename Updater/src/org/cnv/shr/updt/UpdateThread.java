@@ -62,6 +62,7 @@ class UpdateThread extends Thread
 				}
 				
 				LogWrapper.getLogger().info("Sending latest version.");
+				Updater.code.checkTime();
 				Misc.writeBytes(Updater.code.getVersion().getBytes("UTF8"), output);
 				
 				if (input.read() == 0)

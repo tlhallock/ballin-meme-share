@@ -229,24 +229,25 @@ public class PermissionFailure extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "rootName":
-				needsrootName = false;
-				rootName = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "rootName":
+					needsrootName = false;
+					rootName = parser.getString();
+					break;
+				case "currentPermission":
+					needscurrentPermission = false;
+					currentPermission = SharingState.valueOf(parser.getString());
+					break;
+				case "action":
+					needsaction = false;
+					action = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "currentPermission":
-				needscurrentPermission = false;
-				currentPermission = SharingState.valueOf(parser.getString());
-				break;
-			case "action":
-				needsaction = false;
-				action = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

@@ -72,7 +72,7 @@ public class PausableOutputStream extends OutputStream
 		{
 			try
 			{
-				raw = Files.newOutputStream(Paths.get("Raw.out" + Math.random()));
+				raw = Files.newOutputStream(Paths.get("log.Raw.out" + Math.random()));
 			}
 			catch (IOException e)
 			{
@@ -87,8 +87,7 @@ public class PausableOutputStream extends OutputStream
 			}
 			catch (IOException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LogWrapper.getLogger().log(Level.INFO, "Unable to log raw output to file", e);
 			}
 		}
 	}

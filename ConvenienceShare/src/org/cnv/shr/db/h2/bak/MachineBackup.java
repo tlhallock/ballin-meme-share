@@ -182,15 +182,15 @@ public class MachineBackup implements Jsonable
 		String key = null;                         
 		boolean needsallowsMessages = true;
 		boolean needspin = true;
-		boolean needsport = true;
-		boolean needsnports = true;
 		boolean needsroots = true;
-		boolean needskeys = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsidentifier = true;
 		boolean needsweShareToThem = true;
 		boolean needssharesWithUs = true;
+		boolean needskeys = true;
+		boolean needsport = true;
+		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -212,21 +212,9 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
 				}
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsnports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
-				}
 				if (needsroots)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
-				}
-				if (needskeys)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
 				}
 				if (needsip)
 				{
@@ -248,89 +236,109 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
 				}
+				if (needskeys)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
+				}
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_FALSE:
-			if (key==null) break;
-			switch(key) {
-			case "allowsMessages":
-				needsallowsMessages = false;
-				allowsMessages = false;
+			case VALUE_FALSE:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "allowsMessages":
+					needsallowsMessages = false;
+					allowsMessages = false;
+					break;
+				case "pin":
+					needspin = false;
+					pin = false;
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "pin":
-				needspin = false;
-				pin = false;
+			case VALUE_TRUE:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "allowsMessages":
+					needsallowsMessages = false;
+					allowsMessages = true;
+					break;
+				case "pin":
+					needspin = false;
+					pin = true;
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_TRUE:
-			if (key==null) break;
-			switch(key) {
-			case "allowsMessages":
-				needsallowsMessages = false;
-				allowsMessages = true;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("roots")) {
+					needsroots = false;
+					roots.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "pin":
-				needspin = false;
-				pin = true;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "ip":
+					needsip = false;
+					ip = parser.getString();
+					break;
+				case "name":
+					needsname = false;
+					name = parser.getString();
+					break;
+				case "identifier":
+					needsidentifier = false;
+					identifier = parser.getString();
+					break;
+				case "weShareToThem":
+					needsweShareToThem = false;
+					weShareToThem = SharingState.valueOf(parser.getString());
+					break;
+				case "sharesWithUs":
+					needssharesWithUs = false;
+					sharesWithUs = SharingState.valueOf(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("keys")) {
+					needskeys = false;
+					keys.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "port":
+					needsport = false;
+					port = Integer.parseInt(parser.getString());
+					break;
+				case "nports":
+					needsnports = false;
+					nports = Integer.parseInt(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("roots")) {
-				needsroots = false;
-				roots.parse(parser);
-			}
-			break;
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("keys")) {
-				needskeys = false;
-				keys.parse(parser);
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "ip":
-				needsip = false;
-				ip = parser.getString();
-				break;
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "identifier":
-				needsidentifier = false;
-				identifier = parser.getString();
-				break;
-			case "weShareToThem":
-				needsweShareToThem = false;
-				weShareToThem = SharingState.valueOf(parser.getString());
-				break;
-			case "sharesWithUs":
-				needssharesWithUs = false;
-				sharesWithUs = SharingState.valueOf(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

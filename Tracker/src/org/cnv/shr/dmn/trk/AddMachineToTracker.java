@@ -14,7 +14,7 @@ import java.util.logging.Level;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-import org.cnv.shr.track.TrackerInfoImport;
+import org.cnv.shr.track.Track;
 import org.cnv.shr.track.TrackerStore;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.util.LogWrapper;
@@ -194,17 +194,23 @@ public class AddMachineToTracker extends javax.swing.JFrame {
         {
             return;
         }
-        
-        LogWrapper.getLogger().info("Import trackers/machines from file " + fc.getSelectedFile());
-        try
-				{
-					TrackerInfoImport.importTrackerInfo(Paths.get(fc.getSelectedFile().getAbsolutePath()), store);
-				}
-				catch (IOException | SQLException e)
-				{
-	        LogWrapper.getLogger().log(Level.INFO, "Unable to import trackers/machines from file " + fc.getSelectedFile(), e);
-				}
-        dispose();
+        Track.threads.execute(new Runnable() {
+					@Override
+					public void run()
+					{
+		        try
+						{
+							Track.importer.importTrackerInfo(Paths.get(fc.getSelectedFile().getAbsolutePath()));
+						}
+						catch (IOException | SQLException e)
+						{
+			        LogWrapper.getLogger().log(Level.INFO, "Unable to import trackers/machines from file " + fc.getSelectedFile(), e);
+						}
+		        finally
+		        {
+		          dispose();
+		        }
+					}});
     }//GEN-LAST:event_jButton3ActionPerformed
 
 

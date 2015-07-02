@@ -155,21 +155,25 @@ public class ChunkList extends DownloadMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-			}
-			break;
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("chunks")) {
-				needschunks = false;
-				chunks.parse(parser);
-			}
-			break;
-			default: break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("descriptor")) {
+					needsdescriptor = false;
+					descriptor = new FileEntry(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("chunks")) {
+					needschunks = false;
+					chunks.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

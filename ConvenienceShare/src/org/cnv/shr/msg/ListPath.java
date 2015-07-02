@@ -41,6 +41,7 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class ListPath extends Message
 {
@@ -136,20 +137,21 @@ public class ListPath extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "rootName":
-				needsrootName = false;
-				rootName = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "rootName":
+					needsrootName = false;
+					rootName = parser.getString();
+					break;
+				case "path":
+					needspath = false;
+					path = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "path":
-				needspath = false;
-				path = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

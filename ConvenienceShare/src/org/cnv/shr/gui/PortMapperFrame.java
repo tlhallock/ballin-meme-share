@@ -33,9 +33,11 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import javax.swing.text.DefaultCaret;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;

@@ -313,15 +313,13 @@ for security no symbolic links are added, and all files should remain inside the
 
 First:
 \begin{itemize}
-\item add tracker import directory
 \item finish about pane
 \item use json for messages (reencrypt the streams)
 \item finish user manual
 \item test change path of mirror
 \item test what happens with two locals by the same name...
 \item test tracker gui with remote tracker
-\item take root synchronizer off user thread in pathTreeModel
-\item remove the old messaging system with all bytes (connectionreason)
+\item remove the old messaging system with all bytes (connectionreason), or use it again...
 \item max string in json?
 \item debug dbbackrestore
 \item debug number of files
@@ -331,17 +329,52 @@ Later:
 \item connections need to be revisited
 \item remove all caching of db objects...
 \item check all settings listeners
+
+machineName          application.refreshMachines
+machineIdentifier    application.refreshMachines
+defaultPermission    
+                     
+                     
+servePortBeginI      restart handlers (including port mapping), refreshmachines
+servePortBeginE      restart handlers (including port mapping), refreshmachines
+maxDownloads         initiate downloads
+maxSimServers        servermanager
+minNaunce            
+maxStringSize        
+numHandlers          restart handlers (including port mapping), refreshmachines
+keySize              
+appLocX              
+appLocY              
+maxDirectorySize     (I guess implement this and have download manager use it)
+monitorRepeat        (I guess implement this)
+checksumWait         kick checksum thread
+maxImmediateChecksum 
+logLength            
+logToFile            
+acceptNewKeys        
+shareWithEveryone    
+runTrackerOnStart    
+autoMapPorts         (something start port mapper if not already started.)
+downloadPresentAction
+downloadsDirectory   
+applicationDirectory 
+keysFile             (key manager)
+logFile              
+dbFile               h2connection cache
+codeUpdateKey        update manager ( or remove this setting )
+trackerFile          Trackers ( or remove this setting )
+colorsFile           Color setter ( or remove this setting )
+
+
 \item implement popup menu for servetable
 \item test with different port numbers
 \item profile memory
-\item add synchronization to tracker gui's tracker store
 \item test verify integrity
 \item use IOUtils.copy + Files.mkdirs
 \item dbl check connection caching
 \item add way to change download priority, and test priority
 \item compress data (path list, txt files, tracker connection for files, tracker import/exprt, db backup/restore)
 \item monitor free space
-\item Need to check versions when messaging.
 \item check full path vs fsPath
 \item run it for a long time
 \item write TONS more tests
@@ -353,6 +386,7 @@ Later:
 \end{itemize}
 Maybe:
 \begin{itemize}
+\item Need to check versions when messaging?
 \item search by filename across trackers?
 \item implement phone service
 \item recursive directories in machine viewer

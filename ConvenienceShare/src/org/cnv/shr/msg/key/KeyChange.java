@@ -40,6 +40,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class KeyChange extends KeyMessage
@@ -147,28 +148,29 @@ public class KeyChange extends KeyMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "oldKey":
-				needsoldKey = false;
-				oldKey = KeyPairObject.deSerializePublicKey(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "oldKey":
+					needsoldKey = false;
+					oldKey = KeyPairObject.deSerializePublicKey(parser.getString());
+					break;
+				case "newKey":
+					needsnewKey = false;
+					newKey = KeyPairObject.deSerializePublicKey(parser.getString());
+					break;
+				case "decryptedProof":
+					needsdecryptedProof = false;
+					decryptedProof = Misc.format(parser.getString());
+					break;
+				case "naunceRequest":
+					needsnaunceRequest = false;
+					naunceRequest = Misc.format(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "newKey":
-				needsnewKey = false;
-				newKey = KeyPairObject.deSerializePublicKey(parser.getString());
-				break;
-			case "decryptedProof":
-				needsdecryptedProof = false;
-				decryptedProof = Misc.format(parser.getString());
-				break;
-			case "naunceRequest":
-				needsnaunceRequest = false;
-				naunceRequest = Misc.format(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

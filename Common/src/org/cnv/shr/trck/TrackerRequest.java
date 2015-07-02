@@ -31,6 +31,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.json.JsonStringMap;
+import org.cnv.shr.util.LogWrapper;
 
 public class TrackerRequest extends TrackObject
 {
@@ -101,21 +102,25 @@ public class TrackerRequest extends TrackObject
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("params")) {
-				needsparams = false;
-				params.parse(parser);
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("action")) {
-				needsaction = false;
-				action = parser.getString();
-			}
-			break;
-			default: break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("params")) {
+					needsparams = false;
+					params.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("action")) {
+					needsaction = false;
+					action = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

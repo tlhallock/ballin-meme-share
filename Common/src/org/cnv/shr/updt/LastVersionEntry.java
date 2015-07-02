@@ -7,6 +7,7 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class LastVersionEntry implements Jsonable
 {
@@ -46,20 +47,21 @@ public class LastVersionEntry implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "identifier":
-				needsidentifier = false;
-				identifier = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "identifier":
+					needsidentifier = false;
+					identifier = parser.getString();
+					break;
+				case "version":
+					needsversion = false;
+					version = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "version":
-				needsversion = false;
-				version = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

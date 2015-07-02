@@ -343,7 +343,7 @@ public class GenerateParserCode
                         p.print(ps);
                     });
             });
-		ps.println("\t\t\tdefault: break;");
+		ps.println("\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown type found in message: \" + e);");
 		ps.println("\t\t\t}");
 		ps.println("\t\t}");
 		ps.println("\t}");
@@ -391,41 +391,41 @@ public class GenerateParserCode
 
 		public void print(PrintStream ps)
 		{
-			ps.println("\t\tcase " + jsonType.name() + ":");
-			ps.println("\t\t\tif (key==null) break;");
+			ps.println("\t\t\tcase " + jsonType.name() + ":");
+			ps.println("\t\t\t\tif (key==null) { LogWrapper.getLogger().warning(\"Value with no key!\"); break; }");
 
 			if (fields.size() == 1)
 			{
-                            fields.stream().map((f) -> {
-                                ps.println("\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
-                                return f;
-                            }).map((f) -> {
-                                if (!f.isAnnotationPresent(MyParserNullable.class))
-                                {
-                                    ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
-                                }
-                                return f;
-                            }).forEach((f) -> {
-                                ps.println("\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
-                            });
+				for (Field f : fields)
+				{
+          ps.println("\t\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
+          if (!f.isAnnotationPresent(MyParserNullable.class))
+          {
+            ps.println("\t\t\t\t\tneeds" + f.getName() + " = false;");
+          }
+          ps.println("\t\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
+          ps.println("\t\t\t\t} else {");
+          ps.println("\t\t\t\t\tLogWrapper.getLogger().warning(\"Unknown key: \" + key);");
+				}
 			}
 			else
 			{
-				ps.println("\t\t\tswitch(key) {");
+				ps.println("\t\t\t\tswitch(key) {");
 				for (Field f : fields)
 				{
-					ps.println("\t\t\tcase \"" + f.getName() + "\":");
+					ps.println("\t\t\t\tcase \"" + f.getName() + "\":");
 					if (!f.isAnnotationPresent(MyParserNullable.class))
 					{
-						ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
+						ps.println("\t\t\t\t\tneeds" + f.getName() + " = false;");
 					}
-					ps.println("\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
-					ps.println("\t\t\t\tbreak;");
+					ps.println("\t\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
+					ps.println("\t\t\t\t\tbreak;");
 				}
+				ps.println("\t\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown key: \" + key);");
 			}
-			ps.println("\t\t\t}");
+			ps.println("\t\t\t\t}");
 			// ps.println("\t\t\tkey=null;");
-			ps.println("\t\t\tbreak;");
+			ps.println("\t\t\t\tbreak;");
 		}
 		
 		public void print(StringBuilder builder)

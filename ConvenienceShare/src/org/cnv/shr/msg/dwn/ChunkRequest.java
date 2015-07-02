@@ -163,34 +163,39 @@ public class ChunkRequest extends DownloadMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_FALSE:
-			if (key==null) break;
-			if (key.equals("pleaseCompress")) {
-				needspleaseCompress = false;
-				pleaseCompress = false;
-			}
-			break;
-		case VALUE_TRUE:
-			if (key==null) break;
-			if (key.equals("pleaseCompress")) {
-				needspleaseCompress = false;
-				pleaseCompress = true;
-			}
-			break;
-		case START_OBJECT:
-			if (key==null) break;
-			switch(key) {
-			case "chunk":
-				needschunk = false;
-				chunk = new Chunk(parser);
+			case VALUE_FALSE:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("pleaseCompress")) {
+					needspleaseCompress = false;
+					pleaseCompress = false;
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "descriptor":
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
+			case VALUE_TRUE:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("pleaseCompress")) {
+					needspleaseCompress = false;
+					pleaseCompress = true;
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-			default: break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "chunk":
+					needschunk = false;
+					chunk = new Chunk(parser);
+					break;
+				case "descriptor":
+					needsdescriptor = false;
+					descriptor = new FileEntry(parser);
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

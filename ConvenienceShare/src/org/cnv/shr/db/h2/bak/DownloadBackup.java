@@ -197,46 +197,22 @@ public class DownloadBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsfileSize = true;
-		boolean needslastModified = true;
-		boolean needsadded = true;
-		boolean needspriority = true;
-		boolean needschunkSize = true;
-		boolean needschunks = true;
 		boolean needsremoteMachine = true;
 		boolean needsremoteDirectory = true;
 		boolean needsremotePath = true;
 		boolean needschecksum = true;
 		boolean needscurrentDownloadState = true;
+		boolean needschunks = true;
+		boolean needsfileSize = true;
+		boolean needslastModified = true;
+		boolean needsadded = true;
+		boolean needspriority = true;
+		boolean needschunkSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsfileSize)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
-				}
-				if (needslastModified)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
-				}
-				if (needsadded)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs added");
-				}
-				if (needspriority)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs priority");
-				}
-				if (needschunkSize)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
-				}
-				if (needschunks)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
-				}
 				if (needsremoteMachine)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteMachine");
@@ -257,71 +233,99 @@ public class DownloadBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentDownloadState");
 				}
+				if (needschunks)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
+				}
+				if (needsfileSize)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+				}
+				if (needslastModified)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
+				}
+				if (needsadded)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs added");
+				}
+				if (needspriority)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs priority");
+				}
+				if (needschunkSize)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "fileSize":
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "remoteMachine":
+					needsremoteMachine = false;
+					remoteMachine = parser.getString();
+					break;
+				case "remoteDirectory":
+					needsremoteDirectory = false;
+					remoteDirectory = parser.getString();
+					break;
+				case "remotePath":
+					needsremotePath = false;
+					remotePath = parser.getString();
+					break;
+				case "checksum":
+					needschecksum = false;
+					checksum = parser.getString();
+					break;
+				case "tags":
+					tags = parser.getString();
+					break;
+				case "currentDownloadState":
+					needscurrentDownloadState = false;
+					currentDownloadState = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "lastModified":
-				needslastModified = false;
-				lastModified = Long.parseLong(parser.getString());
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("chunks")) {
+					needschunks = false;
+					chunks.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "added":
-				needsadded = false;
-				added = Long.parseLong(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "fileSize":
+					needsfileSize = false;
+					fileSize = Long.parseLong(parser.getString());
+					break;
+				case "lastModified":
+					needslastModified = false;
+					lastModified = Long.parseLong(parser.getString());
+					break;
+				case "added":
+					needsadded = false;
+					added = Long.parseLong(parser.getString());
+					break;
+				case "priority":
+					needspriority = false;
+					priority = Integer.parseInt(parser.getString());
+					break;
+				case "chunkSize":
+					needschunkSize = false;
+					chunkSize = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "priority":
-				needspriority = false;
-				priority = Integer.parseInt(parser.getString());
-				break;
-			case "chunkSize":
-				needschunkSize = false;
-				chunkSize = Long.parseLong(parser.getString());
-				break;
-			}
-			break;
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("chunks")) {
-				needschunks = false;
-				chunks.parse(parser);
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "remoteMachine":
-				needsremoteMachine = false;
-				remoteMachine = parser.getString();
-				break;
-			case "remoteDirectory":
-				needsremoteDirectory = false;
-				remoteDirectory = parser.getString();
-				break;
-			case "remotePath":
-				needsremotePath = false;
-				remotePath = parser.getString();
-				break;
-			case "checksum":
-				needschecksum = false;
-				checksum = parser.getString();
-				break;
-			case "tags":
-				tags = parser.getString();
-				break;
-			case "currentDownloadState":
-				needscurrentDownloadState = false;
-				currentDownloadState = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

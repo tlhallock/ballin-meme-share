@@ -41,6 +41,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class PathListChild implements Jsonable
 {
@@ -115,14 +116,18 @@ public class PathListChild implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsname = true;
 		boolean needssize = true;
 		boolean needslastModified = true;
-		boolean needsname = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsname)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
 				if (needssize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs size");
@@ -131,43 +136,43 @@ public class PathListChild implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
 				}
-				if (needsname)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "size":
-				needssize = false;
-				size = Long.parseLong(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "name":
+					needsname = false;
+					name = parser.getString();
+					break;
+				case "checksum":
+					checksum = parser.getString();
+					break;
+				case "tags":
+					tags = parser.getString();
+					
+					System.out.println("Found tags of \"" + tags + "\"");
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "lastModified":
-				needslastModified = false;
-				lastModified = Long.parseLong(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "size":
+					needssize = false;
+					size = Long.parseLong(parser.getString());
+					break;
+				case "lastModified":
+					needslastModified = false;
+					lastModified = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "checksum":
-				checksum = parser.getString();
-				break;
-			case "tags":
-				tags = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

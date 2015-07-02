@@ -42,6 +42,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class RootListChild implements Jsonable
 {
@@ -128,26 +129,27 @@ public class RootListChild implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "name":
-				needsname = false;
-				name = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "name":
+					needsname = false;
+					name = parser.getString();
+					break;
+				case "tags":
+					tags = parser.getString();
+					break;
+				case "description":
+					description = parser.getString();
+					break;
+				case "state":
+					needsstate = false;
+					state = SharingState.valueOf(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "tags":
-				tags = parser.getString();
-				break;
-			case "description":
-				description = parser.getString();
-				break;
-			case "state":
-				needsstate = false;
-				state = SharingState.valueOf(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

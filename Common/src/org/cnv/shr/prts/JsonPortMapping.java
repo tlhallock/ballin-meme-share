@@ -8,6 +8,7 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class JsonPortMapping implements Jsonable
 {
@@ -46,23 +47,15 @@ public class JsonPortMapping implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsinternalPort = true;
-		boolean needsexternalPort = true;
 		boolean needsprotocol = true;
 		boolean needsdescription = true;
+		boolean needsinternalPort = true;
+		boolean needsexternalPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsinternalPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs internalPort");
-				}
-				if (needsexternalPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs externalPort");
-				}
 				if (needsprotocol)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs protocol");
@@ -71,40 +64,50 @@ public class JsonPortMapping implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
 				}
+				if (needsinternalPort)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs internalPort");
+				}
+				if (needsexternalPort)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs externalPort");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "internalPort":
-				needsinternalPort = false;
-				internalPort = Integer.parseInt(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "ip":
+					ip = parser.getString();
+					break;
+				case "protocol":
+					needsprotocol = false;
+					protocol = parser.getString();
+					break;
+				case "description":
+					needsdescription = false;
+					description = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "externalPort":
-				needsexternalPort = false;
-				externalPort = Integer.parseInt(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "internalPort":
+					needsinternalPort = false;
+					internalPort = Integer.parseInt(parser.getString());
+					break;
+				case "externalPort":
+					needsexternalPort = false;
+					externalPort = Integer.parseInt(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "ip":
-				ip = parser.getString();
-				break;
-			case "protocol":
-				needsprotocol = false;
-				protocol = parser.getString();
-				break;
-			case "description":
-				needsdescription = false;
-				description = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

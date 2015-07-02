@@ -42,6 +42,7 @@ import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class LookingFor extends DownloadMessage
 {
@@ -93,18 +94,14 @@ public class LookingFor extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsfileSize = true;
 		boolean needsdescriptor = true;
 		boolean needschecksum = true;
+		boolean needsfileSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsfileSize)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
-				}
 				if (needsdescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
@@ -113,32 +110,42 @@ public class LookingFor extends DownloadMessage
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
+				if (needsfileSize)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("fileSize")) {
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
-			}
-			break;
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				needschecksum = false;
-				checksum = parser.getString();
-			}
-			break;
-			default: break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("descriptor")) {
+					needsdescriptor = false;
+					descriptor = new FileEntry(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("checksum")) {
+					needschecksum = false;
+					checksum = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("fileSize")) {
+					needsfileSize = false;
+					fileSize = Long.parseLong(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

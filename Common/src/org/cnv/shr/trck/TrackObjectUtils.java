@@ -133,6 +133,10 @@ public class TrackObjectUtils
 				{
 					LogWrapper.getLogger().severe("Read 0 byte from input!!!!");
 				}
+				if (read < 0)
+				{
+					LogWrapper.getLogger().info("Hit end of stream while inside json...");
+				}
 				
 				return read;
 			}

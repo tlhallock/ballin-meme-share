@@ -36,6 +36,7 @@ import javax.swing.event.TreeModelListener;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.mdl.PathElement;
+import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.Pair;
 import org.cnv.shr.sync.SynchronizationTask.TaskListener;
@@ -89,10 +90,6 @@ public class PathTreeModelNode implements TaskListener
 	
 	public boolean isLeaf()
 	{
-		if (model.rootDirectory == null)
-		{
-			return true;
-		}
 		return getFile() != null;
 	}
 
@@ -113,7 +110,8 @@ public class PathTreeModelNode implements TaskListener
 	{
 		if (element.getId() == 0)
 		{
-			return model.rootDirectory.getName();
+			RootDirectory rootDir = model.getRootDirectory();
+			return rootDir == null ? "No directory chosen" : rootDir.getName();
 		}
 		return element.getUnbrokenName();
 	}
@@ -135,18 +133,19 @@ public class PathTreeModelNode implements TaskListener
 
 	public SharedFile getFile()
 	{
-		if (model.rootDirectory == null)
+		RootDirectory rootDir = model.getRootDirectory();
+		if (rootDir == null)
 		{
 			return null;
 		}
-		return DbFiles.getFile(model.rootDirectory, element);
+		return DbFiles.getFile(rootDir, element);
 	}
 	
-	public synchronized void syncFully()
+	public synchronized void syncFully(RootDirectory rootDir)
 	{
-		syncFully(true);
+		syncFully(rootDir, true);
 	}
-	public synchronized void syncFully(boolean val)
+	public synchronized void syncFully(RootDirectory root, boolean val)
 	{
 		lastSync = 0;
 		syncFully = val;
@@ -154,12 +153,12 @@ public class PathTreeModelNode implements TaskListener
 		{
 			for (PathTreeModelNode node : children)
 			{
-				node.syncFully(val);
+				node.syncFully(root, val);
 			}
 		}
 		if (sourceChildren != null)
 		{
-			setToSource();
+			setToSource(root);
 		}
 	}
 	
@@ -169,7 +168,8 @@ public class PathTreeModelNode implements TaskListener
 		this.sourceChildren = pairs;
 		if (syncFully || children != null)
 		{
-			setToSource();
+			RootDirectory rootDir = model.getRootDirectory();
+			setToSource(rootDir);
 		}
 	}
 	
@@ -178,8 +178,9 @@ public class PathTreeModelNode implements TaskListener
     }
 	synchronized void expand()
 	{
-		System.out.println("Expanding " + element.getFullPath());
-		if (model.rootDirectory == null)
+		LogWrapper.getLogger().info("Expanding " + element.getFullPath());
+		RootDirectory rootDir = model.getRootDirectory();
+		if (rootDir == null)
 		{
 			children = new PathTreeModelNode[0];
 			return;
@@ -187,18 +188,18 @@ public class PathTreeModelNode implements TaskListener
 
 		if (sourceChildren != null)
 		{
-			setToSource();
+			setToSource(rootDir);
 		}
 		else
 		{
-			setToDb();
+			setToDb(rootDir);
 		}
 	}
 
-	private synchronized void setToDb()
+	private synchronized void setToDb(RootDirectory rootDir)
 	{
 		// List from database...
-		final LinkedList<PathElement> list = element.list(model.rootDirectory);
+		final LinkedList<PathElement> list = element.list(rootDir);
 		// Should clean this one up...
 		for (final PathElement e : list)
 		{
@@ -216,7 +217,7 @@ public class PathTreeModelNode implements TaskListener
 		}
 	}
 	
-	public synchronized void setToSource()
+	public synchronized void setToSource(RootDirectory rootDir)
 	{
 		long now = System.currentTimeMillis();
 		if (children != null && lastSync + 5 * 60 * 1000 > now)
@@ -244,16 +245,16 @@ public class PathTreeModelNode implements TaskListener
 			accountedFor.add(unbrokenName);
 			PathTreeModelNode node = new PathTreeModelNode(this, model, pathElement, syncFully);
 			allChildren.add(node);
-			model.iterator.queueSyncTask(p.getSource(), pathElement, node);
+			model.getIterator().queueSyncTask(p.getSource(), pathElement, node);
 		}
 		// add sub files...
-		for (final PathElement childElement : element.list(model.rootDirectory))
+		for (final PathElement childElement : element.list(rootDir))
 		{
 			if (accountedFor.contains(childElement.getUnbrokenName()))
 			{
 				continue;
 			}
-			final SharedFile file = DbFiles.getFile(model.rootDirectory, childElement);
+			final SharedFile file = DbFiles.getFile(rootDir, childElement);
 			if (file == null)
 			{
 				continue;
@@ -274,7 +275,8 @@ public class PathTreeModelNode implements TaskListener
 	public List<SharedFile> getFileList(boolean recursive)
 	{
 		LogWrapper.getLogger().info("Finding children of \"" + element.getFullPath() + "\"");
-		if (model.rootDirectory == null)
+		RootDirectory rootDir = model.getRootDirectory();
+		if (rootDir == null)
 		{
 			return Collections.emptyList();
 		}
@@ -288,7 +290,7 @@ public class PathTreeModelNode implements TaskListener
 
 		if (recursive)
 		{
-			element.getFilesList(model.rootDirectory, list);
+			element.getFilesList(model.getRootDirectory(), list);
 			return list;
 		}
 		

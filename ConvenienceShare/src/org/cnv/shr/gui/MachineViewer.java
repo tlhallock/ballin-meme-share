@@ -31,8 +31,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -166,15 +164,9 @@ public class MachineViewer extends javax.swing.JFrame
 						machine.tryToSave();
 					}
 				});
-		
-			addWindowListener(new WindowAdapter()
-			{
-				@Override
-				public void windowClosed(WindowEvent e)
-				{
-					model.close();
-				}
-		});
+
+		Services.timer.scheduleAtFixedRate(model, PathTreeModel.INACTIVITY_DELAY, PathTreeModel.INACTIVITY_DELAY);
+		addWindowListener(model);
 		jCheckBox1.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -394,7 +386,7 @@ public class MachineViewer extends javax.swing.JFrame
             public void actionPerformed(ActionEvent ae) {
                 final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                n.syncFully();
+                n.syncFully(getRootDirectory());
             }
         });
         menu.add(item);
@@ -516,6 +508,7 @@ public class MachineViewer extends javax.swing.JFrame
     }
 
     private void viewNoDirectory() {
+    		jButton9.setEnabled(false);
         this.rootDirectoryName = null;
         jCheckBox1.setEnabled(false);
         jTextField1.setEnabled(false);
@@ -569,6 +562,7 @@ public class MachineViewer extends javax.swing.JFrame
         requestDownloadButton.setEnabled(false);
         requestShareButton.setEnabled(false);
         jButton4.setEnabled(false);
+        jButton9.setEnabled(false);
     }
     
     private void updatePermissionBoxesRemote(RemoteDirectory remote)
@@ -580,6 +574,7 @@ public class MachineViewer extends javax.swing.JFrame
         requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
         requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
         jButton4.setEnabled(true);
+        jButton9.setEnabled(true);
     }
 
     /**
@@ -619,6 +614,7 @@ public class MachineViewer extends javax.swing.JFrame
         filesTree = new javax.swing.JTree();
         jLabel2 = new javax.swing.JLabel();
         syncStatus = new JLabel() {};
+        jButton9 = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
@@ -703,7 +699,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         jSplitPane1.setLeftComponent(jScrollPane1);
 
-        jSplitPane2.setDividerLocation(200);
+        jSplitPane2.setDividerLocation(350);
 
         jLabel5.setText("Filter paths:");
 
@@ -743,7 +739,7 @@ public class MachineViewer extends javax.swing.JFrame
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 510, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -801,27 +797,36 @@ public class MachineViewer extends javax.swing.JFrame
 
         syncStatus.setText("not connected");
 
+        jButton9.setText("Reconnect");
+        jButton9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton9ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
-            .addGroup(jPanel4Layout.createSequentialGroup()
+            .addComponent(jScrollPane2)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(syncStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(syncStatus, javax.swing.GroupLayout.DEFAULT_SIZE, 170, Short.MAX_VALUE)
+                .addGap(1, 1, 1)
+                .addComponent(jButton9))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 328, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(syncStatus))
-                .addGap(6, 6, 6))
+                    .addComponent(syncStatus)
+                    .addComponent(jButton9))
+                .addGap(1, 1, 1))
         );
 
         jSplitPane2.setLeftComponent(jPanel4);
@@ -1320,6 +1325,10 @@ public class MachineViewer extends javax.swing.JFrame
         jButton4.setEnabled(!getMachine().isLocal());
     }//GEN-LAST:event_jButton4ActionPerformed
 
+    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+        Services.userThreads.execute(new Runnable() { public void run() { model.resetRoot(); }});
+    }//GEN-LAST:event_jButton9ActionPerformed
+
     private void filterFilesTable()
     {
     	filesManager.setFilters(jTextField1.getText(), jTextField2.getText());
@@ -1341,6 +1350,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
+    private javax.swing.JButton jButton9;
     private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JCheckBox jCheckBox2;
     private javax.swing.JLabel jLabel1;

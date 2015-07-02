@@ -37,10 +37,12 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class MachineFound extends Message
 {
@@ -79,6 +81,12 @@ public class MachineFound extends Message
 	{
 		if (ident.equals(Services.localMachine.getIdentifier()))
 		{
+			LogWrapper.getLogger().info("We already know about the local machine.");
+			return;
+		}
+		if (UserActions.checkIfMachineShouldNotReplaceOld(ident, ip, port))
+		{
+			LogWrapper.getLogger().info("A machine at " + ip + " already exists.");
 			return;
 		}
 		DbMachines.updateMachineInfo(
@@ -147,24 +155,16 @@ public class MachineFound extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsport = true;
-		boolean needsnports = true;
 		boolean needsip = true;
 		boolean needsname = true;
 		boolean needsident = true;
+		boolean needsport = true;
+		boolean needsnports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsport)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsnports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
-				}
 				if (needsip)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
@@ -177,41 +177,51 @@ public class MachineFound extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
+				if (needsport)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsnports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "ip":
+					needsip = false;
+					ip = parser.getString();
+					break;
+				case "name":
+					needsname = false;
+					name = parser.getString();
+					break;
+				case "ident":
+					needsident = false;
+					ident = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "port":
+					needsport = false;
+					port = Integer.parseInt(parser.getString());
+					break;
+				case "nports":
+					needsnports = false;
+					nports = Integer.parseInt(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "ip":
-				needsip = false;
-				ip = parser.getString();
-				break;
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "ident":
-				needsident = false;
-				ident = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

@@ -47,6 +47,7 @@ import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class RootList extends Message
 {
@@ -199,14 +200,16 @@ public class RootList extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("sharedDirectories")) {
-				needssharedDirectories = false;
-				sharedDirectories.parse(parser);
-			}
-			break;
-			default: break;
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("sharedDirectories")) {
+					needssharedDirectories = false;
+					sharedDirectories.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

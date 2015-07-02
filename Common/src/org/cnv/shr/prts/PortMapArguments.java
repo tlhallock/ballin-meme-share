@@ -82,51 +82,56 @@ public class PortMapArguments implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsports = true;
 		boolean needsaction = true;
+		boolean needsports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ports");
-				}
 				if (needsaction)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+				}
+				if (needsports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ports");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("routerIndex")) {
-				routerIndex = Integer.parseInt(parser.getString());
-			}
-			break;
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("ports")) {
-				needsports = false;
-				ports.parse(parser);
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "upnpLib":
-				upnpLib = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "upnpLib":
+					upnpLib = parser.getString();
+					break;
+				case "action":
+					needsaction = false;
+					action = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "action":
-				needsaction = false;
-				action = parser.getString();
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("ports")) {
+					needsports = false;
+					ports.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-			default: break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("routerIndex")) {
+					routerIndex = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

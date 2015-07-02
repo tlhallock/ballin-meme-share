@@ -39,6 +39,7 @@ import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class RootPermissionBackup implements Jsonable
 {
@@ -100,24 +101,25 @@ public class RootPermissionBackup implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "machineIdent":
-				needsmachineIdent = false;
-				machineIdent = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "machineIdent":
+					needsmachineIdent = false;
+					machineIdent = parser.getString();
+					break;
+				case "localName":
+					needslocalName = false;
+					localName = parser.getString();
+					break;
+				case "currentState":
+					needscurrentState = false;
+					currentState = SharingState.valueOf(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "localName":
-				needslocalName = false;
-				localName = parser.getString();
-				break;
-			case "currentState":
-				needscurrentState = false;
-				currentState = SharingState.valueOf(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

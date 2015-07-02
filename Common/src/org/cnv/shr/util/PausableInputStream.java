@@ -41,7 +41,7 @@ public class PausableInputStream extends InputStream
 		{
 			try
 			{
-				raw = Files.newOutputStream(Paths.get("Raw.in" + Math.random()));
+				raw = Files.newOutputStream(Paths.get("log.Raw.in" + Math.random()));
 			}
 			catch (IOException e)
 			{

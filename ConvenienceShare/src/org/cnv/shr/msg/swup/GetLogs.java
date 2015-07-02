@@ -149,14 +149,16 @@ public class GetLogs extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("decryptedNaunce")) {
-				needsdecryptedNaunce = false;
-				decryptedNaunce = Misc.format(parser.getString());
-			}
-			break;
-			default: break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("decryptedNaunce")) {
+					needsdecryptedNaunce = false;
+					decryptedNaunce = Misc.format(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

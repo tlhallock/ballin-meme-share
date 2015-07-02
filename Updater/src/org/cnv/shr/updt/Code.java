@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
-import java.util.zip.ZipException;
 
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -41,12 +40,6 @@ public class Code
 	private long timeStamp;
 	private Path jar = Updater.getUpdatesDirectory().resolve("updates.zip");
 	private String version;
-	
-	public Code() throws ZipException, IOException
-	{
-		checkTime();
-		// Add watch service?
-	}
 	
 	public void checkTime()
 	{
@@ -78,7 +71,6 @@ public class Code
 	
 	public String getVersion()
 	{
-		checkTime();
 		return version;
 	}
 
