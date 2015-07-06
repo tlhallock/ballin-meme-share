@@ -495,6 +495,7 @@ public class MachineViewer extends javax.swing.JFrame
             jButton3.setEnabled(false); // cannot sync roots to local
             jButton6.setEnabled(false); jButton5.setEnabled(false);
             pin.setSelected(true); pin.setEnabled(false);
+          	jCheckBox2.setSelected(false); jCheckBox2.setEnabled(false);
         }
         else
         {
@@ -504,6 +505,7 @@ public class MachineViewer extends javax.swing.JFrame
             jButton3.setEnabled(true);
             jButton6.setEnabled(true); jButton5.setEnabled(true);
             pin.setSelected(machine.isPinned()); pin.setEnabled(true);
+          	jCheckBox2.setSelected(Services.blackList.contains(machine.getIdentifier())); jCheckBox2.setEnabled(true);
         }
     }
 
@@ -556,25 +558,25 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void updatePermissionBoxesLocal()
     {
-        changePathButton.setEnabled(false);
-        rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(true);
-        rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(false);
-        requestDownloadButton.setEnabled(false);
-        requestShareButton.setEnabled(false);
-        jButton4.setEnabled(false);
-        jButton9.setEnabled(false);
+      changePathButton.setEnabled(false);
+      rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(true);
+      rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(false);
+      requestDownloadButton.setEnabled(false);
+      requestShareButton.setEnabled(false);
+      jButton4.setEnabled(false);
+      jButton9.setEnabled(false);
     }
     
     private void updatePermissionBoxesRemote(RemoteDirectory remote)
     {
-    		SharingState state = remote.getSharesWithUs();
-        changePathButton.setEnabled(true);
-        rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(state.listable());
-        rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(state.downloadable());
-        requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
-        requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
-        jButton4.setEnabled(true);
-        jButton9.setEnabled(true);
+    	SharingState state = remote.getSharesWithUs();
+      changePathButton.setEnabled(true);
+      rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(state.listable());
+      rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(state.downloadable());
+      requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
+      requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
+      jButton4.setEnabled(true);
+      jButton9.setEnabled(true);
     }
 
     /**
@@ -1316,6 +1318,10 @@ public class MachineViewer extends javax.swing.JFrame
         Machine machine = getMachine();
         String ip = machine.getIp();
         String ident = machine.getIdentifier();
+        if (machine.isLocal())
+        {
+        	return;
+        }
         Services.blackList.setBlacklisted(ident, ip, jCheckBox2.isSelected());
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 

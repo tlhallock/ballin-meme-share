@@ -482,6 +482,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jMenuItem4 = new javax.swing.JMenuItem();
         jCheckBoxMenuItem2 = new javax.swing.JCheckBoxMenuItem();
         jMenuItem12 = new javax.swing.JMenuItem();
+        jMenuItem22 = new javax.swing.JMenuItem();
         jMenu7 = new javax.swing.JMenu();
         jMenuItem17 = new javax.swing.JMenuItem();
         jMenuItem16 = new javax.swing.JMenuItem();
@@ -1167,6 +1168,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         });
         jMenu1.add(jMenuItem12);
 
+        jMenuItem22.setText("Show duplicate files...");
+        jMenuItem22.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem22ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem22);
+
         jMenuBar1.add(jMenu1);
 
         jMenu7.setText("Actions");
@@ -1664,6 +1673,12 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         frame.setVisible(true);
     }//GEN-LAST:event_jMenuItem12ActionPerformed
 
+    private void jMenuItem22ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem22ActionPerformed
+        DuplicateFileFrame frame = new DuplicateFileFrame();
+        Services.notifications.registerWindow(frame);
+        frame.setVisible(true);
+    }//GEN-LAST:event_jMenuItem22ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1716,6 +1731,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem20;
     private javax.swing.JMenuItem jMenuItem21;
+    private javax.swing.JMenuItem jMenuItem22;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;

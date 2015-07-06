@@ -48,6 +48,10 @@ public class DbConnectionCache extends TimerTask
 		
 		try (ConnectionWrapper c = getThreadConnection();)
 		{
+			if (c == null)
+			{
+				throw new SQLException("Unable to create connection!");
+			}
 			if (args.deleteDb)
 			{
 				LogWrapper.getLogger().info("Deleting database.");
