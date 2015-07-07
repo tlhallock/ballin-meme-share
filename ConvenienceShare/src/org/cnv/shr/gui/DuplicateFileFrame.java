@@ -9,17 +9,25 @@ package org.cnv.shr.gui;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Set;
+import java.util.Timer;
 import java.util.logging.Level;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
+import javax.swing.SwingWorker;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -40,14 +48,55 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 
     private final HashSet<Integer> machines = new HashSet<>();
     private final HashMap<String, RootThingy> roots = new HashMap<>();
+    private final LinkedList<DuplicateFileEntry> entries = new LinkedList<>();
+    private final Timer timer;
+    private boolean modified;
+    
+    private final Object searchThreadSync = new Object();
+    private Thread searchThread;
+    
     /**
      * Creates new form DuplicateFileFrame
      */
     public DuplicateFileFrame() {
+    		timer = new Timer();
         initComponents();
         listPanel.setLayout(new GridLayout(0, 1));
         machinesList.setLayout(new GridLayout(0, 1));
         refresh();
+        
+        addWindowListener(new WindowAdapter() {
+        	@Override
+        	public void windowClosed(WindowEvent e)
+        	{
+        		timer.cancel();
+        		cancelSearch();
+        	}
+        });
+//        timer.scheduleAtFixedRate(new TimerTask() {
+//					@Override
+//					public void run()
+//					{
+//						if (!modified)
+//						{
+//							return;
+//						}
+//						modified = false;
+//						Collection<DuplicateFileEntry> entryCollection;
+//						synchronized (entries)
+//						{
+//							entryCollection = (Collection<DuplicateFileEntry>) entries.clone();
+//						}
+//						for (DuplicateFileEntry entry : entryCollection)
+//						{
+//							entry.sizeText(listPanel);
+//						}
+//					}}, 1000, 1000);
+        addComponentListener(new ComponentAdapter() {@Override
+        public void componentResized(ComponentEvent e)
+        {
+        	modified = true;
+        }});
     }
     
     private void refresh()
@@ -95,12 +144,13 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 				}
 			}
 		}
+		Services.colors.childrenChanged(this, machinesList);
 		repaint();
 	}
 
 	private void setRoots()
 	{
-		LogWrapper.getLogger().info("Setting machines.");
+		LogWrapper.getLogger().info("Setting roots.");
 		roots.clear();
 		DefaultListModel model = (DefaultListModel) rootsList.getModel();
 		model.clear();
@@ -112,18 +162,20 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 
 		DbLocals locals = new DbLocals();
 		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection(); 
-				 StatementWrapper statement = connection.prepareNewStatement("select RNAME, R_ID, IS_LOCAL from ROOT where MID in " 
+				 StatementWrapper statement = connection.prepareNewStatement("select MNAME, RNAME, R_ID, ROOT.IS_LOCAL from ROOT join MACHINE on ROOT.MID=MACHINE.M_ID where MID in " 
 		+ createParamList(machines) + ";"); 
 				 ResultSet results = statement.executeQuery();)
 		{
 			while (results.next())
 			{
 				int ndx = 1;
+				String machineName = results.getString(ndx++);
 				String name = results.getString(ndx++);
 				int id = results.getInt(ndx++);
 				boolean local = results.getBoolean(ndx++);
-				roots.put(name, new RootThingy(id, local));
-				model.addElement(name);
+				String key = machineName + " : " + name;
+				roots.put(key, new RootThingy(id, local));
+				model.addElement(key);
 			}
 		}
 		catch (SQLException ex)
@@ -134,15 +186,15 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 
 	private void search()
 	{
-//		listPanel.removeAll();
-//
-//		listPanel.add(new DuplicateFilePanel("idk", 1));
-//		listPanel.add(new DuplicateFilePanel("another", 5));
-
 		listPanel.removeAll();
+		synchronized (entries)
+		{
+			entries.clear();
+		}
+		Services.colors.childrenChanged(this, listPanel);
 		
 		HashMap<Integer, RootThingy> selectedThingies = new HashMap<>();
-		// Same hash, different file size?
+		// TODO: Same hash, different file size?
 		HashMap<String, DuplicateFilePanel> panels = new HashMap<>();
 		
 		for (Object value : rootsList.getSelectedValuesList())
@@ -150,10 +202,17 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 			RootThingy e = roots.get(value);
 			selectedThingies.put(e.id, e);
 		}
-		
 
 		if (selectedThingies.isEmpty())
 		{
+			if (machines.isEmpty())
+			{
+				JOptionPane.showMessageDialog(this, "Please select a machine.", "No machines selected", JOptionPane.INFORMATION_MESSAGE);
+			}
+			else
+			{
+				JOptionPane.showMessageDialog(this, "Please select at least one root.", "No roots selected", JOptionPane.INFORMATION_MESSAGE);
+			}
 			return;
 		}
 		
@@ -162,31 +221,32 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 		String rootList = createParamList(selectedThingies.keySet());
 		LogWrapper.getLogger().info("Searching with roots: " + rootList);
 
-		DuplicateFileCancelFrame cancel = new DuplicateFileCancelFrame(Thread.currentThread());
-		cancel.setLocation(getLocation());
-		cancel.setAlwaysOnTop(true);
-		cancel.setVisible(true);
+		
+		boolean includeZeroSizeFiles = jCheckBox1.isSelected();
 
+		DuplicateFileCancelFrame cancel = null;
 		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
-				StatementWrapper statement = connection.prepareNewStatement(
-						"select distinct * from SFILE as t1 join SFILE as t2 " 
-								+ " on t1.CHKSUM = t2.CHKSUM " 
-								+ " and t1.FSIZE = t2.FSIZE "
-								+ " and t1.F_ID <> t2.F_ID "
-								+ " where t1.ROOT in " + rootList
-								+ " and t2.ROOT in " + rootList 
-//								+ " and t1.CHKSUM is not null " // why do i need these?
-//								+ " and t2.CHKSUM is not null "
-//								+ " order by FSIZE, CHKSUM" // Causes null pointer inside jdbc...
-								+ ";");
+				 StatementWrapper statement = connection.prepareNewStatement(
+						"select distinct * from SFILE as t1 "
+								+ " where t1.ROOT in " + rootList 
+								+ (includeZeroSizeFiles ? "" : " and t1.FSIZE > 0 ")
+								+ " and exists(select F_ID from SFILE as t2 " 
+								+ "     where  t2.CHKSUM = t1.CHKSUM " 
+								+ " 		and    t2.FSIZE  = t1.FSIZE "
+								+ " 		and    t2.F_ID  <> t1.F_ID "
+								+ " 		and    t2.ROOT in " + rootList
+								+ "     limit 1 "
+								+ ") order by FSIZE desc, CHKSUM;");
 				ResultSet results = statement.executeQuery();)
 		{
+			cancel = startSearch();
+			
 			while (results.next())
 			{
 				int id = results.getInt("ROOT");
 				SharedFile allocate = (SharedFile) (selectedThingies.get(id).local ? DbObjects.LFILE : DbObjects.RFILE).allocate(results);
 				allocate.fill(connection, results, locals);
-				LogWrapper.getLogger().info("Found file " + allocate);
+				LogWrapper.getLogger().fine("Found file " + allocate);
 				
 				String checksum = allocate.getChecksum();
 				long fileSize = allocate.getFileSize();
@@ -198,22 +258,77 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 					currentPanel.setVisible(true);
 					listPanel.add(currentPanel);
 					panels.put(checksum, currentPanel);
+					Services.colors.componentAdded(this, currentPanel, listPanel);
 				}
-				currentPanel.add(allocate);
+				DuplicateFileEntry add = currentPanel.add(allocate);
+				if (add != null)
+				{
+					synchronized (entries)
+					{
+						entries.add(add);
+						modified = true;
+					}
+				}
+				Services.colors.childrenChanged(this, currentPanel);
 				repaint();
-				Thread.sleep(20);
+				Thread.sleep(50);
 			}
 		}
 		catch (InterruptedException ex)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to search", ex);
+			LogWrapper.getLogger().info("Search interrupted: " + ex.getMessage());
 		}
-		catch (SQLException ex)
+		catch (Exception ex)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to search", ex);
-			cancel.dispose();
+		}
+		finally
+		{
+			searchDone(cancel);
 		}
 		LogWrapper.getLogger().info("Done searching.");
+	}
+
+	private void searchDone(DuplicateFileCancelFrame cancel)
+	{
+		synchronized (searchThreadSync)
+		{
+			if (cancel != null)
+			{
+				cancel.dispose();
+			}
+			searchThread = null;
+			jButton1.setEnabled(true);
+			jCheckBox1.setEnabled(true);
+		}
+	}
+	
+	void cancelSearch()
+	{
+		synchronized (searchThreadSync)
+		{
+			if (searchThread == null)
+			{
+				return;
+			}
+			searchThread.interrupt();
+		}
+	}
+
+	private synchronized DuplicateFileCancelFrame startSearch()
+	{
+		synchronized (searchThreadSync)
+		{
+			cancelSearch();
+			searchThread = Thread.currentThread();
+			DuplicateFileCancelFrame cancel = new DuplicateFileCancelFrame(this);
+			Services.notifications.registerWindow(cancel);
+			cancel.setAlwaysOnTop(true);
+			cancel.setVisible(true);
+			jButton1.setEnabled(false);
+			jCheckBox1.setEnabled(false);
+			return cancel;
+		}
 	}
 
     private static String createParamList(Collection<Integer> ids)
@@ -258,12 +373,14 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
         jScrollPane3 = new javax.swing.JScrollPane();
         listPanel = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
+        jCheckBox1 = new javax.swing.JCheckBox();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
-        jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Duplicate Files");
 
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
@@ -324,7 +441,7 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
                     .addComponent(jScrollPane2)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel2)
-                        .addGap(0, 210, Short.MAX_VALUE)))
+                        .addGap(0, 404, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -352,28 +469,35 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
         listPanel.setLayout(listPanelLayout);
         listPanelLayout.setHorizontalGroup(
             listPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 509, Short.MAX_VALUE)
+            .addGap(0, 703, Short.MAX_VALUE)
         );
         listPanelLayout.setVerticalGroup(
             listPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 157, Short.MAX_VALUE)
+            .addGap(0, 203, Short.MAX_VALUE)
         );
 
         jScrollPane3.setViewportView(listPanel);
 
         jLabel3.setText("Filters could go here if useful...");
 
+        jCheckBox1.setSelected(true);
+        jCheckBox1.setText("Include size 0 files");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+            .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(178, 178, 178)
-                .addComponent(jButton1)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 417, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jCheckBox1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton1)))
                 .addContainerGap())
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -381,9 +505,11 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
-                    .addComponent(jLabel3))
+                    .addComponent(jLabel3)
+                    .addComponent(jCheckBox1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 139, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 194, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         jSplitPane1.setRightComponent(jPanel3);
@@ -398,13 +524,13 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem2);
 
-        jMenuItem1.setText("Search");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItem3.setText("Hide");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
+                jMenuItem3ActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem1);
+        jMenu1.add(jMenuItem3);
 
         jMenuBar1.add(jMenu1);
 
@@ -414,83 +540,43 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jSplitPane1)
-                .addContainerGap())
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jSplitPane1)
-                .addContainerGap())
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.Alignment.TRAILING)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        Services.userThreads.execute(new Runnable() {
-            @Override
-            public void run() {
-                search();
-            }
-        });
+    	new SwingWorker<Void, Void>()
+			{
+				@Override
+				protected Void doInBackground() throws Exception
+				{
+          search();
+					return null;
+				}
+			}.execute();
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        Services.userThreads.execute(new Runnable() {
-            @Override
-            public void run() {
-                search();
-            }
-        });
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
-
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        Services.userThreads.execute(new Runnable() {
-            @Override
-            public void run() {
-                refresh();
-            }
-        });  
+    	new SwingWorker<Void, Void>()
+			{
+				@Override
+				protected Void doInBackground() throws Exception
+				{
+					refresh();
+					return null;
+				}
+			}.execute();
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(DuplicateFileFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(DuplicateFileFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(DuplicateFileFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(DuplicateFileFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new DuplicateFileFrame().setVisible(true);
-            }
-        });
-    }
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        dispose();
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
     
     static class RootThingy
     {
@@ -507,13 +593,14 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;

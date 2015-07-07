@@ -42,8 +42,6 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.TreePath;
 
@@ -148,10 +146,10 @@ public class MachineViewer extends javax.swing.JFrame
 		
         addPermissionListeners();
         
-        pin.addChangeListener(new ChangeListener()
+        pin.addActionListener(new ActionListener()
 				{
 					@Override
-					public void stateChanged(ChangeEvent e)
+					public void actionPerformed(ActionEvent e)
 					{
 						Machine machine = getMachine();
 						boolean selected = pin.isSelected();
@@ -167,10 +165,10 @@ public class MachineViewer extends javax.swing.JFrame
 
 		Services.timer.scheduleAtFixedRate(model, PathTreeModel.INACTIVITY_DELAY, PathTreeModel.INACTIVITY_DELAY);
 		addWindowListener(model);
-		jCheckBox1.addChangeListener(new ChangeListener()
+		jCheckBox1.addActionListener(new ActionListener()
 		{
 			@Override
-			public void stateChanged(ChangeEvent ce)
+			public void actionPerformed(ActionEvent ce)
 			{
 				Services.userThreads.execute(new Runnable() {
 					@Override
@@ -189,10 +187,10 @@ public class MachineViewer extends javax.swing.JFrame
     private void addPermissionListeners()
 	{
     	// need to go to DB
-		isMessaging.addChangeListener(new ChangeListener()
+		isMessaging.addActionListener(new ActionListener()
 		{
 			@Override
-			public void stateChanged(ChangeEvent arg0)
+			public void actionPerformed(ActionEvent arg0)
 			{
 				Machine machine = getMachine();
 				if (machine == null) return;
@@ -1161,7 +1159,13 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        UserActions.syncRemote(this, getRootDirectory());
+    	RootDirectory rootDirectory = getRootDirectory();
+    	if (rootDirectory == null)
+    	{
+    		JOptionPane.showMessageDialog(this, "Please select a directory first.", "No directory selected", JOptionPane.INFORMATION_MESSAGE);
+    		return;
+    	}
+			UserActions.syncRemote(this, rootDirectory);
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -1316,13 +1320,12 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
         Machine machine = getMachine();
-        String ip = machine.getIp();
         String ident = machine.getIdentifier();
         if (machine.isLocal())
         {
         	return;
         }
-        Services.blackList.setBlacklisted(ident, ip, jCheckBox2.isSelected());
+        Services.blackList.setBlacklisted(ident, jCheckBox2.isSelected());
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed

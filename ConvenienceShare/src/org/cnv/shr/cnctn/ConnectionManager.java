@@ -94,6 +94,12 @@ public class ConnectionManager
 			boolean acceptAnyKeys,
 			String reason) throws UnknownHostException, IOException
 	{
+		if (Services.blackList.contains(identifier))
+		{
+			LogWrapper.getLogger().info(identifier + " is a blacklisted machine.");
+			return null;
+		}
+		
 		if (Misc.collectIps().contains(ip)
 				&&  (portBegin            >= Services.localMachine.getPort() && portBegin            <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts())
 						||
@@ -210,7 +216,7 @@ public class ConnectionManager
 		{
 			if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(
 					origin, 
-					"A tracker listed another url listed for " + identifier + " at " + findAlternativeUrls.describe(alternative)
+					"A tracker listed another url listed for " + identifier + " at " + findAlternativeUrls.describe(alternative) + ".\n"
 						+ "Would you like to try this one?",
 					"Found another address",
 					JOptionPane.YES_NO_OPTION))

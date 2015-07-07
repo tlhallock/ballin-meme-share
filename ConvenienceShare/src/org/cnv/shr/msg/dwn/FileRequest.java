@@ -81,12 +81,20 @@ public class FileRequest extends DownloadMessage
 	public void perform(Communication connection) throws Exception
 	{
 		LocalFile local = getLocal();
+		
 		if (local == null)
 		{
 //			fail("Unable to find local file.");
 			LogWrapper.getLogger().info("Unable to file file " + descriptor);
 			connection.finish();
 		}
+		if (local.getFileSize() == 0)
+		{
+			LogWrapper.getLogger().info("Not serving zero length file: " + local);
+			connection.finish();
+			return;
+		}
+		
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Serve file");
 		ServeInstance serve = Services.server.serve(local, connection);
 		if (serve == null)

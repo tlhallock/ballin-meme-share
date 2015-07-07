@@ -548,8 +548,7 @@ public class UserActions
 									JOptionPane.YES_NO_OPTION))
 					{
 						AddMachine addMachine = new AddMachine(url);
-						addMachine.setLocation(origin.getLocation());
-						Services.colors.setColors(addMachine);
+						Services.notifications.registerWindow(addMachine);
 						addMachine.setVisible(true);
 						addMachine.setAlwaysOnTop(true);
 					}

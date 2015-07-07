@@ -74,7 +74,7 @@
             <Property name="columns" type="int" value="20"/>
             <Property name="lineWrap" type="boolean" value="true"/>
             <Property name="rows" type="int" value="5"/>
-            <Property name="text" type="java.lang.String" value="Finding duplicate files.This can take some time if you have searching several files."/>
+            <Property name="text" type="java.lang.String" value="Finding duplicate files.This can take some time if you are searching several files."/>
           </Properties>
         </Component>
       </SubComponents>

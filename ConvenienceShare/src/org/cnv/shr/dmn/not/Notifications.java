@@ -25,6 +25,7 @@
 
 package org.cnv.shr.dmn.not;
 
+import java.awt.Point;
 import java.awt.Window;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
@@ -446,9 +447,25 @@ public class Notifications implements WindowFocusListener
 		});
 	}
 	
+	private static Point midPoint(JFrame frame)
+	{
+		return new Point(frame.getLocationOnScreen().x + frame.getWidth() / 2, frame.getLocationOnScreen().y + frame.getHeight() / 2);
+	}
+	private static Point upperLeft(JFrame frame, int centerX, int centerY)
+	{
+		return new Point(centerX - frame.getWidth() / 2, centerY - frame.getHeight() / 2);
+	}
+	
+	public void setAppLocation(JFrame frame)
+	{
+		Point p = midPoint(frame);
+		Services.settings.appLocX.set(p.x);
+		Services.settings.appLocY.set(p.y);
+	}
+	
 	public void registerWindow(final JFrame frame)
 	{
-        frame.setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
+        frame.setLocation(upperLeft(frame, Services.settings.appLocX.get(), Services.settings.appLocY.get()));
         frame.addWindowFocusListener(this);
 				Services.colors.setColors(frame);
 //		try

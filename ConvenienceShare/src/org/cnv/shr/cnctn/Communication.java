@@ -217,6 +217,12 @@ public class Communication implements Closeable
 //			Machine machine = DbMachines.getMachine(this.remoteIdentifier);
 //			UserActions.assertUserAcceptsNewIdentifier(remoteIdentifier, machine, getUrl());
 //		}
+		if (Services.blackList.contains(remoteIdentifier))
+		{
+			LogWrapper.getLogger().info(remoteIdentifier + " is a blacklisted machine.");
+			finish();
+			return;
+		}
 		this.remoteIdentifier = remoteIdentifier;
 	}
 	

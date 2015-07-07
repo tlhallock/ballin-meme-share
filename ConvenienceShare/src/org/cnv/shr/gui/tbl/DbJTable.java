@@ -38,6 +38,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.dmn.Services;
@@ -82,15 +83,19 @@ public abstract class DbJTable<T> extends MouseAdapter
 
 	public void empty()
 	{
-		SwingUtilities.invokeLater(new Runnable(){
+		// The entire reason these classes exist is to put refreshes on the event queue
+		new SwingWorker<Void, Void>()
+		{
 			@Override
-			public void run()
+			protected Void doInBackground() throws Exception
 			{
 				synchronized (table)
 				{
 					emptyInternal();
 				}
-			}});
+				return null;
+			}
+		}.execute();
 	}
 
 	private synchronized void emptyInternal()
@@ -105,15 +110,18 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void refreshInPlace()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		SwingUtilities.invokeLater(new Runnable(){
+		new SwingWorker<Void, Void>()
+		{
 			@Override
-			public void run()
+			protected Void doInBackground() throws Exception
 			{
 				synchronized (table)
 				{
 					refreshInPlaceInternal();
 				}
-			}});
+				return null;
+			}
+		}.execute();
 	}
 	
 	private synchronized void refreshInPlaceInternal()
@@ -139,15 +147,18 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void refresh()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		SwingUtilities.invokeLater(new Runnable(){
+		new SwingWorker<Void, Void>()
+		{
 			@Override
-			public void run()
+			protected Void doInBackground() throws Exception
 			{
 				synchronized (table)
 				{
 					refreshInternal();
 				}
-			}});
+				return null;
+			}
+		}.execute();
 	}
 	
 	private synchronized void refreshInternal()

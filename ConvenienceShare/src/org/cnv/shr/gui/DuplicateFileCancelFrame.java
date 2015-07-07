@@ -15,9 +15,9 @@ public class DuplicateFileCancelFrame extends javax.swing.JFrame {
     /**
      * Creates new form DuplicateFileCancelFrame
      */
-    Thread toInterrupt;
-    public DuplicateFileCancelFrame(Thread toInterrupt) {
-        this.toInterrupt = toInterrupt;
+	DuplicateFileFrame toInterrupt;
+    public DuplicateFileCancelFrame(DuplicateFileFrame frame) {
+        this.toInterrupt = frame;
         initComponents();
     }
 
@@ -44,7 +44,7 @@ public class DuplicateFileCancelFrame extends javax.swing.JFrame {
         jTextArea1.setColumns(20);
         jTextArea1.setLineWrap(true);
         jTextArea1.setRows(5);
-        jTextArea1.setText("Finding duplicate files.This can take some time if you have searching several files.");
+        jTextArea1.setText("Finding duplicate files.This can take some time if you are searching several files.");
         jScrollPane1.setViewportView(jTextArea1);
 
         jButton2.setText("Cancel");
@@ -86,10 +86,13 @@ public class DuplicateFileCancelFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        toInterrupt.interrupt();
-        dispose();
+    	cancel();
     }//GEN-LAST:event_jButton2ActionPerformed
 
+	void cancel()
+	{
+		toInterrupt.cancelSearch();
+	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton2;

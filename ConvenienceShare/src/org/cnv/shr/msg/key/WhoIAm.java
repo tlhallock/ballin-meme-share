@@ -90,6 +90,13 @@ public class WhoIAm extends MachineFound
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
+		if (Services.blackList.contains(ident))
+		{
+			LogWrapper.getLogger().info(ident + " is a blacklisted machine.");
+			connection.finish();
+			return;
+		}
+		
 		if (UserActions.checkIfMachineShouldNotReplaceOld(ident, connection.getIp(), port))
 		{
 			throw new RuntimeException("A different machine at " + connection.getIp() + " already exists");

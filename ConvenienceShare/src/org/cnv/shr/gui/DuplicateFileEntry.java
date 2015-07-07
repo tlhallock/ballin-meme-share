@@ -6,9 +6,17 @@
 
 package org.cnv.shr.gui;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.nio.file.Paths;
+
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
+import org.cnv.shr.util.Misc;
 
 /**
  *
@@ -17,6 +25,7 @@ import org.cnv.shr.mdl.SharedFile;
 public class DuplicateFileEntry extends javax.swing.JPanel {
 
     private String path;
+    private boolean truncated;
     /**
      * Creates new form DuplicateFileEntry
      */
@@ -25,17 +34,18 @@ public class DuplicateFileEntry extends javax.swing.JPanel {
         if (file.isLocal())
         {
             LocalFile localFile = (LocalFile) file;
-            jTextField1.setText(path = localFile.getFsFile().toString());
+            path = localFile.getFsFile().toString();
         }
         else
         {
-            jTextField1.setText(path = file.getRelativePath());
+        		path = file.getRelativePath();
             jButton1.setEnabled(false);
         }
         
         RootDirectory root = file.getRootDirectory();
         rootLabel.setText(root.getName());
         machineLabel.setText(root.getMachine().getName());
+        jTextField1.setText(path);
     }
 
     /**
@@ -47,17 +57,23 @@ public class DuplicateFileEntry extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jTextField1 = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         machineLabel = new javax.swing.JLabel();
         rootLabel = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTextField1 = new javax.swing.JTextField();
 
-        jTextField1.setEditable(false);
-        jTextField1.setText("loading...");
+        setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         jButton1.setText("Open");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         jLabel1.setText("Machine:");
 
@@ -66,6 +82,12 @@ public class DuplicateFileEntry extends javax.swing.JPanel {
         machineLabel.setText("loading...");
 
         rootLabel.setText("loading...");
+
+        jLabel3.setText("Path:");
+
+        jTextField1.setEditable(false);
+        jTextField1.setText("loading...");
+        jScrollPane1.setViewportView(jTextField1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -80,13 +102,14 @@ public class DuplicateFileEntry extends javax.swing.JPanel {
                             .addComponent(jLabel2))
                         .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE)
+                            .addComponent(machineLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(rootLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jTextField1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButton1)))
                 .addContainerGap())
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -101,19 +124,97 @@ public class DuplicateFileEntry extends javax.swing.JPanel {
                     .addComponent(rootLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3)
                     .addComponent(jButton1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private JTextField createTextField()
+		{
+    	return new JTextField() {
+    		@Override
+    		public Dimension getPreferredSize()
+    		{
+    			return new Dimension(getDesiredWidth(), super.getPreferredSize().height);
+    		}
+    		@Override
+    		public Dimension getMaximumSize()
+    		{
+    			return getPreferredSize();
+    		}
+    	};
+		}
+    private int getDesiredWidth()
+    {
+    	return getWidth();
+    }
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        Misc.nativeOpen(Paths.get(path), false);
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+
+    private void showFullPath()
+		{
+    	if (!truncated)
+    	{
+    		return;
+    	}
+			JOptionPane.showMessageDialog(this, path, "Full Path", JOptionPane.INFORMATION_MESSAGE);
+		}
+    
+    
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JLabel machineLabel;
     private javax.swing.JLabel rootLabel;
     // End of variables declaration//GEN-END:variables
+    
+    
+	void sizeText(Component frame)
+	{
+		if (!isVisible())
+		{
+			return;
+		}
+		String original = path;
+//		int cut = 0;
+//		FontMetrics fontMetrics = jTextField1.getFontMetrics(jTextField1.getFont());
+//		int leftSide = jTextField1.getLocationOnScreen().x - frame.getLocationOnScreen().x;
+//		int rightSide = Math.max(0, (getLocationOnScreen().x + getWidth()) - (jTextField1.getLocationOnScreen().x + jTextField1.getWidth()));
+//		int desiredWidth = frame.getPreferredSize().width - leftSide - rightSide - 5;
+//		truncated = false;
+//		while (fontMetrics.stringWidth(original) > desiredWidth)
+//		{
+//			truncated = true;
+//			cut++;
+//			int endIndex = path.length() / 2 - cut;
+//			int startIndex = path.length() / 2 + cut;
+//			if (endIndex < 0 || startIndex >= path.length())
+//			{
+//				break;
+//			}
+//			original = path.substring(0, endIndex) + " ... " + path.substring(startIndex, path.length());
+		// }
+//		int width2 = getWidth();
+		jTextField1.setText(original);
+//		Dimension d = new Dimension(width2, jScrollPane1.getHeight());
+//		jScrollPane1.setSize(d);
+//		jScrollPane1.setPreferredSize(d);
+//		jScrollPane1.setMaximumSize(d);
+//		jTextField1.setPreferredSize(d);
+//		jTextField1.setMinimumSize(new Dimension(1,1));
+//		jTextField1.setPreferredSize(new Dimension(1, 1));
+		repaint();
+	}
 }

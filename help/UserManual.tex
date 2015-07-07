@@ -384,6 +384,182 @@ colorsFile           Color setter ( or remove this setting )
 \item close root synchronizer on inactivity
 \item change directory name while it is open in the machine viewer
 \end{itemize}
+
+
+\begin{itemize}
+\item sync issue on showing duplicate files
+\item the tracker message thing does not have proper coloring
+\item compress tracker
+\item deleting all the downloads hangs and doesn't work.
+\item Should there be an option to add filters to a local directory before you synchronize it
+\item File getRelativePath
+\item the stats on the machine viewer don't update
+\item sockets not closing?
+\item open containing folder opens the file itself
+
+\item getLogs?  (weird logs, and not closing?)
+\item synchronize roots on local machine?
+
+
+\item files table should accept a boolean for local machine...
+\item refresh serve table (finish it, more like)
+\item call refresh once from inside the application constructor so that downloads has the correct number of max downloads
+\item update request and get logs could have a progress bar...
+
+\item is configure run on startup a toggle menu item?
+\item fix "speed will go here on verify integrity"
+\item verify integrity might should redownload the meta data if possible...
+\item compress database backup
+\item ignore patterns are not stored in backup (is there any other reason why they would be lost?)
+\item eventually remove all the file logs...
+
+\item on update request with new key:
+\end{itemize}
+
+Remote is authenticated.
+Adding key to wBsLmZJDrq: 00000081008728B33DFB6F18B32E4E6CF1A8A7646FC2EB15E73F6AA64D4DAC46DF54072B58D259F1A67CC306A77878ADC0EB2F780BF80603D7A8DDF42FA7D2733DF3CC7B11B8E6D1ADFE41A2865075A0552DC34DE527BB5DBAE6C1C7C323EF4FAD76FB8A5D0EC3265ABB83FBD578A9C822AC5863B493A04D37025A686977E3CC618C75A7EB00000003010001
+Sending message "Here is a new AES key to encrypt with." to /127.0.0.1:48301
+Receiving message of type NewAesKey from 127.0.0.1:48301
+Read msg Here is a new AES key to encrypt with. from 127.0.0.1:48301
+Receiving message of type UpdateInfoRequestRequest from 127.0.0.1:48301
+Read msg Please implement toString() in class org.cnv.shr.msg.swup.UpdateInfoRequestRequest from 127.0.0.1:48301
+Sending message "Please implement toString() in class org.cnv.shr.msg.swup.UpdateInfoRequest" to /127.0.0.1:48301
+Receiving message of type UpdateInfoMessage from 127.0.0.1:48301
+Read msg Please implement toString() in class org.cnv.shr.msg.swup.UpdateInfoMessage from 127.0.0.1:48301
+Sending message "done." to /127.0.0.1:48301
+Unable to download update.
+java.io.IOException: Hit end of stream.
+	at org.cnv.shr.util.ByteReader.readInt(ByteReader.java:96)
+	at org.cnv.shr.util.ByteReader.readVarByteArray(ByteReader.java:124)
+	at org.cnv.shr.dmn.UpdateManager.checkForUpdatesFromServer(UpdateManager.java:227)
+	at org.cnv.shr.dmn.UpdateManager.checkForUpdates(UpdateManager.java:144)
+	at org.cnv.shr.msg.swup.UpdateInfoMessage.perform(UpdateInfoMessage.java:99)
+	at org.cnv.shr.cnctn.ConnectionRunnable.run(ConnectionRunnable.java:73)
+	at org.cnv.shr.cnctn.ConnectionManager.handleConnection(ConnectionManager.java:249)
+	at org.cnv.shr.dmn.RequestHandler.run(RequestHandler.java:83)
+Receiving message of type DoneResponse from 127.0.0.1:48301
+Read msg I am done too. from 127.0.0.1:48301
+
+
+
+
+
+
+
+
+
+
+
+Found this:
+Thread 121 count: -1
+	stmt #4 tmp=false results:closed query=prep16645: select * from MACHINE where IDENT = ? {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3'}
+	stmt #11 tmp=false results:closed query=prep16429: select KEYSTR from PUBLIC_KEY where MID=? order by ADDED desc limit 1; {1: 2}
+	stmt #18 tmp=false results:closed query=prep16625: select * from SFILE where F_ID=?; {1: 26188}
+	stmt #20 tmp=false results:closed query=prep14556: select * from SFILE where PELEM=? and ROOT=?; {1: 28, 2: 36}
+	stmt #33 tmp=false results:closed query=prep14553: select PATTERN from IGNORE_PATTERN where RID=?; {1: 3}
+	stmt #34 tmp=false results:closed query=prep16646: select * from ROOT where RNAME=? and MID=?; {1: 'intel', 2: 2}
+	stmt #38 tmp=false results:closed query=prep14742: select count(F_ID) as number from SFILE where ROOT = ?; {1: 3}
+	stmt #39 tmp=false results:closed query=prep14744: select sum(FSIZE) as totalsize from SFILE where ROOT = ?; {1: 3}
+	stmt #45 tmp=false results:closed query=prep14749: update ROOT set PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=?, SHARING=?, MIN_SIZE=?, MAX_SIZE=? where ROOT.R_ID = ?; {1: 29, 2: '', 3: '', 4: 12797791063, 5: 19108, 6: 'Documents', 7: 3, 8: -1, 9: -1, 10: 3}
+	stmt #51 tmp=false results:closed query=prep14554: select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID where PELEM.PARENT = ?;                                                         {1: 3, 2: 41738}
+	stmt #52 tmp=false results:null query=prep14558: insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);
+	stmt #53 tmp=false results:closed query=prep14557: select P_ID from PELEM where PARENT=? and PELEM=?; {1: 27, 2: 'b'}
+	stmt #55 tmp=false results:null query=prep14555: merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?); {1: 36, 2: 0}
+	stmt #59 tmp=false results:closed query=prep14559: merge into SFILE key(PELEM, ROOT) values ((select F_ID from SFILE where PELEM=? and ROOT=?), ?, ?, ?, ?, ?, ?, ?, ?); {1: 28, 2: 36, 3: 9216, 4: '', 5: '6f14f0963ac00a6fcda14753ce7a2e700b67eb76', 6: 28, 7: 36, 8: 0, 9: 1429047436000, 10: 0}
+	stmt #60 tmp=false results:closed query=prep16657: merge into DOWNLOAD key(FID) values ((select Q_ID from DOWNLOAD where FID=?), ?, ?, ?, ?, ?, ?) {1: 26188, 2: 26188, 3: 1436233654851, 4: 10, 5: 0, 6: '/work/ballin-meme-share/instances/i1/downloads/mirror.intel.K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3/ism/rm/intelremotemondata.db', 7: 1048576}
+	stmt #61 tmp=false results:null query=prep16643: delete from DOWNLOAD where FID=? {1: 26188}
+	stmt #63 tmp=false results:closed query=prep16624: select * from DOWNLOAD join SFILE on DOWNLOAD.FID=SFILE.F_ID join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.MID = ?; {1: 2}
+	stmt #64 tmp=false results:null query=prep16644: delete from ROOT_CONTAINS where RID in (select R_ID from ROOT where MID=?); {1: 2}
+	stmt #70 tmp=false results:closed query=prep16642: select * from CHUNK where DID=?; {1: 1}
+
+
+
+and this:
+Thread 119 count: -2
+	stmt #0 tmp=false results:closed query=prep14276: merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 2: 'DsVRDx9yRd', 3: '192.168.1.2', 4: 8990, 5: 10, 6: 1436233632231, 7: 3, 8: 3, 9: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 10: FALSE, 11: TRUE, 12: FALSE, 13: TRUE}
+	stmt #4 tmp=false results:closed query=prep14275: select * from MACHINE where IDENT = ? {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3'}
+	stmt #9 tmp=false results:closed query=prep14264: select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1; {1: '192.168.1.2', 2: 8990, 3: 8990}
+	stmt #13 tmp=false results:closed query=prep14277: merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?); {1: '0000008100B844F88A28DFF01E9B1C3A29820B1764212F97AAE68C4F8A22108C78EEB7D4D8412A3CF4D6DB679E43FCA15FD4180E529B61066B01AC6B64FEEA9B38AFBD9BB576E0E8A8354BC2030D78F3999CB869148BAB1A475815BF6EE398A2514C1B10BEE3F9943148507FBBD26520D2EE44FF9A060987D45E04015530A8C8E11B54B23100000003010001', 2: 1436233632236, 3: 1436233632236, 4: 2}
+	stmt #34 tmp=false results:closed query=prep14348: select * from ROOT where RNAME=? and MID=?; {1: 'intel', 2: 2}
+	stmt #52 tmp=false results:null query=prep14691: insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);
+	stmt #53 tmp=false results:closed query=prep14690: select P_ID from PELEM where PARENT=? and PELEM=?; {1: 23, 2: 'rm/'}
+	stmt #55 tmp=false results:null query=prep14349: merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?); {1: 36, 2: 0}
+Thread 116 count: -2
+	stmt #0 tmp=false results:closed query=prep13642: merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 2: 'DsVRDx9yRd', 3: '192.168.1.2', 4: 8990, 5: 10, 6: 1436233624607, 7: 3, 8: 3, 9: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 10: FALSE, 11: TRUE, 12: FALSE, 13: TRUE}
+	stmt #4 tmp=false results:closed query=prep13641: select * from MACHINE where IDENT = ? {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3'}
+	stmt #9 tmp=false results:closed query=prep13640: select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1; {1: '192.168.1.2', 2: 8990, 3: 8990}
+	stmt #13 tmp=false results:closed query=prep13643: merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?); {1: '0000008100B844F88A28DFF01E9B1C3A29820B1764212F97AAE68C4F8A22108C78EEB7D4D8412A3CF4D6DB679E43FCA15FD4180E529B61066B01AC6B64FEEA9B38AFBD9BB576E0E8A8354BC2030D78F3999CB869148BAB1A475815BF6EE398A2514C1B10BEE3F9943148507FBBD26520D2EE44FF9A060987D45E04015530A8C8E11B54B23100000003010001', 2: 1436233624612, 3: 1436233624612, 4: 2}
+Thread 118 count: -1
+	stmt #0 tmp=false results:closed query=prep14167: merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 2: 'DsVRDx9yRd', 3: '192.168.1.2', 4: 8990, 5: 10, 6: 1436233630870, 7: 3, 8: 3, 9: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 10: FALSE, 11: TRUE, 12: FALSE, 13: TRUE}
+	stmt #4 tmp=false results:closed query=prep14166: select * from MACHINE where IDENT = ? {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3'}
+	stmt #9 tmp=false results:closed query=prep14165: select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1; {1: '192.168.1.2', 2: 8990, 3: 8990}
+	stmt #13 tmp=false results:closed query=prep14168: merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?); {1: '0000008100B844F88A28DFF01E9B1C3A29820B1764212F97AAE68C4F8A22108C78EEB7D4D8412A3CF4D6DB679E43FCA15FD4180E529B61066B01AC6B64FEEA9B38AFBD9BB576E0E8A8354BC2030D78F3999CB869148BAB1A475815BF6EE398A2514C1B10BEE3F9943148507FBBD26520D2EE44FF9A060987D45E04015530A8C8E11B54B23100000003010001', 2: 1436233630875, 3: 1436233630875, 4: 2}
+	stmt #37 tmp=false results:closed query=prep14232: select * from ROOT where ROOT.MID = ?; {1: 2}
+	stmt #44 tmp=false results:closed query=prep14231: merge into ROOT key(R_ID) VALUES ((select R_ID from ROOT where MID=? and RNAME=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 2, 2: 'intel', 3: 41777, 4: '', 5: '', 6: 2, 7: FALSE, 8: -1, 9: -1, 10: 'intel', 11: 3, 12: -1, 13: -1}
+	stmt #52 tmp=false results:null query=prep14230: insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);
+	stmt #53 tmp=false results:closed query=prep14229: select P_ID from PELEM where PARENT=? and PELEM=?; {1: 41776, 2: 'MQ3'}
+	stmt #55 tmp=false results:null query=prep14233: merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?); {1: 36, 2: 0}
+
+Thread 100 count: -14
+	stmt #0 tmp=false results:closed query=prep5456: merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 2: 'DsVRDx9yRd', 3: '192.168.1.2', 4: 8990, 5: 10, 6: 1436233735919, 7: 3, 8: 3, 9: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 10: FALSE, 11: TRUE, 12: FALSE, 13: TRUE}
+	stmt #4 tmp=false results:closed query=prep5455: select * from MACHINE where IDENT = ? {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3'}
+	stmt #9 tmp=false results:closed query=prep5454: select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1; {1: '192.168.1.2', 2: 8990, 3: 8990}
+	stmt #13 tmp=false results:closed query=prep5457: merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?); {1: '0000008100B844F88A28DFF01E9B1C3A29820B1764212F97AAE68C4F8A22108C78EEB7D4D8412A3CF4D6DB679E43FCA15FD4180E529B61066B01AC6B64FEEA9B38AFBD9BB576E0E8A8354BC2030D78F3999CB869148BAB1A475815BF6EE398A2514C1B10BEE3F9943148507FBBD26520D2EE44FF9A060987D45E04015530A8C8E11B54B23100000003010001', 2: 1436233735924, 3: 1436233735924, 4: 2}
+	stmt #34 tmp=false results:closed query=prep5630: select * from ROOT where RNAME=? and MID=?; {1: 'intel', 2: 2}
+	stmt #37 tmp=false results:closed query=prep16722: select * from ROOT where ROOT.MID = ?; {1: 2}
+	stmt #44 tmp=false results:closed query=prep16721: merge into ROOT key(R_ID) VALUES ((select R_ID from ROOT where MID=? and RNAME=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 2, 2: 'intel', 3: 41777, 4: '', 5: '', 6: 2, 7: FALSE, 8: -1, 9: -1, 10: 'intel', 11: 3, 12: -1, 13: -1}
+	stmt #52 tmp=false results:null query=prep5740: insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);
+	stmt #53 tmp=false results:closed query=prep5739: select P_ID from PELEM where PARENT=? and PELEM=?; {1: 41776, 2: 'MQ3'}
+	stmt #55 tmp=false results:null query=prep5631: merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?); {1: 36, 2: 0}
+Thread 101 count: -2
+	stmt #0 tmp=false results:closed query=prep5753: merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 2: 'DsVRDx9yRd', 3: '192.168.1.2', 4: 8990, 5: 10, 6: 1436233471150, 7: 3, 8: 3, 9: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3', 10: FALSE, 11: TRUE, 12: FALSE, 13: TRUE}
+	stmt #4 tmp=false results:closed query=prep5752: select * from MACHINE where IDENT = ? {1: 'K2dTGwDlkYHNkAG4DMDBtEJPQC91lu3l2Y73JnpL4JQE16TMQ3'}
+	stmt #9 tmp=false results:closed query=prep5751: select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1; {1: '192.168.1.2', 2: 8990, 3: 8990}
+	stmt #13 tmp=false results:closed query=prep5754: merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?); {1: '0000008100B844F88A28DFF01E9B1C3A29820B1764212F97AAE68C4F8A22108C78EEB7D4D8412A3CF4D6DB679E43FCA15FD4180E529B61066B01AC6B64FEEA9B38AFBD9BB576E0E8A8354BC2030D78F3999CB869148BAB1A475815BF6EE398A2514C1B10BEE3F9943148507FBBD26520D2EE44FF9A060987D45E04015530A8C8E11B54B23100000003010001', 2: 1436233471153, 3: 1436233471153, 4: 2}
+	stmt #34 tmp=false results:closed query=prep5845: select * from ROOT where RNAME=? and MID=?; {1: 'intel', 2: 3}
+	stmt #52 tmp=false results:null query=prep5870: insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);
+	stmt #53 tmp=false results:closed query=prep5869: select P_ID from PELEM where PARENT=? and PELEM=?; {1: 23, 2: 'rm/'}
+	stmt #55 tmp=false results:null query=prep5846: merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?); {1: 5, 2: 0}
+Thread 103 count: -3
+	stmt #0 tmp=false results:closed query=prep6129: merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 'qBBnCRLhlv878tA1KYXy8hHSaGnWRBPDR0V67XFZ4c6NP99GF5', 2: 'nH3pCoWdTn', 3: '127.0.0.1', 4: 7990, 5: 10, 6: 1436233475725, 7: 3, 8: 3, 9: 'qBBnCRLhlv878tA1KYXy8hHSaGnWRBPDR0V67XFZ4c6NP99GF5', 10: FALSE, 11: TRUE, 12: FALSE, 13: TRUE}
+	stmt #4 tmp=false results:closed query=prep6128: select * from MACHINE where IDENT = ? {1: 'qBBnCRLhlv878tA1KYXy8hHSaGnWRBPDR0V67XFZ4c6NP99GF5'}
+	stmt #9 tmp=false results:closed query=prep6127: select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1; {1: '127.0.0.1', 2: 7990, 3: 7990}
+	stmt #13 tmp=false results:closed query=prep6130: merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?); {1: '0000008100C7C5F6EBE7CE841385CF00B61B5B425E3D12B2F5EF976E0C9D5DDBF49F95EA6F79B9ABE6BF7F1F9EB049768633C05BB29604FB1C8B157CE3996FA8F8B147D6385FD405534056CF5C783C674D16162F54CEE9C100DE76D132384B36ABE2E25243145A6E46D3F1FD3BA9E7D1FAF5A48BA63DCACE69DE3D0B763C4859DCB147D85900000003010001', 2: 1436233475730, 3: 1436233475730, 4: 3}
+	stmt #34 tmp=false results:closed query=prep6394: select * from ROOT where RNAME=? and MID=?; {1: 'exp', 2: 3}
+	stmt #55 tmp=false results:null query=prep6395: merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?); {1: 6, 2: 0}
+Thread 73 count: -19
+	stmt #0 tmp=false results:closed query=prep604: merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 'qBBnCRLhlv878tA1KYXy8hHSaGnWRBPDR0V67XFZ4c6NP99GF5', 2: 'nH3pCoWdTn', 3: '127.0.0.1', 4: 7990, 5: 10, 6: 1436233624387, 7: 3, 8: 3, 9: 'qBBnCRLhlv878tA1KYXy8hHSaGnWRBPDR0V67XFZ4c6NP99GF5', 10: FALSE, 11: TRUE, 12: FALSE, 13: TRUE}
+	stmt #4 tmp=false results:closed query=prep540: select * from MACHINE where IDENT = ? {1: 'qBBnCRLhlv878tA1KYXy8hHSaGnWRBPDR0V67XFZ4c6NP99GF5'}
+	stmt #9 tmp=false results:closed query=prep539: select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1; {1: '127.0.0.1', 2: 7990, 3: 7990}
+	stmt #13 tmp=false results:closed query=prep605: merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?); {1: '0000008100C7C5F6EBE7CE841385CF00B61B5B425E3D12B2F5EF976E0C9D5DDBF49F95EA6F79B9ABE6BF7F1F9EB049768633C05BB29604FB1C8B157CE3996FA8F8B147D6385FD405534056CF5C783C674D16162F54CEE9C100DE76D132384B36ABE2E25243145A6E46D3F1FD3BA9E7D1FAF5A48BA63DCACE69DE3D0B763C4859DCB147D85900000003010001', 2: 1436233624393, 3: 1436233624393, 4: 3}
+	stmt #34 tmp=false results:closed query=prep704: select * from ROOT where RNAME=? and MID=?; {1: 'intel', 2: 2}
+	stmt #37 tmp=false results:closed query=prep12697: select * from ROOT where ROOT.MID = ?; {1: 2}
+	stmt #44 tmp=false results:closed query=prep12696: merge into ROOT key(R_ID) VALUES ((select R_ID from ROOT where MID=? and RNAME=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); {1: 2, 2: 'intel', 3: 41777, 4: '', 5: '', 6: 2, 7: FALSE, 8: -1, 9: -1, 10: 'intel', 11: 3, 12: -1, 13: -1}
+	stmt #52 tmp=false results:null query=prep2099: insert into PELEM(PARENT, BROKEN, PELEM) values(?, ?, ?);
+	stmt #53 tmp=false results:closed query=prep2098: select P_ID from PELEM where PARENT=? and PELEM=?; {1: 23, 2: 'rm/'}
+	stmt #55 tmp=false results:null query=prep705: merge into ROOT_CONTAINS key(RID, PELEM) values (?, ?); {1: 36, 2: 0}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Maybe:
 \begin{itemize}
 \item Need to check versions when messaging?

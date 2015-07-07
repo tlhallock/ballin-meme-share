@@ -203,14 +203,14 @@ public class DbMachines
 		if (machine == null)
 		{
 			machine = new Machine(ident);
+			// By default, we will accept messages from other machines...
+			machine.setAllowsMessages(true);
 		}
 		
 		machine.setIp(ip);
 		machine.setPort(port);
 		machine.setName(name);
 		machine.setNumberOfPorts(nports);
-		// By default, we will accept messages from other machines...
-		machine.setAllowsMessages(true);
 		machine.setLastActive(System.currentTimeMillis());
 		
 
