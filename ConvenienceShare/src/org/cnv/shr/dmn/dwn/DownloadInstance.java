@@ -26,6 +26,7 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -62,6 +63,7 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.trck.FileEntry;
+import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -337,7 +339,8 @@ public class DownloadInstance implements Runnable
 			Seeder removeFirst = freeSeeders.removeFirst();
 			try
 			{
-				boolean shouldCompress = c.getSize() > 50 && remoteFile.getPath().getUnbrokenName().endsWith(".txt");
+				// TODO: move size check
+				boolean shouldCompress = c.getSize() > 50 && Services.compressionManager.shouldCompressFile(remoteFile.getPath().getUnbrokenName());
 				shouldCompress = true;
 				removeFirst.request(remoteFile.getFileEntry(), c, shouldCompress);
 				pendingSeeders.put(c, removeFirst);
@@ -411,11 +414,24 @@ public class DownloadInstance implements Runnable
 		}
 		
 		resquestedSeeder.requestCompleted(null, chunk);
-		connection.beginReadRaw();
 		try
 		{
-			boolean successful = ChunkData.read(chunk, destination.toFile(), connection.getIn(), compressed);
-			connection.endReadRaw();
+			boolean successful;
+			
+			if (compressed)
+			{
+				try (InputStream in = CompressionStreams.newCompressedInputStream(connection.getIn()))
+				{
+					successful = ChunkData.read(chunk, destination.toFile(), connection.getIn());
+				}
+			}
+			else
+			{
+				connection.beginReadRaw();
+				successful = ChunkData.read(chunk, destination.toFile(), connection.getIn());
+				connection.endReadRaw();
+			}
+			
 			freeSeeders.addLast(resquestedSeeder);
 			
 			if (successful)

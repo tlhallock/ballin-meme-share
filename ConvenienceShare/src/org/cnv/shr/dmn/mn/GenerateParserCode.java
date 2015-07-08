@@ -309,6 +309,7 @@ public class GenerateParserCode
 	
 	private static void printParsers(HashMap<JsonParser.Event, List<Parser>> parsers, PrintStream ps)
 	{
+		HashSet<String> alreadyValidated = new HashSet<>();
 		ps.println("\t@Override                                    ");
 		ps.println("\tpublic void parse(JsonParser parser) {       ");
 		ps.println("\t\tString key = null;                         ");
@@ -323,7 +324,7 @@ public class GenerateParserCode
 //		ps.println("\t\t\t\tvalidate();                            ");
                 parsers.entrySet().stream().forEach((entry) -> {
                     entry.getValue().stream().forEach((Parser p) -> {
-                        p.printValidator(ps);
+                        p.printValidator(ps, alreadyValidated);
                     });
             });
 		ps.println("\t\t\t\treturn;                                ");
@@ -370,15 +371,15 @@ public class GenerateParserCode
 		
 		public void printDecls(PrintStream ps)
 		{
-                    fields.stream().filter((f) -> !(f.isAnnotationPresent(MyParserNullable.class))).forEach((f) -> {
-                        ps.println("\t\tboolean needs" + f.getName() + " = true;");
+			HashSet<String> printed = new HashSet<>();
+                    fields.stream().filter((f) -> !(!printed.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))).forEach((f) -> {
+                        ps.println("\t\tboolean " + getNeedsVarName(f.getName()) + " = true;");
                     });
 		}
-		public void printValidator(PrintStream ps)
+		public void printValidator(PrintStream ps, HashSet<String> alreadyValidated)
 		{
-			HashSet<String> printed = new HashSet<>();
-                        fields.stream().filter((f) -> !(!printed.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))).map((f) -> {
-                            ps.println("\t\t\t\tif (needs" + f.getName() + ")");
+                        fields.stream().filter((f) -> !(!alreadyValidated.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))).map((f) -> {
+                            ps.println("\t\t\t\tif (" + getNeedsVarName(f.getName()) + ")");
                         return f;
                     }).map((f) -> {
                         ps.println("\t\t\t\t{");
@@ -401,7 +402,7 @@ public class GenerateParserCode
           ps.println("\t\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
           if (!f.isAnnotationPresent(MyParserNullable.class))
           {
-            ps.println("\t\t\t\t\tneeds" + f.getName() + " = false;");
+            ps.println("\t\t\t\t\t" + getNeedsVarName(f.getName()) + " = false;");
           }
           ps.println("\t\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
           ps.println("\t\t\t\t} else {");
@@ -416,7 +417,7 @@ public class GenerateParserCode
 					ps.println("\t\t\t\tcase \"" + f.getName() + "\":");
 					if (!f.isAnnotationPresent(MyParserNullable.class))
 					{
-						ps.println("\t\t\t\t\tneeds" + f.getName() + " = false;");
+						ps.println("\t\t\t\t\t" + getNeedsVarName(f.getName()) + " = false;");
 					}
 					ps.println("\t\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
 					ps.println("\t\t\t\t\tbreak;");
@@ -446,6 +447,8 @@ public class GenerateParserCode
 		case "org.cnv.shr.json.JsonStringMap":
 		case "org.cnv.shr.json.JsonMap":
 		case "org.cnv.shr.json.JsonList":
+		case "org.cnv.shr.json.JsonSet":
+		case "org.cnv.shr.json.JsonStringSet":
 		case "org.cnv.shr.json.JsonStringList": return ".parse(parser)";
 		case "class org.cnv.shr.msg.PathList":
 			return " = (new PathList(parser)).setParent(this)";
@@ -492,6 +495,8 @@ public class GenerateParserCode
 		switch (fieldName)
 		{
 		case "org.cnv.shr.json.JsonList":
+		case "org.cnv.shr.json.JsonSet":
+		case "org.cnv.shr.json.JsonStringSet":
 		case "org.cnv.shr.json.JsonStringList":
 			return JsonParser.Event.START_ARRAY;
 		case "org.cnv.shr.json.JsonStringMap":
@@ -578,6 +583,8 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 		output.println("\t\t}");
 		return;
 	case "org.cnv.shr.json.JsonList":
+	case "org.cnv.shr.json.JsonSet":
+	case "org.cnv.shr.json.JsonStringSet":
 	case "org.cnv.shr.json.JsonStringList":
 		if (nullable)
 		{
@@ -750,6 +757,10 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 	private static boolean shouldContinue(Class<?> c)
 	{
 		return c != null && c.getName().startsWith("org.cnv.shr");
+	}
+	private static String getNeedsVarName(String var)
+	{
+		return "needs" + (var.charAt(0) + "").toUpperCase() + var.substring(1);
 	}
 
 //private static String parseList(Field f)

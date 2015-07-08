@@ -34,8 +34,11 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.db.h2.DbRoots.IgnorePatterns;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.json.JsonStringSet;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
@@ -56,6 +59,7 @@ public class LocalBackup implements Jsonable
 	private Long totalNumFiles;
 	@MyParserNullable
 	private SharingState defaultSharingState;
+	private JsonStringSet ignores = new JsonStringSet();
 	
 	LocalBackup(LocalDirectory root)
 	{
@@ -70,6 +74,11 @@ public class LocalBackup implements Jsonable
 		if (path.charAt(path.length() - 1) != '/')
 		{
 			path = path + "/";
+		}
+		IgnorePatterns dbIgnores = DbRoots.getIgnores(root);
+		for (String str : dbIgnores.getPatterns())
+		{
+			ignores.add(str);
 		}
 	}
 	
@@ -95,6 +104,8 @@ public class LocalBackup implements Jsonable
 			return;
 		}
 		DbPaths.pathLiesIn(DbPaths.getPathElement(path), local);
+		
+		DbRoots.setIgnores(local, ignores.toArray(DUMMY));
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -117,54 +128,96 @@ public class LocalBackup implements Jsonable
 		generator.write("totalNumFiles", totalNumFiles);
 		if (defaultSharingState!=null)
 		generator.write("defaultSharingState",defaultSharingState.name());
+		{
+			generator.writeStartArray("ignores");
+			ignores.generate(generator);
+		}
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsminFSize = true;
-		boolean needsmaxFSize = true;
-		boolean needsname = true;
-		boolean needsdescription = true;
-		boolean needspath = true;
+		boolean needsName = true;
+		boolean needsDescription = true;
+		boolean needsPath = true;
+		boolean needsIgnores = true;
+		boolean needsMinFSize = true;
+		boolean needsMaxFSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsminFSize)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs minFSize");
-				}
-				if (needsmaxFSize)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs maxFSize");
-				}
-				if (needsname)
+				if (needsName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
 				}
-				if (needsdescription)
+				if (needsDescription)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
 				}
-				if (needspath)
+				if (needsPath)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
+				}
+				if (needsIgnores)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ignores");
+				}
+				if (needsMinFSize)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs minFSize");
+				}
+				if (needsMaxFSize)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs maxFSize");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "description":
+					needsDescription = false;
+					description = parser.getString();
+					break;
+				case "tags":
+					tags = parser.getString();
+					break;
+				case "path":
+					needsPath = false;
+					path = parser.getString();
+					break;
+				case "defaultSharingState":
+					defaultSharingState = SharingState.valueOf(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("ignores")) {
+					needsIgnores = false;
+					ignores.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "minFSize":
-					needsminFSize = false;
+					needsMinFSize = false;
 					minFSize = Long.parseLong(parser.getString());
 					break;
 				case "maxFSize":
-					needsmaxFSize = false;
+					needsMaxFSize = false;
 					maxFSize = Long.parseLong(parser.getString());
 					break;
 				case "totalFileSize":
@@ -172,30 +225,6 @@ public class LocalBackup implements Jsonable
 					break;
 				case "totalNumFiles":
 					totalNumFiles = Long.parseLong(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "name":
-					needsname = false;
-					name = parser.getString();
-					break;
-				case "description":
-					needsdescription = false;
-					description = parser.getString();
-					break;
-				case "tags":
-					tags = parser.getString();
-					break;
-				case "path":
-					needspath = false;
-					path = parser.getString();
-					break;
-				case "defaultSharingState":
-					defaultSharingState = SharingState.valueOf(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
@@ -215,4 +244,7 @@ public class LocalBackup implements Jsonable
 		return new String(output.toByteArray());                                         
 	}                                                                                  
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
+	
+	
+	private static final String[] DUMMY = new String[0];
 }

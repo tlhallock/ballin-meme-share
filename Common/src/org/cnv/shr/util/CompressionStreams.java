@@ -1,265 +1,95 @@
 package org.cnv.shr.util;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 public class CompressionStreams
 {
 
-	public static OutputStream newCompressedOutputStream(long numBytes, OutputStream delegate) throws IOException
+	public static OutputStream newCompressedOutputStream(PausableOutputStream delegate) throws IOException
 	{
-		OutputStream innerStream = new OutputStream()
-		{
-			@Override
-			public void write(int b) throws IOException
-			{
-				delegate.write(b);
-			}
-			@Override
-			public void write(byte[] b, int off, int len) throws IOException
-			{
-				delegate.write(b, off, len);
-			}
-			@Override
-			public void close() throws IOException
-			{
-				flush();
-			}
-			@Override
-			public void flush() throws IOException
-			{
-				delegate.flush();
-			}
-		};
-		
-		GZIPOutputStream zip = new GZIPOutputStream(innerStream);
+		ZipOutputStream zip = new ZipOutputStream(delegate);
+		zip.putNextEntry(new ZipEntry(String.valueOf(Math.random())));
 		
 		OutputStream outerStream = new OutputStream()
 		{
-			boolean closed;
-			long remaining = numBytes;
 			@Override
 			public void write(int b) throws IOException
 			{
-				if (remaining <= 0)
-				{
-					LogWrapper.getLogger().warning("Wrote past the number of bytes expected to write!!\nWriting directly to stream...");
-					close();
-					delegate.write(b);
-					return;
-				}
 				zip.write(b);
-				remaining--;
 			}
 			@Override
 			public void write(byte[] b, int off, int len) throws IOException
 			{
-				if (len <= remaining)
-				{
-					zip.write(b, off, len);
-					remaining -= len;
-					return;
-				}
-				
-				int newLength = (int) remaining;
-				LogWrapper.getLogger().warning("Wrote " + (len - newLength) + " past the number of bytes expected to write!!\nWriting directly to stream...");
-				zip.write(b, off, newLength);
-				close();
-				delegate.write(b, off + newLength, len - newLength);
-				remaining = 0;
-				return;
+				zip.write(b, off, len);
 			}
 
 			@Override
 			public void close() throws IOException
 			{
-				if (!closed)
-				{
-					zip.close();
-				}
+				zip.close();
 			}
 			@Override
 			public void flush() throws IOException
 			{
-				if (!closed)
-				{
-					zip.flush();
-				}
-				else
-				{
-					delegate.flush();
-				}
+				zip.putNextEntry(new ZipEntry(String.valueOf(Math.random())));
+				zip.flush();
+				delegate.flush();
 			}
 		};
 		return outerStream;
 	}
 
-	public static InputStream newCompressedInputStream(long numBytes, InputStream delegate) throws IOException
+	public static InputStream newCompressedInputStream(PausableInputStream2 delegate) throws IOException
 	{
-		// This needs to be revisited: the point of the outer isn't really useful anymore...
-		InputStream inner = new InputStream()
-		{
-			@Override
-			public int available() throws IOException
-			{
-				return delegate.available();
-			}
-			@Override
-			public int read() throws IOException
-			{
-				return delegate.read();
-			}
-			@Override
-			public int read(byte[] buf, int off, int len) throws IOException
-			{
-				return delegate.read(buf, off, len);
-			}
-			@Override
-			public void close() throws IOException
-			{
-				// Do nothing...
-			}
-		};
-		GZIPInputStream zip = new GZIPInputStream(inner);
+		ZipInputStream zip = new ZipInputStream(delegate);
 
 		InputStream outer = new InputStream()
 		{
-			long remaining = numBytes;
 			@Override
 			public int available() throws IOException
 			{
-				int available = zip.available();
-				if (remaining < available)
+				int available;
+				do
 				{
-					return (int) remaining;
+					available = zip.available();
 				}
+				while (available == 0 && zip.getNextEntry() != null);
 				return available;
 			}
 			@Override
 			public int read() throws IOException
 			{
-				if (remaining <= 0)
+				int read;
+				do
 				{
-					return -1;
+					read = zip.read();
 				}
-				remaining--;
-				return zip.read();
+				while (read < 0 && zip.getNextEntry() != null);
+				return read;
 			}
 			@Override
 			public int read(byte[] buf, int off, int len) throws IOException
 			{
-				if (remaining <= 0)
+				int read;
+				do
 				{
-					return -1;
+					read = zip.read(buf, off, len);
 				}
-				if (len > remaining)
-				{
-					len = (int) remaining;
-				}
-				int read = zip.read(buf, off, len);
-				remaining -= read;
+				while (read < 0 && zip.getNextEntry() != null);
 				return read;
 			}
 			@Override
 			public void close() throws IOException
 			{
-				// finish the remaining bytes...
-				while (remaining > 0)
-				{
-					zip.read();
-					remaining--;
-				}
+				zip.close();
+				delegate.startAgain();
 			}
 		};
 		return outer;
-	}
-	
-	public static void main(String[] args) throws IOException
-	{
-		byte[] bytes = "here is some text \nto be compressed.\n".getBytes();
-		LinkedBlockingDeque<Integer> queue = new LinkedBlockingDeque<Integer>();
-		
-		new Thread() {
-			public void run()
-			{
-				try (InputStream input2 = new InputStream()
-				{
-					boolean done;
-					@Override
-					public int read() throws IOException
-					{
-						if (done)
-						{
-							System.out.println("Returning -1");
-							return -1;
-						}
-						try
-						{
-							Integer takeFirst = queue.takeFirst();
-							if (takeFirst < 0)
-							{
-								done = true;
-							}
-							System.out.println("\t\t\t\tRead " + takeFirst);
-							return takeFirst;
-						}
-						catch (InterruptedException e)
-						{
-							e.printStackTrace();
-							return -1;
-						}
-					}
-
-					public int available()
-					{
-						if (done)
-						{
-							return 0;
-						}
-						return queue.size();
-					}
-				};)
-				{
-					try (BufferedReader input = new BufferedReader(new InputStreamReader(newCompressedInputStream(bytes.length, input2))))
-					{
-						String line;
-						while ((line = input.readLine()) != null)
-						{
-							System.out.println(line);
-						}
-					}
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
-			}
-		}.start();
-		
-		try (OutputStream outputStream = new OutputStream()
-				{
-					@Override
-					public void write(int b) throws IOException
-					{
-						queue.offerLast(b & 0xff);
-						System.out.println("Wrote " + (b & 0xff));
-					}
-					public void close()
-					{
-						queue.offerLast(-1);
-					}
-				};)
-		{
-			try (OutputStream output = newCompressedOutputStream(bytes.length, outputStream);)
-			{
-				output.write(bytes);
-			}
-		}
 	}
 }

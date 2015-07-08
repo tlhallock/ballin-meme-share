@@ -37,9 +37,12 @@ import javax.json.stream.JsonParser.Event;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerRequest;
+import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.PausableInputStream2;
+import org.cnv.shr.util.PausableOutputStream;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
@@ -48,6 +51,9 @@ public abstract class TrackerConnection implements Closeable
 	Socket socket;
 	JsonParser parser;
 	JsonGenerator generator;
+	
+	PausableOutputStream out;
+	PausableInputStream2 in;
 
 	protected TrackerConnection(String url, int port) throws IOException
 	{
@@ -56,7 +62,7 @@ public abstract class TrackerConnection implements Closeable
 
 	void connect(TrackerRequest request) throws IOException
 	{
-		generator = TrackObjectUtils.createGenerator(socket.getOutputStream());
+		generator = TrackObjectUtils.createGenerator(out = new PausableOutputStream(socket.getOutputStream()));
 		generator.writeStartArray();
 		
 		MachineEntry local = getLocalMachine();
@@ -75,7 +81,7 @@ public abstract class TrackerConnection implements Closeable
 		}
 		generator.flush();
 
-		parser = TrackObjectUtils.createParser(socket.getInputStream());
+		parser = TrackObjectUtils.createParser(in = new PausableInputStream2(socket.getInputStream()));
 		Event next = parser.next();
 		if (!next.equals(JsonParser.Event.START_ARRAY))
 		{
@@ -89,8 +95,21 @@ public abstract class TrackerConnection implements Closeable
 			authenticate();
 		}
 		
+		// handshake done...
+		generator.writeEnd();
+		generator.close();
+		generator = TrackObjectUtils.createGenerator(CompressionStreams.newCompressedOutputStream(out));
+		generator.writeStartArray();
 		request.generate(generator);
 		generator.flush();
+		
+		if (!parser.next().equals(JsonParser.Event.END_ARRAY))
+		{
+			throw new IOException("Expected end of old stream.");
+		}
+		in.startAgain();
+		parser = TrackObjectUtils.createParser(CompressionStreams.newCompressedInputStream(in));
+		
 	}
 
 	private void authenticate() throws IOException

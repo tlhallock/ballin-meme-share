@@ -83,16 +83,13 @@ public class GetLogs extends Message
 		{
 			connection.send(new GotLogs(logSize));
 
-			connection.beginWriteRaw();
 			// Temporarily disable file logs...
 			LogWrapper.logToFile(null, -1);
 
-			try (OutputStream output = CompressionStreams.newCompressedOutputStream(logSize, connection.getOutput()))
+			try (OutputStream output = CompressionStreams.newCompressedOutputStream(connection.getOutput());
+					 InputStream input = Files.newInputStream(logFile))
 			{
-				long rem = Math.max(0, logSize - pushedSoFar);
-
-				try (InputStream input = Files.newInputStream(logFile))
-				{
+					long rem = logSize - pushedSoFar;
 					while (rem > 0)
 					{
 						LogWrapper.getLogger().fine("remaining: " + rem);
@@ -121,30 +118,27 @@ public class GetLogs extends Message
 					// Then reopen it
 					LogWrapper.logToFile(Services.settings.logFile.getPath(), Services.settings.logLength.get());
 				}
-				finishWritingRemainingBytes(output, rem);
-			}
-
-			connection.endWriteRaw();
+//				finishWritingRemainingBytes(output, rem);
 		}
 	}
 
-	private static void finishWritingRemainingBytes(OutputStream output, long rem) throws IOException
-	{
-		int paddingLength = 50;
-		StringBuilder builder = new StringBuilder(paddingLength);
-		for (int i = 0; i < paddingLength; i++)
-		{
-			builder.append('\n');
-		}
-		byte[] bytes = builder.toString().getBytes();
-		while (rem > 0)
-		{
-			for (int i = 0; i < bytes.length && rem > 0; i++, rem--)
-			{
-				output.write(bytes[i]);
-			}
-		}
-	}
+//	private static void finishWritingRemainingBytes(OutputStream output, long rem) throws IOException
+//	{
+//		int paddingLength = 50;
+//		StringBuilder builder = new StringBuilder(paddingLength);
+//		for (int i = 0; i < paddingLength; i++)
+//		{
+//			builder.append('\n');
+//		}
+//		byte[] bytes = builder.toString().getBytes();
+//		while (rem > 0)
+//		{
+//			for (int i = 0; i < bytes.length && rem > 0; i++, rem--)
+//			{
+//				output.write(bytes[i]);
+//			}
+//		}
+//	}
 
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -160,13 +154,13 @@ public class GetLogs extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdecryptedNaunce = true;
+		boolean needsDecryptedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdecryptedNaunce)
+				if (needsDecryptedNaunce)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
@@ -177,7 +171,7 @@ public class GetLogs extends Message
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("decryptedNaunce")) {
-					needsdecryptedNaunce = false;
+					needsDecryptedNaunce = false;
 					decryptedNaunce = Misc.format(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

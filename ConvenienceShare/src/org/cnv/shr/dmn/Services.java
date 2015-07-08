@@ -113,6 +113,7 @@ public class Services
 	
 	private static final Object localSyncerSync = new Object();
 	private static TimerTask localSynchronizer;
+	public static CompressionList compressionManager;
 	
 	public static void initialize(Arguments args, SplashScreen screen) throws Exception
 	{
@@ -206,6 +207,7 @@ public class Services
 	{
 		if (screen != null)
 			screen.setStatus("Creating services");
+		compressionManager = new CompressionList();
 		colors = new ColorSetter();
 		colors.read();
 		notifications = new Notifications();

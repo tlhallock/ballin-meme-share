@@ -25,8 +25,13 @@
 
 package org.cnv.shr.util;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public final class CountingOutputStream extends OutputStream
 {
@@ -43,13 +48,6 @@ public final class CountingOutputStream extends OutputStream
 		return soFar;
 	}
 
-	@Override
-	public void write(int b) throws IOException
-	{
-		soFar++;
-		delegate.write(b);
-	}
-
 	public void flush() throws IOException
 	{
 		delegate.flush();
@@ -60,11 +58,58 @@ public final class CountingOutputStream extends OutputStream
 	{
 		delegate.close();
 	}
+
+	@Override
+	public void write(int b) throws IOException
+	{
+		soFar++;
+		stats.wrote(b);
+		delegate.write(b);
+	}
 	
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException
 	{
 		soFar += len;
+		stats.wrote(b, off, len);
 		delegate.write(b, off, len);
+	}
+	
+	private static final ByteStats stats = new ByteStats();
+	private static final class ByteStats extends TimerTask
+	{
+		double[] histogram = new double[256];
+		{
+			new Timer().scheduleAtFixedRate(this, 1000, 1000);
+		}
+
+		@Override
+		public void run()
+		{
+			try (BufferedWriter output = Files.newBufferedWriter(Paths.get("stats.txt")))
+			{
+				for (int i = 0; i < histogram.length; i++)
+				{
+					output.write(String.format("%d\t:\t%12.4\n", i, histogram[i]));
+				}
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		void wrote(byte[] bytes, int off, int len)
+		{
+			for (int i=0;i<len;i++)
+			{
+				wrote(bytes[i + off]);
+			}
+		}
+		
+		void wrote(int b)
+		{
+			histogram[b & 0xff]++;
+		}
 	}
 }

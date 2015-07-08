@@ -92,13 +92,13 @@ public class UpdateInfoRequestRequest extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsaction = true;
+		boolean needsAction = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsaction)
+				if (needsAction)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
 				}
@@ -109,7 +109,7 @@ public class UpdateInfoRequestRequest extends Message
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("action")) {
-					needsaction = false;
+					needsAction = false;
 					action = parser.getString();
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

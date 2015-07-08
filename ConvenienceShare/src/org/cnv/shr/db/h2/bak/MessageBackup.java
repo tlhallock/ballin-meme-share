@@ -91,60 +91,60 @@ public class MessageBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssent = true;
-		boolean needsmachine = true;
-		boolean needsmessageType = true;
-		boolean needsmessage = true;
+		boolean needsMachine = true;
+		boolean needsMessageType = true;
+		boolean needsMessage = true;
+		boolean needsSent = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssent)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sent");
-				}
-				if (needsmachine)
+				if (needsMachine)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machine");
 				}
-				if (needsmessageType)
+				if (needsMessageType)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs messageType");
 				}
-				if (needsmessage)
+				if (needsMessage)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
+				}
+				if (needsSent)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sent");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("sent")) {
-					needssent = false;
-					sent = Long.parseLong(parser.getString());
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "machine":
-					needsmachine = false;
+					needsMachine = false;
 					machine = parser.getString();
 					break;
 				case "messageType":
-					needsmessageType = false;
+					needsMessageType = false;
 					messageType = parser.getString();
 					break;
 				case "message":
-					needsmessage = false;
+					needsMessage = false;
 					message = parser.getString();
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("sent")) {
+					needsSent = false;
+					sent = Long.parseLong(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

@@ -36,7 +36,6 @@ public class GotLogs extends Message
 	{
 		try
 		{
-			connection.beginReadRaw();
 			Machine machine = connection.getMachine();
 			Path log =  Paths.get("otherLogs")
 					.resolve(PathSecurity.getFsName(machine.getIdentifier()))
@@ -49,31 +48,27 @@ public class GotLogs extends Message
 			
 			byte[] buffer = new byte[Misc.BUFFER_SIZE];
 			Misc.ensureDirectory(log, true);
-			try (OutputStream output = Files.newOutputStream(log))
+			try (OutputStream output = Files.newOutputStream(log);
+					 InputStream in = CompressionStreams.newCompressedInputStream(connection.getIn());)
 			{
-				try (InputStream in = CompressionStreams.newCompressedInputStream(logSize, connection.getIn());)
+				while (remaining > 0)
 				{
-					while (remaining > 0)
+					LogWrapper.getLogger().fine("remaining: " + remaining);
+					int amountToRead = buffer.length;
+					if (amountToRead > remaining)
 					{
-						LogWrapper.getLogger().fine("remaining: " + remaining);
-						int amountToRead = buffer.length;
-						if (amountToRead > remaining)
-						{
-							amountToRead = (int) remaining;
-						}
-						int nread = in.read(buffer, 0, amountToRead);
-						if (nread < 0)
-						{
-							LogWrapper.getLogger().info("Hit end of input before expected: remaining = " + remaining);
-							break;
-						}
-						output.write(buffer, 0, nread);
-						remaining -= nread;
+						amountToRead = (int) remaining;
 					}
+					int nread = in.read(buffer, 0, amountToRead);
+					if (nread < 0)
+					{
+						LogWrapper.getLogger().info("Hit end of input before expected: remaining = " + remaining);
+						break;
+					}
+					output.write(buffer, 0, nread);
+					remaining -= nread;
 				}
 			}
-				
-			connection.endReadRaw();
 		}
 		finally
 		{
@@ -101,13 +96,13 @@ public class GotLogs extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needslogSize = true;
+		boolean needsLogSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needslogSize)
+				if (needsLogSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs logSize");
 				}
@@ -118,7 +113,7 @@ public class GotLogs extends Message
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("logSize")) {
-					needslogSize = false;
+					needsLogSize = false;
 					logSize = Long.parseLong(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

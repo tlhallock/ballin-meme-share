@@ -135,27 +135,23 @@ public class ChunkRequest extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needspleaseCompress = true;
-		boolean needschunk = true;
-		boolean needsdescriptor = true;
+		boolean needsPleaseCompress = true;
+		boolean needsChunk = true;
+		boolean needsDescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needspleaseCompress)
+				if (needsPleaseCompress)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pleaseCompress");
 				}
-				if (needspleaseCompress)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pleaseCompress");
-				}
-				if (needschunk)
+				if (needsChunk)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunk");
 				}
-				if (needsdescriptor)
+				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
@@ -166,7 +162,7 @@ public class ChunkRequest extends DownloadMessage
 			case VALUE_FALSE:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("pleaseCompress")) {
-					needspleaseCompress = false;
+					needsPleaseCompress = false;
 					pleaseCompress = false;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
@@ -175,7 +171,7 @@ public class ChunkRequest extends DownloadMessage
 			case VALUE_TRUE:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("pleaseCompress")) {
-					needspleaseCompress = false;
+					needsPleaseCompress = false;
 					pleaseCompress = true;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
@@ -185,11 +181,11 @@ public class ChunkRequest extends DownloadMessage
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "chunk":
-					needschunk = false;
+					needsChunk = false;
 					chunk = new Chunk(parser);
 					break;
 				case "descriptor":
-					needsdescriptor = false;
+					needsDescriptor = false;
 					descriptor = new FileEntry(parser);
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

@@ -112,18 +112,18 @@ public class ConnectionOpenAwk extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdecryptedNaunce = true;
-		boolean needsnaunceRequest = true;
+		boolean needsDecryptedNaunce = true;
+		boolean needsNaunceRequest = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdecryptedNaunce)
+				if (needsDecryptedNaunce)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
-				if (needsnaunceRequest)
+				if (needsNaunceRequest)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
@@ -135,11 +135,11 @@ public class ConnectionOpenAwk extends KeyMessage
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "decryptedNaunce":
-					needsdecryptedNaunce = false;
+					needsDecryptedNaunce = false;
 					decryptedNaunce = Misc.format(parser.getString());
 					break;
 				case "naunceRequest":
-					needsnaunceRequest = false;
+					needsNaunceRequest = false;
 					naunceRequest = Misc.format(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

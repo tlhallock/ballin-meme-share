@@ -105,13 +105,13 @@ public class EmptyMessage extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssize = true;
+		boolean needsSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssize)
+				if (needsSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs size");
 				}
@@ -122,7 +122,7 @@ public class EmptyMessage extends Message
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("size")) {
-					needssize = false;
+					needsSize = false;
 					size = Integer.parseInt(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

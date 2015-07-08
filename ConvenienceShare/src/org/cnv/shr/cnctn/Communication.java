@@ -54,7 +54,7 @@ import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.CountingOutputStream;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.PausableInputStream;
+import org.cnv.shr.util.PausableInputStream2;
 import org.cnv.shr.util.PausableOutputStream;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
@@ -72,7 +72,7 @@ public class Communication implements Closeable
 	private CountingInputStream countingInput;
 	private CountingOutputStream countingOutput;
 	
-	private PausableInputStream pausableInput;
+	private PausableInputStream2 pausableInput;
 	private PausableOutputStream pausableOutput;
 	
 	private InputStream encryptedInput;
@@ -121,7 +121,7 @@ public class Communication implements Closeable
 
 		stats = new ConnectionStatistics(countingInput, countingOutput);
 		
-		pausableInput = new PausableInputStream(countingInput);
+		pausableInput = new PausableInputStream2(countingInput);
 		pausableOutput = new PausableOutputStream(countingOutput);
 		
 		needsMore = true;
@@ -205,7 +205,7 @@ public class Communication implements Closeable
 	{
 		return pausableOutput;
 	}
-	public PausableInputStream getIn()
+	public PausableInputStream2 getIn()
 	{
 		return pausableInput;
 	}

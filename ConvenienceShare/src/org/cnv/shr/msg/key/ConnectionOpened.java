@@ -103,13 +103,13 @@ public class ConnectionOpened extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdecryptedNaunce = true;
+		boolean needsDecryptedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdecryptedNaunce)
+				if (needsDecryptedNaunce)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
@@ -120,7 +120,7 @@ public class ConnectionOpened extends KeyMessage
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("decryptedNaunce")) {
-					needsdecryptedNaunce = false;
+					needsDecryptedNaunce = false;
 					decryptedNaunce = Misc.format(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

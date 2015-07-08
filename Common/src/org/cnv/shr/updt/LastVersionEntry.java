@@ -28,18 +28,18 @@ public class LastVersionEntry implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsidentifier = true;
-		boolean needsversion = true;
+		boolean needsIdentifier = true;
+		boolean needsVersion = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsidentifier)
+				if (needsIdentifier)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs identifier");
 				}
-				if (needsversion)
+				if (needsVersion)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs version");
 				}
@@ -51,11 +51,11 @@ public class LastVersionEntry implements Jsonable
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "identifier":
-					needsidentifier = false;
+					needsIdentifier = false;
 					identifier = parser.getString();
 					break;
 				case "version":
-					needsversion = false;
+					needsVersion = false;
 					version = parser.getString();
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

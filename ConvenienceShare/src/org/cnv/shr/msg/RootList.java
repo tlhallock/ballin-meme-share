@@ -186,13 +186,13 @@ public class RootList extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssharedDirectories = true;
+		boolean needsSharedDirectories = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssharedDirectories)
+				if (needsSharedDirectories)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharedDirectories");
 				}
@@ -203,7 +203,7 @@ public class RootList extends Message
 			case START_ARRAY:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("sharedDirectories")) {
-					needssharedDirectories = false;
+					needsSharedDirectories = false;
 					sharedDirectories.parse(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

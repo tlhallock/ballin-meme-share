@@ -93,6 +93,10 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 	public void close() throws SQLException
 	{
 		inUse--;
+		if (inUse < 0)
+		{
+			throw new RuntimeException("In use is now negative!!");
+		}
 	}
 
 	public StatementWrapper prepareStatement(QueryWrapper wrapper) throws SQLException

@@ -94,35 +94,35 @@ public class LookingFor extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsfileSize = true;
-		boolean needschecksum = true;
-		boolean needsdescriptor = true;
+		boolean needsDescriptor = true;
+		boolean needsChecksum = true;
+		boolean needsFileSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsfileSize)
+				if (needsDescriptor)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
-				if (needschecksum)
+				if (needsChecksum)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
-				if (needsdescriptor)
+				if (needsFileSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
+			case START_OBJECT:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("fileSize")) {
-					needsfileSize = false;
-					fileSize = Long.parseLong(parser.getString());
+				if (key.equals("descriptor")) {
+					needsDescriptor = false;
+					descriptor = new FileEntry(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
@@ -130,17 +130,17 @@ public class LookingFor extends DownloadMessage
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("checksum")) {
-					needschecksum = false;
+					needsChecksum = false;
 					checksum = parser.getString();
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_OBJECT:
+			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("descriptor")) {
-					needsdescriptor = false;
-					descriptor = new FileEntry(parser);
+				if (key.equals("fileSize")) {
+					needsFileSize = false;
+					fileSize = Long.parseLong(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

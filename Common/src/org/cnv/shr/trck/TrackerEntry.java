@@ -138,34 +138,30 @@ public class TrackerEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsstoresMetaData = true;
-		boolean needsbegin = true;
-		boolean needsend = true;
-		boolean needsurl = true;
+		boolean needsStoresMetaData = true;
+		boolean needsUrl = true;
+		boolean needsBegin = true;
+		boolean needsEnd = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsstoresMetaData)
+				if (needsStoresMetaData)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs storesMetaData");
 				}
-				if (needsstoresMetaData)
+				if (needsUrl)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs storesMetaData");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs url");
 				}
-				if (needsbegin)
+				if (needsBegin)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs begin");
 				}
-				if (needsend)
+				if (needsEnd)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs end");
-				}
-				if (needsurl)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs url");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -175,7 +171,7 @@ public class TrackerEntry extends TrackObject
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "storesMetaData":
-					needsstoresMetaData = false;
+					needsStoresMetaData = false;
 					storesMetaData = false;
 					break;
 				case "sync":
@@ -188,7 +184,7 @@ public class TrackerEntry extends TrackObject
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "storesMetaData":
-					needsstoresMetaData = false;
+					needsStoresMetaData = false;
 					storesMetaData = true;
 					break;
 				case "sync":
@@ -197,27 +193,27 @@ public class TrackerEntry extends TrackObject
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("url")) {
+					needsUrl = false;
+					url = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "begin":
-					needsbegin = false;
+					needsBegin = false;
 					begin = Integer.parseInt(parser.getString());
 					break;
 				case "end":
-					needsend = false;
+					needsEnd = false;
 					end = Integer.parseInt(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("url")) {
-					needsurl = false;
-					url = parser.getString();
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

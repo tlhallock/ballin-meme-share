@@ -121,13 +121,13 @@ public enum SharingState implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsstate = true;
+		boolean needsState = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsstate)
+				if (needsState)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs state");
 				}
@@ -138,7 +138,7 @@ public enum SharingState implements Jsonable
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("state")) {
-					needsstate = false;
+					needsState = false;
 					state = Integer.parseInt(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

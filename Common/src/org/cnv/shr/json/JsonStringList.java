@@ -29,7 +29,6 @@ import java.util.LinkedList;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
-import javax.json.stream.JsonParser.Event;
 
 public class JsonStringList extends LinkedList<String> 
 {
@@ -52,8 +51,7 @@ public class JsonStringList extends LinkedList<String>
 		clear();
 		while (parser.hasNext())
 		{
-			Event next = parser.next();
-			switch (next)
+			switch (parser.next())
 			{
 			case VALUE_STRING:
 				add(parser.getString());

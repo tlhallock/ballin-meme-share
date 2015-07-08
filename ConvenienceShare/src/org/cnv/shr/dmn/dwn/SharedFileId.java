@@ -136,23 +136,23 @@ public class SharedFileId implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsmachineIdent = true;
-		boolean needsrootName = true;
-		boolean needspath = true;
+		boolean needsMachineIdent = true;
+		boolean needsRootName = true;
+		boolean needsPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsmachineIdent)
+				if (needsMachineIdent)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machineIdent");
 				}
-				if (needsrootName)
+				if (needsRootName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
-				if (needspath)
+				if (needsPath)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
 				}
@@ -164,15 +164,15 @@ public class SharedFileId implements Jsonable
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "machineIdent":
-					needsmachineIdent = false;
+					needsMachineIdent = false;
 					machineIdent = parser.getString();
 					break;
 				case "rootName":
-					needsrootName = false;
+					needsRootName = false;
 					rootName = parser.getString();
 					break;
 				case "path":
-					needspath = false;
+					needsPath = false;
 					path = parser.getString();
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

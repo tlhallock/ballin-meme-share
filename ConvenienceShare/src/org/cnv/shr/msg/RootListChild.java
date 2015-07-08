@@ -110,18 +110,18 @@ public class RootListChild implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsname = true;
-		boolean needsstate = true;
+		boolean needsName = true;
+		boolean needsState = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsname)
+				if (needsName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
 				}
-				if (needsstate)
+				if (needsState)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs state");
 				}
@@ -133,7 +133,7 @@ public class RootListChild implements Jsonable
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "name":
-					needsname = false;
+					needsName = false;
 					name = parser.getString();
 					break;
 				case "tags":
@@ -143,7 +143,7 @@ public class RootListChild implements Jsonable
 					description = parser.getString();
 					break;
 				case "state":
-					needsstate = false;
+					needsState = false;
 					state = SharingState.valueOf(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

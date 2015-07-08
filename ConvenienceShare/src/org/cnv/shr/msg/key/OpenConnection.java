@@ -128,18 +128,18 @@ public class OpenConnection extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssourcePublicKey = true;
-		boolean needsrequestedNaunce = true;
+		boolean needsSourcePublicKey = true;
+		boolean needsRequestedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssourcePublicKey)
+				if (needsSourcePublicKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sourcePublicKey");
 				}
-				if (needsrequestedNaunce)
+				if (needsRequestedNaunce)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs requestedNaunce");
 				}
@@ -151,14 +151,14 @@ public class OpenConnection extends KeyMessage
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "sourcePublicKey":
-					needssourcePublicKey = false;
+					needsSourcePublicKey = false;
 					sourcePublicKey = KeyPairObject.deSerializePublicKey(parser.getString());
 					break;
 				case "destinationPublicKey":
 					destinationPublicKey = KeyPairObject.deSerializePublicKey(parser.getString());
 					break;
 				case "requestedNaunce":
-					needsrequestedNaunce = false;
+					needsRequestedNaunce = false;
 					requestedNaunce = Misc.format(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

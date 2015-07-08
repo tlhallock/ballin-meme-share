@@ -97,13 +97,13 @@ public class Failure extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsmessage = true;
+		boolean needsMessage = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsmessage)
+				if (needsMessage)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
 				}
@@ -114,7 +114,7 @@ public class Failure extends Message
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("message")) {
-					needsmessage = false;
+					needsMessage = false;
 					message = parser.getString();
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

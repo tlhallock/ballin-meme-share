@@ -92,13 +92,13 @@ public class RevokeKey extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsrevoke = true;
+		boolean needsRevoke = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsrevoke)
+				if (needsRevoke)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs revoke");
 				}
@@ -109,7 +109,7 @@ public class RevokeKey extends Message
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("revoke")) {
-					needsrevoke = false;
+					needsRevoke = false;
 					revoke = KeyPairObject.deSerializePublicKey(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

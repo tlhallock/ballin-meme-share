@@ -66,6 +66,16 @@ public class PathListChild implements Jsonable
 		this.pl = pathList;
 	}
 	
+	public int hashCode()
+	{
+		return name.hashCode();
+	}
+	
+	public boolean equals(Object other)
+	{
+		return other instanceof PathListChild && name.equals(((PathListChild) other).name);
+	}
+	
 	void setParent(PathList pl)
 	{
 		this.pl = pl;
@@ -116,49 +126,35 @@ public class PathListChild implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssize = true;
-		boolean needslastModified = true;
-		boolean needsname = true;
+		boolean needsName = true;
+		boolean needsSize = true;
+		boolean needsLastModified = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssize)
+				if (needsName)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs size");
 				}
-				if (needslastModified)
+				if (needsLastModified)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
-				}
-				if (needsname)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "size":
-					needssize = false;
-					size = Long.parseLong(parser.getString());
-					break;
-				case "lastModified":
-					needslastModified = false;
-					lastModified = Long.parseLong(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "name":
-					needsname = false;
+					needsName = false;
 					name = parser.getString();
 					break;
 				case "checksum":
@@ -166,6 +162,20 @@ public class PathListChild implements Jsonable
 					break;
 				case "tags":
 					tags = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "size":
+					needsSize = false;
+					size = Long.parseLong(parser.getString());
+					break;
+				case "lastModified":
+					needsLastModified = false;
+					lastModified = Long.parseLong(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

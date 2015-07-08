@@ -77,23 +77,23 @@ public class RootPermissionBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsmachineIdent = true;
-		boolean needslocalName = true;
-		boolean needscurrentState = true;
+		boolean needsMachineIdent = true;
+		boolean needsLocalName = true;
+		boolean needsCurrentState = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsmachineIdent)
+				if (needsMachineIdent)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machineIdent");
 				}
-				if (needslocalName)
+				if (needsLocalName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs localName");
 				}
-				if (needscurrentState)
+				if (needsCurrentState)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentState");
 				}
@@ -105,15 +105,15 @@ public class RootPermissionBackup implements Jsonable
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "machineIdent":
-					needsmachineIdent = false;
+					needsMachineIdent = false;
 					machineIdent = parser.getString();
 					break;
 				case "localName":
-					needslocalName = false;
+					needsLocalName = false;
 					localName = parser.getString();
 					break;
 				case "currentState":
-					needscurrentState = false;
+					needsCurrentState = false;
 					currentState = SharingState.valueOf(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

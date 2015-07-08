@@ -151,13 +151,13 @@ public class KeyNotFound extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needstests = true;
+		boolean needsTests = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needstests)
+				if (needsTests)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs tests");
 				}
@@ -168,7 +168,7 @@ public class KeyNotFound extends KeyMessage
 			case START_OBJECT:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("tests")) {
-					needstests = false;
+					needsTests = false;
 					tests.parse(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

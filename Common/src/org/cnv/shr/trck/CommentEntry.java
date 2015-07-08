@@ -165,68 +165,68 @@ public class CommentEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsrating = true;
-		boolean needsdate = true;
-		boolean needsoriginIdent = true;
-		boolean needsdestIdent = true;
-		boolean needstext = true;
+		boolean needsOriginIdent = true;
+		boolean needsDestIdent = true;
+		boolean needsText = true;
+		boolean needsRating = true;
+		boolean needsDate = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsrating)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rating");
-				}
-				if (needsdate)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs date");
-				}
-				if (needsoriginIdent)
+				if (needsOriginIdent)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs originIdent");
 				}
-				if (needsdestIdent)
+				if (needsDestIdent)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs destIdent");
 				}
-				if (needstext)
+				if (needsText)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs text");
+				}
+				if (needsRating)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rating");
+				}
+				if (needsDate)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs date");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "rating":
-					needsrating = false;
-					rating = Integer.parseInt(parser.getString());
-					break;
-				case "date":
-					needsdate = false;
-					date = Long.parseLong(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "originIdent":
-					needsoriginIdent = false;
+					needsOriginIdent = false;
 					originIdent = parser.getString();
 					break;
 				case "destIdent":
-					needsdestIdent = false;
+					needsDestIdent = false;
 					destIdent = parser.getString();
 					break;
 				case "text":
-					needstext = false;
+					needsText = false;
 					text = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "rating":
+					needsRating = false;
+					rating = Integer.parseInt(parser.getString());
+					break;
+				case "date":
+					needsDate = false;
+					date = Long.parseLong(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

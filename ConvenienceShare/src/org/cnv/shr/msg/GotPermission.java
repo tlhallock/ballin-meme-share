@@ -135,18 +135,18 @@ public class GotPermission extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsrootName = true;
-		boolean needspermission = true;
+		boolean needsRootName = true;
+		boolean needsPermission = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsrootName)
+				if (needsRootName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
-				if (needspermission)
+				if (needsPermission)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs permission");
 				}
@@ -158,11 +158,11 @@ public class GotPermission extends Message
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "rootName":
-					needsrootName = false;
+					needsRootName = false;
 					rootName = parser.getString();
 					break;
 				case "permission":
-					needspermission = false;
+					needsPermission = false;
 					permission = SharingState.valueOf(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

@@ -121,39 +121,39 @@ public class ChecksumResponse extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needschecksum = true;
-		boolean needsdescriptor = true;
+		boolean needsDescriptor = true;
+		boolean needsChecksum = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needschecksum)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
-				}
-				if (needsdescriptor)
+				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+				}
+				if (needsChecksum)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
+			case START_OBJECT:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("checksum")) {
-					needschecksum = false;
-					checksum = parser.getString();
+				if (key.equals("descriptor")) {
+					needsDescriptor = false;
+					descriptor = new SharedFileId(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_OBJECT:
+			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("descriptor")) {
-					needsdescriptor = false;
-					descriptor = new SharedFileId(parser);
+				if (key.equals("checksum")) {
+					needsChecksum = false;
+					checksum = parser.getString();
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

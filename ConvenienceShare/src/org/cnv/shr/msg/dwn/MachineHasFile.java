@@ -117,22 +117,18 @@ public class MachineHasFile extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needshasFile = true;
-		boolean needsdescriptor = true;
+		boolean needsHasFile = true;
+		boolean needsDescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needshasFile)
+				if (needsHasFile)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
 				}
-				if (needshasFile)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
-				}
-				if (needsdescriptor)
+				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
@@ -143,7 +139,7 @@ public class MachineHasFile extends DownloadMessage
 			case VALUE_FALSE:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("hasFile")) {
-					needshasFile = false;
+					needsHasFile = false;
 					hasFile = false;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
@@ -152,7 +148,7 @@ public class MachineHasFile extends DownloadMessage
 			case VALUE_TRUE:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("hasFile")) {
-					needshasFile = false;
+					needsHasFile = false;
 					hasFile = true;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
@@ -161,7 +157,7 @@ public class MachineHasFile extends DownloadMessage
 			case START_OBJECT:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("descriptor")) {
-					needsdescriptor = false;
+					needsDescriptor = false;
 					descriptor = new FileEntry(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

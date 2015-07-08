@@ -66,8 +66,8 @@ public class RemoteSynchronizerQueue implements Closeable
 	{
 		for (;;)
 		{
-			final PathList directoryList = directories.get(path);
-			if (directoryList != null)
+			PathList directoryList = directories.get(path);
+			if (directoryList != null && directoryList.listIsComplete())
 			{
 				directories.remove(path);
 				return directoryList;
@@ -124,10 +124,18 @@ public class RemoteSynchronizerQueue implements Closeable
 		try
 		{
 			LogWrapper.getLogger().info("Received \"" + list.getCurrentPath() + "\"");
-			directories.put(list.getCurrentPath(), list);
-			queue.remove(list.getCurrentPath());
+			PathList oldList = directories.put(list.getCurrentPath(), list);
+			if (oldList != null)
+			{
+				list.merge(oldList);
+			}
 			lastCommunication = System.currentTimeMillis();
-			condition.signalAll();
+			
+			if (list.listIsComplete())
+			{
+				queue.remove(list.getCurrentPath());
+				condition.signalAll();
+			}
 		}
 		finally
 		{

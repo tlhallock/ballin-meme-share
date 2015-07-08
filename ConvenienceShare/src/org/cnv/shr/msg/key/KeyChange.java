@@ -119,28 +119,28 @@ public class KeyChange extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsoldKey = true;
-		boolean needsnewKey = true;
-		boolean needsdecryptedProof = true;
-		boolean needsnaunceRequest = true;
+		boolean needsOldKey = true;
+		boolean needsNewKey = true;
+		boolean needsDecryptedProof = true;
+		boolean needsNaunceRequest = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsoldKey)
+				if (needsOldKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs oldKey");
 				}
-				if (needsnewKey)
+				if (needsNewKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs newKey");
 				}
-				if (needsdecryptedProof)
+				if (needsDecryptedProof)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedProof");
 				}
-				if (needsnaunceRequest)
+				if (needsNaunceRequest)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
@@ -152,19 +152,19 @@ public class KeyChange extends KeyMessage
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "oldKey":
-					needsoldKey = false;
+					needsOldKey = false;
 					oldKey = KeyPairObject.deSerializePublicKey(parser.getString());
 					break;
 				case "newKey":
-					needsnewKey = false;
+					needsNewKey = false;
 					newKey = KeyPairObject.deSerializePublicKey(parser.getString());
 					break;
 				case "decryptedProof":
-					needsdecryptedProof = false;
+					needsDecryptedProof = false;
 					decryptedProof = Misc.format(parser.getString());
 					break;
 				case "naunceRequest":
-					needsnaunceRequest = false;
+					needsNaunceRequest = false;
 					naunceRequest = Misc.format(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

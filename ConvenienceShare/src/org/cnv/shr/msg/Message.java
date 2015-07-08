@@ -77,7 +77,7 @@ public abstract class Message implements Jsonable
 	public    abstract void perform(Communication connection) throws Exception;
 	
 	
-	protected void checkPermissionsVisible(Communication c, Machine machine, LocalDirectory root, String action) throws PermissionException, IOException
+	protected static void checkPermissionsVisible(Communication c, Machine machine, LocalDirectory root, String action) throws PermissionException, IOException
 	{
 		if (Services.settings.shareWithEveryone.get())
 		{
@@ -94,7 +94,7 @@ public abstract class Message implements Jsonable
 		throw new PermissionException(action);
 	}
 	
-	protected void checkPermissionsDownloadable(Communication c, Machine machine, LocalDirectory root, String action) throws PermissionException, IOException
+	protected static void checkPermissionsDownloadable(Communication c, Machine machine, LocalDirectory root, String action) throws PermissionException, IOException
 	{
 		if (Services.settings.shareWithEveryone.get())
 		{
@@ -111,7 +111,7 @@ public abstract class Message implements Jsonable
 		throw new PermissionException(action);
 	}
 	
-	protected void checkPermissionsViewable(Communication c, Machine machine, String action) throws PermissionException, IOException
+	protected static void checkPermissionsViewable(Communication c, Machine machine, String action) throws PermissionException, IOException
 	{
 		if (Services.settings.shareWithEveryone.get())
 		{

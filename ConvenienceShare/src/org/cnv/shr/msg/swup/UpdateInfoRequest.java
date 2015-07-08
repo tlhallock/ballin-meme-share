@@ -121,23 +121,23 @@ public class UpdateInfoRequest extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needspublicKey = true;
-		boolean needsnaunceRequest = true;
-		boolean needsaction = true;
+		boolean needsPublicKey = true;
+		boolean needsNaunceRequest = true;
+		boolean needsAction = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needspublicKey)
+				if (needsPublicKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs publicKey");
 				}
-				if (needsnaunceRequest)
+				if (needsNaunceRequest)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
-				if (needsaction)
+				if (needsAction)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
 				}
@@ -149,15 +149,15 @@ public class UpdateInfoRequest extends Message
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
 				case "publicKey":
-					needspublicKey = false;
+					needsPublicKey = false;
 					publicKey = KeyPairObject.deSerializePublicKey(parser.getString());
 					break;
 				case "naunceRequest":
-					needsnaunceRequest = false;
+					needsNaunceRequest = false;
 					naunceRequest = Misc.format(parser.getString());
 					break;
 				case "action":
-					needsaction = false;
+					needsAction = false;
 					action = parser.getString();
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);

@@ -108,13 +108,13 @@ public class ChecksumRequest extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdescriptor = true;
+		boolean needsDescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdescriptor)
+				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
@@ -125,7 +125,7 @@ public class ChecksumRequest extends Message
 			case START_OBJECT:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("descriptor")) {
-					needsdescriptor = false;
+					needsDescriptor = false;
 					descriptor = new SharedFileId(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

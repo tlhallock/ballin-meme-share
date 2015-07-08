@@ -48,7 +48,7 @@ public class PausableOutputStream extends OutputStream
 	public void write(int b) throws IOException
 	{
 		delegate.write(b);
-		logFile.write(b); logFile.flush();
+		if (logFile != null) { logFile.write(b); logFile.flush(); }
 		if (rawMode)
 		{
 			raw.write(b);
@@ -62,7 +62,7 @@ public class PausableOutputStream extends OutputStream
 	public void flush() throws IOException
 	{
 		delegate.flush();
-		logFile.flush();
+		if (logFile != null) { logFile.flush(); }
 	}
 	
 	public void setRawMode(boolean rawMode)
@@ -103,7 +103,7 @@ public class PausableOutputStream extends OutputStream
 	public void close() throws IOException
 	{
 		stopOtherSide();
-		logFile.write("<paused here>"); logFile.flush();
+		if (logFile != null) {  logFile.write("<paused here>"); logFile.flush(); }
 	}
 	
 	/*
@@ -140,8 +140,10 @@ public class PausableOutputStream extends OutputStream
 	
 	
 
+	public static boolean LOG = true;
 private BufferedWriter logFile; 
 { 
+	if (LOG) {
   Map<String, Object> properties = new HashMap<>(1);
   properties.put(JsonGenerator.PRETTY_PRINTING, true);
 	try
@@ -153,6 +155,6 @@ private BufferedWriter logFile;
 	catch (IOException e)
 	{
 		LogWrapper.getLogger().log(Level.INFO, "Unable to log to file", e);
-	}
+	}}
 }
 }

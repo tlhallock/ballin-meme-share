@@ -125,13 +125,13 @@ public class NewAesKey extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsencryptedAesKey = true;
+		boolean needsEncryptedAesKey = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsencryptedAesKey)
+				if (needsEncryptedAesKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs encryptedAesKey");
 				}
@@ -142,7 +142,7 @@ public class NewAesKey extends Message
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("encryptedAesKey")) {
-					needsencryptedAesKey = false;
+					needsEncryptedAesKey = false;
 					encryptedAesKey = Misc.format(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);

@@ -109,39 +109,39 @@ public class CompletionStatus extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needspercentComplete = true;
-		boolean needsdescriptor = true;
+		boolean needsDescriptor = true;
+		boolean needsPercentComplete = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needspercentComplete)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs percentComplete");
-				}
-				if (needsdescriptor)
+				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+				}
+				if (needsPercentComplete)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs percentComplete");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
+			case START_OBJECT:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("percentComplete")) {
-					needspercentComplete = false;
-					percentComplete = Double.parseDouble(parser.getString());
+				if (key.equals("descriptor")) {
+					needsDescriptor = false;
+					descriptor = new FileEntry(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_OBJECT:
+			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("descriptor")) {
-					needsdescriptor = false;
-					descriptor = new FileEntry(parser);
+				if (key.equals("percentComplete")) {
+					needsPercentComplete = false;
+					percentComplete = Double.parseDouble(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
