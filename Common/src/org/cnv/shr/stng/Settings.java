@@ -94,6 +94,7 @@ public class Settings implements SettingListener
 	public FileSetting       keysFile                 = new FileSetting      ("keysFile              ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "keys.json"    ), false,  true, "File to put public/private key information.                                                      ".trim()); { settings.add(keysFile             );  }
 	public FileSetting       logFile                  = new FileSetting      ("logFile               ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "log.txt"      ),  true,  true, "File to put log messages if logging to file.                                                     ".trim()); { settings.add(logFile              );  }
 	public FileSetting       dbFile                   = new FileSetting      ("dbFile                ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "files"        ), false,  true, "File to put database.                                                                            ".trim()); { settings.add(dbFile               );  }
+	public FileSetting       compressionFile          = new FileSetting      ("compressionFile       ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "compress.json"), false,  true, "File to list what should be compressed.                                                          ".trim()); { settings.add(compressionFile      );  }
 	public FileSetting       codeUpdateKey            = new FileSetting      ("codeUpdateKey         ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "updateKey"    ), false,  true, "File containing key to authenticate code updates.                                                ".trim()); { settings.add(codeUpdateKey        );  }
 	public FileSetting       trackerFile              = new FileSetting      ("trackerFile           ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "trackers"     ), false,  true, "File containing tracker urls.                                                                    ".trim()); { settings.add(trackerFile          );  }
 	public FileSetting       colorsFile               = new FileSetting      ("colorFile             ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "colors.props" ), false,  true, "File storing Gui colors.                                                                         ".trim()); { settings.add(colorsFile           );  }
@@ -166,6 +167,7 @@ public class Settings implements SettingListener
 		codeUpdateKey   .set(Paths.get(applicationDirectory.get().getPath(), "updateKey"      ));
 		trackerFile     .set(Paths.get(applicationDirectory.get().getPath(), "trackers"       ));
 		colorsFile      .set(Paths.get(applicationDirectory.get().getPath(), "colors.props"   ));
+		compressionFile .set(Paths.get(applicationDirectory.get().getPath(), "compress.json"   ));
 	}
 	
 	public void listenToSettings()

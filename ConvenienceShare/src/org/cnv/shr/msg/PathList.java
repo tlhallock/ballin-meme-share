@@ -136,21 +136,28 @@ public class PathList extends Message
 	@Override
 	public String toString()
 	{
+//		final StringBuilder builder = new StringBuilder();
+//		
+//		System.out.println("[machine=" + name + "   currentpath=" + currentPath + "]:");
+//		builder.append("Subdirectories:\n");
+//		for (final String subdir : subDirs)
+//		{
+//			builder.append('\t').append(subdir).append('\n');
+//		}
+//		builder.append("Files:\n");
+//		for (final PathListChild c : children)
+//		{
+//			builder.append('\t').append(c.name).append('\n');
+//		}
+//		
+//		return builder.toString();
+
 		final StringBuilder builder = new StringBuilder();
-		
 		System.out.println("[machine=" + name + "   currentpath=" + currentPath + "]:");
-		builder.append("Subdirectories:\n");
-		for (final String subdir : subDirs)
-		{
-			builder.append('\t').append(subdir).append('\n');
-		}
-		builder.append("Files:\n");
-		for (final PathListChild c : children)
-		{
-			builder.append('\t').append(c.name).append('\n');
-		}
-		
+		builder.append("\tSubdirectories: " + subDirs.size());
+		builder.append("\tFiles: " + children.size());
 		return builder.toString();
+	
 	}
 
 	@Override
@@ -278,16 +285,24 @@ public class PathList extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsSubDirs = true;
+		boolean needsChildren = true;
 		boolean needsIsTheEnd = true;
 		boolean needsName = true;
 		boolean needsCurrentPath = true;
-		boolean needsSubDirs = true;
-		boolean needsChildren = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsSubDirs)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs subDirs");
+				}
+				if (needsChildren)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs children");
+				}
 				if (needsIsTheEnd)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isTheEnd");
@@ -300,18 +315,24 @@ public class PathList extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPath");
 				}
-				if (needsSubDirs)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs subDirs");
-				}
-				if (needsChildren)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs children");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "subDirs":
+					needsSubDirs = false;
+					subDirs.parse(parser);
+					break;
+				case "children":
+					needsChildren = false;
+					children.parse(parser);
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_FALSE:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("isTheEnd")) {
@@ -340,20 +361,6 @@ public class PathList extends Message
 				case "currentPath":
 					needsCurrentPath = false;
 					currentPath = parser.getString();
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "subDirs":
-					needsSubDirs = false;
-					subDirs.parse(parser);
-					break;
-				case "children":
-					needsChildren = false;
-					children.parse(parser);
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

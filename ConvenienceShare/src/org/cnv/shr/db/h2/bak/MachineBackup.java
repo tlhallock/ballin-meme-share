@@ -180,22 +180,26 @@ public class MachineBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsKeys = true;
 		boolean needsAllowsMessages = true;
 		boolean needsPin = true;
-		boolean needsRoots = true;
+		boolean needsPort = true;
+		boolean needsNports = true;
 		boolean needsIp = true;
 		boolean needsName = true;
 		boolean needsIdentifier = true;
 		boolean needsWeShareToThem = true;
 		boolean needsSharesWithUs = true;
-		boolean needsKeys = true;
-		boolean needsPort = true;
-		boolean needsNports = true;
+		boolean needsRoots = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsKeys)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
+				}
 				if (needsAllowsMessages)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
@@ -204,9 +208,13 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
 				}
-				if (needsRoots)
+				if (needsPort)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsNports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
 				}
 				if (needsIp)
 				{
@@ -228,22 +236,23 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
 				}
-				if (needsKeys)
+				if (needsRoots)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
-				}
-				if (needsPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsNports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("keys")) {
+					needsKeys = false;
+					keys.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_FALSE:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
@@ -272,13 +281,18 @@ public class MachineBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_OBJECT:
+			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("roots")) {
-					needsRoots = false;
-					roots.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+				switch(key) {
+				case "port":
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+					break;
+				case "nports":
+					needsNports = false;
+					nports = Integer.parseInt(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			case VALUE_STRING:
@@ -307,27 +321,13 @@ public class MachineBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_ARRAY:
+			case START_OBJECT:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("keys")) {
-					needsKeys = false;
-					keys.parse(parser);
+				if (key.equals("roots")) {
+					needsRoots = false;
+					roots.parse(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "port":
-					needsPort = false;
-					port = Integer.parseInt(parser.getString());
-					break;
-				case "nports":
-					needsNports = false;
-					nports = Integer.parseInt(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

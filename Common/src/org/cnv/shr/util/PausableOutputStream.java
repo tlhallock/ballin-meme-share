@@ -1,15 +1,7 @@
 package org.cnv.shr.util;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-
-import javax.json.stream.JsonGenerator;
 
 /**
  * The json parser continues to read after the current object.
@@ -22,17 +14,6 @@ public class PausableOutputStream extends OutputStream
 {
 	private OutputStream delegate;
 	boolean rawMode;
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	private OutputStream raw;
 
 	public PausableOutputStream(OutputStream delegate)
 	{
@@ -48,11 +29,6 @@ public class PausableOutputStream extends OutputStream
 	public void write(int b) throws IOException
 	{
 		delegate.write(b);
-		if (logFile != null) { logFile.write(b); logFile.flush(); }
-		if (rawMode)
-		{
-			raw.write(b);
-		}
 		if (b == PausableInputStream.PAUSE_BYTE && !rawMode)
 		{
 			// Escape the pause byte
@@ -62,34 +38,11 @@ public class PausableOutputStream extends OutputStream
 	public void flush() throws IOException
 	{
 		delegate.flush();
-		if (logFile != null) { logFile.flush(); }
 	}
 	
 	public void setRawMode(boolean rawMode)
 	{
 		this.rawMode = rawMode;
-		if (rawMode)
-		{
-			try
-			{
-				raw = Files.newOutputStream(Paths.get("log.Raw.out" + Math.random()));
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-		}
-		else
-		{
-			try
-			{
-				raw.close();
-			}
-			catch (IOException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to log raw output to file", e);
-			}
-		}
 	}
 	
 	public void stopOtherSide() throws IOException
@@ -103,7 +56,6 @@ public class PausableOutputStream extends OutputStream
 	public void close() throws IOException
 	{
 		stopOtherSide();
-		if (logFile != null) {  logFile.write("<paused here>"); logFile.flush(); }
 	}
 	
 	/*
@@ -119,7 +71,6 @@ public class PausableOutputStream extends OutputStream
 	{
 		if (rawMode)
 		{
-			raw.write(b, off, len); raw.flush();
 			delegate.write(b, off, len);
 			return;
 		}
@@ -130,31 +81,4 @@ public class PausableOutputStream extends OutputStream
 			write(b[i]);
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-	public static boolean LOG = true;
-private BufferedWriter logFile; 
-{ 
-	if (LOG) {
-  Map<String, Object> properties = new HashMap<>(1);
-  properties.put(JsonGenerator.PRETTY_PRINTING, true);
-	try
-	{
-		String string = "log.out." + System.currentTimeMillis() + "." + Math.random() + ".txt";
-		System.out.println("Logging to " + string);
-		logFile = Files.newBufferedWriter(Paths.get(string));
-	}
-	catch (IOException e)
-	{
-		LogWrapper.getLogger().log(Level.INFO, "Unable to log to file", e);
-	}}
-}
 }

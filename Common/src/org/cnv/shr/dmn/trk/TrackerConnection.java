@@ -109,7 +109,11 @@ public abstract class TrackerConnection implements Closeable
 		}
 		in.startAgain();
 		parser = TrackObjectUtils.createParser(CompressionStreams.newCompressedInputStream(in));
-		
+
+		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+		{
+			throw new IOException("Tracker content did not start with an array.");
+		}
 	}
 
 	private void authenticate() throws IOException

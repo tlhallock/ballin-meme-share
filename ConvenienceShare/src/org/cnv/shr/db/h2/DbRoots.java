@@ -59,8 +59,6 @@ public class DbRoots
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from SFILE where ROOT=?;");
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from ROOT_CONTAINS where ROOT_CONTAINS.RID=?;");
 	
-	
-	
 	public static long getTotalFileSize(RootDirectory d)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
@@ -242,14 +240,6 @@ public class DbRoots
 		
 		public boolean blocks(Path path)
 		{
-			if (Files.isDirectory(path))
-			{
-				return false;
-			}
-			if (!Files.isRegularFile(path))
-			{
-				return true;
-			}
 			String pathString = path.toString();
 			for (String pattern : patterns)
 			{
@@ -257,6 +247,14 @@ public class DbRoots
 				{
 					return true;
 				}
+			}
+			if (Files.isDirectory(path))
+			{
+				return false;
+			}
+			if (!Files.isRegularFile(path))
+			{
+				return true;
 			}
 			try
 			{
@@ -319,7 +317,8 @@ public class DbRoots
 			LogWrapper.getLogger().log(Level.INFO, "Unable to delete old ignores.", ex);
 		}
 		HashSet<String> ignoresAdded = new HashSet<>();
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); StatementWrapper s1 = c.prepareStatement(INSERT1);)
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); 
+				 StatementWrapper s1 = c.prepareStatement(INSERT1);)
 		{
 			for (String ignore : ignores)
 			{

@@ -172,14 +172,6 @@ public class Chunk implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("checksum")) {
-					checksum = parser.getString();
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
@@ -192,6 +184,14 @@ public class Chunk implements Jsonable
 					end = Long.parseLong(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("checksum")) {
+					checksum = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

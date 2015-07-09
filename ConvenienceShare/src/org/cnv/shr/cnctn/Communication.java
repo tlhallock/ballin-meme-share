@@ -35,6 +35,7 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.HashMap;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
@@ -92,7 +93,9 @@ public class Communication implements Closeable
 	
 	private ConnectionStatistics stats;
 	
-	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = true;
+	private HashMap<String, Object> params = new HashMap<>();
+	
+	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = false;
 	
 	/** Initiator **/
 	public Communication(Authenticator authentication, String ip, int port) throws UnknownHostException, IOException
@@ -484,5 +487,15 @@ public class Communication implements Closeable
 	public void setReason(String reason)
 	{
 		stats.setReason(reason);
+	}
+	
+	// downloads should use this as well...
+	public Object getParam(String str)
+	{
+		return params.get(str);
+	}
+	public void putParam(String str, Object obj)
+	{
+		params.put(str, obj);
 	}
 }

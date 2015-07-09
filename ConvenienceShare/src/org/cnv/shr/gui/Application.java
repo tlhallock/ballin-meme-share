@@ -1477,7 +1477,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 		{
-			DbBackupRestore.restoreDatabase(this, Paths.get(fc.getSelectedFile().getAbsolutePath()));
+			DbBackupRestore.restoreDatabase(Paths.get(fc.getSelectedFile().getAbsolutePath()), false);
 		}
     }//GEN-LAST:event_jMenuItem6ActionPerformed
 

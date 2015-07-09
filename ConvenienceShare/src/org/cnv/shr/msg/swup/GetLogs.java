@@ -62,6 +62,11 @@ public class GetLogs extends Message
 	@Override
 	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
 
+	public String toString()
+	{
+		return "Give me your logs.";
+	}
+	
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
@@ -87,38 +92,38 @@ public class GetLogs extends Message
 			LogWrapper.logToFile(null, -1);
 
 			try (OutputStream output = CompressionStreams.newCompressedOutputStream(connection.getOutput());
-					 InputStream input = Files.newInputStream(logFile))
+					 InputStream input = Files.newInputStream(logFile);)
 			{
-					long rem = logSize - pushedSoFar;
-					while (rem > 0)
+				long rem = logSize - pushedSoFar;
+				while (rem > 0)
+				{
+					LogWrapper.getLogger().fine("remaining: " + rem);
+					int amountToRead = buffer.length;
+					if (amountToRead > rem)
 					{
-						LogWrapper.getLogger().fine("remaining: " + rem);
-						int amountToRead = buffer.length;
-						if (amountToRead > rem)
-						{
-							amountToRead = (int) rem;
-						}
-						int nread = input.read(buffer, 0, amountToRead);
-						if (nread < 0)
-						{
-							LogWrapper.getLogger().info("Hit end of input from logs too early.");
-							break;
-						}
-						output.write(buffer, 0, nread);
-						pushedSoFar += nread;
-						rem = Math.max(0, logSize - pushedSoFar);
+						amountToRead = (int) rem;
 					}
+					int nread = input.read(buffer, 0, amountToRead);
+					if (nread < 0)
+					{
+						LogWrapper.getLogger().info("Hit end of input from logs too early.");
+						break;
+					}
+					output.write(buffer, 0, nread);
+					pushedSoFar += nread;
+					rem = Math.max(0, logSize - pushedSoFar);
 				}
-				catch (IOException ex)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to serve logs.", ex);
-				}
-				finally
-				{
-					// Then reopen it
-					LogWrapper.logToFile(Services.settings.logFile.getPath(), Services.settings.logLength.get());
-				}
-//				finishWritingRemainingBytes(output, rem);
+			}
+			catch (IOException ex)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to serve logs.", ex);
+			}
+			finally
+			{
+				// Then reopen it
+				LogWrapper.logToFile(Services.settings.logFile.getPath(), Services.settings.logLength.get());
+			}
+			// finishWritingRemainingBytes(output, rem);
 		}
 	}
 

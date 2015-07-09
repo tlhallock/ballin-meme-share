@@ -158,4 +158,17 @@ public class DbConnectionCache extends TimerTask
 		}
 		return builder;
 	}
+	
+
+	public void setAutoCommit(boolean value)
+	{
+		try (ConnectionWrapper conn = Services.h2DbCache.getThreadConnection())
+		{
+			conn.setAutoCommit(value);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to set autocommit to " + value, e);
+		}
+	}
 }

@@ -137,29 +137,17 @@ public class LocalBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsName = true;
-		boolean needsDescription = true;
-		boolean needsPath = true;
 		boolean needsIgnores = true;
 		boolean needsMinFSize = true;
 		boolean needsMaxFSize = true;
+		boolean needsName = true;
+		boolean needsDescription = true;
+		boolean needsPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsName)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
-				}
-				if (needsDescription)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
-				}
-				if (needsPath)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
-				}
 				if (needsIgnores)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ignores");
@@ -172,34 +160,22 @@ public class LocalBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs maxFSize");
 				}
+				if (needsName)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsDescription)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
+				}
+				if (needsPath)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "name":
-					needsName = false;
-					name = parser.getString();
-					break;
-				case "description":
-					needsDescription = false;
-					description = parser.getString();
-					break;
-				case "tags":
-					tags = parser.getString();
-					break;
-				case "path":
-					needsPath = false;
-					path = parser.getString();
-					break;
-				case "defaultSharingState":
-					defaultSharingState = SharingState.valueOf(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case START_ARRAY:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("ignores")) {
@@ -225,6 +201,30 @@ public class LocalBackup implements Jsonable
 					break;
 				case "totalNumFiles":
 					totalNumFiles = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "description":
+					needsDescription = false;
+					description = parser.getString();
+					break;
+				case "tags":
+					tags = parser.getString();
+					break;
+				case "path":
+					needsPath = false;
+					path = parser.getString();
+					break;
+				case "defaultSharingState":
+					defaultSharingState = SharingState.valueOf(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

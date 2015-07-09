@@ -38,7 +38,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.dmn.Services;
@@ -84,18 +83,12 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void empty()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		new SwingWorker<Void, Void>()
-		{
-			@Override
-			protected Void doInBackground() throws Exception
+		SwingUtilities.invokeLater(new Runnable() {public void run() {
+			synchronized (table)
 			{
-				synchronized (table)
-				{
-					emptyInternal();
-				}
-				return null;
+				emptyInternal();
 			}
-		}.execute();
+		}});
 	}
 
 	private synchronized void emptyInternal()
@@ -110,18 +103,12 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void refreshInPlace()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		new SwingWorker<Void, Void>()
-		{
-			@Override
-			protected Void doInBackground() throws Exception
+		SwingUtilities.invokeLater(new Runnable() {public void run() {
+			synchronized (table)
 			{
-				synchronized (table)
-				{
-					refreshInPlaceInternal();
-				}
-				return null;
+				refreshInPlaceInternal();
 			}
-		}.execute();
+		}});
 	}
 	
 	private synchronized void refreshInPlaceInternal()
@@ -147,18 +134,18 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void refresh()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		new SwingWorker<Void, Void>()
+
+		SwingUtilities.invokeLater(new Runnable()
 		{
 			@Override
-			protected Void doInBackground() throws Exception
+			public void run()
 			{
 				synchronized (table)
 				{
 					refreshInternal();
 				}
-				return null;
 			}
-		}.execute();
+		});
 	}
 	
 	private synchronized void refreshInternal()
@@ -440,38 +427,43 @@ public abstract class DbJTable<T> extends MouseAdapter
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			int[] selectedRows2 = getSelectedRows();
-			if (selectedRows2 == null)
-			{
-				LogWrapper.getLogger().info("No rows selected!");
-				return;
-			}
-			for (int i = selectedRows2.length - 1; i >= 0; i--)
-			{
-				final T create = create(selectedRows2[i]);
-				if (create == null)
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run()
 				{
-					LogWrapper.getLogger().info("Unable to find record from " + selectedRows2[i]);
-					return;
-				}
-
-				LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
+					int[] selectedRows2 = getSelectedRows();
+					if (selectedRows2 == null)
 					{
-						try
+						LogWrapper.getLogger().info("No rows selected!");
+						return;
+					}
+					for (int i = selectedRows2.length - 1; i >= 0; i--)
+					{
+						final T create = create(selectedRows2[i]);
+						if (create == null)
 						{
-							perform(create);
+							LogWrapper.getLogger().info("Unable to find record from " + selectedRows2[i]);
+							return;
 						}
-						catch (Exception ex)
+
+						LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
+						Services.userThreads.execute(new Runnable()
 						{
-							LogWrapper.getLogger().log(Level.INFO, null, ex);
-						}
-					};
-				});
-			}
+							@Override
+							public void run()
+							{
+								try
+								{
+									perform(create);
+								}
+								catch (Exception ex)
+								{
+									LogWrapper.getLogger().log(Level.INFO, null, ex);
+								}
+							};
+						});
+					}
+				}});
 		}
 	}
 }

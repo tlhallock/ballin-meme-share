@@ -101,6 +101,10 @@ public class Tracker implements Runnable
 				parser.close();
 				input.startAgain();
 				parser = TrackObjectUtils.createParser(CompressionStreams.newCompressedInputStream(input));
+				if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+				{
+					throw new IOException("Client content did not start with an array.");
+				}
 				
 				// Handshake done
 				generator.writeEnd();

@@ -13,6 +13,7 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.dwn.PathSecurity;
+import org.cnv.shr.gui.UpdateServerProgress;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
@@ -34,6 +35,8 @@ public class GotLogs extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
+
+		UpdateServerProgress progress = (UpdateServerProgress) connection.getParam("progress");
 		try
 		{
 			Machine machine = connection.getMachine();
@@ -54,6 +57,11 @@ public class GotLogs extends Message
 				while (remaining > 0)
 				{
 					LogWrapper.getLogger().fine("remaining: " + remaining);
+					if (progress != null)
+					{
+						progress.setProgress(logSize - remaining, logSize);
+					}
+
 					int amountToRead = buffer.length;
 					if (amountToRead > remaining)
 					{

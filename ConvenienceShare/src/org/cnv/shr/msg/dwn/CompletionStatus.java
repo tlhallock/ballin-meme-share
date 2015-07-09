@@ -109,39 +109,39 @@ public class CompletionStatus extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsDescriptor = true;
 		boolean needsPercentComplete = true;
+		boolean needsDescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsDescriptor)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
-				}
 				if (needsPercentComplete)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs percentComplete");
+				}
+				if (needsDescriptor)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case START_OBJECT:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("descriptor")) {
-					needsDescriptor = false;
-					descriptor = new FileEntry(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("percentComplete")) {
 					needsPercentComplete = false;
 					percentComplete = Double.parseDouble(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("descriptor")) {
+					needsDescriptor = false;
+					descriptor = new FileEntry(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

@@ -8,17 +8,10 @@ import java.util.Random;
 import org.cnv.shr.util.PausableInputStream2;
 import org.cnv.shr.util.PausableOutputStream;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 public class PausingStreamTests
 {
-	@Before
-	public void foo()
-	{
-		PausableOutputStream.LOG = false;
-	}
-	
 	@Test
 	public void testEasySmallBuffer() throws IOException
 	{

@@ -90,7 +90,7 @@ public final class CountingOutputStream extends OutputStream
 			{
 				for (int i = 0; i < histogram.length; i++)
 				{
-					output.write(String.format("%d\t:\t%12.4\n", i, histogram[i]));
+					output.write(String.format("%d\t:\t%12.4f\n", i, histogram[i]));
 				}
 			}
 			catch (IOException e)

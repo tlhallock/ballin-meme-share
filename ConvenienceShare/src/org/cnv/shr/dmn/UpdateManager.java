@@ -329,7 +329,8 @@ public class UpdateManager extends TimerTask
 	{
 		UserInputWait wait = new UserInputWait();
 		waitForInput(wait);
-		JOptionPane.showMessageDialog(origin, 
+		JOptionPane.showMessageDialog(
+				origin == null ? Services.notifications.getCurrentContext() : origin, 
 				"Code update is complete. ConvenienceShare will now restart.", 
 				"Code update.", 
 				JOptionPane.INFORMATION_MESSAGE);
@@ -345,7 +346,8 @@ public class UpdateManager extends TimerTask
 	{
 			UserInputWait wait = new UserInputWait();
 			waitForInput(wait);
-			boolean proceed = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(origin,
+			boolean proceed = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
+					origin == null ? Services.notifications.getCurrentContext() : origin,
 					"A new version of code has been found. Would you like to update now?",
 					"Update ConvenienceShare",
 					JOptionPane.YES_NO_OPTION);

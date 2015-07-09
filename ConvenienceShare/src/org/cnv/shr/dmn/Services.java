@@ -129,7 +129,7 @@ public class Services
 		createServices(args.settings, screen);
 		if (args.restoreFile != null)
 		{
-			DbBackupRestore.restoreDatabase(null, args.restoreFile);
+			DbBackupRestore.restoreDatabase(args.restoreFile, true);
 		}
 		checkIfUpdateManagerIsRunning(args, screen);
 		startServices(screen);
@@ -207,7 +207,7 @@ public class Services
 	{
 		if (screen != null)
 			screen.setStatus("Creating services");
-		compressionManager = new CompressionList();
+		compressionManager = new CompressionList(); compressionManager.read(settings.compressionFile.getPath());
 		colors = new ColorSetter();
 		colors.read();
 		notifications = new Notifications();

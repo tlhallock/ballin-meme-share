@@ -132,39 +132,39 @@ public class UserMessageMessage extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsMessageStr = true;
 		boolean needsType = true;
+		boolean needsMessageStr = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsMessageStr)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs messageStr");
-				}
 				if (needsType)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs type");
+				}
+				if (needsMessageStr)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs messageStr");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("messageStr")) {
-					needsMessageStr = false;
-					messageStr = parser.getString();
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("type")) {
 					needsType = false;
 					type = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("messageStr")) {
+					needsMessageStr = false;
+					messageStr = parser.getString();
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

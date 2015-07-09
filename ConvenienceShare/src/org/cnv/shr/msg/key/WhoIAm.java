@@ -152,18 +152,26 @@ public class WhoIAm extends MachineFound
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsPort = true;
+		boolean needsNports = true;
 		boolean needsPKey = true;
 		boolean needsVersionString = true;
 		boolean needsIp = true;
 		boolean needsName = true;
 		boolean needsIdent = true;
-		boolean needsPort = true;
-		boolean needsNports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsPort)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
+				}
+				if (needsNports)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
 				if (needsPKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pKey");
@@ -184,18 +192,24 @@ public class WhoIAm extends MachineFound
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
-				if (needsPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsNports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "port":
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+					break;
+				case "nports":
+					needsNports = false;
+					nports = Integer.parseInt(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_STRING:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
@@ -218,20 +232,6 @@ public class WhoIAm extends MachineFound
 				case "ident":
 					needsIdent = false;
 					ident = parser.getString();
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "port":
-					needsPort = false;
-					port = Integer.parseInt(parser.getString());
-					break;
-				case "nports":
-					needsNports = false;
-					nports = Integer.parseInt(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

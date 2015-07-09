@@ -182,7 +182,9 @@ public class DbFiles
 		try 
 		{
 			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-			return new DbIterator<LocalFile>(c, c.prepareStatement(CHECKED).executeQuery(), DbTables.DbObjects.LFILE);
+			StatementWrapper prepareStatement = c.prepareStatement(CHECKED);
+			prepareStatement.setFetchSize(50);
+			return new DbIterator<LocalFile>(c, prepareStatement.executeQuery(), DbTables.DbObjects.LFILE);
 		}
 		catch (SQLException e)
 		{
@@ -196,7 +198,9 @@ public class DbFiles
 			try 
 			{
 				ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				return new DbIterator<LocalFile>(c, c.prepareStatement(ALL).executeQuery(), DbTables.DbObjects.LFILE);
+				StatementWrapper prepareStatement = c.prepareStatement(ALL);
+				prepareStatement.setFetchSize(50);
+				return new DbIterator<LocalFile>(c, prepareStatement.executeQuery(), DbTables.DbObjects.LFILE);
 			}
 			catch (SQLException e)
 			{

@@ -2,9 +2,6 @@ package org.cnv.shr.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 /**
  * The json parser continues to read after the current object.
@@ -28,8 +25,6 @@ public class PausableInputStream2 extends InputStream
 	byte[] buffer;
 	byte[] singleReadBuffer = new byte[1];
 	
-	OutputStream raw;
-
 	public PausableInputStream2(InputStream input)
 	{
 		this(input, Misc.BUFFER_SIZE);
@@ -42,36 +37,17 @@ public class PausableInputStream2 extends InputStream
 	public void setRawMode(boolean rawMode)
 	{
 		this.rawMode = rawMode;
-		if (rawMode)
-		{
-			try
-			{
-				raw = Files.newOutputStream(Paths.get("log.Raw.in" + Math.random()));
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-		}
-		else
-		{
-			try
-			{
-				raw.close();
-			}
-			catch (IOException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
 	}
 	public void setDelegate(InputStream delegate)
 	{
 		this.delegate = delegate;
 	}
-	public void startAgain()
+	public void startAgain() throws IOException
 	{
+		while (!paused)
+		{
+			read(null, 0, Integer.MAX_VALUE);
+		}
 		paused = false;
 	}
 
@@ -90,7 +66,7 @@ public class PausableInputStream2 extends InputStream
 		return read(b, 0, b.length);
 	}
 
-	public int read(byte b[], int off, int len) throws IOException
+	public int read(byte buf[], int off, int len) throws IOException
 	{
 		if (paused)
 		{
@@ -98,8 +74,7 @@ public class PausableInputStream2 extends InputStream
 		}
 		if (rawMode)
 		{
-			int nread = delegate.read(b, off, len);
-//			logFile.write(b, off, nread); logFile.flush();
+			int nread = delegate.read(buf, off, len);
 			return nread;
 		}
 
@@ -114,7 +89,6 @@ public class PausableInputStream2 extends InputStream
 				{
 					return -1;
 				}
-//				logFile.write(bufferEnd); logFile.flush();
 				continue;
 			}
 			if (buffer[bufferBegin] != PAUSE_BYTE)
@@ -128,7 +102,8 @@ public class PausableInputStream2 extends InputStream
 				{
 					len = available;
 				}
-				System.arraycopy(buffer, bufferBegin, b, off, len);
+				if (buf!=null)
+					System.arraycopy(buffer, bufferBegin, buf, off, len);
 				bufferBegin += len;
 				return len;
 			}
@@ -137,7 +112,8 @@ public class PausableInputStream2 extends InputStream
 				bufferBegin++;
 				if (buffer[bufferBegin] == PAUSE_BYTE)
 				{
-					b[off++] = PAUSE_BYTE;
+					if (buf!=null)
+						buf[off++] = PAUSE_BYTE;
 					bufferBegin++;
 					len--;
 					int available = findNextRead();
@@ -149,15 +125,14 @@ public class PausableInputStream2 extends InputStream
 					{
 						len = available;
 					}
-					System.arraycopy(buffer, bufferBegin, b, off, len);
+					if (buf!=null)
+						System.arraycopy(buffer, bufferBegin, buf, off, len);
 					bufferBegin += len;
 					return len + 1;
 				}
 				
 				bufferBegin++;
 				paused = true;
-//				logFile.write("<paused here>".getBytes());
-//				logFile.flush();
 				return -1;
 			}
 			if (bufferEnd < buffer.length)
@@ -172,14 +147,9 @@ public class PausableInputStream2 extends InputStream
 				{
 					throw new IOException("Unescaped pause character!!");
 				}
-//				logFile.write(read); logFile.flush();
 				bufferEnd += read;
 				continue;
 			}
-			// facts:
-			// buffer[bufferBegin] == PAUSE_BYTE
-			// bufferBegin + 1 == bufferEnd
-			// bufferEnd == buffer.length
 			buffer[bufferBegin = 0] = PAUSE_BYTE;
 			bufferEnd = 1 + delegate.read(buffer, 1, Math.min(buffer.length - 1, len));
 			if (bufferEnd < 0)
@@ -198,6 +168,11 @@ public class PausableInputStream2 extends InputStream
 	{
 		if (bufferEnd - bufferBegin > 0)
 		{
+			if (bufferBegin + 1 > bufferEnd && buffer[bufferBegin] == PAUSE_BYTE && buffer[bufferBegin + 1] != PAUSE_BYTE)
+			{
+				return 0;
+			}
+//			System.out.println(Misc.format(Arrays.copyOfRange(buffer, bufferBegin, bufferEnd)));
 			return bufferEnd - bufferBegin;
 		}
 		return delegate.available();
@@ -232,20 +207,4 @@ public class PausableInputStream2 extends InputStream
 		}
 		return len;
 	}
-
-//	private OutputStream logFile;
-//	{
-//		Map<String, Object> properties = new HashMap<>(1);
-//		properties.put(JsonGenerator.PRETTY_PRINTING, true);
-//		try
-//		{
-//			String string = "log.in." + System.currentTimeMillis() + "." + Math.random() + ".txt";
-//			System.out.println("Logging to " + string);
-//			logFile = Files.newOutputStream(Paths.get(string));
-//		}
-//		catch (IOException e)
-//		{
-//			e.printStackTrace();
-//		}
-//	}
 }

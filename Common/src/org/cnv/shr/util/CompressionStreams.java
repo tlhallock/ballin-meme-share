@@ -9,36 +9,88 @@ import java.util.zip.ZipOutputStream;
 
 public class CompressionStreams
 {
+	private static ZipEntry createZipEntry(int increment)
+	{
+		ZipEntry zipEntry = new ZipEntry(String.valueOf(increment));
+		zipEntry.setMethod(ZipEntry.DEFLATED);
+		return zipEntry;
+	}
+	
+	private static final class ZipStats
+	{
+		long uncompressed;
+		long compressed;
+		public String toString()
+		{
+			return "compression ratio: " + compressed / (double) uncompressed;
+		}
+	}
 
 	public static OutputStream newCompressedOutputStream(PausableOutputStream delegate) throws IOException
 	{
-		ZipOutputStream zip = new ZipOutputStream(delegate);
-		zip.putNextEntry(new ZipEntry(String.valueOf(Math.random())));
+		ZipStats stats = new ZipStats();
+		delegate.stopOtherSide();
+		ZipOutputStream zip = new ZipOutputStream(new OutputStream()
+		{
+			int nextName = 1;
+			@Override
+			public void write(int b) throws IOException
+			{
+				delegate.write(b);
+				stats.compressed++;
+			}
+			@Override
+			public void write(byte[] b, int off, int len) throws IOException
+			{
+				delegate.write(b, off, len);
+				stats.compressed+=len;
+			}
+
+			@Override
+			public void close() throws IOException
+			{
+				delegate.close();
+			}
+			@Override
+			public void flush() throws IOException
+			{
+				delegate.flush();
+			}
+		});
+		zip.setLevel(9);
+		zip.putNextEntry(createZipEntry(0));
+		
+		
 		
 		OutputStream outerStream = new OutputStream()
 		{
+			int nextName = 1;
 			@Override
 			public void write(int b) throws IOException
 			{
 				zip.write(b);
+				stats.uncompressed++;
 			}
 			@Override
 			public void write(byte[] b, int off, int len) throws IOException
 			{
 				zip.write(b, off, len);
+				stats.uncompressed+=len;
 			}
 
 			@Override
 			public void close() throws IOException
 			{
 				zip.close();
+				LogWrapper.getLogger().info(stats.toString());
 			}
 			@Override
 			public void flush() throws IOException
 			{
-				zip.putNextEntry(new ZipEntry(String.valueOf(Math.random())));
+				zip.putNextEntry(createZipEntry(nextName++));
 				zip.flush();
 				delegate.flush();
+				LogWrapper.getLogger().info(stats.toString());
 			}
 		};
 		return outerStream;
@@ -46,20 +98,17 @@ public class CompressionStreams
 
 	public static InputStream newCompressedInputStream(PausableInputStream2 delegate) throws IOException
 	{
+		delegate.startAgain();
 		ZipInputStream zip = new ZipInputStream(delegate);
+		zip.getNextEntry();
 
 		InputStream outer = new InputStream()
 		{
 			@Override
 			public int available() throws IOException
 			{
-				int available;
-				do
-				{
-					available = zip.available();
-				}
-				while (available == 0 && zip.getNextEntry() != null);
-				return available;
+				// ZipInputStream doesn't know anything...
+				return delegate.available();
 			}
 			@Override
 			public int read() throws IOException

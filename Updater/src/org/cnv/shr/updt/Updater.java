@@ -55,6 +55,7 @@ public class Updater
 	static UpdateThread updateThread;
 	static Timer timer;
 	static Code code;
+	static CodeMonitor monitor;
 	
 	static Path getUpdatesDirectory()
 	{
@@ -76,6 +77,8 @@ public class Updater
 			ROOT_DIRECTORY = args[0];
 		}
 		Misc.ensureDirectory(getUpdatesDirectory(), false);
+		
+		LogWrapper.getLogger().info("Root directory is " + ROOT_DIRECTORY);
 
 		keysFile  = Paths.get(ROOT_DIRECTORY, UpdateInfoImpl.KEYS_TXT);
 		propsFile = Paths.get(ROOT_DIRECTORY, UpdateInfoImpl.INFO_PROPS);
@@ -91,6 +94,9 @@ public class Updater
 		
 		timer = new Timer();
 		timer.scheduleAtFixedRate(new KeyUpdater(), A_LONG_TIME, A_LONG_TIME);
+		
+		monitor = new CodeMonitor(getUpdatesDirectory());
+		new Thread(monitor).start();
 	}
 	
 	public static void updateProps()

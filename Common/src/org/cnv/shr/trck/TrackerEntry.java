@@ -139,9 +139,9 @@ public class TrackerEntry extends TrackObject
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsStoresMetaData = true;
-		boolean needsUrl = true;
 		boolean needsBegin = true;
 		boolean needsEnd = true;
+		boolean needsUrl = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -151,10 +151,6 @@ public class TrackerEntry extends TrackObject
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs storesMetaData");
 				}
-				if (needsUrl)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs url");
-				}
 				if (needsBegin)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs begin");
@@ -162,6 +158,10 @@ public class TrackerEntry extends TrackObject
 				if (needsEnd)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs end");
+				}
+				if (needsUrl)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs url");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -193,15 +193,6 @@ public class TrackerEntry extends TrackObject
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("url")) {
-					needsUrl = false;
-					url = parser.getString();
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
@@ -214,6 +205,15 @@ public class TrackerEntry extends TrackObject
 					end = Integer.parseInt(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("url")) {
+					needsUrl = false;
+					url = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
