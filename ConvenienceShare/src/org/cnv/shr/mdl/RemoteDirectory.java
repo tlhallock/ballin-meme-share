@@ -25,7 +25,6 @@
 
 package org.cnv.shr.mdl;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +40,7 @@ import org.cnv.shr.sync.RemoteFileSource;
 import org.cnv.shr.sync.RemoteSynchronizer;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.sync.RootSynchronizer;
+import org.cnv.shr.util.Misc;
 
 
 public class RemoteDirectory extends RootDirectory
@@ -55,8 +55,14 @@ public class RemoteDirectory extends RootDirectory
 			final SharingState defaultShare)
 	{
 		super(machine, name, tags, description);
-		path = DbPaths.getPathElement(
-				Services.settings.downloadsDirectory.get().getAbsolutePath() + File.separator + getLocalMirrorName());
+		
+		String pathStr = Services.settings.downloadsDirectory.getPath().resolve(getLocalMirrorName()).toAbsolutePath().toString();
+		if (!pathStr.endsWith("/"))
+		{
+			pathStr = pathStr + "/";
+		}
+		path = DbPaths.getPathElement(pathStr);
+		Misc.ensureDirectory(Paths.get(pathStr), false);
 		sharesWithUs = defaultShare;
 	}
 
@@ -124,6 +130,11 @@ public class RemoteDirectory extends RootDirectory
 
 	@Override
 	protected void setDefaultSharingState(SharingState sharingState)
+	{
+		this.sharesWithUs = sharingState;
+	}
+	
+	public void setSharesWithUs(SharingState sharingState)
 	{
 		this.sharesWithUs = sharingState;
 	}

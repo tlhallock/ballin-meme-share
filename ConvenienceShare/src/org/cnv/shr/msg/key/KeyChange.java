@@ -40,6 +40,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class KeyChange extends KeyMessage
@@ -118,28 +119,28 @@ public class KeyChange extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsoldKey = true;
-		boolean needsnewKey = true;
-		boolean needsdecryptedProof = true;
-		boolean needsnaunceRequest = true;
+		boolean needsOldKey = true;
+		boolean needsNewKey = true;
+		boolean needsDecryptedProof = true;
+		boolean needsNaunceRequest = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsoldKey)
+				if (needsOldKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs oldKey");
 				}
-				if (needsnewKey)
+				if (needsNewKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs newKey");
 				}
-				if (needsdecryptedProof)
+				if (needsDecryptedProof)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedProof");
 				}
-				if (needsnaunceRequest)
+				if (needsNaunceRequest)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
@@ -147,28 +148,29 @@ public class KeyChange extends KeyMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "oldKey":
-				needsoldKey = false;
-				oldKey = KeyPairObject.deSerializePublicKey(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "oldKey":
+					needsOldKey = false;
+					oldKey = KeyPairObject.deSerializePublicKey(parser.getString());
+					break;
+				case "newKey":
+					needsNewKey = false;
+					newKey = KeyPairObject.deSerializePublicKey(parser.getString());
+					break;
+				case "decryptedProof":
+					needsDecryptedProof = false;
+					decryptedProof = Misc.format(parser.getString());
+					break;
+				case "naunceRequest":
+					needsNaunceRequest = false;
+					naunceRequest = Misc.format(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "newKey":
-				needsnewKey = false;
-				newKey = KeyPairObject.deSerializePublicKey(parser.getString());
-				break;
-			case "decryptedProof":
-				needsdecryptedProof = false;
-				decryptedProof = Misc.format(parser.getString());
-				break;
-			case "naunceRequest":
-				needsnaunceRequest = false;
-				naunceRequest = Misc.format(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

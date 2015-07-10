@@ -36,33 +36,40 @@ import org.cnv.shr.util.Misc;
 
 public class BlackList
 {
-	Path blackListFile = Services.settings.applicationDirectory.getPath().resolve("blackList.txt");
+	private static void ensureExists(Path path)
 	{
-		Misc.ensureDirectory(blackListFile, true);
-		if (!Files.exists(blackListFile))
+		Misc.ensureDirectory(path, true);
+		if (!Files.exists(path))
 		{
 			try
 			{
-				Files.createFile(blackListFile);
+				Files.createFile(path);
 			}
 			catch (IOException e)
 			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to create blacklist file at " + blackListFile, e);
+				LogWrapper.getLogger().log(Level.INFO, "Unable to create blacklist file at " + path, e);
 			}
 		}
 	}
 	
 	public synchronized boolean contains(String machineId)
 	{
+		Path blackListFile = Services.settings.applicationDirectory.getPath().resolve("blackList.txt");
+		
+		ensureExists(blackListFile);
 		Boolean grep = Misc.grep(blackListFile, machineId);
-		boolean blackListed = grep == null || grep;
+		boolean blackListed = grep != null && grep;
 		LogWrapper.getLogger().info(machineId + " is " + (blackListed? "" : "not") + " blacklisted");
 		return blackListed;
 	}
 	public synchronized void add(String machineId)
 	{
-		LogWrapper.getLogger().info("Blacklisting " + machineId);
+		Path blackListFile = Services.settings.applicationDirectory.getPath().resolve("blackList.txt");
 		Path backup = Paths.get(blackListFile.toString() + ".back");
+		ensureExists(blackListFile);
+		ensureExists(backup);
+		
+		LogWrapper.getLogger().info("Blacklisting " + machineId);
 		if (Misc.sed(blackListFile, backup, null, null))
 		{
 			Misc.sed(backup, blackListFile, machineId, null);
@@ -70,24 +77,28 @@ public class BlackList
 	}
 	public synchronized void remove(String machineId)
 	{
-		LogWrapper.getLogger().info("Un-blacklisting " + machineId);
+		Path blackListFile = Services.settings.applicationDirectory.getPath().resolve("blackList.txt");
 		Path backup = Paths.get(blackListFile.toString() + ".back");
+		ensureExists(blackListFile);
+		ensureExists(backup);
+		
+		LogWrapper.getLogger().info("Un-blacklisting " + machineId);
 		if (Misc.sed(blackListFile, backup, null, null))
 		{
 			Misc.sed(backup, blackListFile, null, machineId);
 		}
 	}
-	public synchronized void setBlacklisted(String machineId, String ip, boolean value)
+
+	// TODO: how to do ips?
+	public synchronized void setBlacklisted(String machineId, boolean value)
 	{
 		if (value)
 		{
 			add(machineId);
-			add(ip);
 		}
 		else
 		{
 			remove(machineId);
-			remove(ip);
 		}
 	}
 }

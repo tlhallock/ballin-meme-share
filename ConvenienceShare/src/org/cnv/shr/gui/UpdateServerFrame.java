@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.logging.Level;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -43,6 +44,8 @@ public class UpdateServerFrame extends javax.swing.JFrame {
     public UpdateServerFrame() {
         initComponents();
     }
+    
+    // TODO: open logs once they come in.
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -218,153 +221,70 @@ public class UpdateServerFrame extends javax.swing.JFrame {
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
       LogWrapper.getLogger().info("Updating cached versions");  
       UpdateServerFrame frame = this;
-    	Services.userThreads.execute(new Runnable() {
-					@Override
-					public void run()
+      
+      HashSet<String> selectedIdents = new HashSet<>();
+      SwingUtilities.invokeLater(() -> {
+					// has to be on event queue
+					getSelectedIdents(selectedIdents);
+					if (selectedIdents.isEmpty())
 					{
-		        for (String identifier : getSelectedIdents())
-		        {
-		            Machine machine = DbMachines.getMachine(identifier);
-		            if (machine == null)
-		            {
-		            	LogWrapper.getLogger().info("Unable to get machine " + identifier);
-		            	continue;
-		            }
-		            
-								try
-								{
-									Communication connection = Services.networkManager.openConnection(frame, machine, false, "Update cached version info.");
-			            if (connection == null)
-			            {
-			            	continue;
-			            }
-			            connection.finish();
-								}
-								catch (IOException e)
-								{
-		            	LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
-								}
-		  					
-		  					try
-		  					{
-		  						LogWrapper.getLogger().info("Yielding for 10 sec.");
-		  						Thread.sleep(10 * 1000);
-		  					}
-		  					catch (InterruptedException ex)
-		  					{
-		  						LogWrapper.getLogger().log(Level.INFO, "Interrupted", ex);
-		  						return;
-		  					}
-		        }
-					}});
+						JOptionPane.showMessageDialog(frame,
+								"No machines selected.",
+								"You have not selected any machines.",
+								JOptionPane.INFORMATION_MESSAGE);
+						return;
+					}
+					Services.userThreads.execute(() -> {
+							// should not be on event queue
+							updateVersion(frame, selectedIdents);
+						});
+				});
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-		LogWrapper.getLogger().info("Sending update requests");
-		UpdateServerFrame frame = this;
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				for (String identifier : getSelectedIdents())
+		LogWrapper.getLogger().info("Sending update requests"); 
+    UpdateServerFrame frame = this;
+    
+    HashSet<String> selectedIdents = new HashSet<>();
+    SwingUtilities.invokeLater(() -> {
+				// has to be on event queue
+				getSelectedIdents(selectedIdents);
+				if (selectedIdents.isEmpty())
 				{
-					Machine machine = DbMachines.getMachine(identifier);
-					if (machine == null)
-					{
-						LogWrapper.getLogger().info("Unable to get machine " + identifier);
-						continue;
-					}
-
-					try
-					{
-						Communication connection = Services.networkManager.openConnection(frame, machine, false, "Update code info.");
-						if (connection == null)
-						{
-							continue;
-						}
-						try
-						{
-							connection.send(new UpdateInfoRequestRequest("update info"));
-						}
-						catch (Exception ex)
-						{
-  						LogWrapper.getLogger().log(Level.INFO, "Unable to send update info request to " + identifier, ex);
-							connection.finish();
-						}
-					}
-					catch (IOException e)
-					{
-						LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
-					}
-					
-					try
-					{
-						LogWrapper.getLogger().info("Yielding for 10 sec.");
-						Thread.sleep(10 * 1000);
-					}
-					catch (InterruptedException ex)
-					{
-						LogWrapper.getLogger().log(Level.INFO, "Interrupted", ex);
-						return;
-					}
+					JOptionPane.showMessageDialog(frame,
+							"No machines selected.",
+							"You have not selected any machines.",
+							JOptionPane.INFORMATION_MESSAGE);
+					return;
 				}
-			}
-		});
+				Services.userThreads.execute(() -> {
+						// should not be on event queue
+						requestUpdates(frame, selectedIdents);
+					});
+				});
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
     	LogWrapper.getLogger().info("Getting logs");
-    	JFrame frame = this;
-  		Services.userThreads.execute(new Runnable()
-  		{
-  			@Override
-  			public void run()
-  			{
-  				for (String identifier : getSelectedIdents())
+      UpdateServerFrame frame = this;
+      
+      HashSet<String> selectedIdents = new HashSet<>();
+      SwingUtilities.invokeLater(() -> {
+  				// has to be on event queue
+  				getSelectedIdents(selectedIdents);
+  				if (selectedIdents.isEmpty())
   				{
-  					Machine machine = DbMachines.getMachine(identifier);
-  					if (machine == null)
-  					{
-  						LogWrapper.getLogger().info("Unable to get machine " + identifier);
-  						continue;
-  					}
-
-  					try
-  					{
-  						Communication connection = Services.networkManager.openConnection(frame, machine, false, "Get logs");
-  						if (connection == null)
-  						{
-  							continue;
-  						}
-  						try
-  						{
-  							connection.send(new UpdateInfoRequestRequest("getLogs"));
-							}
-							catch (Exception ex)
-							{
-	  						LogWrapper.getLogger().log(Level.INFO, "Unable to send get logs request to " + identifier, ex);
-								connection.finish();
-							}
-  					}
-  					catch (IOException e)
-  					{
-  						LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
-  					}
-  					
-  					try
-  					{
-  						LogWrapper.getLogger().info("Yielding for 10 sec.");
-  						Thread.sleep(10 * 1000);
-  					}
-  					catch (InterruptedException ex)
-  					{
-  						LogWrapper.getLogger().log(Level.INFO, "Interrupted", ex);
-  						return;
-  					}
+  					JOptionPane.showMessageDialog(frame,
+  							"No machines selected.",
+  							"You have not selected any machines.",
+  							JOptionPane.INFORMATION_MESSAGE);
+  					return;
   				}
-  			}
-  		});
+  				Services.userThreads.execute(() -> {
+  						// should not be on event queue
+  	  				requestLogs(frame, selectedIdents);
+  					});
+  				});
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -461,10 +381,7 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 			jButton4.setEnabled(true);
 			jButton5.setEnabled(true);
 			
-        SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run()
-					{
+        SwingUtilities.invokeLater(() -> {
 						synchronized (displayedMachineIdents)
 						{
 							displayedMachineIdents.clear();
@@ -495,25 +412,21 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 								}
 							}
 						}
-					}});
+					});
     }
     
-    private HashSet<String> getSelectedIdents()
+    private void getSelectedIdents(HashSet<String> selectedIdents)
     {
-    	HashSet<String> returnValue = new HashSet<>();
-    	
     	synchronized (displayedMachineIdents)
     	{
     		for (int row : jTable1.getSelectedRows())
     		{
     			if (row >= 0 && row < displayedMachineIdents.size())
     			{
-    				returnValue.add(displayedMachineIdents.get(row));
+    				selectedIdents.add(displayedMachineIdents.get(row));
     			}
     		}
     	}
-    	
-    	return returnValue;
     }
     
     private static final TableModel getTableModel()
@@ -542,4 +455,117 @@ public class UpdateServerFrame extends javax.swing.JFrame {
           }
       };
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+	private static void requestLogs(JFrame frame, HashSet<String> selectedIdents)
+	{
+		UpdateServerProgress progress = new UpdateServerProgress("Requesting Logs Progress", selectedIdents.size());
+		Services.notifications.registerWindow(progress);
+		progress.setVisible(true);
+
+		int current = 0;
+		for (String identifier : selectedIdents)
+		{
+			progress.startMachine(current++);
+			Machine machine = DbMachines.getMachine(identifier);
+			if (machine == null)
+			{
+				LogWrapper.getLogger().info("Unable to get machine " + identifier);
+				continue;
+			}
+
+			try
+			{
+				Communication connection = Services.networkManager.openConnection(frame, machine, false, "Get logs");
+				if (connection == null)
+				{
+					continue;
+				}
+				try
+				{
+					connection.putParam("progress", progress);
+					connection.send(new UpdateInfoRequestRequest("getLogs"));
+				}
+				catch (Exception ex)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to send get logs request to " + identifier, ex);
+					connection.finish();
+				}
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
+			}
+		}
+		progress.dispose();
+	}
+
+	private static void updateVersion(UpdateServerFrame frame, HashSet<String> selectedIdents)
+	{
+		for (String identifier : selectedIdents)
+		{
+			Machine machine = DbMachines.getMachine(identifier);
+			if (machine == null)
+			{
+				LogWrapper.getLogger().info("Unable to get machine " + identifier);
+				continue;
+			}
+
+			try
+			{
+				Communication connection = Services.networkManager.openConnection(frame, machine, false, "Update cached version info.");
+				if (connection == null)
+				{
+					continue;
+				}
+				connection.finish();
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
+			}
+		}
+	}
+	private static void requestUpdates(UpdateServerFrame frame, HashSet<String> selectedIdents)
+	{
+		for (String identifier : selectedIdents)
+		{
+			Machine machine = DbMachines.getMachine(identifier);
+			if (machine == null)
+			{
+				LogWrapper.getLogger().info("Unable to get machine " + identifier);
+				continue;
+			}
+
+			try
+			{
+				Communication connection = Services.networkManager.openConnection(frame, machine, false, "Update code info.");
+				if (connection == null)
+				{
+					continue;
+				}
+				try
+				{
+					connection.send(new UpdateInfoRequestRequest("update info"));
+				}
+				catch (Exception ex)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to send update info request to " + identifier, ex);
+					connection.finish();
+				}
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
+			}
+		}
+	}
 }

@@ -31,6 +31,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.json.JsonStringMap;
+import org.cnv.shr.util.LogWrapper;
 
 public class TrackerRequest extends TrackObject
 {
@@ -82,40 +83,44 @@ public class TrackerRequest extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsparams = true;
-		boolean needsaction = true;
+		boolean needsAction = true;
+		boolean needsParams = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsparams)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs params");
-				}
-				if (needsaction)
+				if (needsAction)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+				}
+				if (needsParams)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs params");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("params")) {
-				needsparams = false;
-				params.parse(parser);
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("action")) {
-				needsaction = false;
-				action = parser.getString();
-			}
-			break;
-			default: break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("action")) {
+					needsAction = false;
+					action = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("params")) {
+					needsParams = false;
+					params.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

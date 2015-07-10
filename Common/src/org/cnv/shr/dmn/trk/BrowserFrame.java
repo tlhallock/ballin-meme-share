@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
@@ -822,6 +823,7 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 			}
 			LogWrapper.getLogger().info("Found " + count + " comments.");
 			commentPanel.repaint();
+			commentsChanged();
 			repaint();
 		}
 		catch (Exception ex)
@@ -831,7 +833,14 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 		}
 	}
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+
+  	protected JComponent getCommentPanel()
+  	{
+  		return commentPanel;
+  	}
+
+
+		// Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel commentPanel;
     private javax.swing.JLabel filesLabl;
     private javax.swing.JButton jButton1;
@@ -891,4 +900,6 @@ public abstract class BrowserFrame extends javax.swing.JFrame implements ListSel
 		
 		protected abstract boolean trackAction2Enabled();
     protected abstract boolean machineAction2Enabled();
+
+    protected abstract void commentsChanged();
 }

@@ -27,6 +27,9 @@ import org.cnv.shr.util.LogWrapper;
 
 public class ColorSetter
 {
+	private static final String SET_FOREGROUND_FOR_COMPONENTS_LIKE_THIS = "Set foreground for components like this...";
+	private static final String SET_BACKGROUND_FOR_COMPONENTS_LIKE_THIS = "Set background for components like this...";
+	
 	final Properties properties = new Properties();
 	final HashMap<String, LinkedList<ColorListener>> listeners = new HashMap<>();
 	final HashMap<JFrame, ColorWindowListener> windowListeners = new HashMap<>();
@@ -126,11 +129,26 @@ public class ColorSetter
 		synchronized (windowListener)
 		{
 			ColorListener listener = colorListeners.get(component);
-			if (listener != null)
-			{
-				listener.removeAllChildren();
-			}
+			listener.removeAllChildren();
 			setChildrenColors(listener, windowListener, true);
+		}
+	}
+	public void componentAdded(JFrame window, JComponent component, JComponent parent)
+	{
+		ColorWindowListener windowListener;
+		synchronized (windowListeners)
+		{
+			windowListener = windowListeners.get(window);
+		}
+		if (windowListener == null)
+		{
+			setColors(window);
+			return;
+		}
+		synchronized (windowListener)
+		{
+			ColorListener listener = colorListeners.get(parent);
+			setColor(listener, component, windowListener, true);
 		}
 	}
 	
@@ -203,8 +221,23 @@ public class ColorSetter
 
 	private void addMenuItems(final JPopupMenu newmenu, ColorListener component)
 	{
+		Component[] components = newmenu.getComponents();
+		for (Component c : components)
+		{
+			if (!(c instanceof JMenuItem))
+			{
+				continue;
+			}
+			JMenuItem item = (JMenuItem) c;
+			if (item.getText().equals(SET_BACKGROUND_FOR_COMPONENTS_LIKE_THIS) 
+					|| item.getText().equals(SET_FOREGROUND_FOR_COMPONENTS_LIKE_THIS))
+			{
+				return;
+			}
+		}
+		
 		String listenerKey = component.getListenersKey();
-		JMenuItem item = new JMenuItem("Set background for components like this...");
+		JMenuItem item = new JMenuItem(SET_BACKGROUND_FOR_COMPONENTS_LIKE_THIS);
 		item.addActionListener(new ActionListener()
 		{
 			@Override
@@ -226,7 +259,7 @@ public class ColorSetter
 			}
 		});
 		newmenu.add(item);
-		item = new JMenuItem("Set foreground for components like this...");
+		item = new JMenuItem(SET_FOREGROUND_FOR_COMPONENTS_LIKE_THIS);
 		item.addActionListener(new ActionListener()
 		{
 			@Override
@@ -267,13 +300,8 @@ public class ColorSetter
 			LogWrapper.getLogger().info("Setting " + colorKey + " to " + c);
 	  	properties.setProperty(colorKey, ColorUtils.serializeColor(c));
 			store();
-			Services.userThreads.execute(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					notifyListeners(c);
-				}
+			Services.userThreads.execute(() -> {
+				notifyListeners(c);
 			});
 		}
 		

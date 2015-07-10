@@ -228,13 +228,10 @@ public class DownloadManager
 
 	public void startDownloadInitiator()
 	{
-		Services.downloads.downloadThreads.schedule(new Runnable() {
-			@Override
-			public void run()
-			{
+		Services.downloads.downloadThreads.schedule(() -> {
 				Services.timer.scheduleAtFixedRate(initiator, 1000, 10 * 60 * 1000);
 				requester.start();
-			}}, 10, TimeUnit.SECONDS);
+		}, 10, TimeUnit.SECONDS);
 	}
 
 	public void quitAllDownloads()

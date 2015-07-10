@@ -41,6 +41,7 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class ListPath extends Message
 {
@@ -85,14 +86,8 @@ public class ListPath extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
-		checkPermissionsVisible(connection, connection.getMachine(), localByName, "List a path");
 		PathElement pathElement = DbPaths.getPathElement(path);
-		PathList msg = new PathList(localByName, pathElement);
-
-		System.out.println("Listing " + rootName + ":" + path);
-		System.out.println("Msg: " + msg);
-		
-		connection.send(msg);
+		PathList.listPaths(localByName, pathElement, connection);
 	}
 	
 	@Override
@@ -117,18 +112,18 @@ public class ListPath extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsrootName = true;
-		boolean needspath = true;
+		boolean needsRootName = true;
+		boolean needsPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsrootName)
+				if (needsRootName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
-				if (needspath)
+				if (needsPath)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
 				}
@@ -136,20 +131,21 @@ public class ListPath extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "rootName":
-				needsrootName = false;
-				rootName = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "rootName":
+					needsRootName = false;
+					rootName = parser.getString();
+					break;
+				case "path":
+					needsPath = false;
+					path = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "path":
-				needspath = false;
-				path = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

@@ -36,6 +36,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class Failure extends Message
 {
@@ -96,13 +97,13 @@ public class Failure extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsmessage = true;
+		boolean needsMessage = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsmessage)
+				if (needsMessage)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
 				}
@@ -110,14 +111,16 @@ public class Failure extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("message")) {
-				needsmessage = false;
-				message = parser.getString();
-			}
-			break;
-			default: break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("message")) {
+					needsMessage = false;
+					message = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

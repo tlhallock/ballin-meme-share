@@ -47,6 +47,7 @@ import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class RootList extends Message
 {
@@ -88,14 +89,10 @@ public class RootList extends Message
 		HashSet<String> accountedFor = new HashSet<>();
 		Machine machine = connection.getMachine();
 		
-		boolean changed = true;
 		for (RootListChild rootC : sharedDirectories)
 		{
-			RootDirectory root = rootC.getRoot(connection.getMachine());
+			RootDirectory root = rootC.createRoot(connection.getMachine());
 			accountedFor.add(root.getName());
-			root.setMachine(machine);
-			root.tryToSave();
-			changed = true;
 		}
 
 		List<RootDirectory> toDelete = new LinkedList<>();
@@ -110,7 +107,6 @@ public class RootList extends Message
 				}
 				toDelete.add(next);
 				DbRoots.deleteRoot(next);
-				changed = true;
 			}
 		}
 		
@@ -121,10 +117,8 @@ public class RootList extends Message
 			Services.notifications.remoteDirectoryChanged((RemoteDirectory) root);
 		}
 		
-		if (changed)
-		{
-			Services.notifications.remoteChanged(machine);
-		}
+		// TODO: should only happen if there was a change...
+		Services.notifications.remoteChanged(machine);
 	}
 
 	@Override
@@ -185,13 +179,13 @@ public class RootList extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssharedDirectories = true;
+		boolean needsSharedDirectories = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssharedDirectories)
+				if (needsSharedDirectories)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharedDirectories");
 				}
@@ -199,14 +193,16 @@ public class RootList extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("sharedDirectories")) {
-				needssharedDirectories = false;
-				sharedDirectories.parse(parser);
-			}
-			break;
-			default: break;
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("sharedDirectories")) {
+					needsSharedDirectories = false;
+					sharedDirectories.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

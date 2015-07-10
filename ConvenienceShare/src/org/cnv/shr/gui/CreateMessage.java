@@ -175,8 +175,8 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
             return;
         }
         
-        Services.userThreads.execute(new Runnable() { public void run() {
-        try {
+        Services.userThreads.execute(() -> {
+        	try {
             Communication connection = Services.networkManager.openConnection(message, machine, false, "Send user message");
             if (connection == null)
             {
@@ -193,7 +193,7 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
             dispose();
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to send message:", ex);
-        }}});
+        }});
     }//GEN-LAST:event_jButton1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -132,7 +132,7 @@ public class DbKeys
 	public static void addKey(Machine machine, PublicKey key)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(MERGE1, Statement.RETURN_GENERATED_KEYS))
+				 StatementWrapper stmt = c.prepareStatement(MERGE1, Statement.RETURN_GENERATED_KEYS);)
 		{
 			String keyStr = getKeyString(key);
 			LogWrapper.getLogger().info("Adding key to " + machine.getName() + ": " + keyStr);

@@ -32,6 +32,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.DbPermissions;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -42,15 +43,16 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class RootListChild implements Jsonable
 {
-	String name       ;
+	String name;
 	@MyParserNullable
-	String tags       ;
+	String tags;
 	@MyParserNullable
 	String description;
-	SharingState state;
+	SharingState isShared;
 	
 	public RootListChild(ByteReader reader) throws IOException
 	{
@@ -62,7 +64,7 @@ public class RootListChild implements Jsonable
 		name = root.getName();
 		tags = root.getTags();
 		description = root.getDescription();
-		state = DbPermissions.getCurrentPermissions(root.getMachine(), (LocalDirectory) root);
+		isShared = DbPermissions.getCurrentPermissions(root.getMachine(), (LocalDirectory) root);
 	}
 	
 	void append(AbstractByteWriter buffer) throws IOException
@@ -70,7 +72,7 @@ public class RootListChild implements Jsonable
 		buffer.append(name);
 		buffer.append(tags);
 		buffer.append(description);
-		buffer.append(state);
+		buffer.append(isShared);
 	}
 	
 	void parse(ByteReader reader) throws IOException
@@ -78,12 +80,24 @@ public class RootListChild implements Jsonable
 		name        = reader.readString();
 		tags        = reader.readString();
 		description = reader.readString();
-		state = SharingState.get(reader.readInt());
+		isShared    = SharingState.get(reader.readInt());
 	}
 	
-	RemoteDirectory getRoot(Machine machine)
+	RemoteDirectory createRoot(Machine machine)
 	{
-		return new RemoteDirectory(machine, name, tags, description, state);
+		RootDirectory root = DbRoots.getRoot(machine, name);
+		if (root != null && !root.isLocal())
+		{
+			root.setTags(tags);
+			root.setDescription(description);
+			((RemoteDirectory) root).setSharesWithUs(isShared);
+		}
+		else
+		{
+			root = new RemoteDirectory(machine, name, tags, description, isShared);
+		}
+		root.tryToSave();
+		return (RemoteDirectory) root;
 	}
 
 	public String getName()
@@ -103,51 +117,52 @@ public class RootListChild implements Jsonable
 		generator.write("tags", tags);
 		if (description!=null)
 		generator.write("description", description);
-		generator.write("state",state.name());
+		generator.write("isShared",isShared.name());
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsname = true;
-		boolean needsstate = true;
+		boolean needsName = true;
+		boolean needsIsShared = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsname)
+				if (needsName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
 				}
-				if (needsstate)
+				if (needsIsShared)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs state");
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isShared");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "name":
-				needsname = false;
-				name = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "tags":
+					tags = parser.getString();
+					break;
+				case "description":
+					description = parser.getString();
+					break;
+				case "isShared":
+					needsIsShared = false;
+					isShared = SharingState.valueOf(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "tags":
-				tags = parser.getString();
-				break;
-			case "description":
-				description = parser.getString();
-				break;
-			case "state":
-				needsstate = false;
-				state = SharingState.valueOf(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

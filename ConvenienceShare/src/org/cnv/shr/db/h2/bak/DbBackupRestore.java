@@ -35,7 +35,6 @@ import java.util.logging.Level;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
-import javax.swing.JFrame;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
@@ -98,12 +97,18 @@ public class DbBackupRestore
 
 			LogWrapper.getLogger().info("Writing local files.");
 			generator.writeStartArray("files");
+
+			Services.h2DbCache.setAutoCommit(false);
 			try (DbIterator<LocalFile> listLocals = DbFiles.listAllLocalFiles())
 			{
 				while (listLocals.hasNext())
 				{
 					new FileBackup(listLocals.next()).generate(generator, null);
 				}
+			}
+			finally
+			{
+				Services.h2DbCache.setAutoCommit(true);
 			}
 			generator.writeEnd();
 			
@@ -159,36 +164,29 @@ public class DbBackupRestore
 		LogWrapper.getLogger().info("Database backup complete.");
 	}
 
-	public static void restoreDatabase(JFrame origin, Path f)
+	public static void restoreDatabase(Path f, boolean hide)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
+		Services.userThreads.execute(() ->
 			{
 				try
 				{
-					restoreDatabaseInternal(origin, f);
+					restoreDatabaseInternal(hide, f);
 				}
 				catch (IOException | SQLException e)
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Unable to restore database.", e);
 				}
-			}
-		});
+			});
 	}
 	
-	private synchronized static void restoreDatabaseInternal(JFrame origin, Path f) throws IOException, SQLException
+	private synchronized static void restoreDatabaseInternal(boolean hide, Path f) throws IOException, SQLException
 	{
 		try (ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();)
 		{
 			DbTables.deleteDb(wrapper);
 		}
 		DbRestoreProgress dbRestoreProgress = new DbRestoreProgress(Files.size(f));
-		if (origin != null)
-		{
-			dbRestoreProgress.setLocation(origin.getLocation());
-		}
+		Services.notifications.registerWindow(dbRestoreProgress);
 		dbRestoreProgress.setVisible(true);
 		
 		try (CountingInputStream newInputStream = new CountingInputStream(Files.newInputStream(f));
@@ -244,7 +242,7 @@ public class DbBackupRestore
 		finally
 		{
 			dbRestoreProgress.done();
-			if (origin == null)
+			if (hide)
 			{
 				dbRestoreProgress.dispose();
 			}

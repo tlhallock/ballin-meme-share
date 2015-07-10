@@ -37,6 +37,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class ConnectionOpenAwk extends KeyMessage
@@ -111,18 +112,18 @@ public class ConnectionOpenAwk extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdecryptedNaunce = true;
-		boolean needsnaunceRequest = true;
+		boolean needsDecryptedNaunce = true;
+		boolean needsNaunceRequest = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdecryptedNaunce)
+				if (needsDecryptedNaunce)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
-				if (needsnaunceRequest)
+				if (needsNaunceRequest)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
@@ -130,20 +131,21 @@ public class ConnectionOpenAwk extends KeyMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "decryptedNaunce":
-				needsdecryptedNaunce = false;
-				decryptedNaunce = Misc.format(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "decryptedNaunce":
+					needsDecryptedNaunce = false;
+					decryptedNaunce = Misc.format(parser.getString());
+					break;
+				case "naunceRequest":
+					needsNaunceRequest = false;
+					naunceRequest = Misc.format(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "naunceRequest":
-				needsnaunceRequest = false;
-				naunceRequest = Misc.format(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

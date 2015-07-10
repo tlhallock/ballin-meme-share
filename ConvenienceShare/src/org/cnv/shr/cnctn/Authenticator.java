@@ -46,6 +46,7 @@ import org.cnv.shr.msg.key.KeyChange;
 import org.cnv.shr.msg.key.NewKey;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.MissingKeyException;
 
 public class Authenticator
 {
@@ -222,7 +223,7 @@ public class Authenticator
 		return false;
 	}
 	
-	public void authenticateToTarget(Communication connection, byte[] requestedNaunce) throws IOException
+	public void authenticateToTarget(Communication connection, byte[] requestedNaunce) throws IOException, MissingKeyException
 	{
 		PublicKey publicKey = Services.keyManager.getPublicKey();
 		if (!Services.keyManager.containsKey(localPublicKey))

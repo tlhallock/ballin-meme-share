@@ -44,8 +44,11 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerAction;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.trck.TrackerRequest;
+import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.PausableInputStream2;
+import org.cnv.shr.util.PausableOutputStream;
 
 public class Tracker implements Runnable
 {
@@ -68,28 +71,50 @@ public class Tracker implements Runnable
 				break;
 			}
 			LogWrapper.getLogger().info("Waiting on " + serverSocket.getLocalPort());
-			
-			try (Socket socket       = serverSocket.accept();
-					
-					// Should be compressed streams...
-					JsonParser input     = TrackObjectUtils.createParser(socket.getInputStream());
-					JsonGenerator output = TrackObjectUtils.createGenerator(socket.getOutputStream());)
+
+			try (Socket socket = serverSocket.accept();)
 			{
-				EnsureClosed ensureClosed = new EnsureClosed(output);
+				PausableInputStream2 input  = new PausableInputStream2(socket.getInputStream());
+				PausableOutputStream output = new PausableOutputStream(socket.getOutputStream());
+				JsonParser parser       = TrackObjectUtils.createParser(input);
+				JsonGenerator generator = TrackObjectUtils.createGenerator(output);
+				
+				EnsureClosed ensureClosed = new EnsureClosed();
 				Track.timer.schedule(ensureClosed, 10 * 60 * 1000);
 				
-				output.writeStartArray();
-				output.flush();
-				if (!input.next().equals(JsonParser.Event.START_ARRAY))
+				generator.writeStartArray();
+				generator.flush();
+				if (!parser.next().equals(JsonParser.Event.START_ARRAY))
 				{
-					fail("Messages should be arrays", input, output);
+					fail("Messages should be arrays", parser, generator);
 				}
 				String hostName = socket.getInetAddress().getHostAddress();
 				LogWrapper.getLogger().info("Connected to " + hostName);
-				MachineEntry entry = authenticateClient(input, output, hostName);
-				handleAction(output, input, entry);
-				output.writeEnd();
-				waitForClient(input, output);
+				MachineEntry entry = authenticateClient(parser, generator, hostName);
+				
+				if (!parser.next().equals(JsonParser.Event.END_ARRAY))
+				{
+					throw new IOException("Expected end of old stream.");
+				}
+				parser.close();
+				input.startAgain();
+				parser = TrackObjectUtils.createParser(CompressionStreams.newCompressedInputStream(input));
+				if (!parser.next().equals(JsonParser.Event.START_ARRAY))
+				{
+					throw new IOException("Client content did not start with an array.");
+				}
+				
+				// Handshake done
+				generator.writeEnd();
+				generator.close();
+				generator = TrackObjectUtils.createGenerator(CompressionStreams.newCompressedOutputStream(output));
+				generator.writeStartArray();
+				generator.flush();
+				
+				handleAction(generator, parser, entry);
+				generator.writeEnd();
+				generator.close();
+				waitForClient(parser);
 				ensureClosed.closed = true;
 			}
 			catch (IOException e)
@@ -109,10 +134,9 @@ public class Tracker implements Runnable
 		store.close();
 	}
 
-	private void waitForClient(JsonParser input, JsonGenerator generator)
+	private void waitForClient(JsonParser input)
 	{
-		generator.flush();
-		EnsureClosed ensureClosed = new EnsureClosed(generator);
+		EnsureClosed ensureClosed = new EnsureClosed();
 		Track.timer.schedule(ensureClosed, 10 * 1000);
 		try
 		{
@@ -122,7 +146,10 @@ public class Tracker implements Runnable
 		{
 			LogWrapper.getLogger().info("Client already closed.\n" + e.getMessage());
 		}
-		ensureClosed.closed = true;
+		finally
+		{
+			ensureClosed.closed = true;
+		}
 		
 //		TrackObjectUtils.read(input, new Done());
 	}
@@ -410,18 +437,16 @@ public class Tracker implements Runnable
 		generator.writeEnd();
 		generator.flush();
 
-		waitForClient(input, generator);
+		waitForClient(input);
 		throw new TrackerException(message);
 	}
 
 	class EnsureClosed extends TimerTask
 	{
-		JsonGenerator generator;
 		Thread t;
 		
-		public EnsureClosed(JsonGenerator generator)
+		public EnsureClosed()
 		{
-			this.generator = generator;
 			this.t = Thread.currentThread();
 		}
 		boolean closed = false;
@@ -429,7 +454,6 @@ public class Tracker implements Runnable
 		public void run()
 		{
 			if (closed) return;
-			generator.close();
 			t.interrupt();
 		}
 	}

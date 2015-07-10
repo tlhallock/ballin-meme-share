@@ -49,10 +49,10 @@ public class KeyTable extends DbJTable<KeyPairObject>
 	}
 
 	@Override
-	protected void fillRow(KeyPairObject t, HashMap<String, Object> currentRow)
+	protected boolean fillRow(KeyPairObject t, HashMap<String, Object> currentRow)
 	{
 		// TODO Auto-generated method stub
-		
+		return false;
 	}
 
 	@Override

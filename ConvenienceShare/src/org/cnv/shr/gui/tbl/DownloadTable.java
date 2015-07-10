@@ -27,6 +27,7 @@ package org.cnv.shr.gui.tbl;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 import javax.swing.JSpinner;
@@ -234,28 +235,43 @@ public class DownloadTable extends DbJTable<Download>
 	}
 
 	@Override
-	protected void fillRow(Download download, HashMap<String, Object> currentRow)
+	protected boolean fillRow(Download download, HashMap<String, Object> currentRow)
 	{
 		SharedFile file = download.getFile();
 		RootDirectory directory = file.getRootDirectory();
 		Machine machine = directory.getMachine();
+
+		FileEntry fileEntry;
+		try
+		{
+			fileEntry = file.getFileEntry();
+		}
+		catch (NullPointerException ex)
+		{
+			DbDownloads.cleanUnchecksummedFiles();
+			LogWrapper.getLogger().log(Level.INFO, "Found unchecksummed file for download.", ex);
+			currentRow.clear();
+			return false;
+		}
 		
-		FileEntry fileEntry = file.getFileEntry();
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(fileEntry);
 		
-		currentRow.put("Machine",           machine.getName()                                                         );
-		currentRow.put("Directory",         directory.getName()                                                       );
-		currentRow.put("File",              file.getPath().getUnbrokenName()                                          );
-		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                         );
-		currentRow.put("Added on",          new Date(download.getAdded())                                             );
-		currentRow.put("Status",            download.getState().humanReadable()                                       );
-		currentRow.put("Priority",          String.valueOf(download.getPriority())                                    );
-		currentRow.put("Local path",        download.getTargetFile().toString()                                       );
-		currentRow.put("Number of Mirrors", "1"                                                                       );
-		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()            );
-		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100"         
-				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage(false) * 100));
-		currentRow.put("Id",                String.valueOf(download.getId())                                          );
+		
+		currentRow.put("Machine",           machine.getName()                                                                );
+		currentRow.put("Directory",         directory.getName()                                                              );
+		currentRow.put("File",              file.getPath().getUnbrokenName()                                                 );
+		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                                );
+		currentRow.put("Added on",          new Date(download.getAdded())                                                    );
+		currentRow.put("Status",            download.getState().humanReadable()                                              );
+		currentRow.put("Priority",          String.valueOf(download.getPriority())                                           );
+		currentRow.put("Local path",        download.getTargetFile().toString()                                              );
+		currentRow.put("Number of Mirrors", String.valueOf(downloadInstance == null ? 0 : downloadInstance.getNumSeeders())  );
+		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()                   );
+		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100"                      
+				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage(false) * 100)       );
+		currentRow.put("Id",                String.valueOf(download.getId())                                                 );
+		
+		return true;
 	}
 
 	@Override

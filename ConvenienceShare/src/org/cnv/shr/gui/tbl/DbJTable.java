@@ -53,9 +53,9 @@ public abstract class DbJTable<T> extends MouseAdapter
 	
 	private JPopupMenu jPopupMenu;
 	private TableRightClickListener dblClick;
-	private JTable table;
 	private String keyName;
 	private String[] names;
+	protected JTable table;
 	
 	
 	public DbJTable(JTable table, String keyName)
@@ -82,15 +82,13 @@ public abstract class DbJTable<T> extends MouseAdapter
 
 	public void empty()
 	{
-		SwingUtilities.invokeLater(new Runnable(){
-			@Override
-			public void run()
+		// The entire reason these classes exist is to put refreshes on the event queue
+		SwingUtilities.invokeLater(() -> {
+			synchronized (table)
 			{
-				synchronized (table)
-				{
-					emptyInternal();
-				}
-			}});
+				emptyInternal();
+			}
+		});
 	}
 
 	private synchronized void emptyInternal()
@@ -105,15 +103,9 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void refreshInPlace()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		SwingUtilities.invokeLater(new Runnable(){
-			@Override
-			public void run()
-			{
-				synchronized (table)
-				{
-					refreshInPlaceInternal();
-				}
-			}});
+		SwingUtilities.invokeLater(() -> {
+				refreshInPlaceInternal();
+		});
 	}
 	
 	private synchronized void refreshInPlaceInternal()
@@ -125,7 +117,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 		int rowCount = table.getRowCount();
 		for (int row = 0; row < rowCount; row++)
 		{
-			fillRow(create(row), values);
+			if (!fillRow(create(row), values))
+			{
+				continue;
+			}
 			for (int col = 0; col < columnCount; col++)
 			{
 				model.setValueAt(values.get(names[col]), row, col);
@@ -136,15 +131,13 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void refresh()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		SwingUtilities.invokeLater(new Runnable(){
-			@Override
-			public void run()
+
+		SwingUtilities.invokeLater(() -> {
+			synchronized (table)
 			{
-				synchronized (table)
-				{
-					refreshInternal();
-				}
-			}});
+				refreshInternal();
+			}
+		});
 	}
 	
 	private synchronized void refreshInternal()
@@ -163,7 +156,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 				T t = it.next();
 				try
 				{
-					fillRow(t, currentRow);
+					if (!fillRow(t, currentRow))
+					{
+						continue;
+					}
 				}
 				catch (Exception ex)
 				{
@@ -185,16 +181,11 @@ public abstract class DbJTable<T> extends MouseAdapter
 	
 	public void refresh(T t)
 	{
-		SwingUtilities.invokeLater(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		SwingUtilities.invokeLater(() -> {
 				synchronized (table)
 				{
 					refreshInternal(t);
 				}
-			}
 		});
 	}
 	
@@ -213,7 +204,11 @@ public abstract class DbJTable<T> extends MouseAdapter
 			}
 		}
 		HashMap<String, Object> values = new HashMap<>();
-		fillRow(t, values);
+		if (!fillRow(t, values))
+		{
+			return;
+		}
+			
 		String needle = (String) values.get(keyName);
 		
 		int rowCount = table.getRowCount();
@@ -243,15 +238,12 @@ public abstract class DbJTable<T> extends MouseAdapter
 	
 	public void setValues(T t, HashMap<String, Object> vals, int rowGuess)
 	{
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run()
+		SwingUtilities.invokeLater(() -> {
+			synchronized (table)
 			{
-				synchronized (table)
-				{
-					setValuesInternal(t, vals, rowGuess);
-				}
-			}});
+				setValuesInternal(t, vals, rowGuess);
+			}
+		});
 	}
 	private synchronized void setValuesInternal(T t, HashMap<String, Object> vals, int rowGuess)
 	{
@@ -268,7 +260,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 	}
 
 	protected abstract T create(HashMap<String, Object> currentRow);
-	protected abstract void fillRow(T t, HashMap<String, Object> currentRow);
+	protected abstract boolean fillRow(T t, HashMap<String, Object> currentRow);
 	protected abstract CloseableIterator<T> list();
 	
 	protected void setDblClick(TableRightClickListener listener)
@@ -306,14 +298,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 //	public void removeSelected()
 //	{
 //		// The entire reason these classes exist is to put refreshes on the event queue
-//		SwingUtilities.invokeLater(new Runnable(){
-//			@Override
-//			public void run()
+//		SwingUtilities.invokeLater(() -> {
+//			synchronized (table)
 //			{
-//				synchronized (table)
-//				{
-//					removeSelectedInternal();
-//				}
+//				removeSelectedInternal();
 //			}
 //		});
 //	}
@@ -419,27 +407,24 @@ public abstract class DbJTable<T> extends MouseAdapter
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			int[] selectedRows2 = getSelectedRows();
-			if (selectedRows2 == null)
-			{
-				LogWrapper.getLogger().info("No rows selected!");
-				return;
-			}
-			for (int i = selectedRows2.length - 1; i >= 0; i--)
-			{
-				final T create = create(selectedRows2[i]);
-				if (create == null)
+			SwingUtilities.invokeLater(() -> {
+				int[] selectedRows2 = getSelectedRows();
+				if (selectedRows2 == null)
 				{
-					LogWrapper.getLogger().info("Unable to find record from " + selectedRows2[i]);
+					LogWrapper.getLogger().info("No rows selected!");
 					return;
 				}
-
-				LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
-				Services.userThreads.execute(new Runnable()
+				for (int i = selectedRows2.length - 1; i >= 0; i--)
 				{
-					@Override
-					public void run()
+					final T create = create(selectedRows2[i]);
+					if (create == null)
 					{
+						LogWrapper.getLogger().info("Unable to find record from " + selectedRows2[i]);
+						return;
+					}
+
+					LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
+					Services.userThreads.execute(() -> {
 						try
 						{
 							perform(create);
@@ -448,9 +433,9 @@ public abstract class DbJTable<T> extends MouseAdapter
 						{
 							LogWrapper.getLogger().log(Level.INFO, null, ex);
 						}
-					};
-				});
-			}
+					});
+				}
+			});
 		}
 	}
 }

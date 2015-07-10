@@ -40,6 +40,7 @@ import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class ChunkResponse extends DownloadMessage
 {
@@ -85,6 +86,10 @@ public class ChunkResponse extends DownloadMessage
 		if (downloadInstance == null)
 		{
 			// download not found...
+			// TODO: what should we actually do here.
+			LogWrapper.getLogger().info("Could not find download for " + getDescriptor() + "!!");
+			connection.finish();
+			return;
 		}
 		downloadInstance.download(chunk, connection, isCompressed);
 	}
@@ -114,27 +119,23 @@ public class ChunkResponse extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsisCompressed = true;
-		boolean needschunk = true;
-		boolean needsdescriptor = true;
+		boolean needsIsCompressed = true;
+		boolean needsChunk = true;
+		boolean needsDescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsisCompressed)
+				if (needsIsCompressed)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isCompressed");
 				}
-				if (needsisCompressed)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isCompressed");
-				}
-				if (needschunk)
+				if (needsChunk)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunk");
 				}
-				if (needsdescriptor)
+				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
@@ -142,34 +143,39 @@ public class ChunkResponse extends DownloadMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_FALSE:
-			if (key==null) break;
-			if (key.equals("isCompressed")) {
-				needsisCompressed = false;
-				isCompressed = false;
-			}
-			break;
-		case VALUE_TRUE:
-			if (key==null) break;
-			if (key.equals("isCompressed")) {
-				needsisCompressed = false;
-				isCompressed = true;
-			}
-			break;
-		case START_OBJECT:
-			if (key==null) break;
-			switch(key) {
-			case "chunk":
-				needschunk = false;
-				chunk = new Chunk(parser);
+			case VALUE_FALSE:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("isCompressed")) {
+					needsIsCompressed = false;
+					isCompressed = false;
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "descriptor":
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
+			case VALUE_TRUE:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("isCompressed")) {
+					needsIsCompressed = false;
+					isCompressed = true;
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-			default: break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "chunk":
+					needsChunk = false;
+					chunk = new Chunk(parser);
+					break;
+				case "descriptor":
+					needsDescriptor = false;
+					descriptor = new FileEntry(parser);
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

@@ -78,6 +78,10 @@ public class AlternativeAddresses
 		{
 			set.remove(port);
 		}
+		if (set.isEmpty())
+		{
+			alternativeIps.remove(ip);
+		}
 	}
 	
 	public Iterable<String> getIps()

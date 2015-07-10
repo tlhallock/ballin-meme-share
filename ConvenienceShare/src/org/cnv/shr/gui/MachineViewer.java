@@ -26,13 +26,12 @@
 package org.cnv.shr.gui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -44,8 +43,6 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.TreePath;
 
@@ -56,6 +53,7 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.db.h2.bak.CleanBrowsingHistory;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.gui.tbl.FilesTable;
@@ -108,33 +106,6 @@ public class MachineViewer extends javax.swing.JFrame
 //        	}
 //        }
         
-        filesTree.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(final MouseEvent e) {
-                filesTree.setVisibleRowCount(filesTree.getRowCount());
-                if (e.getClickCount() >= 2) {
-                  final TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
-                  currentFilesNode = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                  // Try our best to toggle...
-//                  TreeUI ui = filesTree.getUI();
-//                  if (ui instanceof MyTreeUI)
-//                  {
-//                  	((MyTreeUI) ui).toggleExpandState(pathForLocation);
-//                  }
-//                  else 
-                  if (filesTree.isExpanded(pathForLocation))
-                  {
-                  	filesTree.collapsePath(pathForLocation);
-                  }
-                  else
-                  {
-                  	filesTree.expandPath(pathForLocation);
-                  }
-                  filesTree.expandPath(pathForLocation);
-                  filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, currentFilesNode.getFileList(jCheckBox1.isSelected()));
-                }
-            }
-        });
 //        filesTree.setUI(new MyTreeUI());
         // Otherwise the tree changes before we can get the location of the node the user clicked on.
       	filesTree.setToggleClickCount(99999999);
@@ -149,79 +120,57 @@ public class MachineViewer extends javax.swing.JFrame
 		
         addPermissionListeners();
         
-        pin.addChangeListener(new ChangeListener()
+        pin.addActionListener((ActionEvent e) ->
 				{
-					@Override
-					public void stateChanged(ChangeEvent e)
+					Machine machine = getMachine();
+					boolean selected = pin.isSelected();
+					if (machine == null || machine.isLocal() || machine.isPinned() == selected)
 					{
-						Machine machine = getMachine();
-						boolean selected = pin.isSelected();
-						if (machine == null || machine.isLocal() || machine.isPinned() == selected)
-						{
-							return;
-						}
-						LogWrapper.getLogger().info("Setting pin of " + machine.getName() + " to " + selected);
-						machine.setPinned(selected);
-						machine.tryToSave();
+						return;
 					}
+					LogWrapper.getLogger().info("Setting pin of " + machine.getName() + " to " + selected);
+					machine.setPinned(selected);
+					machine.tryToSave();
 				});
-		
-			addWindowListener(new WindowAdapter()
-			{
-				@Override
-				public void windowClosed(WindowEvent e)
+
+		Services.timer.scheduleAtFixedRate(model, PathTreeModel.INACTIVITY_DELAY, PathTreeModel.INACTIVITY_DELAY);
+		addWindowListener(model);
+		jCheckBox1.addActionListener((ActionEvent e) -> {
+			Services.userThreads.execute(() -> {
+				if (currentFilesNode == null)
 				{
-					model.close();
+					return;
 				}
-		});
-		jCheckBox1.addChangeListener(new ChangeListener()
-		{
-			@Override
-			public void stateChanged(ChangeEvent ce)
-			{
-				Services.userThreads.execute(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (currentFilesNode == null)
-						{
-							return;
-						}
-						filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, currentFilesNode.getFileList(jCheckBox1.isSelected()));
-					}});
-			}
+				filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, currentFilesNode.getFileList(jCheckBox1.isSelected()));
+			});
 		});
 	}
 
     private void addPermissionListeners()
 	{
     	// need to go to DB
-		isMessaging.addChangeListener(new ChangeListener()
+		isMessaging.addActionListener((ActionEvent arg0) ->
 		{
-			@Override
-			public void stateChanged(ChangeEvent arg0)
+			Machine machine = getMachine();
+			if (machine == null) return;
+			if (machine.isLocal())
 			{
-				Machine machine = getMachine();
-				if (machine == null) return;
-				if (machine.isLocal())
-				{
-					return;
-				}
-				if (isMessaging.isSelected() && !machine.getAllowsMessages())
-				{
-					machine.setAllowsMessages(true);
-					machine.tryToSave();
-					Services.notifications.remoteChanged(machine);
-				}
-				else if (!isMessaging.isSelected() && machine.getAllowsMessages())
-				{
-					machine.setAllowsMessages(false);
-					machine.tryToSave();
-					Services.notifications.remoteChanged(machine);
-				}
+				return;
+			}
+			if (isMessaging.isSelected() && !machine.getAllowsMessages())
+			{
+				machine.setAllowsMessages(true);
+				machine.tryToSave();
+				Services.notifications.remoteChanged(machine);
+			}
+			else if (!isMessaging.isSelected() && machine.getAllowsMessages())
+			{
+				machine.setAllowsMessages(false);
+				machine.tryToSave();
+				Services.notifications.remoteChanged(machine);
 			}
 		});
-        sharingWithRemoteMachine.setModel(new PermissionChanger(sharingWithRemoteMachine, getMachine().sharingWithOther())
+    sharingWithRemoteMachine.setModel(new PermissionChanger(sharingWithRemoteMachine, getMachine().sharingWithOther())
 		{
 			@Override
 			protected void setPermission(SharingState state)
@@ -285,24 +234,20 @@ public class MachineViewer extends javax.swing.JFrame
                         LogWrapper.getLogger().info("Unable to find machine " + mId);
                         return;
                     }
-                    Services.userThreads.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                            	Machine machine = getMachine();
-                      				if (machine == null) return;
-                                final RootDirectory root = DbRoots.getRoot(machine, mId);
-                                if (root == null) {
-                                    LogWrapper.getLogger().info("Unable to find root mid=" + machine + " name=" + mId);
-                                    viewNoDirectory();
-                                } else {
-                                    view(root);
-                                }
-                            } catch (final Exception ex) {
-                                LogWrapper.getLogger().log(Level.INFO, "Unable to show directory " + mId, ex);
-                            }
-                        }
-                    });
+                    Services.userThreads.execute(() -> {
+	                    try {
+	                    	Machine machine = getMachine();
+	                    if (machine == null) return;
+	                        final RootDirectory root = DbRoots.getRoot(machine, mId);
+	                        if (root == null) {
+	                            LogWrapper.getLogger().info("Unable to find root mid=" + machine + " name=" + mId);
+	                            viewNoDirectory();
+	                        } else {
+	                            view(root);
+	                        }
+	                    } catch (final Exception ex) {
+	                        LogWrapper.getLogger().log(Level.INFO, "Unable to show directory " + mId, ex);
+	                    }});
                 } catch (final Exception ex) {
                     LogWrapper.getLogger().log(Level.INFO, "Unable to show machine at index " + row, ex);
                 }
@@ -314,18 +259,36 @@ public class MachineViewer extends javax.swing.JFrame
             }
         }, true);
     }
+    
+    private int popUpX, popUpY;
     private void addPopupMenu()
     {
     		MachineViewer v = this;
-        class LastPopupClick { int x; int y; }; final LastPopupClick lastPopupClick = new LastPopupClick();
-        final JPopupMenu menu = new JPopupMenu();
-        JMenuItem item = new JMenuItem("Download all currently cached");
+        final JPopupMenu menu = new JPopupMenu()
+        {
+        	@Override
+        	public void show(Component invoker, int x, int y)
+        	{
+        		popUpX = x; popUpY = y;
+        		super.show(invoker, x, y);
+        	}
+        };
+        JMenuItem item;
+        item = new JMenuItem("Recursively cache all subfolders");
+        item.addActionListener((ActionEvent ae) -> {
+        	System.out.println(popUpX + "," + popUpY);
+          final TreePath pathForLocation = filesTree.getClosestPathForLocation(popUpX, popUpY);
+          final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+          n.syncFully(getRootDirectory());
+        });
+        menu.add(item);
+        item = new JMenuItem("Download all currently cached");
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
+                final TreePath pathForLocation = filesTree.getClosestPathForLocation(popUpX, popUpY);
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                Services.userThreads.execute(new Runnable() { public void run()
+                Services.userThreads.execute(() ->
                 {
                   CollectingFiles display = new CollectingFiles();
                   display.setLocation(getLocation());
@@ -333,123 +296,110 @@ public class MachineViewer extends javax.swing.JFrame
                   display.setAlwaysOnTop(true);
                   n.getPathElement().downloadAllCurrentlyCached(getRootDirectory(), display);
                   display.done();
-                }});
+                });
             }
         });
         menu.add(item);
         item = new JMenuItem("Show");
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
+        item.addActionListener((ActionEvent ae) -> {
+                final TreePath pathForLocation = filesTree.getClosestPathForLocation(popUpX, popUpY);
                 currentFilesNode = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
                 currentFilesNode.ensureExpanded();
                 LogWrapper.getLogger().info("Showing " + currentFilesNode);
                     filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, currentFilesNode.getFileList(jCheckBox1.isSelected()));
-            }
-        });
+            });
         menu.add(item);
         item = new JMenuItem("Open");
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
-                final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                n.ensureExpanded();
-                LogWrapper.getLogger().info("Opening " + n);
-                SharedFile file = n.getFile();
-                if (!file.isLocal())
-                {
-                	// Should show message...
-                	return;
-                }
-                
-                Misc.nativeOpen(((LocalFile) file).getFsFile(), false);
-            }
+        item.addActionListener((ActionEvent ae) -> {
+          final TreePath pathForLocation = filesTree.getClosestPathForLocation(popUpX, popUpY);
+          final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+          n.ensureExpanded();
+          LogWrapper.getLogger().info("Opening " + n);
+          SharedFile file = n.getFile();
+          if (!file.isLocal())
+          {
+          	// Should show message...
+          	return;
+          }
+          
+          Misc.nativeOpen(((LocalFile) file).getFsFile(), false);
         });
         menu.add(item);
         item = new JMenuItem("Show in folder");
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
-                final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                n.ensureExpanded();
-                LogWrapper.getLogger().info("Opening " + n);
-                SharedFile file = n.getFile();
-                if (!file.isLocal())
-                {
-                	// Should show message...
-                	return;
-                }
-                
-                Misc.nativeOpen(((LocalFile) file).getFsFile(), true);
-            }
-        });
-        menu.add(item);
-        item = new JMenuItem("Recursively cache all subfolders");
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
-                final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                n.syncFully();
-            }
+        item.addActionListener((ActionEvent ae) -> {
+          final TreePath pathForLocation = filesTree.getClosestPathForLocation(popUpX, popUpY);
+          final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+          n.ensureExpanded();
+          LogWrapper.getLogger().info("Opening " + n);
+          SharedFile file = n.getFile();
+          if (!file.isLocal())
+          {
+          	// Should show message...
+          	return;
+          }
+          
+          Misc.nativeOpen(((LocalFile) file).getFsFile(), true);
         });
         menu.add(item);
         item = new JMenuItem("Set tags...");
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-            	RootDirectory root = getRootDirectory();
-            	if (!(root instanceof LocalDirectory))
-            	{
-            		JOptionPane.showMessageDialog(
-            				v,
-            				"It is only possible to set tags of a local directory. You either have not selected a directory or are viewing a remote directory",
-            				"Can only set local tags.",
-            				JOptionPane.INFORMATION_MESSAGE);
-            		return;
-            	}
-            	LocalDirectory local = (LocalDirectory) root;
-            	
-                final TreePath pathForLocation = filesTree.getClosestPathForLocation(lastPopupClick.x, lastPopupClick.y);
-                final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-                Services.userThreads.execute(new Runnable() { public void run()
-                {
-                	LogWrapper.getLogger().info("Settings tags of files in " + local + "." + n.getPathElement().getFullPath());
-                	SetTagsFrame setTagsFrame = new SetTagsFrame(local, n.getFileList(true));
-                	Services.notifications.registerWindow(setTagsFrame);
-                	setTagsFrame.setVisible(true);
-                }});
-            }
+        item.addActionListener((ActionEvent ae) -> {
+          RootDirectory root = getRootDirectory();
+          if (!(root instanceof LocalDirectory))
+          {
+          	JOptionPane.showMessageDialog(
+          			v,
+          			"It is only possible to set tags of a local directory. You either have not selected a directory or are viewing a remote directory",
+          			"Can only set local tags.",
+          			JOptionPane.INFORMATION_MESSAGE);
+          	return;
+          }
+          LocalDirectory local = (LocalDirectory) root;
+          
+          final TreePath pathForLocation = filesTree.getClosestPathForLocation(popUpX, popUpY);
+          final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+          Services.userThreads.execute(() ->
+          {
+          	LogWrapper.getLogger().info("Settings tags of files in " + local + "." + n.getPathElement().getFullPath());
+          	SetTagsFrame setTagsFrame = new SetTagsFrame(local, n.getFileList(true));
+          	Services.notifications.registerWindow(setTagsFrame);
+          	setTagsFrame.setVisible(true);
+          });
         });
         menu.add(item);
         filesTree.add(menu);
         filesTree.setComponentPopupMenu(menu);
 
         filesTree.addMouseListener(new MouseAdapter() {
-            public void doPopup(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    lastPopupClick.x = e.getX(); lastPopupClick.y = e.getY();
-                    menu.show(e.getComponent(), e.getX(), e.getY());
-                }
-            }
+//        	
+//            public void doPopup(MouseEvent e) {
+//                if (e.isPopupTrigger()) {
+//                	popUpX = e.getX(); popUpY = e.getY();
+//                  menu.show(e.getComponent(), e.getX(), e.getY());
+//                }
+//            }
 
             @Override
             public void mouseClicked(final MouseEvent e) {
-                doPopup(e);
+//            	doPopup(e);
+	            filesTree.setVisibleRowCount(filesTree.getRowCount());
+	            if (e.getClickCount() >= 2) {
+	              final TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
+	              currentFilesNode = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
+	              // Try our best to toggle (doesn't actually work)...
+	              if (filesTree.isExpanded(pathForLocation))
+	              	filesTree.collapsePath(pathForLocation);
+	              else
+	              	filesTree.expandPath(pathForLocation);
+	              filesTree.expandPath(pathForLocation);
+	              filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, currentFilesNode.getFileList(jCheckBox1.isSelected()));
+	            }
             }
-
-            @Override
-            public void mousePressed(final MouseEvent e) {
-                doPopup(e);
-            }
-
-            @Override
-            public void mouseReleased(final MouseEvent e) {
-                doPopup(e);
-            }
+//
+//            @Override
+//            public void mousePressed(final MouseEvent e) { doPopup(e); }
+//
+//            @Override
+//            public void mouseReleased(final MouseEvent e) { doPopup(e); }
         });
     }
     
@@ -502,6 +452,8 @@ public class MachineViewer extends javax.swing.JFrame
             jButton3.setEnabled(false); // cannot sync roots to local
             jButton6.setEnabled(false); jButton5.setEnabled(false);
             pin.setSelected(true); pin.setEnabled(false);
+          	jCheckBox2.setSelected(false); jCheckBox2.setEnabled(false);
+          	jButton4.setEnabled(false);
         }
         else
         {
@@ -511,10 +463,13 @@ public class MachineViewer extends javax.swing.JFrame
             jButton3.setEnabled(true);
             jButton6.setEnabled(true); jButton5.setEnabled(true);
             pin.setSelected(machine.isPinned()); pin.setEnabled(true);
+          	jCheckBox2.setSelected(Services.blackList.contains(machine.getIdentifier())); jCheckBox2.setEnabled(true);
+          	jButton4.setEnabled(true);
         }
     }
 
     private void viewNoDirectory() {
+    		jButton9.setEnabled(false);
         this.rootDirectoryName = null;
         jCheckBox1.setEnabled(false);
         jTextField1.setEnabled(false);
@@ -562,21 +517,25 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void updatePermissionBoxesLocal()
     {
-        changePathButton.setEnabled(false);
-        rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(true);
-        rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(false);
-        requestDownloadButton.setEnabled(false);
-        requestShareButton.setEnabled(false);
+      changePathButton.setEnabled(false);
+      rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(true);
+      rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(false);
+      requestDownloadButton.setEnabled(false);
+      requestShareButton.setEnabled(false);
+      jButton4.setEnabled(false);
+      jButton9.setEnabled(false);
     }
     
     private void updatePermissionBoxesRemote(RemoteDirectory remote)
     {
     	SharingState state = remote.getSharesWithUs();
-        changePathButton.setEnabled(true);
-        rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(state.listable());
-        rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(state.downloadable());
-        requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
-        requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
+      changePathButton.setEnabled(true);
+      rootIsVisibleCheckBox.setEnabled(false); rootIsVisibleCheckBox.setSelected(state.listable());
+      rootIsDownloadableCheckBox.setEnabled(false); rootIsDownloadableCheckBox.setSelected(state.downloadable());
+      requestDownloadButton.setEnabled(!rootIsDownloadableCheckBox.isSelected());
+      requestShareButton.setEnabled(!rootIsVisibleCheckBox.isSelected());
+      jButton4.setEnabled(true);
+      jButton9.setEnabled(true);
     }
 
     /**
@@ -616,6 +575,7 @@ public class MachineViewer extends javax.swing.JFrame
         filesTree = new javax.swing.JTree();
         jLabel2 = new javax.swing.JLabel();
         syncStatus = new JLabel() {};
+        jButton9 = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
@@ -700,7 +660,7 @@ public class MachineViewer extends javax.swing.JFrame
 
         jSplitPane1.setLeftComponent(jScrollPane1);
 
-        jSplitPane2.setDividerLocation(200);
+        jSplitPane2.setDividerLocation(350);
 
         jLabel5.setText("Filter paths:");
 
@@ -734,13 +694,13 @@ public class MachineViewer extends javax.swing.JFrame
 
         numFilesShowingLabel.setText("0");
 
-        jLabel17.setText("file(s).");
+        jLabel17.setText("cached file(s).");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 510, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -798,27 +758,36 @@ public class MachineViewer extends javax.swing.JFrame
 
         syncStatus.setText("not connected");
 
+        jButton9.setText("Reconnect");
+        jButton9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton9ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
-            .addGroup(jPanel4Layout.createSequentialGroup()
+            .addComponent(jScrollPane2)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(syncStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(syncStatus, javax.swing.GroupLayout.DEFAULT_SIZE, 170, Short.MAX_VALUE)
+                .addGap(1, 1, 1)
+                .addComponent(jButton9))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 328, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(syncStatus))
-                .addGap(6, 6, 6))
+                    .addComponent(syncStatus)
+                    .addComponent(jButton9))
+                .addGap(1, 1, 1))
         );
 
         jSplitPane2.setLeftComponent(jPanel4);
@@ -1006,7 +975,11 @@ public class MachineViewer extends javax.swing.JFrame
         jLabel15.setText("Loading...");
 
         jButton4.setText("Clear Local Cache");
-        jButton4.setEnabled(false);
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
 
         jButton5.setText("Find Trackers");
         jButton5.addActionListener(new java.awt.event.ActionListener() {
@@ -1112,8 +1085,7 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
     	MachineViewer b = this;
-    	Services.userThreads.execute(new Runnable() { @Override
-			public void run() { 
+    	Services.userThreads.execute(() -> { 
         	Machine machine = getMachine();
   				if (machine == null) return;
       		try
@@ -1138,7 +1110,7 @@ public class MachineViewer extends javax.swing.JFrame
         				JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }}});
+        }});
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
@@ -1146,7 +1118,13 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        UserActions.syncRemote(this, getRootDirectory());
+    	RootDirectory rootDirectory = getRootDirectory();
+    	if (rootDirectory == null)
+    	{
+    		JOptionPane.showMessageDialog(this, "Please select a directory first.", "No directory selected", JOptionPane.INFORMATION_MESSAGE);
+    		return;
+    	}
+			UserActions.syncRemote(this, rootDirectory);
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -1212,8 +1190,8 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void requestDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestDownloadButtonActionPerformed
     	MachineViewer b = this;
-    	Services.userThreads.execute(new Runnable() { @Override
-			public void run() { try {
+    	Services.userThreads.execute(() -> {
+    		try {
             Machine machine = getMachine();
     				if (machine == null) return;
 						Communication connection = Services.networkManager.openConnection(b, machine, false, "Send share root request");
@@ -1236,13 +1214,13 @@ public class MachineViewer extends javax.swing.JFrame
         				JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }}});
+        }});
     }//GEN-LAST:event_requestDownloadButtonActionPerformed
 
     private void requestShareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestShareButtonActionPerformed
     	MachineViewer b = this;
-        Services.userThreads.execute(new Runnable() { @Override
-				public void run() { try {
+        Services.userThreads.execute(() -> {
+        	try {
             Machine machine = getMachine();
     				if (machine == null) return;
 						Communication connection = Services.networkManager.openConnection(b, machine, false, "List directories");
@@ -1266,7 +1244,7 @@ public class MachineViewer extends javax.swing.JFrame
         				JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }}});
+        }});
     }//GEN-LAST:event_requestShareButtonActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
@@ -1301,10 +1279,23 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
         Machine machine = getMachine();
-        String ip = machine.getIp();
         String ident = machine.getIdentifier();
-        Services.blackList.setBlacklisted(ident, ip, jCheckBox2.isSelected());
+        if (machine.isLocal())
+        {
+        	return;
+        }
+        Services.blackList.setBlacklisted(ident, jCheckBox2.isSelected());
     }//GEN-LAST:event_jCheckBox2ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        jButton4.setEnabled(false);
+        CleanBrowsingHistory.removeAllNonEssentialData(getMachine());
+        jButton4.setEnabled(!getMachine().isLocal());
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+        Services.userThreads.execute(() -> { model.resetRoot(); });
+    }//GEN-LAST:event_jButton9ActionPerformed
 
     private void filterFilesTable()
     {
@@ -1327,6 +1318,7 @@ public class MachineViewer extends javax.swing.JFrame
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
+    private javax.swing.JButton jButton9;
     private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JCheckBox jCheckBox2;
     private javax.swing.JLabel jLabel1;

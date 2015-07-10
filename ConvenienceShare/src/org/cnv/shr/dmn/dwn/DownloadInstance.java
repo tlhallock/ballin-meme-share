@@ -26,6 +26,7 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -62,9 +63,15 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.trck.FileEntry;
+import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
+/**
+ *
+ * DownloadManager lock must not be taken after download instance lock is taken.
+ *
+ */
 public class DownloadInstance implements Runnable
 {
 	static final Random random = new Random();
@@ -81,6 +88,9 @@ public class DownloadInstance implements Runnable
 	private Download download;
 	private Seeder primarySeeder;
 	private boolean requestedMetaData;
+	
+	private static final long SEEDER_REQUEST_DELAY = 5 * 60 * 1000;
+	private long lastSeederRequest;
 	
 	
 	DownloadInstance(Download d) throws IOException
@@ -140,7 +150,7 @@ public class DownloadInstance implements Runnable
 			LogWrapper.getLogger().info("Already quit.");
 			return;
 		}
-		LogWrapper.getLogger().info("Requesting more metadata");
+		LogWrapper.getLogger().info("Requesting more metadata for " + download);
 		download.setState(DownloadState.REQUESTING_METADATA);
 		
 		if (DbChunks.hasAllChunks(download))
@@ -175,27 +185,28 @@ public class DownloadInstance implements Runnable
 		}
 		ensurePrimarySeeder();
 		
-		if (Math.random() < 2)
+		long now = System.currentTimeMillis();
+		if (now - SEEDER_REQUEST_DELAY < lastSeederRequest)
 		{
 			LogWrapper.getLogger().info("Currently not requesting seeders.");
 			return;
 		}
-		
-		Services.downloads.downloadThreads.execute(new Runnable() {
-			@Override
-			public void run()
+
+		lastSeederRequest = now;
+		LogWrapper.getLogger().info("Requesting seeders for " + download);
+		Services.downloads.downloadThreads.execute(() ->
+		{
+			LogWrapper.getLogger().info("Requesting seeders for " + download);
+			LinkedList<Seeder> allSeeders = new LinkedList<>();
+			allSeeders.addAll(freeSeeders);
+			allSeeders.addAll(pendingSeeders.values());
+			
+			FileEntry fileEntry = remoteFile.getFileEntry();
+			for (ClientTrackerClient client : Services.trackers.getClients())
 			{
-				LogWrapper.getLogger().info("Requesting seeders for " + download);
-				LinkedList<Seeder> allSeeders = new LinkedList<>();
-				allSeeders.addAll(freeSeeders);
-				allSeeders.addAll(pendingSeeders.values());
-				
-				FileEntry fileEntry = remoteFile.getFileEntry();
-				for (ClientTrackerClient client : Services.trackers.getClients())
-				{
-					client.requestSeeders(fileEntry, allSeeders);
-				}
+				client.requestSeeders(fileEntry, allSeeders);
 			}
+			lastSeederRequest = System.currentTimeMillis();
 		});
 	}
 
@@ -307,9 +318,11 @@ public class DownloadInstance implements Runnable
 			LogWrapper.getLogger().info("Already quit.");
 			return;
 		}
+		
 		LogWrapper.getLogger().info("Queue " + download);
 		
 		dblCheckConnections();
+		calculateSpeed();
 		
 		List<Chunk> upComing = DbChunks.getNextChunks(download, NUM_PENDING_CHUNKS - pendingSeeders.size());
 		if (upComing.isEmpty())
@@ -337,7 +350,8 @@ public class DownloadInstance implements Runnable
 			Seeder removeFirst = freeSeeders.removeFirst();
 			try
 			{
-				boolean shouldCompress = c.getSize() > 50 && remoteFile.getPath().getUnbrokenName().endsWith(".txt");
+				// TODO: move size check
+				boolean shouldCompress = c.getSize() > 50 && Services.compressionManager.shouldCompressFile(remoteFile.getPath().getUnbrokenName());
 				shouldCompress = true;
 				removeFirst.request(remoteFile.getFileEntry(), c, shouldCompress);
 				pendingSeeders.put(c, removeFirst);
@@ -386,13 +400,9 @@ public class DownloadInstance implements Runnable
 		// This needs to happen a while later.
 		// If this was the last chunk, then all seeders will be removed, including the one that inspired this queue (maybe a download chunk).
 		// If we do it later, we can hope to terminate the connection peacefully.
-		Services.downloads.downloadThreads.schedule(new Runnable()
+		Services.downloads.downloadThreads.schedule(() ->
 		{
-			@Override
-			public void run()
-			{
-				complete();
-			}
+			complete();
 		}, 1, TimeUnit.SECONDS);
 	}
 
@@ -411,11 +421,24 @@ public class DownloadInstance implements Runnable
 		}
 		
 		resquestedSeeder.requestCompleted(null, chunk);
-		connection.beginReadRaw();
 		try
 		{
-			boolean successful = ChunkData.read(chunk, destination.toFile(), connection.getIn(), compressed);
-			connection.endReadRaw();
+			boolean successful;
+			
+			if (compressed)
+			{
+				try (InputStream in = CompressionStreams.newCompressedInputStream(connection.getIn()))
+				{
+					successful = ChunkData.read(chunk, destination.toFile(), connection.getIn());
+				}
+			}
+			else
+			{
+				connection.beginReadRaw();
+				successful = ChunkData.read(chunk, destination.toFile(), connection.getIn());
+				connection.endReadRaw();
+			}
+			
 			freeSeeders.addLast(resquestedSeeder);
 			
 			if (successful)
@@ -428,19 +451,17 @@ public class DownloadInstance implements Runnable
 		{
 			if (e.getMessage().contains("No space"))
 			{
-				Services.userThreads.execute(new Runnable() {
-					@Override
-					public void run()
-					{
-						JOptionPane.showConfirmDialog(null, "There is no space left on the filesystem!", "No space left", JOptionPane.ERROR_MESSAGE);
-					}});
+				Services.userThreads.execute(() ->
+				{
+					JOptionPane.showConfirmDialog(null, "There is no space left on the filesystem!", "No space left", JOptionPane.ERROR_MESSAGE);
+				});
 			}
 			throw e;
 		}
 		
 		queue();
 	}
-	
+
 	private synchronized void complete()
 	{
 		for (Seeder seeder : freeSeeders)
@@ -468,17 +489,18 @@ public class DownloadInstance implements Runnable
 			download.setState(DownloadState.FAILED);
 		}
 
+			// download.setState(DownloadState.PLACING_IN_FS);
+			// try
+			// {
+			// Files.move(destination, download.getTargetFile(),
+			// StandardCopyOption.REPLACE_EXISTING);
+			// }
+			// catch (IOException e)
+			// {
+			// LogWrapper.getLogger().log(Level.INFO,
+			// "Unable to move downloaded file.", e);
+			// }
 
-//		download.setState(DownloadState.PLACING_IN_FS);
-//		try
-//		{
-//			Files.move(destination, download.getTargetFile(), StandardCopyOption.REPLACE_EXISTING);
-//		}
-//		catch (IOException e)
-//		{
-//			LogWrapper.getLogger().log(Level.INFO, "Unable to move downloaded file.", e);
-//		}
-		
 		LocalDirectory local = getLocalDirectory();
 		if (local != null)
 		{
@@ -493,8 +515,11 @@ public class DownloadInstance implements Runnable
 				LogWrapper.getLogger().log(Level.INFO, "Unable to add local file to local mirror " + remoteFile, e);
 			}
 		}
-		
-		Services.downloads.remove(this);
+
+		DownloadInstance instance = this;
+
+		// Don't hold this lock...
+		Services.downloads.downloadThreads.execute(() -> { Services.downloads.remove(instance); });
 		Services.notifications.downloadDone(this);
 	}
 
@@ -601,9 +626,11 @@ public class DownloadInstance implements Runnable
 			seeder.done();
 		for (Seeder seeder : freeSeeders)
 			seeder.done();
-		Services.downloads.remove(this);
-		Services.notifications.downloadRemoved(this);
 		download.setState(DownloadState.FAILED);
+			
+		DownloadInstance instance = this;
+		Services.downloads.downloadThreads.execute(() -> { Services.downloads.remove(instance); });
+		Services.notifications.downloadRemoved(this);
 	}
 
 	public synchronized void removePeer(Communication connection)
@@ -638,8 +665,27 @@ public class DownloadInstance implements Runnable
 		badSeeder.done();
 	}
 
-	public String getSpeed()
+	private String speed = "0 bps";
+	public  String getSpeed()
 	{
-		return "Speed will go here...";
+		return speed;
+	}
+	private synchronized void calculateSpeed()
+	{
+		double speedD = 0;
+		for (Seeder seeder : pendingSeeders.values())
+		{
+			speedD += seeder.getConnection().getStatistics().getSpeedDown();
+		}
+		for (Seeder seeder : freeSeeders)
+		{
+			speedD += seeder.getConnection().getStatistics().getSpeedDown();
+		}
+		speed =  Misc.formatDiskUsage(speedD) + "ps"; 
+	}
+
+	public int getNumSeeders()
+	{
+		return freeSeeders.size() + pendingSeeders.size();
 	}
 }

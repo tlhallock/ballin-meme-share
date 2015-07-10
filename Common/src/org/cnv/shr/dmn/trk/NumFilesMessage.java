@@ -31,6 +31,7 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class NumFilesMessage implements Jsonable
 {
@@ -70,13 +71,15 @@ public class NumFilesMessage implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("numFiles")) {
-				numFiles = Long.parseLong(parser.getString());
-			}
-			break;
-			default: break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("numFiles")) {
+					numFiles = Long.parseLong(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

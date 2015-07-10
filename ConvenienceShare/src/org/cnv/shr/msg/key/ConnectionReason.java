@@ -10,6 +10,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class ConnectionReason extends KeyMessage
 {
@@ -46,13 +47,13 @@ public class ConnectionReason extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsreason = true;
+		boolean needsReason = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsreason)
+				if (needsReason)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs reason");
 				}
@@ -60,14 +61,16 @@ public class ConnectionReason extends KeyMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("reason")) {
-				needsreason = false;
-				reason = parser.getString();
-			}
-			break;
-			default: break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("reason")) {
+					needsReason = false;
+					reason = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

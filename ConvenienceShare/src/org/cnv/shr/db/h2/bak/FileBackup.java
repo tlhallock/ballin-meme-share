@@ -102,28 +102,28 @@ public class FileBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsfileSize = true;
-		boolean needslastModified = true;
-		boolean needspath = true;
-		boolean needsrootName = true;
+		boolean needsFileSize = true;
+		boolean needsLastModified = true;
+		boolean needsPath = true;
+		boolean needsRootName = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsfileSize)
+				if (needsFileSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
 				}
-				if (needslastModified)
+				if (needsLastModified)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
 				}
-				if (needspath)
+				if (needsPath)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
 				}
-				if (needsrootName)
+				if (needsRootName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
@@ -131,39 +131,41 @@ public class FileBackup implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "fileSize":
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "fileSize":
+					needsFileSize = false;
+					fileSize = Long.parseLong(parser.getString());
+					break;
+				case "lastModified":
+					needsLastModified = false;
+					lastModified = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "lastModified":
-				needslastModified = false;
-				lastModified = Long.parseLong(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "path":
+					needsPath = false;
+					path = parser.getString();
+					break;
+				case "rootName":
+					needsRootName = false;
+					rootName = parser.getString();
+					break;
+				case "checksum":
+					checksum = parser.getString();
+					break;
+				case "tags":
+					tags = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "path":
-				needspath = false;
-				path = parser.getString();
-				break;
-			case "rootName":
-				needsrootName = false;
-				rootName = parser.getString();
-				break;
-			case "checksum":
-				checksum = parser.getString();
-				break;
-			case "tags":
-				tags = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

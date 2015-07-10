@@ -42,10 +42,12 @@ public class DbPermissions
 	private static final QueryWrapper SELECT1    = new QueryWrapper("select IS_SHARING from SHARE_ROOT where RID=? and MID=?;");
 	private static final QueryWrapper MERGE1     = new QueryWrapper("merge into SHARE_ROOT key(RID, MID) values (?, ?, ?);");
 
-	// Needs to work for remote roots too: ie add a listener...
-
-	public static void setSharingState(Machine machine, RootDirectory root, SharingState share)
+	public static void setSharingState(Machine machine, LocalDirectory root, SharingState share)
 	{
+		if (machine.isLocal())
+		{
+			throw new RuntimeException("This is not how setSharingState is supposed to be used.");
+		}
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(MERGE1))
 		{

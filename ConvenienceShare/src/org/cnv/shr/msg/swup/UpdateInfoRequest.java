@@ -96,7 +96,7 @@ public class UpdateInfoRequest extends Message
 		}
 		
 		byte[] decrypted = Services.keyManager.decrypt(privateKey, naunceRequest);
-		switch ("action")
+		switch (action)
 		{
 		case "getLogs":
 			connection.send(new GetLogs(decrypted));
@@ -121,23 +121,23 @@ public class UpdateInfoRequest extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needspublicKey = true;
-		boolean needsnaunceRequest = true;
-		boolean needsaction = true;
+		boolean needsPublicKey = true;
+		boolean needsNaunceRequest = true;
+		boolean needsAction = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needspublicKey)
+				if (needsPublicKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs publicKey");
 				}
-				if (needsnaunceRequest)
+				if (needsNaunceRequest)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
-				if (needsaction)
+				if (needsAction)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
 				}
@@ -145,24 +145,25 @@ public class UpdateInfoRequest extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "publicKey":
-				needspublicKey = false;
-				publicKey = KeyPairObject.deSerializePublicKey(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "publicKey":
+					needsPublicKey = false;
+					publicKey = KeyPairObject.deSerializePublicKey(parser.getString());
+					break;
+				case "naunceRequest":
+					needsNaunceRequest = false;
+					naunceRequest = Misc.format(parser.getString());
+					break;
+				case "action":
+					needsAction = false;
+					action = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "naunceRequest":
-				needsnaunceRequest = false;
-				naunceRequest = Misc.format(parser.getString());
-				break;
-			case "action":
-				needsaction = false;
-				action = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

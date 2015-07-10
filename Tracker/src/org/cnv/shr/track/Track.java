@@ -57,6 +57,7 @@ public class Track
 	public static Path rootDirectory = Paths.get(/*"..", "instances",*/ "tracker");
 	public static boolean storesMetaData = true;
 	public static boolean showGui = true;
+	public static TrackerInfoImport importer;
 	
 	
 	private static void parseArgs(String[] args)
@@ -74,7 +75,7 @@ public class Track
 		}
 	}
 
-	public static void main(String[] args) throws ClassNotFoundException, SQLException, UnknownHostException
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException
 	{
 		parseArgs(args);
 		Misc.ensureDirectory(rootDirectory, false);
@@ -87,7 +88,6 @@ public class Track
 				LogWrapper.getLogger().log(Level.INFO, "Uncaught exception.", e);
 			}
 		});
-		
 		
 		LogWrapper.getLogger().info("Address: " + InetAddress.getLocalHost().getHostAddress());
 		
@@ -108,6 +108,9 @@ public class Track
 		keys = new KeysService();
 		
 		ensureLocalTrackerIsPresent();
+		
+		importer = new TrackerInfoImport(rootDirectory.resolve("importDirectory"));
+		importer.start();
 		
 		boolean ableToStart = false;
 		for (int port = TrackerEntry.TRACKER_PORT_BEGIN; port < TrackerEntry.TRACKER_PORT_END; port++)
@@ -133,6 +136,15 @@ public class Track
 		{
 			gui = new TrackerGui();
 			gui.setVisible(true);
+		}
+
+		try
+		{
+			importer.addExisting();
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to add existing directories", e);
 		}
 	}
 

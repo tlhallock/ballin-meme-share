@@ -34,7 +34,6 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.mn.Main;
 import org.cnv.shr.gui.UserActions;
@@ -45,6 +44,7 @@ import org.cnv.shr.updt.UpdateInfo;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.LogWrapper;
 
 public class WhoIAm extends MachineFound
 {
@@ -90,10 +90,16 @@ public class WhoIAm extends MachineFound
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		Machine findAnExistingMachine = DbMachines.findAnExistingMachine(connection.getIp(), port);
-		if (findAnExistingMachine != null && !findAnExistingMachine.getIdentifier().equals(ident))
+		if (Services.blackList.contains(ident))
 		{
-			UserActions.assertUserAcceptsNewIdentifier(ident, findAnExistingMachine, connection.getUrl());
+			LogWrapper.getLogger().info(ident + " is a blacklisted machine.");
+			connection.finish();
+			return;
+		}
+		
+		if (UserActions.checkIfMachineShouldNotReplaceOld(ident, connection.getIp(), port))
+		{
+			throw new RuntimeException("A different machine at " + connection.getIp() + " already exists");
 		}
 		
 		connection.setRemoteIdentifier(ident);
@@ -111,6 +117,7 @@ public class WhoIAm extends MachineFound
 			}
 		}
 	}
+	
 
 	@Override
 	public boolean requiresAthentication()
@@ -145,43 +152,43 @@ public class WhoIAm extends MachineFound
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsport = true;
-		boolean needsnports = true;
-		boolean needspKey = true;
-		boolean needsversionString = true;
-		boolean needsip = true;
-		boolean needsname = true;
-		boolean needsident = true;
+		boolean needsPort = true;
+		boolean needsNports = true;
+		boolean needsPKey = true;
+		boolean needsVersionString = true;
+		boolean needsIp = true;
+		boolean needsName = true;
+		boolean needsIdent = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsport)
+				if (needsPort)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
 				}
-				if (needsnports)
+				if (needsNports)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
 				}
-				if (needspKey)
+				if (needsPKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pKey");
 				}
-				if (needsversionString)
+				if (needsVersionString)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs versionString");
 				}
-				if (needsip)
+				if (needsIp)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
 				}
-				if (needsname)
+				if (needsName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
 				}
-				if (needsident)
+				if (needsIdent)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
@@ -189,45 +196,47 @@ public class WhoIAm extends MachineFound
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "port":
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "port":
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+					break;
+				case "nports":
+					needsNports = false;
+					nports = Integer.parseInt(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "nports":
-				needsnports = false;
-				nports = Integer.parseInt(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "pKey":
+					needsPKey = false;
+					pKey = KeyPairObject.deSerializePublicKey(parser.getString());
+					break;
+				case "versionString":
+					needsVersionString = false;
+					versionString = parser.getString();
+					break;
+				case "ip":
+					needsIp = false;
+					ip = parser.getString();
+					break;
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "ident":
+					needsIdent = false;
+					ident = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "pKey":
-				needspKey = false;
-				pKey = KeyPairObject.deSerializePublicKey(parser.getString());
-				break;
-			case "versionString":
-				needsversionString = false;
-				versionString = parser.getString();
-				break;
-			case "ip":
-				needsip = false;
-				ip = parser.getString();
-				break;
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "ident":
-				needsident = false;
-				ident = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

@@ -39,6 +39,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
@@ -110,6 +111,10 @@ public class Services
 	public static Trackers trackers;
 	public static ColorSetter colors;
 	
+	private static final Object localSyncerSync = new Object();
+	private static TimerTask localSynchronizer;
+	public static CompressionList compressionManager;
+	
 	public static void initialize(Arguments args, SplashScreen screen) throws Exception
 	{
 		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
@@ -124,7 +129,7 @@ public class Services
 		createServices(args.settings, screen);
 		if (args.restoreFile != null)
 		{
-			DbBackupRestore.restoreDatabase(null, args.restoreFile);
+			DbBackupRestore.restoreDatabase(args.restoreFile, true);
 		}
 		checkIfUpdateManagerIsRunning(args, screen);
 		startServices(screen);
@@ -133,6 +138,7 @@ public class Services
 			screen.setStatus("Starting gui");
 		if (args.showGui)
 		{
+			LogWrapper.getLogger().warning("This should only happen after the db has been restored...");
 			UserActions.showGui(screen);
 		}
 		else if (screen != null)
@@ -150,46 +156,34 @@ public class Services
 
 	private static void runStartupServices()
 	{
-		userThreads.execute(new Runnable()
+		userThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			if (settings.runTrackerOnStart.get())
 			{
-				if (settings.runTrackerOnStart.get())
-				{
-					Trackers.launchTracker(false);
-				}
+				Trackers.launchTracker(false);
 			}
 		});
-		userThreads.execute(new Runnable()
+		userThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			if (settings.autoMapPorts.get())
 			{
-				if (settings.autoMapPorts.get())
-				{
-					PortMapper.addDesiredPorts(settings.getLocalIp(), System.out);
-				}
+				PortMapper.addDesiredPorts(settings.getLocalIp(), System.out);
 			}
 		});
-		userThreads.execute(new Runnable()
+		userThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			for (ClientTrackerClient client : trackers.getClients())
 			{
-				for (ClientTrackerClient client : trackers.getClients())
+				TrackerEntry entry = client.getEntry();
+				if (entry.shouldSync() && entry.supportsMetaData())
 				{
-					TrackerEntry entry = client.getEntry();
-					if (entry.shouldSync() && entry.supportsMetaData())
+					try
 					{
-						try
-						{
-							client.sync();
-						}
-						catch (Exception ex)
-						{
-							LogWrapper.getLogger().log(Level.INFO, "Unable to sync to " + entry.toDebugString(), ex);
-						}
+						client.sync();
+					}
+					catch (Exception ex)
+					{
+						LogWrapper.getLogger().log(Level.INFO, "Unable to sync to " + entry.toDebugString(), ex);
 					}
 				}
 			}
@@ -201,6 +195,7 @@ public class Services
 	{
 		if (screen != null)
 			screen.setStatus("Creating services");
+		compressionManager = new CompressionList(); compressionManager.read(settings.compressionFile.getPath());
 		colors = new ColorSetter();
 		colors.read();
 		notifications = new Notifications();
@@ -302,21 +297,38 @@ public class Services
 		timer = new Timer();
 		downloads.startDownloadInitiator();
 		timer.scheduleAtFixedRate(updateManager, 10000L, 24L * 60L * 60L * 1000L);
-		timer.schedule(h2DbCache, 1000); // for testing we can make it small...
-//		monitorTimer.schedule(new TimerTask() {
-//			@Override
-//			public void run()
-//			{
-//				locals.synchronize(false);
-//			}}, settings.monitorRepeat.get(), settings.monitorRepeat.get());
-//		
-//		monitorTimer.schedule(new TimerTask() {
-//			@Override
-//			public void run() {
-//				remotes.refresh();
-//			}}, 1000);
-		
+		timer.schedule(h2DbCache, 10 * 60 * 1000);
+		startLocalSyncer();
+		settings.monitorRepeat.addListener(new SettingListener() {
+			@Override
+			public void settingChanged() { startLocalSyncer(); }
+		});
 //		Also need to attempt remote authentications...
+	}
+
+
+	private static void startLocalSyncer()
+	{
+		synchronized (localSyncerSync)
+		{
+			if (localSynchronizer != null)
+			{
+				localSynchronizer.cancel();
+			}
+			long delay = settings.monitorRepeat.get();
+			if (delay < 0)
+			{
+				localSynchronizer = null;
+				return;
+			}
+			final TimerTask task = new TimerTask() {
+				@Override
+				public void run()
+				{
+					UserActions.syncAllLocals(null);
+				}};
+			timer.schedule(task, delay, delay);
+		}
 	}
 	
 	private static void startSystemTray(SplashScreen screen) throws IOException, AWTException

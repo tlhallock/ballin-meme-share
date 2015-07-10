@@ -45,7 +45,7 @@ public class TrackerFrame extends BrowserFrame
 	@Override
 	protected AddTracker createAddTracker()
 	{
-		return new AddTracker(this) {
+		AddTracker addTracker = new AddTracker(this) {
 			@Override
 			protected void addTracker(TrackerEntry entry)
 			{
@@ -53,6 +53,8 @@ public class TrackerFrame extends BrowserFrame
 				Services.trackers.save(Services.settings.trackerFile.getPath());
 			}
 		};
+		Services.notifications.registerWindow(addTracker);
+		return addTracker;
 	}
 	
 	@Override
@@ -88,7 +90,7 @@ public class TrackerFrame extends BrowserFrame
 		if (currentClient == null || currentMachine == null)
 			return;
 		MakeComment makeComment = new MakeComment(currentClient, currentMachine.getIdentifer(), this);
-		// Services.notification.registerWindow(makeComment);
+		 Services.notifications.registerWindow(makeComment);
 		makeComment.setAlwaysOnTop(true);
 		makeComment.setVisible(true);
 	}
@@ -97,12 +99,9 @@ public class TrackerFrame extends BrowserFrame
 	@Override
 	protected void trackerAction1()
 	{
-		runLater(new Runnable() {
-		    @Override
-		    public void run() {
+		runLater(() -> {
 		        if (currentClient == null) return;
 		        currentClient.sync();
-		    }
 		});
 	}
 
@@ -134,5 +133,11 @@ public class TrackerFrame extends BrowserFrame
 	protected boolean machineAction2Enabled()
 	{
 		return currentClient != null && currentMachine != null;
+	}
+
+	@Override
+	protected void commentsChanged()
+	{
+		Services.colors.childrenChanged(this, getCommentPanel());
 	}
 }

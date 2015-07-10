@@ -49,6 +49,7 @@ import javax.json.stream.JsonParser.Event;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.dmn.CompressionList;
 import org.cnv.shr.dmn.JsonableUpdateInfo;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.SharedFileId;
@@ -222,6 +223,8 @@ public class GenerateParserCode
 				org.cnv.shr.db.h2.bak.RootPermissionBackup.class,
 				org.cnv.shr.db.h2.bak.MessageBackup.class,
 				org.cnv.shr.db.h2.bak.DownloadBackup.class,
+				
+				CompressionList.class,
 			})
 		{
 			try
@@ -309,6 +312,7 @@ public class GenerateParserCode
 	
 	private static void printParsers(HashMap<JsonParser.Event, List<Parser>> parsers, PrintStream ps)
 	{
+		HashSet<String> alreadyValidated = new HashSet<>();
 		ps.println("\t@Override                                    ");
 		ps.println("\tpublic void parse(JsonParser parser) {       ");
 		ps.println("\t\tString key = null;                         ");
@@ -323,7 +327,7 @@ public class GenerateParserCode
 //		ps.println("\t\t\t\tvalidate();                            ");
                 parsers.entrySet().stream().forEach((entry) -> {
                     entry.getValue().stream().forEach((Parser p) -> {
-                        p.printValidator(ps);
+                        p.printValidator(ps, alreadyValidated);
                     });
             });
 		ps.println("\t\t\t\treturn;                                ");
@@ -343,7 +347,7 @@ public class GenerateParserCode
                         p.print(ps);
                     });
             });
-		ps.println("\t\t\tdefault: break;");
+		ps.println("\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown type found in message: \" + e);");
 		ps.println("\t\t\t}");
 		ps.println("\t\t}");
 		ps.println("\t}");
@@ -370,15 +374,15 @@ public class GenerateParserCode
 		
 		public void printDecls(PrintStream ps)
 		{
-                    fields.stream().filter((f) -> !(f.isAnnotationPresent(MyParserNullable.class))).forEach((f) -> {
-                        ps.println("\t\tboolean needs" + f.getName() + " = true;");
+			HashSet<String> printed = new HashSet<>();
+                    fields.stream().filter((f) -> !(!printed.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))).forEach((f) -> {
+                        ps.println("\t\tboolean " + getNeedsVarName(f.getName()) + " = true;");
                     });
 		}
-		public void printValidator(PrintStream ps)
+		public void printValidator(PrintStream ps, HashSet<String> alreadyValidated)
 		{
-			HashSet<String> printed = new HashSet<>();
-                        fields.stream().filter((f) -> !(!printed.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))).map((f) -> {
-                            ps.println("\t\t\t\tif (needs" + f.getName() + ")");
+                        fields.stream().filter((f) -> !(!alreadyValidated.add(f.getName()) || f.isAnnotationPresent(MyParserNullable.class))).map((f) -> {
+                            ps.println("\t\t\t\tif (" + getNeedsVarName(f.getName()) + ")");
                         return f;
                     }).map((f) -> {
                         ps.println("\t\t\t\t{");
@@ -391,41 +395,41 @@ public class GenerateParserCode
 
 		public void print(PrintStream ps)
 		{
-			ps.println("\t\tcase " + jsonType.name() + ":");
-			ps.println("\t\t\tif (key==null) break;");
+			ps.println("\t\t\tcase " + jsonType.name() + ":");
+			ps.println("\t\t\t\tif (key==null) { LogWrapper.getLogger().warning(\"Value with no key!\"); break; }");
 
 			if (fields.size() == 1)
 			{
-                            fields.stream().map((f) -> {
-                                ps.println("\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
-                                return f;
-                            }).map((f) -> {
-                                if (!f.isAnnotationPresent(MyParserNullable.class))
-                                {
-                                    ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
-                                }
-                                return f;
-                            }).forEach((f) -> {
-                                ps.println("\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
-                            });
+				for (Field f : fields)
+				{
+          ps.println("\t\t\t\tif (key.equals(\"" + f.getName() + "\")) {");
+          if (!f.isAnnotationPresent(MyParserNullable.class))
+          {
+            ps.println("\t\t\t\t\t" + getNeedsVarName(f.getName()) + " = false;");
+          }
+          ps.println("\t\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
+          ps.println("\t\t\t\t} else {");
+          ps.println("\t\t\t\t\tLogWrapper.getLogger().warning(\"Unknown key: \" + key);");
+				}
 			}
 			else
 			{
-				ps.println("\t\t\tswitch(key) {");
+				ps.println("\t\t\t\tswitch(key) {");
 				for (Field f : fields)
 				{
-					ps.println("\t\t\tcase \"" + f.getName() + "\":");
+					ps.println("\t\t\t\tcase \"" + f.getName() + "\":");
 					if (!f.isAnnotationPresent(MyParserNullable.class))
 					{
-						ps.println("\t\t\t\tneeds" + f.getName() + " = false;");
+						ps.println("\t\t\t\t\t" + getNeedsVarName(f.getName()) + " = false;");
 					}
-					ps.println("\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
-					ps.println("\t\t\t\tbreak;");
+					ps.println("\t\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
+					ps.println("\t\t\t\t\tbreak;");
 				}
+				ps.println("\t\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown key: \" + key);");
 			}
-			ps.println("\t\t\t}");
+			ps.println("\t\t\t\t}");
 			// ps.println("\t\t\tkey=null;");
-			ps.println("\t\t\tbreak;");
+			ps.println("\t\t\t\tbreak;");
 		}
 		
 		public void print(StringBuilder builder)
@@ -446,6 +450,8 @@ public class GenerateParserCode
 		case "org.cnv.shr.json.JsonStringMap":
 		case "org.cnv.shr.json.JsonMap":
 		case "org.cnv.shr.json.JsonList":
+		case "org.cnv.shr.json.JsonSet":
+		case "org.cnv.shr.json.JsonStringSet":
 		case "org.cnv.shr.json.JsonStringList": return ".parse(parser)";
 		case "class org.cnv.shr.msg.PathList":
 			return " = (new PathList(parser)).setParent(this)";
@@ -492,6 +498,8 @@ public class GenerateParserCode
 		switch (fieldName)
 		{
 		case "org.cnv.shr.json.JsonList":
+		case "org.cnv.shr.json.JsonSet":
+		case "org.cnv.shr.json.JsonStringSet":
 		case "org.cnv.shr.json.JsonStringList":
 			return JsonParser.Event.START_ARRAY;
 		case "org.cnv.shr.json.JsonStringMap":
@@ -578,6 +586,8 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 		output.println("\t\t}");
 		return;
 	case "org.cnv.shr.json.JsonList":
+	case "org.cnv.shr.json.JsonSet":
+	case "org.cnv.shr.json.JsonStringSet":
 	case "org.cnv.shr.json.JsonStringList":
 		if (nullable)
 		{
@@ -750,6 +760,10 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 	private static boolean shouldContinue(Class<?> c)
 	{
 		return c != null && c.getName().startsWith("org.cnv.shr");
+	}
+	private static String getNeedsVarName(String var)
+	{
+		return "needs" + (var.charAt(0) + "").toUpperCase() + var.substring(1);
 	}
 
 //private static String parseList(Field f)

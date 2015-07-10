@@ -34,7 +34,6 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
@@ -43,6 +42,7 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class GotPermission extends Message
 {
@@ -110,7 +110,8 @@ public class GotPermission extends Message
 			{
 				return;
 			}
-			DbPermissions.setSharingState(remote, directory, permission);
+			directory.setSharesWithUs(permission);
+			directory.tryToSave();
 			Services.notifications.permissionsChanged(remote);
 		}
 	}
@@ -134,18 +135,18 @@ public class GotPermission extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsrootName = true;
-		boolean needspermission = true;
+		boolean needsRootName = true;
+		boolean needsPermission = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsrootName)
+				if (needsRootName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
-				if (needspermission)
+				if (needsPermission)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs permission");
 				}
@@ -153,20 +154,21 @@ public class GotPermission extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "rootName":
-				needsrootName = false;
-				rootName = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "rootName":
+					needsRootName = false;
+					rootName = parser.getString();
+					break;
+				case "permission":
+					needsPermission = false;
+					permission = SharingState.valueOf(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "permission":
-				needspermission = false;
-				permission = SharingState.valueOf(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

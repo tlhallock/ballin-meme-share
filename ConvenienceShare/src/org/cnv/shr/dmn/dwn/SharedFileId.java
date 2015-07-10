@@ -43,6 +43,7 @@ import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class SharedFileId implements Jsonable
 {
@@ -135,23 +136,23 @@ public class SharedFileId implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsmachineIdent = true;
-		boolean needsrootName = true;
-		boolean needspath = true;
+		boolean needsMachineIdent = true;
+		boolean needsRootName = true;
+		boolean needsPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsmachineIdent)
+				if (needsMachineIdent)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machineIdent");
 				}
-				if (needsrootName)
+				if (needsRootName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
 				}
-				if (needspath)
+				if (needsPath)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
 				}
@@ -159,24 +160,25 @@ public class SharedFileId implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "machineIdent":
-				needsmachineIdent = false;
-				machineIdent = parser.getString();
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "machineIdent":
+					needsMachineIdent = false;
+					machineIdent = parser.getString();
+					break;
+				case "rootName":
+					needsRootName = false;
+					rootName = parser.getString();
+					break;
+				case "path":
+					needsPath = false;
+					path = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "rootName":
-				needsrootName = false;
-				rootName = parser.getString();
-				break;
-			case "path":
-				needspath = false;
-				path = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

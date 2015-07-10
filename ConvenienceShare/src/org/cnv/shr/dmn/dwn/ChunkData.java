@@ -37,8 +37,6 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.cnv.shr.dmn.ChecksumManager;
 import org.cnv.shr.stng.Settings;
@@ -49,10 +47,8 @@ import org.cnv.shr.util.Misc;
 // TODO: java nio
 public class ChunkData
 {
-	public static boolean read(Chunk chunk, File f, InputStream input, boolean compressed) throws IOException, NoSuchAlgorithmException
+	public static boolean read(Chunk chunk, File f, InputStream input) throws IOException, NoSuchAlgorithmException
 	{
-		if (compressed)
-			input = new GZIPInputStream(input);
 		MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
 		
 		try (RandomAccessFile toWrite = new RandomAccessFile(f, "rw"))
@@ -90,23 +86,12 @@ public class ChunkData
 			}
 		}
 		
-		if (compressed)
-		{
-			// uh oh!
-			// real problem here...
-			// what if the input stream reads past the end of its stream?
-			// maybe zip magic prevents that...
-		}
-		
 		String digestToString = ChecksumManager.digestToString(digest);
 		return digestToString.equals(chunk.getChecksum());
 	}
 
-	public static void write(Chunk chunk, Path f, OutputStream output, boolean compress) throws IOException
+	public static void write(Chunk chunk, Path f, OutputStream output) throws IOException
 	{
-		if (compress)
-			output = new GZIPOutputStream(output);
-		
 		// TODO: Native IO
 		try (RandomAccessFile toRead = new RandomAccessFile(f.toFile(), "r"))
 		{
@@ -145,13 +130,6 @@ public class ChunkData
 		}
 		
 		LogWrapper.getLogger().info("Done serving bytes chunk " + chunk);
-		
-		if (compress)
-		{
-			// uh oh, flush!!!
-			// this will stop the other side?? No, its in raw mode.
-			output.close();
-		}
 		
 		output.flush();
 	}

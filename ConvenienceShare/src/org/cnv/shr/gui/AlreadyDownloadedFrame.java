@@ -43,12 +43,8 @@ public class AlreadyDownloadedFrame extends javax.swing.JFrame {
         if (list.isEmpty())
         {
         	// Removing deadlock
-					SwingUtilities.invokeLater(new Runnable()
-					{
-						public void run()
-						{
-							setVisible(false);
-						}
+					SwingUtilities.invokeLater(() -> {
+						setVisible(false);
 					});
         }
         else

@@ -25,9 +25,10 @@
 
 package org.cnv.shr.dmn.mn;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.file.Paths;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
@@ -39,12 +40,13 @@ import org.cnv.shr.dmn.mn.strt.RunOnStartUp;
 import org.cnv.shr.gui.SplashScreen;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.ShowApplication;
-import org.cnv.shr.stng.Settings;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.LogWrapper;
 
 public class Main
 {
+//a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
+	
 	public static void main(String[] args) throws Exception
 	{
 		Arguments a = new Arguments();
@@ -54,16 +56,6 @@ public class Main
 		{
 			screen = SplashScreen.showSplash();
 		}
-		Settings settings;
-		
-//		a.settings = new Settings(Paths.get("another\\apps\\settings.props"));
-		
-		a.settings = new Settings(Paths.get("/work/ballin-meme-share/instances/i1/settings.props"));
-		a.settings.setDefaultApplicationDirectoryStructure();
-		a.updateManagerDirectory = Paths.get("/home/thallock/Applications/ConvenienceShare1/updater");
-		a.showGui = true;
-
-		System.out.println("Settings file: " + a.settings.getSettingsFile());
 		
 		if (Services.isAlreadyRunning(a, screen))
 		{
@@ -71,31 +63,7 @@ public class Main
 			{
 				return;
 			}
-			if (screen != null)
-			{
-				screen.setStatus("ConvenienceShare is already running!!! Will close soon.");
-			}
-			
-			LogWrapper.getLogger().info("Application must already be running.");
-			String address = InetAddress.getLocalHost().getHostAddress();
-			try (Socket socket = new Socket(address, a.settings.servePortBeginI.get());
-					JsonParser input = TrackObjectUtils.createParser(socket.getInputStream());
-					JsonGenerator outputStream = TrackObjectUtils.createGenerator(socket.getOutputStream());)
-			{
-				ShowApplication showApplication = new ShowApplication();
-				DoneMessage doneMessage = new DoneMessage();
-				outputStream.writeStartObject();
-				showApplication.generate(outputStream, showApplication.getJsonKey());
-				doneMessage.generate(outputStream, doneMessage.getJsonKey());
-				outputStream.writeEnd();
-				outputStream.flush();
-				LogWrapper.getLogger().info("Message sent. Waiting...");
-				Thread.sleep(5000);
-			}
-			finally
-			{
-				System.exit(-1);
-			}
+			instanceAlreadyRunning(screen, a);
 			return;
 		}
 		
@@ -128,6 +96,35 @@ public class Main
 //			}
 //			Thread.sleep(1000);
 //		}
+	}
+
+	private static void instanceAlreadyRunning(SplashScreen screen, Arguments a) throws UnknownHostException, InterruptedException, IOException
+	{
+		if (screen != null)
+		{
+			screen.setStatus("ConvenienceShare is already running!!! Will close soon.");
+		}
+		
+		LogWrapper.getLogger().info("Application must already be running.");
+		String address = InetAddress.getLocalHost().getHostAddress();
+		try (Socket socket = new Socket(address, a.settings.servePortBeginI.get());
+				JsonParser input = TrackObjectUtils.createParser(socket.getInputStream());
+				JsonGenerator outputStream = TrackObjectUtils.createGenerator(socket.getOutputStream());)
+		{
+			ShowApplication showApplication = new ShowApplication();
+			DoneMessage doneMessage = new DoneMessage();
+			outputStream.writeStartObject();
+			showApplication.generate(outputStream, showApplication.getJsonKey());
+			doneMessage.generate(outputStream, doneMessage.getJsonKey());
+			outputStream.writeEnd();
+			outputStream.flush();
+			LogWrapper.getLogger().info("Message sent. Waiting...");
+			Thread.sleep(5000);
+		}
+		finally
+		{
+			System.exit(-1);
+		}
 	}
 
 	public static void restart(LinkedList<String> args)

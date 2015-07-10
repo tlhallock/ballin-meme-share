@@ -14,4 +14,16 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>java</name>
+			<type>2</type>
+			<location>/work/ballin-meme-share/jsonp~git/api/src/main/java</location>
+		</link>
+		<link>
+			<name>json/impl</name>
+			<type>2</type>
+			<location>/work/ballin-meme-share/jsonp~git/impl/src/main/java</location>
+		</link>
+	</linkedResources>
 </projectDescription>

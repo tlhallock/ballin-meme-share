@@ -42,6 +42,7 @@ import org.cnv.shr.json.JsonMap;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class KeyNotFound extends KeyMessage
@@ -150,13 +151,13 @@ public class KeyNotFound extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needstests = true;
+		boolean needsTests = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needstests)
+				if (needsTests)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs tests");
 				}
@@ -164,14 +165,16 @@ public class KeyNotFound extends KeyMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("tests")) {
-				needstests = false;
-				tests.parse(parser);
-			}
-			break;
-			default: break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("tests")) {
+					needsTests = false;
+					tests.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

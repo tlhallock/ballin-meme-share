@@ -40,6 +40,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.LogWrapper;
 
 public class RevokeKey extends Message
 {
@@ -91,13 +92,13 @@ public class RevokeKey extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsrevoke = true;
+		boolean needsRevoke = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsrevoke)
+				if (needsRevoke)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs revoke");
 				}
@@ -105,14 +106,16 @@ public class RevokeKey extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("revoke")) {
-				needsrevoke = false;
-				revoke = KeyPairObject.deSerializePublicKey(parser.getString());
-			}
-			break;
-			default: break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("revoke")) {
+					needsRevoke = false;
+					revoke = KeyPairObject.deSerializePublicKey(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

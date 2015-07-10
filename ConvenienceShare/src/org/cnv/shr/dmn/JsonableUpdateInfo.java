@@ -35,6 +35,7 @@ import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.LogWrapper;
 
 
 public class JsonableUpdateInfo implements Jsonable
@@ -95,18 +96,18 @@ public class JsonableUpdateInfo implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsport = true;
-		boolean needsip = true;
+		boolean needsPort = true;
+		boolean needsIp = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsport)
+				if (needsPort)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
 				}
-				if (needsip)
+				if (needsIp)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
 				}
@@ -114,26 +115,29 @@ public class JsonableUpdateInfo implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("port")) {
-				needsport = false;
-				port = Integer.parseInt(parser.getString());
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "ip":
-				needsip = false;
-				ip = parser.getString();
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("port")) {
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "pKey":
-				pKey = KeyPairObject.deSerializePublicKey(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "ip":
+					needsIp = false;
+					ip = parser.getString();
+					break;
+				case "pKey":
+					pKey = KeyPairObject.deSerializePublicKey(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

@@ -35,6 +35,7 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.HashMap;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
@@ -55,7 +56,7 @@ import org.cnv.shr.util.CountingOutputStream;
 import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.PausableInputStream;
+import org.cnv.shr.util.PausableInputStream2;
 import org.cnv.shr.util.PausableOutputStream;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
@@ -75,7 +76,7 @@ public class Communication implements Closeable
 	private CountingInputStream countingInput;
 	private CountingOutputStream countingOutput;
 	
-	private PausableInputStream pausableInput;
+	private PausableInputStream2 pausableInput;
 	private PausableOutputStream pausableOutput;
 	
 	private InputStream encryptedInput;
@@ -95,7 +96,9 @@ public class Communication implements Closeable
 	
 	private ConnectionStatistics stats;
 	
-	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = true;
+	private HashMap<String, Object> params = new HashMap<>();
+	
+	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = false;
 	
 	/** Initiator **/
 	public Communication(Authenticator authentication, String ip, int port) throws UnknownHostException, IOException
@@ -124,7 +127,7 @@ public class Communication implements Closeable
 
 		stats = new ConnectionStatistics(countingInput, countingOutput);
 		
-		pausableInput = new PausableInputStream(countingInput);
+		pausableInput = new PausableInputStream2(countingInput);
 		pausableOutput = new PausableOutputStream(countingOutput);
 		
 		needsMore = true;
@@ -208,7 +211,7 @@ public class Communication implements Closeable
 	{
 		return pausableOutput;
 	}
-	public PausableInputStream getIn()
+	public PausableInputStream2 getIn()
 	{
 		return pausableInput;
 	}
@@ -220,6 +223,12 @@ public class Communication implements Closeable
 //			Machine machine = DbMachines.getMachine(this.remoteIdentifier);
 //			UserActions.assertUserAcceptsNewIdentifier(remoteIdentifier, machine, getUrl());
 //		}
+		if (Services.blackList.contains(remoteIdentifier))
+		{
+			LogWrapper.getLogger().info(remoteIdentifier + " is a blacklisted machine.");
+			finish();
+			return;
+		}
 		this.remoteIdentifier = remoteIdentifier;
 	}
 	
@@ -493,5 +502,15 @@ public class Communication implements Closeable
 	public void setReason(String reason)
 	{
 		stats.setReason(reason);
+	}
+	
+	// downloads should use this as well...
+	public Object getParam(String str)
+	{
+		return params.get(str);
+	}
+	public void putParam(String str, Object obj)
+	{
+		params.put(str, obj);
 	}
 }

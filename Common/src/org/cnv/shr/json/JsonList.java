@@ -30,7 +30,6 @@ import java.util.LinkedList;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
-import javax.json.stream.JsonParser.Event;
 
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
@@ -65,8 +64,7 @@ public class JsonList<T extends Jsonable> extends LinkedList<T>
 		clear();
 		while (parser.hasNext())
 		{
-			Event next = parser.next();
-			switch (next)
+			switch (parser.next())
 			{
 			case START_OBJECT:
 				add(allocator.create(parser));

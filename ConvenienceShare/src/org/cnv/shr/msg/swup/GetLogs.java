@@ -28,6 +28,7 @@ package org.cnv.shr.msg.swup;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
@@ -41,6 +42,7 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -60,6 +62,11 @@ public class GetLogs extends Message
 	@Override
 	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
 
+	public String toString()
+	{
+		return "Give me your logs.";
+	}
+	
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
@@ -70,38 +77,41 @@ public class GetLogs extends Message
 			return;
 		}
 		
-		Services.updateManager.checkForUpdates(null, true);
-		
-		LogWrapper.getLogger().info("Serving logs.");
 		
 		Path logFile = Services.settings.logFile.getPath();
+		LogWrapper.getLogger().info("Serving logs at " + logFile.toAbsolutePath());
 		long logSize = Files.size(logFile);
 		long pushedSoFar = 0;
 		byte[] buffer = new byte[Misc.BUFFER_SIZE];
-		
+
 		synchronized (connection.getOutput())
 		{
 			connection.send(new GotLogs(logSize));
 
 			// Temporarily disable file logs...
 			LogWrapper.logToFile(null, -1);
-			
-			try (InputStream input = Files.newInputStream(logFile))
+
+			try (OutputStream output = CompressionStreams.newCompressedOutputStream(connection.getOutput());
+					 InputStream input = Files.newInputStream(logFile);)
 			{
-				while (logSize - pushedSoFar > 0)
+				long rem = logSize - pushedSoFar;
+				while (rem > 0)
 				{
+					LogWrapper.getLogger().fine("remaining: " + rem);
 					int amountToRead = buffer.length;
-					if (amountToRead < logSize - pushedSoFar)
+					if (amountToRead > rem)
 					{
-						amountToRead = (int) (logSize - pushedSoFar);
+						amountToRead = (int) rem;
 					}
 					int nread = input.read(buffer, 0, amountToRead);
 					if (nread < 0)
 					{
+						LogWrapper.getLogger().info("Hit end of input from logs too early.");
 						break;
 					}
-					connection.getOutput().write(buffer, 0, nread);
+					output.write(buffer, 0, nread);
 					pushedSoFar += nread;
+					rem = Math.max(0, logSize - pushedSoFar);
 				}
 			}
 			catch (IOException ex)
@@ -113,13 +123,27 @@ public class GetLogs extends Message
 				// Then reopen it
 				LogWrapper.logToFile(Services.settings.logFile.getPath(), Services.settings.logLength.get());
 			}
-			
-			for (long rem = logSize - pushedSoFar; rem > 0; rem--)
-			{
-				connection.getOutput().write((byte) '\n');
-			}
+			// finishWritingRemainingBytes(output, rem);
 		}
 	}
+
+//	private static void finishWritingRemainingBytes(OutputStream output, long rem) throws IOException
+//	{
+//		int paddingLength = 50;
+//		StringBuilder builder = new StringBuilder(paddingLength);
+//		for (int i = 0; i < paddingLength; i++)
+//		{
+//			builder.append('\n');
+//		}
+//		byte[] bytes = builder.toString().getBytes();
+//		while (rem > 0)
+//		{
+//			for (int i = 0; i < bytes.length && rem > 0; i++, rem--)
+//			{
+//				output.write(bytes[i]);
+//			}
+//		}
+//	}
 
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -135,13 +159,13 @@ public class GetLogs extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdecryptedNaunce = true;
+		boolean needsDecryptedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdecryptedNaunce)
+				if (needsDecryptedNaunce)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
@@ -149,14 +173,16 @@ public class GetLogs extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("decryptedNaunce")) {
-				needsdecryptedNaunce = false;
-				decryptedNaunce = Misc.format(parser.getString());
-			}
-			break;
-			default: break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("decryptedNaunce")) {
+					needsDecryptedNaunce = false;
+					decryptedNaunce = Misc.format(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

@@ -45,6 +45,7 @@ import org.cnv.shr.json.JsonStringMap;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.MissingKeyException;
 
 public class UpdateInfoImpl implements UpdateInfo
 {
@@ -101,7 +102,7 @@ public class UpdateInfoImpl implements UpdateInfo
 	}
 
 	@Override
-	public PrivateKey getPrivateKey(PublicKey usedKey)
+	public PrivateKey getPrivateKey(PublicKey usedKey) throws MissingKeyException
 	{
 		return keys.getPrivateKey(usedKey);
 	}

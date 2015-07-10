@@ -142,6 +142,7 @@ public class DbIterator<T extends DbObject> implements CloseableIterator<T>
 		closed = true;
 		try
 		{
+			// this is why the go negative sometimes...
 			c.close();
 		}
 		catch (SQLException e)

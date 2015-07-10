@@ -123,18 +123,18 @@ public class NewKey extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsnewKey = true;
-		boolean needsnaunceRequest = true;
+		boolean needsNewKey = true;
+		boolean needsNaunceRequest = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsnewKey)
+				if (needsNewKey)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs newKey");
 				}
-				if (needsnaunceRequest)
+				if (needsNaunceRequest)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
 				}
@@ -142,20 +142,21 @@ public class NewKey extends KeyMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "newKey":
-				needsnewKey = false;
-				newKey = KeyPairObject.deSerializePublicKey(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "newKey":
+					needsNewKey = false;
+					newKey = KeyPairObject.deSerializePublicKey(parser.getString());
+					break;
+				case "naunceRequest":
+					needsNaunceRequest = false;
+					naunceRequest = Misc.format(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "naunceRequest":
-				needsnaunceRequest = false;
-				naunceRequest = Misc.format(parser.getString());
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

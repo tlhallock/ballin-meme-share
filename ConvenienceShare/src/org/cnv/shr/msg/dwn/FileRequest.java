@@ -81,12 +81,20 @@ public class FileRequest extends DownloadMessage
 	public void perform(Communication connection) throws Exception
 	{
 		LocalFile local = getLocal();
+		
 		if (local == null)
 		{
 //			fail("Unable to find local file.");
 			LogWrapper.getLogger().info("Unable to file file " + descriptor);
 			connection.finish();
 		}
+		if (local.getFileSize() == 0)
+		{
+			LogWrapper.getLogger().info("Not serving zero length file: " + local);
+			connection.finish();
+			return;
+		}
+		
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Serve file");
 		ServeInstance serve = Services.server.serve(local, connection);
 		if (serve == null)
@@ -128,18 +136,18 @@ public class FileRequest extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needschunkSize = true;
-		boolean needsdescriptor = true;
+		boolean needsChunkSize = true;
+		boolean needsDescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needschunkSize)
+				if (needsChunkSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
 				}
-				if (needsdescriptor)
+				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
@@ -147,21 +155,25 @@ public class FileRequest extends DownloadMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("chunkSize")) {
-				needschunkSize = false;
-				chunkSize = Long.parseLong(parser.getString());
-			}
-			break;
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-			}
-			break;
-			default: break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("chunkSize")) {
+					needsChunkSize = false;
+					chunkSize = Long.parseLong(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("descriptor")) {
+					needsDescriptor = false;
+					descriptor = new FileEntry(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

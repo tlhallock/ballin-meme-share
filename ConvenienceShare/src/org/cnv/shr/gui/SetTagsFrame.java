@@ -76,7 +76,7 @@ public class SetTagsFrame extends javax.swing.JFrame {
         });
         jPopupMenu2.add(jMenuItem2);
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jSplitPane1.setDividerLocation(201);
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);

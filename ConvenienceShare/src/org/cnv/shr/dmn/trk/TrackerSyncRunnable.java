@@ -61,14 +61,7 @@ public class TrackerSyncRunnable implements Runnable
 			return;
 		}
 
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				delete(clone);
-			}
-		});
+		Services.userThreads.execute(() -> { delete(clone); });
 	}
 	
 	private void delete(List<FileEntry> clone)
@@ -142,6 +135,8 @@ public class TrackerSyncRunnable implements Runnable
 		try (TrackerConnection connection = client.connect(TrackerAction.CLAIM_FILE);
 				 DbIterator<LocalFile> locals = DbFiles.getChecksummedFiles();)
 		{
+			Services.h2DbCache.setAutoCommit(false);
+			
 			connection.generator.writeStartArray();
 			while (locals.hasNext())
 			{
@@ -162,6 +157,10 @@ public class TrackerSyncRunnable implements Runnable
 		catch (Exception e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to add files.", e);
+		}
+		finally
+		{
+			Services.h2DbCache.setAutoCommit(true);
 		}
 	}
 }

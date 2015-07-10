@@ -37,6 +37,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
+import org.cnv.shr.util.LogWrapper;
 
 public class Chunk implements Jsonable
 {
@@ -152,18 +153,18 @@ public class Chunk implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsbegin = true;
-		boolean needsend = true;
+		boolean needsBegin = true;
+		boolean needsEnd = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsbegin)
+				if (needsBegin)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs begin");
 				}
-				if (needsend)
+				if (needsEnd)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs end");
 				}
@@ -171,26 +172,29 @@ public class Chunk implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "begin":
-				needsbegin = false;
-				begin = Long.parseLong(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "begin":
+					needsBegin = false;
+					begin = Long.parseLong(parser.getString());
+					break;
+				case "end":
+					needsEnd = false;
+					end = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "end":
-				needsend = false;
-				end = Long.parseLong(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("checksum")) {
+					checksum = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				checksum = parser.getString();
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

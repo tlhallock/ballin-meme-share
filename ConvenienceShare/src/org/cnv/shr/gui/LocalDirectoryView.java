@@ -31,8 +31,10 @@ import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.LogWrapper;
@@ -141,6 +143,8 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		DbRoots.setIgnores(local, ignoreTextArea.getText().split("\n"));
 		
 		refresh(getLocal());
+
+		Services.userThreads.execute(() -> { DbPaths.cleanIgnores(getLocal()); });
 	}
 
     /**

@@ -41,6 +41,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
+import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.SharingState;
@@ -136,7 +137,12 @@ public abstract class RootDirectory extends DbObject<Integer>
 				if (generatedKeys.next())
 				{
 					id = generatedKeys.getInt(1);
+					DbPaths.pathLiesIn(getPathElement(), this);
 					return true;
+				}
+				if (id != null)
+				{
+					DbPaths.pathLiesIn(getPathElement(), this);
 				}
 				return false;
 			}

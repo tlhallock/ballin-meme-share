@@ -29,9 +29,7 @@ import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
@@ -53,6 +51,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
@@ -74,6 +73,7 @@ import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.db.h2.TrackerInfoExport;
+import org.cnv.shr.db.h2.bak.CleanBrowsingHistory;
 import org.cnv.shr.db.h2.bak.DbBackupRestore;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
@@ -140,6 +140,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		
 		connectionsPanel.setLayout(new GridLayout(0, 1));
 		
+		JFrame f = this;
 		this.addComponentListener(new ComponentAdapter()
 		{
 			@Override
@@ -149,19 +150,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 				{
 					return;
 				}
-				Point locationOnScreen = getLocationOnScreen();
-				Services.settings.appLocX.set(locationOnScreen.x);
-				Services.settings.appLocY.set(locationOnScreen.y);
+				Services.notifications.setAppLocation(f);
 			}
 		});
 		
 		logHandler = new TextAreaHandler(logTextArea, (Integer) logLines.getValue());
-		logLines.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent arg0)
-			{
+		logLines.addChangeListener((ChangeEvent arg0) -> {
 				logHandler.setLogLines((Integer) logLines.getValue());
-			}});
+		});
 		LogWrapper.getLogger().addHandler(logHandler);
 
     
@@ -231,38 +227,23 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		for (DbObjects table : DbTables.ALL_TABLES)
 		{
 			JMenuItem item = new JMenuItem(table.getTableName());
-			item.addActionListener(new ActionListener()
-			{
-				@Override
-				public void actionPerformed(ActionEvent e)
-				{
-					Services.userThreads.execute(new Runnable() {
-						@Override
-						public void run()
-						{
-							try (ConnectionWrapper threadConnection = Services.h2DbCache.getThreadConnection();)
-							{
-								table.debug(threadConnection);
-							}
-							catch (SQLException e1)
-							{
-		            LogWrapper.getLogger().log(Level.INFO, "Unable to close thread connection.", e);
-							}
-						}});
-				}
+			item.addActionListener((ActionEvent e) -> {
+				Services.userThreads.execute(() -> {
+					try (ConnectionWrapper threadConnection = Services.h2DbCache.getThreadConnection();)
+					{
+						table.debug(threadConnection);
+					}
+					catch (SQLException e1)
+					{
+		        LogWrapper.getLogger().log(Level.INFO, "Unable to close thread connection.", e);
+					}
+				});
 			});
 			jMenu8.add(item);
 		}
 		JMenuItem item = new JMenuItem("All");
-		item.addActionListener(new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				Services.userThreads.execute(new Runnable() {
-					@Override
-					public void run()
-					{
+		item.addActionListener((ActionEvent e) -> {
+				Services.userThreads.execute(() -> {
 						try (ConnectionWrapper threadConnection = Services.h2DbCache.getThreadConnection();)
 						{
 							DbTables.debugDb();
@@ -271,15 +252,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 						{
 		          LogWrapper.getLogger().log(Level.INFO, "Unable to close thread connection.", e);
 						}
-					}});
-			}
+				});
 		});
 		jMenu8.add(item);
-                
-                
-                
-                
-                logHandler.setScrollOnUpdate(jCheckBox1.isSelected());
+		logHandler.setScrollOnUpdate(jCheckBox1.isSelected());
 	}
 
 	private void initializeSettings()
@@ -484,6 +460,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jMenuItem4 = new javax.swing.JMenuItem();
         jCheckBoxMenuItem2 = new javax.swing.JCheckBoxMenuItem();
         jMenuItem12 = new javax.swing.JMenuItem();
+        jMenuItem22 = new javax.swing.JMenuItem();
         jMenu7 = new javax.swing.JMenu();
         jMenuItem17 = new javax.swing.JMenuItem();
         jMenuItem16 = new javax.swing.JMenuItem();
@@ -496,6 +473,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jMenu8 = new javax.swing.JMenu();
         jMenuItem18 = new javax.swing.JMenuItem();
         jMenuItem19 = new javax.swing.JMenuItem();
+        jMenuItem23 = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         jMenuItem9 = new javax.swing.JMenuItem();
         jMenuItem10 = new javax.swing.JMenuItem();
@@ -1169,6 +1147,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         });
         jMenu1.add(jMenuItem12);
 
+        jMenuItem22.setText("Show duplicate files...");
+        jMenuItem22.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem22ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem22);
+
         jMenuBar1.add(jMenu1);
 
         jMenu7.setText("Actions");
@@ -1252,6 +1238,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         });
         jMenu2.add(jMenuItem19);
 
+        jMenuItem23.setText("Debug Paths");
+        jMenuItem23.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem23ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem23);
+
         jMenuBar1.add(jMenu2);
 
         jMenu3.setText("Info");
@@ -1310,27 +1304,23 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			{
 				return;
 			}
-				Services.userThreads.execute(new Runnable()
+			Services.userThreads.execute(() -> {
+				LocalDirectory local = UserActions.addLocalImmediately(Paths.get(fc.getSelectedFile().getAbsolutePath()), null);
+				if (local == null)
 				{
+					return;
+				}
+				locals.refresh();
+				
+				UserActions.showLocal(local).addWindowListener(new WindowAdapter() {
 					@Override
-					public void run()
+					public void windowClosed(WindowEvent e)
 					{
-						LocalDirectory local = UserActions.addLocalImmediately(Paths.get(fc.getSelectedFile().getAbsolutePath()), null);
-						if (local == null)
-						{
-							return;
-						}
-							locals.refresh();
-
-							Services.timer.schedule(new TimerTask() {
-								@Override
-								public void run()
-								{
-									List<SynchronizationListener> singletonList = Collections.singletonList(createLocalListener(local));
-									UserActions.userSync(app, local, singletonList);
-								}}, 1 * 1000);
+						List<SynchronizationListener> singletonList = Collections.singletonList(createLocalListener(local));
+						UserActions.userSync(app, local, singletonList);
 					}
 				});
+			});
 		}
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -1338,11 +1328,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-		try (final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
+		LogWrapper.getLogger().info("Synchronizing all local directories.");
+                try (final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
 		{
 			while (listLocals.hasNext())
 			{
 				LocalDirectory next = listLocals.next();
+                                LogWrapper.getLogger().info("Synrchronizing local " + next);
 				DebugListener createLocalListener = createLocalListener(next);
 				List<DebugListener> singletonList = Collections.singletonList(createLocalListener);
 				if (createLocalListener == null)
@@ -1396,27 +1388,24 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jButton12ActionPerformed
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        Services.userThreads.execute(new Runnable() { @Override
-				public void run()
-        {
-        try {
-            LogWrapper.getLogger().info("Creating another key.");
-            Services.keyManager.createAnotherKey(
-                    Services.settings.keysFile.getPath(), 
-                    Services.settings.keySize.get());
-            LogWrapper.getLogger().info("Done.");
-            refreshKeys();
-        } catch (NoSuchAlgorithmException | NoSuchProviderException ex) {
-            LogWrapper.getLogger().log(Level.SEVERE, "No key algorithm.", ex);
-            Services.quiter.quit();
-        } catch (IOException ex) {
-            LogWrapper.getLogger().log(Level.WARNING, "Unable to save keys.", ex);
-        }
-        }});
+	    Services.userThreads.execute(() -> {
+		    try {
+		        LogWrapper.getLogger().info("Creating another key.");
+		        Services.keyManager.createAnotherKey(
+		                Services.settings.keysFile.getPath(), 
+		                Services.settings.keySize.get());
+		        LogWrapper.getLogger().info("Done.");
+		        refreshKeys();
+		    } catch (NoSuchAlgorithmException | NoSuchProviderException ex) {
+		        LogWrapper.getLogger().log(Level.SEVERE, "No key algorithm.", ex);
+		        Services.quiter.quit();
+		    } catch (IOException ex) {
+		        LogWrapper.getLogger().log(Level.WARNING, "Unable to save keys.", ex);
+		    }});
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void jButton18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton18ActionPerformed
-       Services.userThreads.execute(new Runnable() { public void run() { refreshKeys(); } });
+       Services.userThreads.execute(() -> { refreshKeys(); });
     }//GEN-LAST:event_jButton18ActionPerformed
 
     private void jMenuItem13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem13ActionPerformed
@@ -1469,7 +1458,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 		{
-			DbBackupRestore.restoreDatabase(this, Paths.get(fc.getSelectedFile().getAbsolutePath()));
+			DbBackupRestore.restoreDatabase(Paths.get(fc.getSelectedFile().getAbsolutePath()), false);
 		}
     }//GEN-LAST:event_jMenuItem6ActionPerformed
 
@@ -1565,6 +1554,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			AddMachine addMachine = new AddMachine();
       addMachine.setAlwaysOnTop(true);
       Services.notifications.registerWindow(addMachine);
+      Services.colors.setColors(addMachine);
       addMachine.setVisible(true);
 		}
 
@@ -1663,6 +1653,23 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         frame.setVisible(true);
     }//GEN-LAST:event_jMenuItem12ActionPerformed
 
+    private void jMenuItem22ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem22ActionPerformed
+        DuplicateFileFrame frame = new DuplicateFileFrame();
+        Services.notifications.registerWindow(frame);
+        frame.setVisible(true);
+    }//GEN-LAST:event_jMenuItem22ActionPerformed
+
+    private void jMenuItem23ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem23ActionPerformed
+        
+			final JFileChooser fc = new JFileChooser();
+			fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+			{
+				return;
+			}
+                        CleanBrowsingHistory.debugPaths(Paths.get(fc.getSelectedFile().getAbsolutePath()));
+    }//GEN-LAST:event_jMenuItem23ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField addressLabel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1715,6 +1722,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem20;
     private javax.swing.JMenuItem jMenuItem21;
+    private javax.swing.JMenuItem jMenuItem22;
+    private javax.swing.JMenuItem jMenuItem23;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;

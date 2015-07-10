@@ -58,13 +58,9 @@ public class DownloadInitiator extends TimerTask
 	@Override
 	public void run()
 	{
-		Services.downloads.downloadThreads.execute(new Runnable()
+		Services.downloads.downloadThreads.execute(() ->
 		{
-			@Override
-			public void run()
-			{
-				initiatePendingDownloads();
-			}
+			initiatePendingDownloads();
 		});
 	}
 

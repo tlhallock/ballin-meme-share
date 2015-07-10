@@ -27,6 +27,7 @@ package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -47,6 +48,7 @@ import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.msg.dwn.RequestCompletionStatus;
 import org.cnv.shr.stng.Settings;
+import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
 
@@ -198,14 +200,24 @@ public class ServeInstance extends TimerTask
 		{
 			try
 			{
-				boolean compressed = compress && false;
+				compress |= Services.compressionManager.alwaysCompress(local.getPath().getUnbrokenName());
 				LogWrapper.getLogger().info("Sending chunk " + chunk);
-				connection.send(new ChunkResponse(local.getFileEntry(), chunk, compressed));
+				connection.send(new ChunkResponse(local.getFileEntry(), chunk, compress));
 				// Right here I could check that the checksum matches...
-				
-				connection.beginWriteRaw();
-				ChunkData.write(chunk, local.getFsFile(), connection.getOutput(), compressed);
-				connection.endWriteRaw();
+
+				if (compress)
+				{
+					try (OutputStream out = CompressionStreams.newCompressedOutputStream(connection.getOutput()))
+					{
+						ChunkData.write(chunk, local.getFsFile(), out);
+					}
+				}
+				else
+				{
+					connection.beginWriteRaw();
+					ChunkData.write(chunk, local.getFsFile(), connection.getOutput());
+					connection.endWriteRaw();
+				}
 			}
 			catch (IOException e)
 			{
@@ -238,20 +250,16 @@ public class ServeInstance extends TimerTask
 	@Override
 	public void run()
 	{
-		Services.downloads.downloadThreads.execute(new Runnable()
+		Services.downloads.downloadThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			try
 			{
-				try
-				{
-					connection.send(new RequestCompletionStatus(local.getFileEntry()));
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Could not request status.", e);
-					fail("Unable to request status.");
-				}
+				connection.send(new RequestCompletionStatus(local.getFileEntry()));
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Could not request status.", e);
+				fail("Unable to request status.");
 			}
 		});
 	}

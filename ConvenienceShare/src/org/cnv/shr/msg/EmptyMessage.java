@@ -36,6 +36,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 
 public class EmptyMessage extends Message
 {
@@ -104,13 +105,13 @@ public class EmptyMessage extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needssize = true;
+		boolean needsSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needssize)
+				if (needsSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs size");
 				}
@@ -118,14 +119,16 @@ public class EmptyMessage extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("size")) {
-				needssize = false;
-				size = Integer.parseInt(parser.getString());
-			}
-			break;
-			default: break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("size")) {
+					needsSize = false;
+					size = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

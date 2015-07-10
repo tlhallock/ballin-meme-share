@@ -33,9 +33,11 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import javax.swing.text.DefaultCaret;
+
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.IpTester;
 import org.cnv.shr.util.LogWrapper;
@@ -345,11 +347,8 @@ public class PortMapperFrame extends javax.swing.JFrame {
         {
             return;
         }
-        Services.userThreads.execute(new Runnable() {
-            @Override
-            public void run() {
-                PortMapper.addDesiredPorts((String) jComboBox1.getSelectedItem(), logStream);
-            }
+        Services.userThreads.execute(() -> {
+        	PortMapper.addDesiredPorts((String) jComboBox1.getSelectedItem(), logStream);
         });
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
@@ -358,29 +357,23 @@ public class PortMapperFrame extends javax.swing.JFrame {
         {
             return;
         }
-        Services.userThreads.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    PortMapper.removeAllMappings(logStream);
-                } catch (IOException | InterruptedException ex) {
-                    LogWrapper.getLogger().log(Level.INFO, "Unable to remove mappings", ex);
-                }
-            }
+        Services.userThreads.execute(() -> {
+           try {
+               PortMapper.removeAllMappings(logStream);
+           } catch (IOException | InterruptedException ex) {
+               LogWrapper.getLogger().log(Level.INFO, "Unable to remove mappings", ex);
+           }
         });
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-            Services.userThreads.execute(new Runnable() {
-            @Override
-            public void run() {
-                IpTester tester = new IpTester();
-                String ip = tester.getIpFromCanYouSeeMeDotOrg();
-                LogWrapper.getLogger().info("Canyouseeme.org says our ip is " + ip);
-                String testIp = tester.testIp(ip, Services.settings.servePortBeginE.get());
-                LogWrapper.getLogger().info("Connection status is " + testIp);
-            }
-        });
+    	Services.userThreads.execute(() -> {
+				IpTester tester = new IpTester();
+				String ip = tester.getIpFromCanYouSeeMeDotOrg();
+				LogWrapper.getLogger().info("Canyouseeme.org says our ip is " + ip);
+				String testIp = tester.testIp(ip, Services.settings.servePortBeginE.get());
+				LogWrapper.getLogger().info("Connection status is " + testIp);
+    	});
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed

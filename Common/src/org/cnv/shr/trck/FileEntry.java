@@ -31,6 +31,8 @@ import java.util.Objects;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
+import org.cnv.shr.util.LogWrapper;
+
 public class FileEntry extends TrackObject
 {
 	private String checksum;
@@ -144,18 +146,18 @@ public class FileEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsfileSize = true;
-		boolean needschecksum = true;
+		boolean needsFileSize = true;
+		boolean needsChecksum = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsfileSize)
+				if (needsFileSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
 				}
-				if (needschecksum)
+				if (needsChecksum)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
@@ -163,21 +165,25 @@ public class FileEntry extends TrackObject
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("fileSize")) {
-				needsfileSize = false;
-				fileSize = Long.parseLong(parser.getString());
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("checksum")) {
-				needschecksum = false;
-				checksum = parser.getString();
-			}
-			break;
-			default: break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("fileSize")) {
+					needsFileSize = false;
+					fileSize = Long.parseLong(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("checksum")) {
+					needsChecksum = false;
+					checksum = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

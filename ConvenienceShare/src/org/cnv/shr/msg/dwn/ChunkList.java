@@ -136,40 +136,44 @@ public class ChunkList extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdescriptor = true;
-		boolean needschunks = true;
+		boolean needsChunks = true;
+		boolean needsDescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdescriptor)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
-				}
-				if (needschunks)
+				if (needsChunks)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
+				}
+				if (needsDescriptor)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("descriptor")) {
-				needsdescriptor = false;
-				descriptor = new FileEntry(parser);
-			}
-			break;
-		case START_ARRAY:
-			if (key==null) break;
-			if (key.equals("chunks")) {
-				needschunks = false;
-				chunks.parse(parser);
-			}
-			break;
-			default: break;
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("chunks")) {
+					needsChunks = false;
+					chunks.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("descriptor")) {
+					needsDescriptor = false;
+					descriptor = new FileEntry(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

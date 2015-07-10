@@ -36,6 +36,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class ConnectionOpened extends KeyMessage
@@ -102,13 +103,13 @@ public class ConnectionOpened extends KeyMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsdecryptedNaunce = true;
+		boolean needsDecryptedNaunce = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsdecryptedNaunce)
+				if (needsDecryptedNaunce)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
 				}
@@ -116,14 +117,16 @@ public class ConnectionOpened extends KeyMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_STRING:
-			if (key==null) break;
-			if (key.equals("decryptedNaunce")) {
-				needsdecryptedNaunce = false;
-				decryptedNaunce = Misc.format(parser.getString());
-			}
-			break;
-			default: break;
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("decryptedNaunce")) {
+					needsDecryptedNaunce = false;
+					decryptedNaunce = Misc.format(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

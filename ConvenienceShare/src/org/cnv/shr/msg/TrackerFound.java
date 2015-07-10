@@ -51,13 +51,13 @@ public class TrackerFound extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsentry = true;
+		boolean needsEntry = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsentry)
+				if (needsEntry)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs entry");
 				}
@@ -65,14 +65,16 @@ public class TrackerFound extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case START_OBJECT:
-			if (key==null) break;
-			if (key.equals("entry")) {
-				needsentry = false;
-				entry = new TrackerEntry(parser);
-			}
-			break;
-			default: break;
+			case START_OBJECT:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("entry")) {
+					needsEntry = false;
+					entry = new TrackerEntry(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

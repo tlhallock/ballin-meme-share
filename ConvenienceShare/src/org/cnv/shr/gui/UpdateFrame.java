@@ -132,11 +132,8 @@ public class UpdateFrame extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
     		Services.updateManager.setAddress(jTextField1.getText(), (Integer) jSpinner1.getValue());
         final boolean authenticate = !jCheckBox1.isSelected();
-        Services.userThreads.execute(new Runnable() {
-						@Override
-            public void run() {
-                Services.updateManager.checkForUpdates(origin, authenticate);
-            }
+        Services.userThreads.execute(() -> {
+        	Services.updateManager.checkForUpdates(origin, authenticate);
         });
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed

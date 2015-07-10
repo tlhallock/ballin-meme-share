@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="json"/>
+	<classpathentry kind="src" path="json/patch"/>
+	<classpathentry kind="src" path="json/impl"/>
+	<classpathentry kind="src" path="java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/ConvenienceShare/lib/CoDec-build17-jdk13.jar"/>
-	<classpathentry kind="lib" path="/ConvenienceShare/lib/FlexiProvider-1.7p7.signed.jar"/>
+	<classpathentry kind="lib" path="/work/ballin-meme-share/libs/FlexiProvider-1.7p7.signed.jar"/>
+	<classpathentry kind="lib" path="/work/ballin-meme-share/libs/CoDec-build17-jdk13.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

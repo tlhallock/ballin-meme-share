@@ -45,7 +45,7 @@ public class DbMachines
 	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from MACHINE where MACHINE.IS_LOCAL = false");
 	private static final QueryWrapper SELECT1_5 = new QueryWrapper("select * from MACHINE");
 	private static final QueryWrapper DELETE2   = new QueryWrapper("delete MACHINE where IS_LOCAL=true and not IDENT = ?;");
-	private static final QueryWrapper GET_STATS = new QueryWrapper("select count(NFILES), sum(TSPACE) from ROOT where MID=?;");
+	private static final QueryWrapper GET_STATS = new QueryWrapper("select sum(NFILES), sum(TSPACE) from ROOT where MID=?;");
 	private static final QueryWrapper SELECT4   = new QueryWrapper("select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1;");
 	
 	public static DbIterator<Machine> listMachines()
@@ -203,14 +203,14 @@ public class DbMachines
 		if (machine == null)
 		{
 			machine = new Machine(ident);
+			// By default, we will accept messages from other machines...
+			machine.setAllowsMessages(true);
 		}
 		
 		machine.setIp(ip);
 		machine.setPort(port);
 		machine.setName(name);
 		machine.setNumberOfPorts(nports);
-		// By default, we will accept messages from other machines...
-		machine.setAllowsMessages(true);
 		machine.setLastActive(System.currentTimeMillis());
 		
 

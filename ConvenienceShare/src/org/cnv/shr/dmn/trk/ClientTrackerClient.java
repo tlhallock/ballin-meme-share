@@ -103,13 +103,9 @@ public class ClientTrackerClient extends TrackerClient
 					continue;
 				}
 
-				Services.downloads.downloadThreads.execute(new Runnable()
+				Services.downloads.downloadThreads.execute(() ->
 				{
-					@Override
-					public void run()
-					{
-						addSeeder(remoteFile, entry);
-					}
+					addSeeder(remoteFile, entry);
 				});
 			}
 			connection.generator.writeEnd();

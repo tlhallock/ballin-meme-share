@@ -25,7 +25,6 @@
 
 package org.cnv.shr.gui;
 
-import java.util.Date;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.ConnectionStatistics;

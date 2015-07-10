@@ -43,6 +43,7 @@ public class DbDownloads
 	private static final QueryWrapper SELECT2 = new QueryWrapper("select * from DOWNLOAD where Q_ID=?;");
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from DOWNLOAD where DSTATE=?;");
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK join DOWNLOAD on DID = Q_ID where DSTATE=?;");
+	private static final QueryWrapper DELETE3 = new QueryWrapper("delete from DOWNLOAD where Q_ID in (select Q_ID from DOWNLOAD join SFILE on FID = F_ID where CHKSUM IS NULL or trim(CHKSUM)='');");
 	private static final QueryWrapper SELECTID = new QueryWrapper("select Q_ID from DOWNLOAD where FID=?;");
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from Download where DSTATE=? group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select * from Download                group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc, DSTATE asc;");
@@ -69,8 +70,8 @@ public class DbDownloads
 		return null;
 	}
 
-    public static void clearCompleted()
-    {
+	public static void clearCompleted()
+	{
 //		DbChunks.allChunksDone(download);
 //		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 //				StatementWrapper stmt = c.prepareStatement(DELETE1))
@@ -92,7 +93,19 @@ public class DbDownloads
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to clear completed downloads", e);
 		}
-    }
+	}
+	public static void cleanUnchecksummedFiles()
+	{
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(DELETE3))
+		{
+			stmt.execute();
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to clear completed downloads", e);
+		}
+	}
 
 	public static Download getDownload(int parseInt)
 	{

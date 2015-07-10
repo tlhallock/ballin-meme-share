@@ -48,6 +48,10 @@ public class DbConnectionCache extends TimerTask
 		
 		try (ConnectionWrapper c = getThreadConnection();)
 		{
+			if (c == null)
+			{
+				throw new SQLException("Unable to create connection!");
+			}
 			if (args.deleteDb)
 			{
 				LogWrapper.getLogger().info("Deleting database.");
@@ -153,5 +157,18 @@ public class DbConnectionCache extends TimerTask
 			entry.getValue().debug(builder);
 		}
 		return builder;
+	}
+	
+
+	public void setAutoCommit(boolean value)
+	{
+		try (ConnectionWrapper conn = Services.h2DbCache.getThreadConnection())
+		{
+			conn.setAutoCommit(value);
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to set autocommit to " + value, e);
+		}
 	}
 }

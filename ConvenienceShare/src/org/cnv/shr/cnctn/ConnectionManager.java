@@ -94,6 +94,12 @@ public class ConnectionManager
 			boolean acceptAnyKeys,
 			String reason) throws UnknownHostException, IOException
 	{
+		if (Services.blackList.contains(identifier))
+		{
+			LogWrapper.getLogger().info(identifier + " is a blacklisted machine.");
+			return null;
+		}
+		
 		if (Misc.collectIps().contains(ip)
 				&&  (portBegin            >= Services.localMachine.getPort() && portBegin            <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts())
 						||
@@ -110,29 +116,25 @@ public class ConnectionManager
 		}
 		TmpObject o = new TmpObject();
 		
-		Services.connectionThreads.execute(new Runnable()
-		{
-			public void run()
+		Services.connectionThreads.execute(() -> {
+			try (Communication connection = connect(origin, identifier, authentication, ip, portBegin, portBegin + Math.min(50, numPorts));)
 			{
-				try (Communication connection = connect(origin, identifier, authentication, ip, portBegin, portBegin + Math.min(50, numPorts));)
+				o.connection = connection;
+				if (connection == null)
 				{
-					o.connection = connection;
-					if (connection == null)
-					{
-						return;
-					}
-					connection.setRemoteIdentifier(identifier);
-					connection.setReason(reason);
-					connection.send(new WhoIAm());
-					connection.send(new ConnectionReason(reason));
-					connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
-					ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
-					connectionRunnable.run();
+					return;
 				}
-				catch (Exception e)
-				{
-					LogWrapper.getLogger().info("Unable to open connection: " + e.getMessage());
-				}
+				connection.setRemoteIdentifier(identifier);
+				connection.setReason(reason);
+				connection.send(new WhoIAm());
+				connection.send(new ConnectionReason(reason));
+				connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
+				ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
+				connectionRunnable.run();
+			}
+			catch (Exception e)
+			{
+				LogWrapper.getLogger().info("Unable to open connection: " + e.getMessage());
 			}
 		});
 		try
@@ -210,7 +212,7 @@ public class ConnectionManager
 		{
 			if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(
 					origin, 
-					"A tracker listed another url listed for " + identifier + " at " + findAlternativeUrls.describe(alternative)
+					"A tracker listed another url listed for " + identifier + " at " + findAlternativeUrls.describe(alternative) + ".\n"
 						+ "Would you like to try this one?",
 					"Found another address",
 					JOptionPane.YES_NO_OPTION))

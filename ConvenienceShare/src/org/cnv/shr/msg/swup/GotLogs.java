@@ -2,6 +2,7 @@ package org.cnv.shr.msg.swup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,11 +13,14 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.dwn.PathSecurity;
+import org.cnv.shr.gui.UpdateServerProgress;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
+import org.cnv.shr.util.CompressionStreams;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class GotLogs extends Message
@@ -31,6 +35,8 @@ public class GotLogs extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
+
+		UpdateServerProgress progress = (UpdateServerProgress) connection.getParam("progress");
 		try
 		{
 			Machine machine = connection.getMachine();
@@ -38,19 +44,35 @@ public class GotLogs extends Message
 					.resolve(PathSecurity.getFsName(machine.getIdentifier()))
 					.resolve(String.valueOf(System.currentTimeMillis()));
 			
+			LogWrapper.getLogger().info("Saving logs to " + log.toAbsolutePath());
+			LogWrapper.getLogger().info("Log size is " + logSize);
+			
 			long remaining = logSize;
+			
 			byte[] buffer = new byte[Misc.BUFFER_SIZE];
 			Misc.ensureDirectory(log, true);
-			try (OutputStream output = Files.newOutputStream(log))
+			try (OutputStream output = Files.newOutputStream(log);
+					 InputStream in = CompressionStreams.newCompressedInputStream(connection.getIn());)
 			{
 				while (remaining > 0)
 				{
+					LogWrapper.getLogger().fine("remaining: " + remaining);
+					if (progress != null)
+					{
+						progress.setProgress(logSize - remaining, logSize);
+					}
+
 					int amountToRead = buffer.length;
 					if (amountToRead > remaining)
 					{
 						amountToRead = (int) remaining;
 					}
-					int nread = connection.getIn().read(buffer, 0, amountToRead);
+					int nread = in.read(buffer, 0, amountToRead);
+					if (nread < 0)
+					{
+						LogWrapper.getLogger().info("Hit end of input before expected: remaining = " + remaining);
+						break;
+					}
 					output.write(buffer, 0, nread);
 					remaining -= nread;
 				}
@@ -82,13 +104,13 @@ public class GotLogs extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needslogSize = true;
+		boolean needsLogSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needslogSize)
+				if (needsLogSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs logSize");
 				}
@@ -96,14 +118,16 @@ public class GotLogs extends Message
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			if (key.equals("logSize")) {
-				needslogSize = false;
-				logSize = Long.parseLong(parser.getString());
-			}
-			break;
-			default: break;
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("logSize")) {
+					needsLogSize = false;
+					logSize = Long.parseLong(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

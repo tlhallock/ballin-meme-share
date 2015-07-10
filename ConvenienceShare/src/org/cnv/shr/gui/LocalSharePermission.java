@@ -25,11 +25,13 @@
 
 package org.cnv.shr.gui;
 
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPermissions;
+import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.util.LogWrapper;
 
 /**
  *
@@ -37,31 +39,47 @@ import org.cnv.shr.mdl.Machine;
  */
 public class LocalSharePermission extends javax.swing.JPanel {
 
-    private final Machine machine;
-    private final LocalDirectory local;
-	private PermissionChanger permissionChanger;
-    /**
-     * Creates new form SharePermission
-     */
-    public LocalSharePermission(Machine remote, LocalDirectory l) {
-        this.machine = remote;
-        this.local = l;
-        initComponents();
-        setLocation(Services.settings.appLocX.get(), Services.settings.appLocY.get());
-        
-        jComboBox1.setModel(new PermissionChanger(jComboBox1, DbPermissions.getCurrentPermissions(machine, local)) {
+    private final String machineIdent;
+    private final String localName;
+    
+	public LocalSharePermission(Machine remote, LocalDirectory l)
+	{
+		this.machineIdent = remote.getIdentifier();
+		this.localName = l.getName();
+		initComponents();
+		jComboBox1.setModel(new PermissionChanger(jComboBox1, DbPermissions.getCurrentPermissions(remote, l))
+		{
 			@Override
 			protected void setPermission(SharingState state)
 			{
-		    	DbPermissions.setSharingState(machine, local, state);
-			}});
-        
-        refresh();
-    }
+				setDaPermission(state);
+			}
+		});
+
+		refresh();
+	}
+	
+	private void setDaPermission(SharingState state)
+	{
+		Machine machine = DbMachines.getMachine(machineIdent);
+		if (machine == null)
+		{
+			LogWrapper.getLogger().info("Unable to find machine " + machineIdent);
+			return;
+		}
+		LocalDirectory local = DbRoots.getLocalByName(localName);
+		if (local == null)
+		{
+			LogWrapper.getLogger().info("Unable to find local directory " + localName);
+			return;
+		}
+		DbPermissions.setSharingState(machine, local, state);
+		LogWrapper.getLogger().info("Set permission of " + local.getName() + " to " + state.humanReadable() + " for " + machine.getName());
+	}
 
     public final void refresh()
     {
-        this.machineLabel.setText(machine.getName());
+        this.machineLabel.setText(DbMachines.getMachine(machineIdent).getName());
     }
     
     /**
@@ -76,6 +94,8 @@ public class LocalSharePermission extends javax.swing.JPanel {
         jLabel1 = new javax.swing.JLabel();
         machineLabel = new javax.swing.JLabel();
         jComboBox1 = new javax.swing.JComboBox();
+
+        setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
         jLabel1.setText("Machine:");
 

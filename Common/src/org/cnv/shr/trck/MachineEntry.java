@@ -32,6 +32,7 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.LogWrapper;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
@@ -138,33 +139,33 @@ public class MachineEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsbeginPort = true;
-		boolean needsendPort = true;
-		boolean needsident = true;
-		boolean needsname = true;
-		boolean needsip = true;
+		boolean needsBeginPort = true;
+		boolean needsEndPort = true;
+		boolean needsIdent = true;
+		boolean needsName = true;
+		boolean needsIp = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsbeginPort)
+				if (needsBeginPort)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs beginPort");
 				}
-				if (needsendPort)
+				if (needsEndPort)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs endPort");
 				}
-				if (needsident)
+				if (needsIdent)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
 				}
-				if (needsname)
+				if (needsName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
 				}
-				if (needsip)
+				if (needsIp)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
 				}
@@ -172,40 +173,42 @@ public class MachineEntry extends TrackObject
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-		case VALUE_NUMBER:
-			if (key==null) break;
-			switch(key) {
-			case "beginPort":
-				needsbeginPort = false;
-				beginPort = Integer.parseInt(parser.getString());
+			case VALUE_NUMBER:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "beginPort":
+					needsBeginPort = false;
+					beginPort = Integer.parseInt(parser.getString());
+					break;
+				case "endPort":
+					needsEndPort = false;
+					endPort = Integer.parseInt(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			case "endPort":
-				needsendPort = false;
-				endPort = Integer.parseInt(parser.getString());
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "ident":
+					needsIdent = false;
+					ident = parser.getString();
+					break;
+				case "keyStr":
+					keyStr = parser.getString();
+					break;
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "ip":
+					needsIp = false;
+					ip = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
 				break;
-			}
-			break;
-		case VALUE_STRING:
-			if (key==null) break;
-			switch(key) {
-			case "ident":
-				needsident = false;
-				ident = parser.getString();
-				break;
-			case "keyStr":
-				keyStr = parser.getString();
-				break;
-			case "name":
-				needsname = false;
-				name = parser.getString();
-				break;
-			case "ip":
-				needsip = false;
-				ip = parser.getString();
-				break;
-			}
-			break;
-			default: break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 	}

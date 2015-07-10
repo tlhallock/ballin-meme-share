@@ -25,12 +25,14 @@
 
 package org.cnv.shr.gui.tbl;
 
+import java.io.IOException;
 import java.util.AbstractSequentialList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -42,9 +44,13 @@ import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
+import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.DiskUsage;
+import org.cnv.shr.gui.SetTagsFrame;
 import org.cnv.shr.gui.UserActions;
+import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.CloseableIterator;
@@ -125,6 +131,83 @@ public class FilesTable extends DbJTable<SharedFile>
 				return "Show in folder";
 			}
 		});
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(SharedFile t)
+			{
+				Machine machine = DbMachines.getMachine(currentMachineIdent);
+				if (!machine.isLocal())
+				{
+					JOptionPane.showMessageDialog(
+							table,
+							"Unable to set tags for remote machine",
+							"You can only set tags for files in local directories",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				LinkedList<SharedFile> fileList = new LinkedList<>();
+				fileList.add(t);
+				LocalDirectory local = DbRoots.getLocalByName(currentRootName);
+				if (local == null)
+				{
+					LogWrapper.getLogger().info("Unable to find local directory with name " + currentRootName);
+					return;
+				}
+		  	SetTagsFrame setTagsFrame = new SetTagsFrame(local,fileList);
+		  	Services.notifications.registerWindow(setTagsFrame);
+		  	setTagsFrame.setVisible(true);
+			}
+			@Override
+			String getName()
+			{
+				return "Set tags for this file.";
+			}
+		});
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(SharedFile t)
+			{
+				Machine machine = DbMachines.getMachine(currentMachineIdent);
+				if (!machine.isLocal())
+				{
+					JOptionPane.showMessageDialog(
+							table,
+							"Unable to set tags for remote machine",
+							"You can only set tags for files in local directories",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				LinkedList<SharedFile> fileList = new LinkedList<>();
+				try (CloseableIterator<SharedFile> list = list();)
+				{
+					while (list.hasNext())
+					{
+						fileList.add(list.next());
+					}
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to list files", e);
+				}
+				LocalDirectory local = DbRoots.getLocalByName(currentRootName);
+				if (local == null)
+				{
+					LogWrapper.getLogger().info("Unable to find local directory with name " + currentRootName);
+					return;
+				}
+		  	SetTagsFrame setTagsFrame = new SetTagsFrame(local,fileList);
+		  	Services.notifications.registerWindow(setTagsFrame);
+		  	setTagsFrame.setVisible(true);
+			}
+			@Override
+			String getName()
+			{
+				return "Set tags for all displayed files";
+			}
+		});
 	}
 
 	public void setCurrentlyDisplaying(String currentMachineIdent, String currentRoot, List<SharedFile> list)
@@ -155,7 +238,7 @@ public class FilesTable extends DbJTable<SharedFile>
 	}
 
 	@Override
-	protected void fillRow(SharedFile next, HashMap<String, Object> currentRow)
+	protected boolean fillRow(SharedFile next, HashMap<String, Object> currentRow)
 	{
     final String path = next.getPath().getFullPath();
 
@@ -173,6 +256,8 @@ public class FilesTable extends DbJTable<SharedFile>
 		 currentRow.put("Tags",           String.valueOf(next.getTags())      );
 		 currentRow.put("Modified",       new Date(next.getLastUpdated())     );
 		 currentRow.put("Extension",      String.valueOf(ext)                 );
+		 
+		 return true;
 	}
 
 	@Override

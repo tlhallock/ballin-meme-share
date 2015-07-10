@@ -55,6 +55,10 @@ public class MessageReader
 				break wh;
 			}
 		}
+		if (className == null)
+		{
+			throw new IOException("Expected to see the next message type.");
+		}
 
 		LogWrapper.getLogger().info("Receiving message of type " + className + " from " + debugSource);
 		Jsonable create = JsonAllocators.create(className, input);

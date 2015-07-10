@@ -30,6 +30,7 @@ import java.io.IOException;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.MissingKeyException;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
@@ -56,7 +57,7 @@ public class ClientTrackerConnection extends TrackerConnection
 	}
 
 	@Override
-	protected void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey2) throws IOException
+	protected void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey2) throws IOException, MissingKeyException
 	{
 		if (publicKey2 == null)
 		{

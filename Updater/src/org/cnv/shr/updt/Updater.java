@@ -26,6 +26,7 @@
 package org.cnv.shr.updt;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +42,9 @@ public class Updater
 	private static final long A_LONG_TIME = 7 * 24 * 60 * 60 * 1000;
 	
 	static int KEY_LENGTH = 1024;
-	static String ROOT_DIRECTORY = "updater/";
+	static String ROOT_DIRECTORY = 
+			"../instances/" + 
+			"updater/";
 	
 	static Path keysFile;
 	static Path propsFile;
@@ -52,6 +55,7 @@ public class Updater
 	static UpdateThread updateThread;
 	static Timer timer;
 	static Code code;
+	static CodeMonitor monitor;
 	
 	static Path getUpdatesDirectory()
 	{
@@ -60,17 +64,28 @@ public class Updater
 	
 	public static void main(String[] args) throws Exception
 	{
+		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler()
+		{
+			@Override
+			public void uncaughtException(Thread t, Throwable e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Uncaught exception.", e);
+			}
+		});
 		if (args.length > 0)
 		{
 			ROOT_DIRECTORY = args[0];
 		}
 		Misc.ensureDirectory(getUpdatesDirectory(), false);
+		
+		LogWrapper.getLogger().info("Root directory is " + ROOT_DIRECTORY);
 
 		keysFile  = Paths.get(ROOT_DIRECTORY, UpdateInfoImpl.KEYS_TXT);
 		propsFile = Paths.get(ROOT_DIRECTORY, UpdateInfoImpl.INFO_PROPS);
 		
 		updateSocket = new ServerSocket(UpdateInfo.DEFAULT_UPDATE_PORT);
 		code = new Code();
+		code.checkTime();
 		service = new KeysService();
 		service.readKeys(keysFile, KEY_LENGTH);
 		updateThread = new UpdateThread();
@@ -79,6 +94,9 @@ public class Updater
 		
 		timer = new Timer();
 		timer.scheduleAtFixedRate(new KeyUpdater(), A_LONG_TIME, A_LONG_TIME);
+		
+		monitor = new CodeMonitor(getUpdatesDirectory());
+		new Thread(monitor).start();
 	}
 	
 	public static void updateProps()

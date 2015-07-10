@@ -47,6 +47,11 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		this.connection = connection;
 	}
 
+	public void setAutoCommit(boolean value) throws SQLException
+	{
+		connection.setAutoCommit(value);
+	}
+
 	public void setInUse()
 	{
 		inUse++;
@@ -93,10 +98,20 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 	public void close() throws SQLException
 	{
 		inUse--;
+		if (inUse < 0)
+		{
+			inUse = 0;
+			LogWrapper.getLogger().log(Level.INFO, "In use is now negative!!", new Exception());
+		}
 	}
 
 	public StatementWrapper prepareStatement(QueryWrapper wrapper) throws SQLException
 	{
+		if (inUse <= 0)
+		{
+			inUse = 1;
+			LogWrapper.getLogger().log(Level.INFO, "Using a unused connection!!", new Exception());
+		}
 		StatementWrapper statement = statements[wrapper.index];
 		if (statement == null)
 		{
@@ -108,6 +123,11 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 
 	public StatementWrapper prepareStatement(QueryWrapper wrapper, int returnGeneratedKeys) throws SQLException
 	{
+		if (inUse <= 0)
+		{
+			inUse = 1;
+			LogWrapper.getLogger().log(Level.INFO, "Using a unused connection!!", new Exception());
+		}
 		StatementWrapper statement = statements[wrapper.index];
 		if (statement == null)
 		{
@@ -135,7 +155,12 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		private static int nextId = 0;
 		private static synchronized int getNextQueryWrapperId()
 		{
-			return nextId++;
+			int i = nextId++;
+			if (i >= NUM_STATEMENTS)
+			{
+				throw new RuntimeException("There are too many statements, need to increase ConnectionWrapper.NUM_STATMENTS");
+			}
+			return i;
 		}
 	}
 	
@@ -153,6 +178,11 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		{
 			this.statement = statement;
 			this.temp = temp;
+		}
+
+		public void setFetchSize(int i) throws SQLException
+		{
+			statement.setFetchSize(i);
 		}
 
 		@Override
@@ -211,9 +241,9 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 			statement.setString(i, checksum);
 		}
 
-		public void executeUpdate() throws SQLException
+		public int executeUpdate() throws SQLException
 		{
-			statement.executeUpdate();
+			return statement.executeUpdate();
 		}
 
 		public ResultSet getGeneratedKeys() throws SQLException
