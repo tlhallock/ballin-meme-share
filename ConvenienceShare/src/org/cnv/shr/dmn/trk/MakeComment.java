@@ -132,15 +132,15 @@ public class MakeComment extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        Services.userThreads.execute(new Runnable() { public void run() {
-        try {
-            client.postComment(new CommentEntry(Services.localMachine.getIdentifier(), destIdent, jTextArea1.getText(), (Integer) jSpinner1.getValue(), System.currentTimeMillis()));
-        } catch (Exception ex) {
-            LogWrapper.getLogger().log(Level.INFO, null, ex);
-            JOptionPane.showMessageDialog(frame, "Unable to post comment.", "Unable to post comment.", JOptionPane.ERROR_MESSAGE);
-        }
-        frame.refreshComments();
-        }});
+        Services.userThreads.execute(() -> {
+					try {
+					    client.postComment(new CommentEntry(Services.localMachine.getIdentifier(), destIdent, jTextArea1.getText(), (Integer) jSpinner1.getValue(), System.currentTimeMillis()));
+					} catch (Exception ex) {
+					    LogWrapper.getLogger().log(Level.INFO, null, ex);
+					    JOptionPane.showMessageDialog(frame, "Unable to post comment.", "Unable to post comment.", JOptionPane.ERROR_MESSAGE);
+					}
+					frame.refreshComments();
+        });
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 

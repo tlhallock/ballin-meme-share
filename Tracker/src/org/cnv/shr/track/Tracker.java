@@ -71,13 +71,11 @@ public class Tracker implements Runnable
 				break;
 			}
 			LogWrapper.getLogger().info("Waiting on " + serverSocket.getLocalPort());
-			
-			try (Socket socket       = serverSocket.accept();
-					
-					// Should be compressed streams...
-					PausableInputStream2 input  = new PausableInputStream2(socket.getInputStream());
-					PausableOutputStream output = new PausableOutputStream(socket.getOutputStream());)
+
+			try (Socket socket = serverSocket.accept();)
 			{
+				PausableInputStream2 input  = new PausableInputStream2(socket.getInputStream());
+				PausableOutputStream output = new PausableOutputStream(socket.getOutputStream());
 				JsonParser parser       = TrackObjectUtils.createParser(input);
 				JsonGenerator generator = TrackObjectUtils.createGenerator(output);
 				
@@ -118,7 +116,6 @@ public class Tracker implements Runnable
 				generator.close();
 				waitForClient(parser);
 				ensureClosed.closed = true;
-				parser.close();
 			}
 			catch (IOException e)
 			{

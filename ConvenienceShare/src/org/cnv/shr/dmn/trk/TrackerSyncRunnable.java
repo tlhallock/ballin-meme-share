@@ -61,14 +61,7 @@ public class TrackerSyncRunnable implements Runnable
 			return;
 		}
 
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				delete(clone);
-			}
-		});
+		Services.userThreads.execute(() -> { delete(clone); });
 	}
 	
 	private void delete(List<FileEntry> clone)

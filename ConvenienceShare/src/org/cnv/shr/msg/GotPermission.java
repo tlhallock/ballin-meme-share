@@ -34,7 +34,6 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
@@ -111,7 +110,8 @@ public class GotPermission extends Message
 			{
 				return;
 			}
-			DbPermissions.setSharingState(remote, directory, permission);
+			directory.setSharesWithUs(permission);
+			directory.tryToSave();
 			Services.notifications.permissionsChanged(remote);
 		}
 	}

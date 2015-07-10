@@ -228,4 +228,7 @@ public class TrackerGui extends BrowserFrame
 	{
 		return currentClient != null && currentMachine != null && currentClient.represents(Track.LOCAL_TRACKER);
 	}
+
+	@Override
+	protected void commentsChanged() {}
 }

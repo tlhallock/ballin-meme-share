@@ -44,6 +44,7 @@ import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.MissingKeyException;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
@@ -88,7 +89,7 @@ public class NewAesKey extends Message
 		connection.decrypt(getKey(connection.getAuthentication().getLocalKey(), encryptedAesKey));
 	}
 	
-	private static RijndaelKey getKey(PublicKey pKey, byte[] bytes) throws IOException, ClassNotFoundException
+	private static RijndaelKey getKey(PublicKey pKey, byte[] bytes) throws IOException, ClassNotFoundException, MissingKeyException
 	{
 		try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(
 				Services.keyManager.decrypt(pKey, bytes)));)

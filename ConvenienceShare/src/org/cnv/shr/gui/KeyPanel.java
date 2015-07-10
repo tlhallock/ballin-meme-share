@@ -63,15 +63,12 @@ public class KeyPanel extends javax.swing.JPanel {
 
 		public void setColor()
 		{
-			Services.userThreads.execute(new Runnable() {
-				@Override
-				public void run()
-				{
-			    if (KeyPairObject.serialize(Services.keyManager.getPublicKey()).equals(KeyPairObject.serialize(key.getPublicKey())))
-			    {
-			    	setBackground(Color.lightGray);
-			    }
-				}});
+			Services.userThreads.execute(() -> {
+			  if (KeyPairObject.serialize(Services.keyManager.getPublicKey()).equals(KeyPairObject.serialize(key.getPublicKey())))
+			  {
+			  	setBackground(Color.lightGray);
+			  }
+			});
 		}
 
     /**
@@ -137,12 +134,8 @@ public class KeyPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        KeyPanel b = this;
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+    	KeyPanel b = this;
+			Services.userThreads.execute(() -> {
 				if (Services.keyManager.getPairs().size() <= 1)
 				{
 					JOptionPane.showMessageDialog(b, "Please leave one key!");
@@ -158,8 +151,7 @@ public class KeyPanel extends javax.swing.JPanel {
 					LogWrapper.getLogger().log(Level.INFO, "Unable to save keys.", ex);
 				}
 				app.refreshKeys();
-			}
-		});
+			});
     }//GEN-LAST:event_jButton1ActionPerformed
 
 

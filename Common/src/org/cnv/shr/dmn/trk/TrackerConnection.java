@@ -41,6 +41,7 @@ import org.cnv.shr.util.CompressionStreams;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.MissingKeyException;
 import org.cnv.shr.util.PausableInputStream2;
 import org.cnv.shr.util.PausableOutputStream;
 
@@ -92,7 +93,16 @@ public abstract class TrackerConnection implements Closeable
 		
 		if (local != null && getNeedsAuthentication())
 		{
-			authenticate();
+			try
+			{
+				authenticate();
+			}
+			catch (MissingKeyException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Cannot connect.", e);
+				socket.close();
+				return;
+			}
 		}
 		
 		// handshake done...
@@ -116,7 +126,7 @@ public abstract class TrackerConnection implements Closeable
 		}
 	}
 
-	private void authenticate() throws IOException
+	private void authenticate() throws IOException, MissingKeyException
 	{
 		generator.writeStartObject();
 		byte[] naunceRequest = new byte[0];
@@ -155,7 +165,7 @@ public abstract class TrackerConnection implements Closeable
 		generator.flush();
 	}
 
-	protected abstract void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey) throws IOException;
+	protected abstract void sendDecryptedNaunce(byte[] naunceRequest, RSAPublicKey publicKey) throws IOException, MissingKeyException;
 
 	private boolean getNeedsAuthentication() throws IOException
 	{

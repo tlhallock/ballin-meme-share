@@ -112,13 +112,9 @@ public class UpdateManager extends TimerTask
 	@Override
 	public void run()
 	{
-		Services.userThreads.execute(new Runnable()
+		Services.userThreads.execute(() ->
 		{
-			@Override
-			public void run()
-			{
 				checkForUpdates(null, true);
-			}
 		});
 	}
 

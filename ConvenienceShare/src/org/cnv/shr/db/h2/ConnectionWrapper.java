@@ -241,9 +241,9 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 			statement.setString(i, checksum);
 		}
 
-		public void executeUpdate() throws SQLException
+		public int executeUpdate() throws SQLException
 		{
-			statement.executeUpdate();
+			return statement.executeUpdate();
 		}
 
 		public ResultSet getGeneratedKeys() throws SQLException

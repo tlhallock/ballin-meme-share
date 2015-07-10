@@ -37,11 +37,11 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
@@ -134,11 +134,11 @@ public class PermissionFailure extends Message
 		if (rootName != null)
 		{
 			RootDirectory root = DbRoots.getRoot(machine, rootName);
-			if (root == null)
+			if (!(root instanceof RemoteDirectory))
 			{
 				return;
 			}
-			DbPermissions.setSharingState(Services.localMachine, root, currentPermission);
+			((RemoteDirectory) root).setSharesWithUs(currentPermission);
 		}
 		else
 		{

@@ -257,47 +257,31 @@ public class AlreadyPresentPanel extends javax.swing.JPanel {
 
 	void useLocalFile()
 	{
-		moveService.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				resolved();
-				
-				AlreadyDownloadedAction.copyLocalFile(remote, local);
-			}
+		moveService.execute(() -> {
+			resolved();
+			AlreadyDownloadedAction.copyLocalFile(remote, local);
 		});
 	}
 	
 	void downloadAnyway()
 	{
-		moveService.execute(new Runnable()
-		{
-			@Override
-			public void run()
+		moveService.execute(() -> {
+			resolved();
+			try
 			{
-				resolved();
-				try
-				{
-					Services.downloads.download(remote, true);
-				}
-				catch (IOException ex)
-				{
-					LogWrapper.getLogger().log(Level.SEVERE, "Unable to download...", ex);
-				}
+				Services.downloads.download(remote, true);
+			}
+			catch (IOException ex)
+			{
+				LogWrapper.getLogger().log(Level.SEVERE, "Unable to download...", ex);
 			}
 		});
 	}
 
 	void cancelDownload()
 	{
-		moveService.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				resolved();
-			}
+		moveService.execute(() -> {
+			resolved();
 		});
 	}
 

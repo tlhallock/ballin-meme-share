@@ -116,29 +116,25 @@ public class ConnectionManager
 		}
 		TmpObject o = new TmpObject();
 		
-		Services.connectionThreads.execute(new Runnable()
-		{
-			public void run()
+		Services.connectionThreads.execute(() -> {
+			try (Communication connection = connect(origin, identifier, authentication, ip, portBegin, portBegin + Math.min(50, numPorts));)
 			{
-				try (Communication connection = connect(origin, identifier, authentication, ip, portBegin, portBegin + Math.min(50, numPorts));)
+				o.connection = connection;
+				if (connection == null)
 				{
-					o.connection = connection;
-					if (connection == null)
-					{
-						return;
-					}
-					connection.setRemoteIdentifier(identifier);
-					connection.setReason(reason);
-					connection.send(new WhoIAm());
-					connection.send(new ConnectionReason(reason));
-					connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
-					ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
-					connectionRunnable.run();
+					return;
 				}
-				catch (Exception e)
-				{
-					LogWrapper.getLogger().info("Unable to open connection: " + e.getMessage());
-				}
+				connection.setRemoteIdentifier(identifier);
+				connection.setReason(reason);
+				connection.send(new WhoIAm());
+				connection.send(new ConnectionReason(reason));
+				connection.send(new OpenConnection(remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, remoteKey)));
+				ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
+				connectionRunnable.run();
+			}
+			catch (Exception e)
+			{
+				LogWrapper.getLogger().info("Unable to open connection: " + e.getMessage());
 			}
 		});
 		try

@@ -102,6 +102,15 @@ public class ConnectionStatistics
 			lastActive = new Date(lastActivity).toString();
 		}
 	}
+
+	public double getSpeedUp()
+	{
+		return speedUp;
+	}
+	public double getSpeedDown()
+	{
+		return speedDown;
+	}
 	
 	public String getBitsUp()
 	{

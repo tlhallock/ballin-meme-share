@@ -83,12 +83,12 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void empty()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		SwingUtilities.invokeLater(new Runnable() {public void run() {
+		SwingUtilities.invokeLater(() -> {
 			synchronized (table)
 			{
 				emptyInternal();
 			}
-		}});
+		});
 	}
 
 	private synchronized void emptyInternal()
@@ -103,12 +103,9 @@ public abstract class DbJTable<T> extends MouseAdapter
 	public void refreshInPlace()
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
-		SwingUtilities.invokeLater(new Runnable() {public void run() {
-			synchronized (table)
-			{
+		SwingUtilities.invokeLater(() -> {
 				refreshInPlaceInternal();
-			}
-		}});
+		});
 	}
 	
 	private synchronized void refreshInPlaceInternal()
@@ -135,15 +132,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 	{
 		// The entire reason these classes exist is to put refreshes on the event queue
 
-		SwingUtilities.invokeLater(new Runnable()
-		{
-			@Override
-			public void run()
+		SwingUtilities.invokeLater(() -> {
+			synchronized (table)
 			{
-				synchronized (table)
-				{
-					refreshInternal();
-				}
+				refreshInternal();
 			}
 		});
 	}
@@ -189,16 +181,11 @@ public abstract class DbJTable<T> extends MouseAdapter
 	
 	public void refresh(T t)
 	{
-		SwingUtilities.invokeLater(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		SwingUtilities.invokeLater(() -> {
 				synchronized (table)
 				{
 					refreshInternal(t);
 				}
-			}
 		});
 	}
 	
@@ -251,15 +238,12 @@ public abstract class DbJTable<T> extends MouseAdapter
 	
 	public void setValues(T t, HashMap<String, Object> vals, int rowGuess)
 	{
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run()
+		SwingUtilities.invokeLater(() -> {
+			synchronized (table)
 			{
-				synchronized (table)
-				{
-					setValuesInternal(t, vals, rowGuess);
-				}
-			}});
+				setValuesInternal(t, vals, rowGuess);
+			}
+		});
 	}
 	private synchronized void setValuesInternal(T t, HashMap<String, Object> vals, int rowGuess)
 	{
@@ -314,14 +298,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 //	public void removeSelected()
 //	{
 //		// The entire reason these classes exist is to put refreshes on the event queue
-//		SwingUtilities.invokeLater(new Runnable(){
-//			@Override
-//			public void run()
+//		SwingUtilities.invokeLater(() -> {
+//			synchronized (table)
 //			{
-//				synchronized (table)
-//				{
-//					removeSelectedInternal();
-//				}
+//				removeSelectedInternal();
 //			}
 //		});
 //	}
@@ -427,43 +407,35 @@ public abstract class DbJTable<T> extends MouseAdapter
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run()
+			SwingUtilities.invokeLater(() -> {
+				int[] selectedRows2 = getSelectedRows();
+				if (selectedRows2 == null)
 				{
-					int[] selectedRows2 = getSelectedRows();
-					if (selectedRows2 == null)
+					LogWrapper.getLogger().info("No rows selected!");
+					return;
+				}
+				for (int i = selectedRows2.length - 1; i >= 0; i--)
+				{
+					final T create = create(selectedRows2[i]);
+					if (create == null)
 					{
-						LogWrapper.getLogger().info("No rows selected!");
+						LogWrapper.getLogger().info("Unable to find record from " + selectedRows2[i]);
 						return;
 					}
-					for (int i = selectedRows2.length - 1; i >= 0; i--)
-					{
-						final T create = create(selectedRows2[i]);
-						if (create == null)
-						{
-							LogWrapper.getLogger().info("Unable to find record from " + selectedRows2[i]);
-							return;
-						}
 
-						LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
-						Services.userThreads.execute(new Runnable()
+					LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
+					Services.userThreads.execute(() -> {
+						try
 						{
-							@Override
-							public void run()
-							{
-								try
-								{
-									perform(create);
-								}
-								catch (Exception ex)
-								{
-									LogWrapper.getLogger().log(Level.INFO, null, ex);
-								}
-							};
-						});
-					}
-				}});
+							perform(create);
+						}
+						catch (Exception ex)
+						{
+							LogWrapper.getLogger().log(Level.INFO, null, ex);
+						}
+					});
+				}
+			});
 		}
 	}
 }

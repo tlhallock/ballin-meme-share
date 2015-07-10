@@ -300,13 +300,8 @@ public class ColorSetter
 			LogWrapper.getLogger().info("Setting " + colorKey + " to " + c);
 	  	properties.setProperty(colorKey, ColorUtils.serializeColor(c));
 			store();
-			Services.userThreads.execute(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					notifyListeners(c);
-				}
+			Services.userThreads.execute(() -> {
+				notifyListeners(c);
 			});
 		}
 		

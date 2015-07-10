@@ -48,11 +48,12 @@ import org.cnv.shr.util.LogWrapper;
 
 public class DbPaths
 {
-	// TODO: This statement is problematic, as it has h2 concurrency issues.
-	// Need to break it up
-	private static final QueryWrapper DELETE = new QueryWrapper("delete from PELEM "
+	// This statement was problematic when it just deleted all records all at once, as it has h2 concurrency issues.
+	// That is why it is broken up with a limit
+	private static final QueryWrapper DELETE_SOME_UNUSED = new QueryWrapper("delete from PELEM "
 											+ " where PELEM.P_ID <> 0 "
-											+ " and not exists (select RID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM = PELEM.P_ID)");
+											+ " and not exists (select RID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM = PELEM.P_ID)"
+											+ " limit 10;");
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete ROOT_CONTAINS where RID=? and PELEM=?;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
 										 "join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID " + 
@@ -115,10 +116,10 @@ public class DbPaths
 		return null;
 	}
 
-	public static String getPathString(long pid)
-	{
-		return "Needs to be implemented.";
-	}
+//	public static String getPathString(long pid)
+//	{
+//		return "Needs to be implemented.";
+//	}
 	
 	public static void setPathElementIds(PathElement root, PathElement[] pathElems)
 	{
@@ -266,9 +267,14 @@ public class DbPaths
 	public static void removeUnusedPaths()
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(DELETE);)
+				StatementWrapper stmt = c.prepareStatement(DELETE_SOME_UNUSED);)
 		{
-			stmt.execute();
+			int numDeleted;
+			do
+			{
+				numDeleted = stmt.executeUpdate();
+				LogWrapper.getLogger().fine("Removed " + numDeleted + " unused paths.");
+			} while (numDeleted > 0);
 		}
 		catch (SQLException e)
 		{

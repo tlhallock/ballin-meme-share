@@ -31,11 +31,13 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
+import org.cnv.shr.util.MissingKeyException;
+
 public interface UpdateInfo
 {
 	public String getIp();
 	public int getPort();
-	public PrivateKey getPrivateKey(PublicKey usedKey);
+	public PrivateKey getPrivateKey(PublicKey usedKey) throws MissingKeyException;
 	public PublicKey getLatestPublicKey();
 	public long getLastKeyTimeStamp();
 	public void useNewKey() throws NoSuchAlgorithmException, NoSuchProviderException, IOException;

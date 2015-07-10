@@ -91,17 +91,23 @@ public class PathList extends Message
 			}
 			final SharedFile local = DbFiles.getFile(localByName, element);
 			
-			if (count++ > 50)
+			if (count++ > 100)
 			{
 				// TODO: compress this
 				communication.send(currentMessage);
 				currentMessage.subDirs.clear();
 				currentMessage.children.clear();
+				count = 0;
 			}
 			
 			if (local == null)
 			{
-				currentMessage.subDirs.add(element.getUnbrokenName());
+				String unbrokenName = element.getUnbrokenName();
+				if (!unbrokenName.endsWith("/"))
+				{
+					unbrokenName = unbrokenName + "/";
+				}
+				currentMessage.subDirs.add(unbrokenName);
 			}
 			else
 			{

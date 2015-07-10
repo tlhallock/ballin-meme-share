@@ -69,25 +69,18 @@ public class UserActions
 {
 	public static void removeMachine(final Machine remote)
 	{
-		Services.userThreads.execute(new Runnable()
+		Services.userThreads.execute(() ->
 		{
-			@Override
-			public void run()
-			{
 				DbMachines.delete(remote);
 				// Is the first of these two really necessary?
 				Services.notifications.remoteChanged(remote);
 				Services.notifications.remotesChanged();
-			}
 		});
 	}
 
 	public static void addMachine(final String url, final AddMachineParams params)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
+		Services.userThreads.execute(() ->
 			{
 				try
 				{
@@ -144,19 +137,13 @@ public class UserActions
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Unable to discover " + url, e);
 				}
-			}
 		});
 	}
 
 	public static void syncRoots(JFrame origin, final Machine m)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		Services.userThreads.execute(() -> {
 				syncRootsNow(origin, m);
-			}
 		});
 	}
 	
@@ -195,11 +182,7 @@ public class UserActions
 
 	public static void findTrackers(JFrame origin, Machine machine)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		Services.userThreads.execute(() -> {
 				try
 				{
 					LogWrapper.getLogger().info("Requesting trackers from " + machine.getName());
@@ -223,17 +206,12 @@ public class UserActions
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Unable to find trackers from " + machine.getUrl(), e);
 				}
-			}
 		});
 	}
 	
 	public static void findMachines(JFrame origin, final Machine m, HashSet<String> foundUrls)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		Services.userThreads.execute(() -> {
 				try
 				{
 					LogWrapper.getLogger().info("Requesting peers from " + m.getName());
@@ -265,16 +243,12 @@ public class UserActions
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Unable to discover refresh " + m.getUrl(), e);
 				}
-			}
 		});
 	}
 
 	public static void syncAllLocals(JFrame origin)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
+		Services.userThreads.execute(() ->
 			{
 				LinkedList<LocalDirectory> locals = new LinkedList<>();
 				try (final DbIterator<LocalDirectory> listLocals = DbRoots.listLocals();)
@@ -290,20 +264,24 @@ public class UserActions
 					// Services.db.removeUnusedPaths();
 					Services.notifications.localsChanged();
 				}
-			}
 		});
 	}
 
 	public static void syncRemote(JFrame origin, final RootDirectory directory)
 	{
-		Services.userThreads.execute(new Runnable()
+		Services.userThreads.execute(() ->
 		{
-			@Override
-			public void run()
-			{
-				directory.synchronize(origin, null);
-			}
+			directory.synchronize(origin, null);
 		});
+	}
+
+	public static LocalDirectoryView showLocal(LocalDirectory root)
+	{
+		LocalDirectoryView localDirectoryView = new LocalDirectoryView(root);
+		Services.notifications.registerWindow(localDirectoryView);
+		localDirectoryView.setVisible(true);
+		LogWrapper.getLogger().info("Displaying " + root.getName());
+		return localDirectoryView;
 	}
 
 	public static LocalDirectory addLocalImmediately(Path localDirectory, String name)
@@ -344,7 +322,6 @@ public class UserActions
 			}
 			if (local != null)
 			{
-				DbPaths.pathLiesIn(pathElement, local);
 				Services.notifications.localChanged(local);
 			}
 			return local;
@@ -358,27 +335,13 @@ public class UserActions
 
 	public static void userSync(JFrame origin, final LocalDirectory d, final List<? extends SynchronizationListener> listeners)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				d.synchronize(origin, listeners);
-			}
-		});
+		Services.userThreads.execute(() -> { d.synchronize(origin, listeners); });
 	}
 
 	public static void remove(final RootDirectory l)
 	{
 		l.stopSynchronizing();
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				DbRoots.deleteRoot(l);
-			}
-		});
+		Services.userThreads.execute(() -> { DbRoots.deleteRoot(l); });
 	}
 
 	public static void shareWith(final Machine m, final SharingState share)
@@ -389,50 +352,33 @@ public class UserActions
 
 	public static void download(final SharedFile remote)
 	{
-		Services.downloads.downloadThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
+		Services.downloads.downloadThreads.execute(() -> {
+			try
 			{
-				try
-				{
-					Services.downloads.download(remote);
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to download " + remote, e);
-				}
+				Services.downloads.download(remote);
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to download " + remote, e);
 			}
 		});
 	}
 
 	public static void debug()
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				DbTables.debugDb();
-			}
-		});
+		Services.userThreads.execute(() -> { DbTables.debugDb(); } );
 	}
 
 	public static void deleteDb()
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
+		Services.userThreads.execute(() -> {
+			try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();)
 			{
-				try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();)
-				{
-					DbTables.deleteDb(c);
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
+				DbTables.deleteDb(c);
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
 			}
 		});
 	}
@@ -453,58 +399,50 @@ public class UserActions
 
 	public static void showGui(SplashScreen screen)
 	{
-		Services.userThreads.execute(new Runnable()
+		Services.userThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			try
 			{
-				try
+				Application application = new Application();
+				Services.notifications.registerWindow(application);
+				application.setVisible(true);
+				application.refreshAll();
+				
+				if (screen != null)
 				{
-					Application application = new Application();
-					Services.notifications.registerWindow(application);
-					application.setVisible(true);
-					application.refreshAll();
-					
-					if (screen != null)
-					{
-						screen.dispose();
-					}
+					screen.dispose();
 				}
-				catch (Exception ex)
-				{
-					LogWrapper.getLogger().log(Level.SEVERE, "Unable to start GUI.\nQuiting.", ex);
-					Services.quiter.quit();
-				}
+			}
+			catch (Exception ex)
+			{
+				LogWrapper.getLogger().log(Level.SEVERE, "Unable to start GUI.\nQuiting.", ex);
+				Services.quiter.quit();
 			}
 		});
 	}
 
 	static void findMachines(JFrame origin)
 	{
-		Services.userThreads.execute(new Runnable()
+		Services.userThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			HashSet<String> foundUrls = new HashSet<>();
+			foundUrls.add(Services.localMachine.getIp() + ":" + Services.localMachine.getPort());
+			
+			LinkedList<ClientTrackerClient> list = new LinkedList<>();
+			synchronized (Services.trackers)
 			{
-				HashSet<String> foundUrls = new HashSet<>();
-				foundUrls.add(Services.localMachine.getIp() + ":" + Services.localMachine.getPort());
-				
-				LinkedList<ClientTrackerClient> list = new LinkedList<>();
-				synchronized (Services.trackers)
+				list.addAll(Services.trackers.getClients());
+			}
+			for (ClientTrackerClient client : list)
+			{
+				findMachines(origin, client, foundUrls);
+			}
+			
+			try (DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();)
+			{
+				while (listRemoteMachines.hasNext())
 				{
-					list.addAll(Services.trackers.getClients());
-				}
-				for (ClientTrackerClient client : list)
-				{
-					findMachines(origin, client, foundUrls);
-				}
-				
-				try (DbIterator<Machine> listRemoteMachines = DbMachines.listRemoteMachines();)
-				{
-					while (listRemoteMachines.hasNext())
-					{
-						findMachines(origin, listRemoteMachines.next(), foundUrls);
-					}
+					findMachines(origin, listRemoteMachines.next(), foundUrls);
 				}
 			}
 		});
@@ -565,20 +503,16 @@ public class UserActions
 
     static void findTrackers()
     {
-  		Services.userThreads.execute(new Runnable()
+  		Services.userThreads.execute(() ->
   		{
-  			@Override
-  			public void run()
+  			LinkedList<ClientTrackerClient> list = new LinkedList<>();
+  			synchronized (Services.trackers)
   			{
-  				LinkedList<ClientTrackerClient> list = new LinkedList<>();
-  				synchronized (Services.trackers)
-  				{
-  					list.addAll(Services.trackers.getClients());
-  				}
-  				for (ClientTrackerClient client : list)
-  				{
-  					client.addOthers();
-  				}
+  				list.addAll(Services.trackers.getClients());
+  			}
+  			for (ClientTrackerClient client : list)
+  			{
+  				client.addOthers();
   			}
   		});
   	}
@@ -587,6 +521,8 @@ public class UserActions
 	{
 		syncRootsNow(origin, machine);
 
+		// Is the rest of this really necessary?
+		// Permissions should be synced inside of syncRoots...
 		try
 		{
 			Communication openConnection = Services.networkManager.openConnection(origin, machine, false, "Check permissions");
@@ -634,9 +570,7 @@ public class UserActions
 			return;
 		}
 		
-		Services.userThreads.execute(new Runnable() { public void run() {
-			syncPermissions(viewer, machine);
-		}});
+		Services.userThreads.execute(() -> { syncPermissions(viewer, machine); });
 	}
 
 	public static boolean checkIfMachineShouldNotReplaceOld(String ident, String ip, int port)

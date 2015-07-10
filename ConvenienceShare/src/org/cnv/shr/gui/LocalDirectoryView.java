@@ -144,12 +144,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		
 		refresh(getLocal());
 
-		Services.userThreads.execute(new Runnable() {
-			@Override
-			public void run()
-			{
-				DbPaths.cleanIgnores(getLocal());
-			}});
+		Services.userThreads.execute(() -> { DbPaths.cleanIgnores(getLocal()); });
 	}
 
     /**

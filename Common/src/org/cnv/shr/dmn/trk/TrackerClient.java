@@ -95,6 +95,7 @@ public abstract class TrackerClient
 
 	public CloseableIterator<MachineEntry> list(int start) throws Exception
 	{
+		LogWrapper.getLogger().info("Listing from " + start);
 		TrackerRequest trackerRequest = new TrackerRequest(TrackerAction.LIST_ALL_MACHINES);
 		trackerRequest.setParameter("offset", String.valueOf(start));
 		TrackerConnection connection = connect(trackerRequest);
@@ -112,6 +113,7 @@ public abstract class TrackerClient
 				else
 				{
 					next = entry;
+					LogWrapper.getLogger().fine("Listed machine " + next);
 				}
 			}
 
@@ -137,6 +139,7 @@ public abstract class TrackerClient
 				else
 				{
 					next = entry;
+					LogWrapper.getLogger().fine("Listed machine " + next);
 				}
 				return returnValue;
 			}
@@ -144,6 +147,7 @@ public abstract class TrackerClient
 			@Override
 			public void close()
 			{
+				LogWrapper.getLogger().fine("Done listing.");
 				next = null;
 				if (connection.socket.isClosed())
 				{

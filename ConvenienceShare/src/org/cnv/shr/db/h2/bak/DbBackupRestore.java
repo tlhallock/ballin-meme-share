@@ -166,10 +166,7 @@ public class DbBackupRestore
 
 	public static void restoreDatabase(Path f, boolean hide)
 	{
-		Services.userThreads.execute(new Runnable()
-		{
-			@Override
-			public void run()
+		Services.userThreads.execute(() ->
 			{
 				try
 				{
@@ -179,8 +176,7 @@ public class DbBackupRestore
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Unable to restore database.", e);
 				}
-			}
-		});
+			});
 	}
 	
 	private synchronized static void restoreDatabaseInternal(boolean hide, Path f) throws IOException, SQLException

@@ -156,46 +156,34 @@ public class Services
 
 	private static void runStartupServices()
 	{
-		userThreads.execute(new Runnable()
+		userThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			if (settings.runTrackerOnStart.get())
 			{
-				if (settings.runTrackerOnStart.get())
-				{
-					Trackers.launchTracker(false);
-				}
+				Trackers.launchTracker(false);
 			}
 		});
-		userThreads.execute(new Runnable()
+		userThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			if (settings.autoMapPorts.get())
 			{
-				if (settings.autoMapPorts.get())
-				{
-					PortMapper.addDesiredPorts(settings.getLocalIp(), System.out);
-				}
+				PortMapper.addDesiredPorts(settings.getLocalIp(), System.out);
 			}
 		});
-		userThreads.execute(new Runnable()
+		userThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			for (ClientTrackerClient client : trackers.getClients())
 			{
-				for (ClientTrackerClient client : trackers.getClients())
+				TrackerEntry entry = client.getEntry();
+				if (entry.shouldSync() && entry.supportsMetaData())
 				{
-					TrackerEntry entry = client.getEntry();
-					if (entry.shouldSync() && entry.supportsMetaData())
+					try
 					{
-						try
-						{
-							client.sync();
-						}
-						catch (Exception ex)
-						{
-							LogWrapper.getLogger().log(Level.INFO, "Unable to sync to " + entry.toDebugString(), ex);
-						}
+						client.sync();
+					}
+					catch (Exception ex)
+					{
+						LogWrapper.getLogger().log(Level.INFO, "Unable to sync to " + entry.toDebugString(), ex);
 					}
 				}
 			}

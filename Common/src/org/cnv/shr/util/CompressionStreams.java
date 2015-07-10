@@ -9,6 +9,23 @@ import java.util.zip.ZipOutputStream;
 
 public class CompressionStreams
 {
+	
+	public static abstract class HardToCloseInputStream extends InputStream
+	{
+		public abstract void actuallyClose() throws IOException;
+	}
+	
+	public static abstract class HardToCloseOutputStream extends OutputStream
+	{
+		public abstract void actuallyClose() throws IOException;
+	}
+	
+	
+	
+	
+	
+	
+	
 	private static ZipEntry createZipEntry(int increment)
 	{
 		ZipEntry zipEntry = new ZipEntry(String.valueOf(increment));
@@ -26,7 +43,7 @@ public class CompressionStreams
 		}
 	}
 
-	public static OutputStream newCompressedOutputStream(PausableOutputStream delegate) throws IOException
+	public static HardToCloseOutputStream newCompressedOutputStream(PausableOutputStream delegate) throws IOException
 	{
 		ZipStats stats = new ZipStats();
 		delegate.stopOtherSide();
@@ -62,7 +79,7 @@ public class CompressionStreams
 		
 		
 		
-		OutputStream outerStream = new OutputStream()
+		HardToCloseOutputStream outerStream = new HardToCloseOutputStream()
 		{
 			int nextName = 1;
 			@Override
@@ -92,17 +109,23 @@ public class CompressionStreams
 				delegate.flush();
 				LogWrapper.getLogger().info(stats.toString());
 			}
+			@Override
+			public void actuallyClose() throws IOException
+			{
+				close();
+				delegate.actuallyClose();
+			}
 		};
 		return outerStream;
 	}
 
-	public static InputStream newCompressedInputStream(PausableInputStream2 delegate) throws IOException
+	public static HardToCloseInputStream newCompressedInputStream(PausableInputStream2 delegate) throws IOException
 	{
 		delegate.startAgain();
 		ZipInputStream zip = new ZipInputStream(delegate);
 		zip.getNextEntry();
 
-		InputStream outer = new InputStream()
+		HardToCloseInputStream outer = new HardToCloseInputStream()
 		{
 			@Override
 			public int available() throws IOException
@@ -137,6 +160,12 @@ public class CompressionStreams
 			{
 				zip.close();
 				delegate.startAgain();
+			}
+			@Override
+			public void actuallyClose() throws IOException
+			{
+				zip.close();
+				delegate.actuallyClose();
 			}
 		};
 		return outer;

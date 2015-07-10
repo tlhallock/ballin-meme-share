@@ -250,20 +250,16 @@ public class ServeInstance extends TimerTask
 	@Override
 	public void run()
 	{
-		Services.downloads.downloadThreads.execute(new Runnable()
+		Services.downloads.downloadThreads.execute(() ->
 		{
-			@Override
-			public void run()
+			try
 			{
-				try
-				{
-					connection.send(new RequestCompletionStatus(local.getFileEntry()));
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Could not request status.", e);
-					fail("Unable to request status.");
-				}
+				connection.send(new RequestCompletionStatus(local.getFileEntry()));
+			}
+			catch (IOException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Could not request status.", e);
+				fail("Unable to request status.");
 			}
 		});
 	}

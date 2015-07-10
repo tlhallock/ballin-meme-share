@@ -89,7 +89,6 @@ public class Track
 			}
 		});
 		
-		
 		LogWrapper.getLogger().info("Address: " + InetAddress.getLocalHost().getHostAddress());
 		
 		threads = Executors.newCachedThreadPool();

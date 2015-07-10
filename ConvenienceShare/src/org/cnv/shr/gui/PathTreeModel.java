@@ -356,7 +356,7 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 	@Override
 	public void windowClosed(WindowEvent e)
 	{
-		shutDown();
+		Services.userThreads.execute(() -> { shutDown(); });
 	}
 	@Override
 	public void windowOpened(WindowEvent e) {}

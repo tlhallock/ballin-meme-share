@@ -33,15 +33,12 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbRoots;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.gui.DiskUsage;
-import org.cnv.shr.gui.LocalDirectoryView;
 import org.cnv.shr.gui.NumberOfFiles;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.util.CloseableIterator;
-import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class LocalTable extends DbJTable<LocalDirectory>
@@ -63,10 +60,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 			@Override
 			void perform(LocalDirectory root)
 			{
-						LocalDirectoryView localDirectoryView = new LocalDirectoryView(root);
-						Services.notifications.registerWindow(localDirectoryView);
-						localDirectoryView.setVisible(true);
-						LogWrapper.getLogger().info("Displaying " + root.getName());
+				UserActions.showLocal(root);
 			}
 		}, true);
 		addListener(new TableRightClickListener()

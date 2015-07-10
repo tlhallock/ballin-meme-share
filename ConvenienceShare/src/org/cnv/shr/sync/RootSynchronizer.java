@@ -125,10 +125,13 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 			LogWrapper.getLogger().log(Level.INFO, "Unable to close iterator", e);
 		}
 
+		local.setStats();
+
 		for (SynchronizationListener listener : listeners)
 		{
 			listener.syncDone(this);
 		}
+		
 		Thread.currentThread().setName(currentName);
 	}
 	
@@ -188,8 +191,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 			final FileSource f) throws IOException
 	{
 		final String name = PathElement.sanitizeFilename(f);
-		if (name == null 
-				|| accountedFor.contains(name))
+		if (name == null || accountedFor.contains(name))
 		{
 			return;
 		}

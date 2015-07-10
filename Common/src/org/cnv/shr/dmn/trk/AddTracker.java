@@ -34,11 +34,12 @@ import org.cnv.shr.util.Misc;
  */
 public abstract class AddTracker extends javax.swing.JFrame {
 
-    BrowserFrame frame;
+    private BrowserFrame frame;
     /**
      * Creates new form AddTracker
      */
-    public AddTracker(BrowserFrame frame) {
+    public AddTracker(BrowserFrame frame)
+    {
         initComponents();
         this.frame = frame;
         jSpinner1.setValue(TrackerEntry.TRACKER_PORT_BEGIN);

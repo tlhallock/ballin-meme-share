@@ -3,6 +3,8 @@ package org.cnv.shr.util;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.cnv.shr.util.CompressionStreams.HardToCloseInputStream;
+
 /**
  * The json parser continues to read after the current object.
  * When I change streams, this messes up the json.
@@ -10,7 +12,7 @@ import java.io.InputStream;
  * 
  * It has a special byte that signals the end of the current stream, so that we don't read past it.
  */
-public class PausableInputStream2 extends InputStream
+public class PausableInputStream2 extends HardToCloseInputStream
 {
 	public static final int PAUSE_BYTE = 13;
 	
@@ -206,5 +208,11 @@ public class PausableInputStream2 extends InputStream
 			}
 		}
 		return len;
+	}
+	
+	@Override
+	public void actuallyClose() throws IOException
+	{
+		delegate.close();
 	}
 }

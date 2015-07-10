@@ -56,10 +56,7 @@ public class Notifications implements WindowFocusListener
 	private final LinkedList<WeakReference<NotificationListener>> weakListeners = new LinkedList<>();
 	private boolean stop;
 	private final LinkedBlockingDeque<Runnable> notifiers = new LinkedBlockingDeque<>();
-	private final Thread notificationThread = new Thread(new Runnable() {
-		@Override
-		public void run()
-		{
+	private final Thread notificationThread = new Thread(() -> {
 			while (!stop)
 			{
 				try
@@ -70,8 +67,7 @@ public class Notifications implements WindowFocusListener
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Unable to notify.", ex);
 				}
-			}
-		}});
+			}});
 
 	{ add(new LogListener()); }
 
@@ -134,317 +130,212 @@ public class Notifications implements WindowFocusListener
 	
 	public void permissionFailure(final PermissionFailureEvent event)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.permissionFailure(event);
 				}
-			}
-		});
+			});
 	}
 
 	public void localsChanged()
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.localsChanged();
 				}
-			}
-		});
+			});
 	}
 
 	public void localChanged(final LocalDirectory local)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.localDirectoryChanged(local);
 				}
-			}
-		});
+			});
 	}
 
 	public void remoteChanged(final Machine machine)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.remoteChanged(machine);
 				}
-			}
-		});
+			});
 	}
 
 	public void remotesChanged()
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.remotesChanged();
 				}
-			}
 		});
 	}
 
 	public void remoteDirectoryChanged(final RemoteDirectory remote)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.remoteDirectoryChanged(remote);
 				}
-			}
-		});
+			});
 	}
 
 	public void downloadAdded(final DownloadInstance d)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.downloadAdded(d);
 				}
-			}
-		});
+			});
 	}
 
 	public void downloadRemoved(final DownloadInstance d)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.downloadRemoved(d);
 				}
-			}
-		});
+			});
 	}
 
 	public void downloadDone(final DownloadInstance d)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.downloadDone(d);
 				}
-			}
-		});
+			});
 	}
 
 	public void serveAdded(final ServeInstance serveInstance)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.serveAdded(serveInstance);
 				}
-			}
-		});
+			});
 	}
 
 	public void serveRemoved(final ServeInstance serveInstance)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.serveRemoved(serveInstance);
 				}
-			}
-		});
+			});
 	}
 
 	public void connectionOpened(final Communication c)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.connectionOpened(c);
 				}
-			}
-		});
+			});
 	}
 
 	public void connectionClosed(final Communication c)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.connectionClosed(c);
 				}
-			}
-		});
+			});
 	}
 
 	public void dbException(final Exception ex)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.dbException(ex);
 				}
-			}
-		});
+			});
 	}
 
 	public void messageReceived(final UserMessage message)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.messageReceived(message);
 				}
-			}
 		});
 	}
 
 	public void messagesChanged()
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.messagesChanged();
 				}
-			}
-		});
+			});
 	}
 
 	public void fileAdded(final SharedFile lFile)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.fileAdded(lFile);
 				}
-			}
-		});
+			});
 	}
 
 	public void fileChanged(final SharedFile lFile)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.fileChanged(lFile);
 				}
-			}
-		});
+			});
 	}
 
 	public void fileDeleted(final LocalFile localFile)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.fileChanged(localFile);
 				}
-			}
-		});
+			});
 	}
 	
 	public void permissionsChanged(Machine remote)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.permissionsChanged(remote);
 				}
-			}
-		});
+			});
 	}
 
 	public void permissionsChanged(RemoteDirectory remote)
 	{
-		notifiers.add(new Runnable()
-		{
-			@Override
-			public void run()
-			{
+		notifiers.add(() -> {
 				for (final NotificationListener listener : getListeners())
 				{
 					listener.permissionsChanged(remote);
 				}
-			}
-		});
+			});
 	}
 	
 	private static Point midPoint(JFrame frame)

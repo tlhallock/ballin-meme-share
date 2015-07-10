@@ -203,16 +203,16 @@ public class KeysService
 		}
 	}
 
-	public byte[] decrypt(PublicKey pKey, byte[] encrypted) throws IOException
+	public byte[] decrypt(PublicKey pKey, byte[] encrypted) throws IOException, MissingKeyException
 	{
-		if (pKey == null) return new byte[0];
+		if (pKey == null) throw new MissingKeyException("Invalid paramter");
 		return decrypt(getPrivateKey(pKey), encrypted);
 	}
 
-	public byte[] decrypt(PrivateKey privateKey, byte[] encrypted) throws IOException
+	public byte[] decrypt(PrivateKey privateKey, byte[] encrypted) throws IOException, MissingKeyException
 	{
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		if (privateKey == null) return new byte[0];
+		if (privateKey == null) throw new MissingKeyException("Unable to find private key for give public key");
 		
 		byte[] encryptedChunk;
 		try (InputStream input = new ByteArrayInputStream(encrypted))
@@ -293,12 +293,12 @@ public class KeysService
 		}
 	}
 
-	public PrivateKey getPrivateKey(PublicKey publicKey)
+	public PrivateKey getPrivateKey(PublicKey publicKey) throws MissingKeyException
 	{
 		KeyPairObject keyPairObject = keys.get(KeyPairObject.hashObject(publicKey));
 		if (keyPairObject == null)
 		{
-			return null;
+			throw new MissingKeyException("No private key for public key.");
 		}
 		return keyPairObject.privateKey;
 	}

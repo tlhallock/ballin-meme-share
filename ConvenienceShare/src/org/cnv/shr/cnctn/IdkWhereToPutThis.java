@@ -53,28 +53,21 @@ public class IdkWhereToPutThis
 	
 	private static TimerTask getAttempter()
 	{
-		return new TimerTask()
-		{
+		return new TimerTask() {
 			@Override
 			public void run()
 			{
-				Services.userThreads.execute(new Runnable()
-				{
-					@Override
-					public void run()
+				Services.userThreads.execute(() -> {
+					try
 					{
-						try
-						{
-							attemptAuthentications(Services.keyManager.getPendingAuthenticationRequests());
-						}
-						catch (IOException e)
-						{
-							e.printStackTrace();
-						}
+						attemptAuthentications(Services.keyManager.getPendingAuthenticationRequests());
+					}
+					catch (IOException e)
+					{
+						e.printStackTrace();
 					}
 				});
-			}
-		};
+			}};
 	}
 	
 	public static void attemptAuthentications(Set<String> pendingAuthenticationRequests) throws IOException

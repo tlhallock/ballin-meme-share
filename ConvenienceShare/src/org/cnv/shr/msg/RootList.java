@@ -89,14 +89,10 @@ public class RootList extends Message
 		HashSet<String> accountedFor = new HashSet<>();
 		Machine machine = connection.getMachine();
 		
-		boolean changed = true;
 		for (RootListChild rootC : sharedDirectories)
 		{
-			RootDirectory root = rootC.getRoot(connection.getMachine());
+			RootDirectory root = rootC.createRoot(connection.getMachine());
 			accountedFor.add(root.getName());
-			root.setMachine(machine);
-			root.tryToSave();
-			changed = true;
 		}
 
 		List<RootDirectory> toDelete = new LinkedList<>();
@@ -111,7 +107,6 @@ public class RootList extends Message
 				}
 				toDelete.add(next);
 				DbRoots.deleteRoot(next);
-				changed = true;
 			}
 		}
 		
@@ -122,10 +117,8 @@ public class RootList extends Message
 			Services.notifications.remoteDirectoryChanged((RemoteDirectory) root);
 		}
 		
-		if (changed)
-		{
-			Services.notifications.remoteChanged(machine);
-		}
+		// TODO: should only happen if there was a change...
+		Services.notifications.remoteChanged(machine);
 	}
 
 	@Override

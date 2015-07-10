@@ -257,19 +257,19 @@ public class DownloadTable extends DbJTable<Download>
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(fileEntry);
 		
 		
-		currentRow.put("Machine",           machine.getName()                                                         );
-		currentRow.put("Directory",         directory.getName()                                                       );
-		currentRow.put("File",              file.getPath().getUnbrokenName()                                          );
-		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                         );
-		currentRow.put("Added on",          new Date(download.getAdded())                                             );
-		currentRow.put("Status",            download.getState().humanReadable()                                       );
-		currentRow.put("Priority",          String.valueOf(download.getPriority())                                    );
-		currentRow.put("Local path",        download.getTargetFile().toString()                                       );
-		currentRow.put("Number of Mirrors", "1"                                                                       );
-		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()            );
-		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100"         
-				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage(false) * 100));
-		currentRow.put("Id",                String.valueOf(download.getId())                                          );
+		currentRow.put("Machine",           machine.getName()                                                                );
+		currentRow.put("Directory",         directory.getName()                                                              );
+		currentRow.put("File",              file.getPath().getUnbrokenName()                                                 );
+		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                                );
+		currentRow.put("Added on",          new Date(download.getAdded())                                                    );
+		currentRow.put("Status",            download.getState().humanReadable()                                              );
+		currentRow.put("Priority",          String.valueOf(download.getPriority())                                           );
+		currentRow.put("Local path",        download.getTargetFile().toString()                                              );
+		currentRow.put("Number of Mirrors", String.valueOf(downloadInstance == null ? 0 : downloadInstance.getNumSeeders())  );
+		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()                   );
+		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100"                      
+				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage(false) * 100)       );
+		currentRow.put("Id",                String.valueOf(download.getId())                                                 );
 		
 		return true;
 	}
