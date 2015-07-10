@@ -133,7 +133,7 @@ public class DownloadBackup implements Jsonable
 				return;
 			}
 		}
-		PathElement pathElement = DbPaths.getPathElement(remotePath);
+		PathElement pathElement = DbPaths.getPathElement(remotePath, false);
 		DbPaths.pathLiesIn(pathElement, root);
 		RemoteFile remoteFile = new RemoteFile(root, pathElement, fileSize, checksum, tags, lastModified);
 		try

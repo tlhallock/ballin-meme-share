@@ -296,7 +296,7 @@ public class UserActions
 				name = localDirectory.getFileName().toString();
 			}
 			
-			String dbPath = Misc.sanitizePath(localDirectory.toString());
+			String dbPath = Misc.sanitizePath(localDirectory.toString(), true);
 			LocalDirectory local2 = DbRoots.getLocal(dbPath);
 			if (local2 != null)
 			{
@@ -313,7 +313,7 @@ public class UserActions
 				LogWrapper.getLogger().info("Local directory with this name already exists.\nTrying " + name + ".");
 			}
 
-			PathElement pathElement = DbPaths.getPathElement(localDirectory);
+			PathElement pathElement = DbPaths.getPathElement(localDirectory, true);
 			LocalDirectory local = new LocalDirectory(pathElement, name);
 			local.tryToSave();
 			if (local.getId() == null)

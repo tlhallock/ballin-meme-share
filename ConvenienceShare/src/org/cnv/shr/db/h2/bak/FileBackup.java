@@ -68,7 +68,7 @@ public class FileBackup implements Jsonable
 	public void save(ConnectionWrapper wrapper)
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
-		PathElement element = DbPaths.getPathElement(path);
+		PathElement element = DbPaths.getPathElement(path, false);
 		LocalFile localFile = new LocalFile(localByName, element, tags, fileSize, lastModified, checksum);
 		try
 		{

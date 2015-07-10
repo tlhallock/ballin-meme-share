@@ -57,11 +57,7 @@ public class RemoteDirectory extends RootDirectory
 		super(machine, name, tags, description);
 		
 		String pathStr = Services.settings.downloadsDirectory.getPath().resolve(getLocalMirrorName()).toAbsolutePath().toString();
-		if (!pathStr.endsWith("/"))
-		{
-			pathStr = pathStr + "/";
-		}
-		path = DbPaths.getPathElement(pathStr);
+		path = DbPaths.getPathElement(pathStr, true);
 		Misc.ensureDirectory(Paths.get(pathStr), false);
 		sharesWithUs = defaultShare;
 	}

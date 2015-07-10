@@ -248,7 +248,7 @@ public class PathList extends Message
 		{
 			return elemCache;
 		}
-		return elemCache = DbPaths.getPathElement(currentPath);
+		return elemCache = DbPaths.getPathElement(currentPath, true);
 	}
 
 	public LinkedList<PathListChild> getChildren()

@@ -101,7 +101,7 @@ public class PathListChild implements Jsonable
 	
 	public RemoteFile create() 
 	{
-		final PathElement pathElement = DbPaths.getPathElement(pl.getPath(), name);
+		final PathElement pathElement = DbPaths.getPathElement(pl.getPath(), name, false);
 		return new RemoteFile(pl.getRoot(), pathElement,
 				size, checksum, tags, lastModified);
 	}

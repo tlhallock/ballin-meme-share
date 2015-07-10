@@ -55,7 +55,7 @@ public class DownloadTest extends RemotesTest
 			File makeFile = makeSampleDirectories.get((int) (Math.random() * makeSampleDirectories.size()));
 			Path path2 = Paths.get(makeFile.getAbsolutePath());
 			Path relativize = createTempDirectory.relativize(path2);
-			PathElement pathElement = DbPaths.getPathElement(DbPaths.ROOT, relativize.toString());
+			PathElement pathElement = DbPaths.getPathElement(DbPaths.ROOT, relativize.toString(), true);
 			SharedFile file = DbFiles.getFile(DbRoots.getRoot(machine, rootName), pathElement);
 
 			class MyNotificationListener extends NotificationListenerAdapter

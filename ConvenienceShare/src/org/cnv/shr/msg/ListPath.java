@@ -86,7 +86,7 @@ public class ListPath extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
-		PathElement pathElement = DbPaths.getPathElement(path);
+		PathElement pathElement = DbPaths.getPathElement(path, true);
 		PathList.listPaths(localByName, pathElement, connection);
 	}
 	

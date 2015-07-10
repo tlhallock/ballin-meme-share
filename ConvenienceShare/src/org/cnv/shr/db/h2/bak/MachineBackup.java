@@ -143,7 +143,7 @@ public class MachineBackup implements Jsonable
 					continue;
 				}
 			}
-			PathElement pathElement = DbPaths.getPathElement(path);
+			PathElement pathElement = DbPaths.getPathElement(path, true);
 			root.setLocalMirror(pathElement);
 			DbPaths.pathLiesIn(pathElement, root);
 		}

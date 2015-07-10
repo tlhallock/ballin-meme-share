@@ -1172,7 +1172,7 @@ public class MachineViewer extends javax.swing.JFrame
 				default:
 					return;
 			}
-			PathElement pathElement = DbPaths.getPathElement(newPath);
+			PathElement pathElement = DbPaths.getPathElement(newPath, true);
 			DbPaths.pathDoesNotLieIn(remoteDir.getPathElement(), remoteDir);
 			DbPaths.pathLiesIn(pathElement, remoteDir);
 			remoteDir.setLocalMirror(pathElement);

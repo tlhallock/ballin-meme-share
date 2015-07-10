@@ -197,7 +197,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		}
 		
 		// add path to database
-		final PathElement element = DbPaths.getPathElement(task.current, name);
+		final PathElement element = DbPaths.getPathElement(task.current, name, f.isDirectory());
 		DbPaths.pathLiesIn(element, local);
 		
 		if (f.isFile())

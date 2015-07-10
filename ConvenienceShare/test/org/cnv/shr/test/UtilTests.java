@@ -42,8 +42,8 @@ public class UtilTests
 //		String str = "Combinatorial optimization.. theory and algorithms.pdf";
 		String str = "/home/thallock/Documents/Combinatorial optimization.. theory and algorithms.pdf";
 		System.out.println(str);
-		System.out.println(PathBreaker.join(PathBreaker.breakPath(str)));
-		System.out.println(PathBreaker.breakPath(str)[PathBreaker.breakPath(str).length-1].getUnbrokenName());
+		System.out.println(PathBreaker.join(PathBreaker.breakPath(str, false)));
+		System.out.println(PathBreaker.breakPath(str, false)[PathBreaker.breakPath(str, false).length-1].getUnbrokenName());
 		
 		// TODO: asserts
 	}

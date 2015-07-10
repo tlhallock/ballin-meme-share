@@ -58,10 +58,10 @@ public class RemoteFileSource implements FileSource
 		pathElement = f.getPath();
 	}
 	
-	private RemoteFileSource(RemoteSynchronizerQueue s, PathElement p, String name)
+	private RemoteFileSource(RemoteSynchronizerQueue s, PathElement p, String name, boolean directory)
 	{
 		sync = s;
-		pathElement = DbPaths.getPathElement(p, name);
+		pathElement = DbPaths.getPathElement(p, name, directory);
 	}
 	
 	RemoteSynchronizerQueue getQueue()
@@ -117,7 +117,7 @@ public class RemoteFileSource implements FileSource
 			{
 				if (onFiles)
 				{
-					return new RemoteFileSource(sync, pathElement, subDirs.next());
+					return new RemoteFileSource(sync, pathElement, subDirs.next(), false);
 				}
 				return new RemoteFileSource(sync, children.next().create());
 			}

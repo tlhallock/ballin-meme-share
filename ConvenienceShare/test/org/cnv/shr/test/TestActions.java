@@ -191,7 +191,7 @@ public class TestActions
 					DbFiles.getFile(
 							DbRoots.getRoot(
 									DbMachines.getMachine(ident), name), 
-							DbPaths.getPathElement(path)));
+							DbPaths.getPathElement(path, false)));
 		}
 	};
 	

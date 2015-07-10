@@ -321,20 +321,23 @@ public class Misc
 		return system;
 	}
 	
-	public static String sanitizePath(String path)
+	public static String sanitizePath(String path, boolean directory)
 	{
-		if (!system.equals(OperatingSystem.Windows))
+		if (system.equals(OperatingSystem.Windows))
 		{
-			return path;
+			path = path.replace('\\', '/');
 		}
 		
-		path = path.replace('\\', '/');
 //		int ndx = path.indexOf(':');
 //		if (ndx >= 0)
 //		{
 //			path = path.substring(ndx+1, path.length());
 //		}
 		
+		if (directory && !path.endsWith("/"))
+		{
+			path = path + "/";
+		}
 		return path;
 	}
 	

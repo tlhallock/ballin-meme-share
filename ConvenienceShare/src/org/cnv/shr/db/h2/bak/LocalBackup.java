@@ -103,7 +103,7 @@ public class LocalBackup implements Jsonable
 			LogWrapper.getLogger().log(Level.INFO, "Unable to restore local: " + name, e);
 			return;
 		}
-		DbPaths.pathLiesIn(DbPaths.getPathElement(path), local);
+		DbPaths.pathLiesIn(DbPaths.getPathElement(path, false), local);
 		
 		DbRoots.setIgnores(local, ignores.toArray(DUMMY));
 	}

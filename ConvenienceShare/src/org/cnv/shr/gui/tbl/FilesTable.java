@@ -229,7 +229,7 @@ public class FilesTable extends DbJTable<SharedFile>
     final String basename = (String) currentRow.get("Name");
     final String fullPath = dirname + basename;
     RootDirectory directory = getRootDirectory();
-    return DbFiles.getFile(directory, DbPaths.getPathElement(fullPath));
+    return DbFiles.getFile(directory, DbPaths.getPathElement(fullPath, false));
 	}
 
 	private RootDirectory getRootDirectory()

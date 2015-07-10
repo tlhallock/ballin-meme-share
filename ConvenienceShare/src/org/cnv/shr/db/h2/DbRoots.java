@@ -141,7 +141,7 @@ public class DbRoots
 
 	public static LocalDirectory getLocal(String path)
 	{
-		PathElement pathElement = DbPaths.getPathElement(path);
+		PathElement pathElement = DbPaths.getPathElement(path, true);
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper prepareStatement = c.prepareStatement(SELECT5);)
 		{

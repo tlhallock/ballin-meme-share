@@ -41,7 +41,7 @@ public class PathsTest extends LocalMachineTest
 			
 			for (String testPath : testPaths)
 			{
-				PathElement pathElement = DbPaths.getPathElement(testPath);
+				PathElement pathElement = DbPaths.getPathElement(testPath, false);
 				DbPaths.pathLiesIn(pathElement, local);
 
 				LogWrapper.getLogger().info("Added " + testPath);

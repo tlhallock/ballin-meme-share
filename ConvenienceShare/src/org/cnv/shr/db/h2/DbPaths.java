@@ -82,10 +82,10 @@ public class DbPaths
 		public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException {}
 	};
 
-	public static PathElement getPathElement(Path p) throws IOException
+	public static PathElement getPathElement(Path p, boolean directory) throws IOException
 	{
 		// TODO: native Io
-		return getPathElement(p.toFile().getCanonicalPath());
+		return getPathElement(p.toFile().getCanonicalPath(), directory);
 	}
 	
 	public static PathElement getPathElement(long pid, DbLocals locals)
@@ -242,24 +242,24 @@ public class DbPaths
 		}
 	}
 
-	public static PathElement getPathElement(LocalDirectory local, String fsPath)
+	public static PathElement getPathElement(LocalDirectory local, String fsPath, boolean directory)
 	{
 		String relPath = fsPath.substring(local.getPathElement().getFullPath().length());
-		return getPathElement(relPath);
+		return getPathElement(relPath, directory);
 	}
 
-	public static PathElement getPathElement(String relPath)
+	public static PathElement getPathElement(String relPath, boolean directory)
 	{
-		return getPathElement(ROOT, relPath);
+		return getPathElement(ROOT, relPath, directory);
 	}
 
-	public static PathElement getPathElement(PathElement parentId, String relPath)
+	public static PathElement getPathElement(PathElement parentId, String relPath, boolean directory)
 	{
 		if (relPath.length() == 0 || relPath.equals(".") || relPath.equals("./") || relPath.equals("/"))
 		{
 			return ROOT;
 		}
-		PathElement[] broken = PathBreaker.breakPath(parentId, relPath);
+		PathElement[] broken = PathBreaker.breakPath(parentId, relPath, directory);
 		setPathElementIds(parentId, broken);
 		return broken[broken.length-1];
 	}

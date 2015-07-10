@@ -102,7 +102,7 @@ public class SharedFileId implements Jsonable
 	
 	public LocalFile getLocal()
 	{
-		PathElement pathElement = DbPaths.getPathElement(path);
+		PathElement pathElement = DbPaths.getPathElement(path, false);
 		LocalDirectory local = DbRoots.getLocalByName(rootName);
 		return DbFiles.getFile(local, pathElement);
 	}
@@ -111,7 +111,7 @@ public class SharedFileId implements Jsonable
 	{
 		Machine machine = DbMachines.getMachine(machineIdent);
 		RootDirectory root = DbRoots.getRoot(machine, rootName);
-		PathElement pathElement = DbPaths.getPathElement(path);
+		PathElement pathElement = DbPaths.getPathElement(path, false);
 		return (RemoteFile) DbFiles.getFile(root, pathElement);
 	}
 	

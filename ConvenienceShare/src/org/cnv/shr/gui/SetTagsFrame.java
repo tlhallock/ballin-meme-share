@@ -185,7 +185,7 @@ public class SetTagsFrame extends javax.swing.JFrame {
        for (int i=0; i<rowCount; i++)
        {
            String path = (String) model.getValueAt(i, modelIndex);
-           SharedFile file = DbFiles.getFile(root, DbPaths.getPathElement(path));
+           SharedFile file = DbFiles.getFile(root, DbPaths.getPathElement(path, false));
            if (!(file instanceof LocalFile))
            {
                continue;

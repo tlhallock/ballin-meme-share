@@ -36,9 +36,9 @@ public class PathBreaker
 	
 	private static final PathElement[] dummy = new PathElement[0];
 
-	public static PathElement[] breakPath(PathElement parent, String path)
+	public static PathElement[] breakPath(PathElement parent, String path, boolean directory)
 	{
-		path = Misc.sanitizePath(path);
+		path = Misc.sanitizePath(path, directory);
 		
 		LinkedList<PathElement> returnValue = new LinkedList<>();
 		
@@ -73,9 +73,9 @@ public class PathBreaker
 		return returnValue.toArray(dummy);
 	}
 	
-	public static PathElement[] breakPath(String path)
+	public static PathElement[] breakPath(String path, boolean directory)
 	{
-		return breakPath(DbPaths.ROOT, path);
+		return breakPath(DbPaths.ROOT, path, directory);
 	}
 
 	public static String join(PathElement[] eles)

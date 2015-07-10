@@ -77,7 +77,7 @@ public class LocalDirectory extends RootDirectory
 		this.tags = tags;
 		this.minFSize = minFSize;
 		this.maxFSize = maxFSize;
-		this.path = DbPaths.getPathElement(path2);
+		this.path = DbPaths.getPathElement(path2, true);
 		this.defaultShare = defaultSharingState;
 		if (defaultShare == null)
 		{
@@ -140,7 +140,7 @@ public class LocalDirectory extends RootDirectory
 	
 	public LocalFile getFile(String fsPath)
 	{
-		return DbFiles.getFile(this, DbPaths.getPathElement(this, fsPath));
+		return DbFiles.getFile(this, DbPaths.getPathElement(this, fsPath, false));
 	}
 
 	@Override
