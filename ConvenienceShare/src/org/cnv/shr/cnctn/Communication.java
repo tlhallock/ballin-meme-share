@@ -52,6 +52,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.ConnectionStatistics;
 import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.CountingOutputStream;
+import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.PausableInputStream;
@@ -64,6 +65,8 @@ import de.flexiprovider.core.rijndael.RijndaelKey;
 public class Communication implements Closeable
 {
 	private static final int CLOSE_TIMEOUT = 1 * 60 * 1000;
+	
+	public static final boolean USE_ENCRYPTION = false;
 
 	// The streams
 	private Socket socket;
@@ -368,28 +371,34 @@ public class Communication implements Closeable
 		generator.writeEnd();
 		generator.close();
 		
-//		encryptedOutput = FlushableEncryptionStreams.createEncryptedOutputStream(countingOutput, key);
-//		pausableOutput.setDelegate(encryptedOutput);
-//		generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
 
-		encryptedOutput = new OutputStream() {
-			@Override
-			public void flush() throws IOException
-			{
-				countingOutput.flush();
-			}
-			@Override
-			public void write(int b) throws IOException
-			{
-				countingOutput.write(b);
-			}
-			@Override
-			public void write(byte[] b, int off, int len) throws IOException
-			{
-				countingOutput.write(b, off, len);
-			}};
-		pausableOutput.setDelegate(encryptedOutput);
-		generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
+		if (USE_ENCRYPTION)
+		{
+			encryptedOutput = FlushableEncryptionStreams.createEncryptedOutputStream(countingOutput, key);
+			pausableOutput.setDelegate(encryptedOutput);
+			generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
+		}
+		else
+		{
+			encryptedOutput = new OutputStream() {
+				@Override
+				public void flush() throws IOException
+				{
+					countingOutput.flush();
+				}
+				@Override
+				public void write(int b) throws IOException
+				{
+					countingOutput.write(b);
+				}
+				@Override
+				public void write(byte[] b, int off, int len) throws IOException
+				{
+					countingOutput.write(b, off, len);
+				}};
+			pausableOutput.setDelegate(encryptedOutput);
+			generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
+		}
 		
 		generator.writeStartObject();
 		generator.flush();
@@ -403,29 +412,35 @@ public class Communication implements Closeable
 		}
 		parser.close();
 		
-//		encryptedInput = FlushableEncryptionStreams.createEncryptedInputStream(countingInput, key);
-//		pausableInput.startAgain(encryptedInput);
-//		parser = TrackObjectUtils.createParser(pausableInput);
-
-		encryptedInput = new InputStream() {
-			@Override
-			public int read() throws IOException
-			{
-				return countingInput.read();
-			}
-			@Override
-			public int available() throws IOException
-			{
-				return countingInput.available();
-			}	
-			public int read(byte[] arr, int off, int len) throws IOException
-			{
-				return countingInput.read(arr, off, len);
-			}
-		};
-		pausableInput.setDelegate(encryptedInput);
-		pausableInput.startAgain();
-		parser = TrackObjectUtils.createParser(pausableInput);
+		if (USE_ENCRYPTION)
+		{
+			encryptedInput = FlushableEncryptionStreams.createEncryptedInputStream(countingInput, key);
+			pausableInput.setDelegate(encryptedInput);
+			pausableInput.startAgain();
+			parser = TrackObjectUtils.createParser(pausableInput);
+		}
+		else
+		{
+			encryptedInput = new InputStream() {
+				@Override
+				public int read() throws IOException
+				{
+					return countingInput.read();
+				}
+				@Override
+				public int available() throws IOException
+				{
+					return countingInput.available();
+				}	
+				public int read(byte[] arr, int off, int len) throws IOException
+				{
+					return countingInput.read(arr, off, len);
+				}
+			};
+			pausableInput.setDelegate(encryptedInput);
+			pausableInput.startAgain();
+			parser = TrackObjectUtils.createParser(pausableInput);
+		}
 		
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{

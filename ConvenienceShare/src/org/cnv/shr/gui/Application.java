@@ -128,7 +128,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		initComponents();
 		initializeSettings();
 		
-		setTitle("Convenience Share " + Settings.getVersion(Main.class) + " Machine " + Services.localMachine.getName());
+		setTitle("Convenience Share " + Settings.getVersion(Main.class) 
+				+ " Machine " + Services.localMachine.getName()
+				+ " on " + Services.settings.servePortBeginE.get());
 
 		locals = new LocalTable(this, localsView);
 		remotes = new MachineTable(this, machinesList);
