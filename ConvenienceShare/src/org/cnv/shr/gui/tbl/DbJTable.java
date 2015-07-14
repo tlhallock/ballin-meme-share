@@ -119,7 +119,8 @@ public abstract class DbJTable<T> extends MouseAdapter
 		{
 			if (!fillRow(create(row), values))
 			{
-				continue;
+				refresh();
+				return;
 			}
 			for (int col = 0; col < columnCount; col++)
 			{
@@ -251,7 +252,14 @@ public abstract class DbJTable<T> extends MouseAdapter
 		{
 			return;
 		}
-		// Fix the rowGuess changing problem.....
+		Object valueAt = table.getValueAt(rowGuess, table.getColumn(keyName).getModelIndex());
+		Object expectedValue = vals.get(keyName);
+		
+		if (!valueAt.equals(expectedValue))
+		{
+			// Fix the rowGuess changing problem...
+			return;
+		}
 		for (Entry<String, Object> entry : vals.entrySet())
 		{
 			table.setValueAt(entry.getValue(), rowGuess, 
@@ -309,6 +317,10 @@ public abstract class DbJTable<T> extends MouseAdapter
 	private int[] getSelectedRows()
 	{
 		int[] selectedRows2 = table.getSelectedRows();
+		for (int i=0;i<selectedRows2.length;i++)
+		{
+			selectedRows2[i] = table.convertRowIndexToModel(selectedRows2[i]);
+		}
 		Arrays.sort(selectedRows2);
 		return selectedRows2;
 	}
@@ -343,7 +355,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 		{
 			return;
 		}
-		table.rowAtPoint(me.getPoint());
+//		table.rowAtPoint(me.getPoint());
 		jPopupMenu.show(me.getComponent(), me.getX(), me.getY());
 		jPopupMenu.setVisible(true);
 	}
@@ -363,7 +375,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 	@Override
 	public synchronized void mouseClicked(MouseEvent me)
 	{
-		int nRow = table.rowAtPoint(me.getPoint());
+		int nRow = table.convertRowIndexToModel(table.rowAtPoint(me.getPoint()));
 //		if (isSingleSelection())
 //		{
 //			// ensures row highlighted, even for right clicks...

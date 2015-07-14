@@ -25,18 +25,22 @@
 
 package org.cnv.shr.dmn.trk;
 
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.IOException;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.MachineEntry;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.MissingKeyException;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
-public class ClientTrackerConnection extends TrackerConnection
+public class ClientTrackerConnection extends TrackerConnection implements WindowListener
 {
-	RSAPublicKey publicKey;
+	private RSAPublicKey publicKey;
 	
 	ClientTrackerConnection(String url, int port) throws IOException
 	{
@@ -65,4 +69,35 @@ public class ClientTrackerConnection extends TrackerConnection
 		}
 		generator.write("decrypted", Misc.format(Services.keyManager.decrypt(publicKey, naunceRequest)));
 	}
+
+
+	@Override
+	public void windowClosed(WindowEvent e)
+	{
+		if (socket.isClosed())
+		{
+			return;
+		}
+		try
+		{
+			socket.close();
+		}
+		catch (IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to close on window close.", e1);
+		}
+	}
+
+	@Override
+	public void windowIconified(WindowEvent e) {}
+	@Override
+	public void windowDeiconified(WindowEvent e) {}
+	@Override
+	public void windowActivated(WindowEvent e) {}
+	@Override
+	public void windowDeactivated(WindowEvent e) {}
+	@Override
+	public void windowOpened(WindowEvent e) {}
+	@Override
+	public void windowClosing(WindowEvent e) {}
 }

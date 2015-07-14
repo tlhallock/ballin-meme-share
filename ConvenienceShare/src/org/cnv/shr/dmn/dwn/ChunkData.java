@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.logging.Level;
 
 import org.cnv.shr.dmn.ChecksumManager;
 import org.cnv.shr.stng.Settings;
@@ -47,6 +48,10 @@ import org.cnv.shr.util.Misc;
 // TODO: java nio
 public class ChunkData
 {
+	private static boolean SLOW_DOWNLOADS = false;
+	
+	
+	
 	public static boolean read(Chunk chunk, File f, InputStream input) throws IOException, NoSuchAlgorithmException
 	{
 		MessageDigest digest = MessageDigest.getInstance(Settings.checksumAlgorithm);
@@ -57,10 +62,12 @@ public class ChunkData
 			long offset = chunk.getBegin();
 			toWrite.seek(offset);
 
-			byte[] buffer = new byte[Misc.BUFFER_SIZE];
+			byte[] buffer = new byte[SLOW_DOWNLOADS ? 100 : Misc.BUFFER_SIZE];
 
 			while (offset < end)
 			{
+				pauseDownload();
+				
 				int numToRead = buffer.length;
 				long nRem = end - offset;
 				if (nRem < numToRead)
@@ -70,8 +77,11 @@ public class ChunkData
 				int nread = input.read(buffer, 0, numToRead);
 				if (nread >= 0)
 				{
-					LogWrapper.getLogger().info("Read " + (offset - chunk.getBegin()) + " to " + (offset - chunk.getBegin() + nread));
-					LogWrapper.getLogger().info(Misc.format(Arrays.copyOfRange(buffer, 0, 10)) + "..." + Misc.format(Arrays.copyOfRange(buffer, nread - 10, nread)));
+//					LogWrapper.getLogger().info("Read " + (offset - chunk.getBegin()) + " to " + (offset - chunk.getBegin() + nread));
+					if (buffer.length > 20 && LogWrapper.getLogger().isLoggable(Level.FINE))
+					{
+						LogWrapper.getLogger().fine(Misc.format(Arrays.copyOfRange(buffer, 0, 10)) + "..." + Misc.format(Arrays.copyOfRange(buffer, nread - 10, nread)));
+					}
 					
 					toWrite.write(buffer, 0, nread);
 					digest.update(buffer, 0, nread);
@@ -88,6 +98,23 @@ public class ChunkData
 		
 		String digestToString = ChecksumManager.digestToString(digest);
 		return digestToString.equals(chunk.getChecksum());
+	}
+
+	private static void pauseDownload()
+	{
+		if (!SLOW_DOWNLOADS)
+		{
+			return;
+		}
+
+		try
+		{
+			Thread.sleep(1);
+		}
+		catch (InterruptedException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Interrupted.", e);
+		}
 	}
 
 	public static void write(Chunk chunk, Path f, OutputStream output) throws IOException
@@ -116,8 +143,11 @@ public class ChunkData
 				int nread = toRead.read(buffer, 0, nextRead);
 				if (nread >= 0)
 				{
-					LogWrapper.getLogger().info("Sending " + offset + " to " + (offset + nread));
-					LogWrapper.getLogger().info(Misc.format(Arrays.copyOfRange(buffer, 0, 10)) + "..." + Misc.format(Arrays.copyOfRange(buffer, nread - 10, nread)));
+					if (LogWrapper.getLogger().isLoggable(Level.FINE))
+					{
+						LogWrapper.getLogger().fine("Sending " + offset + " to " + (offset + nread));
+						LogWrapper.getLogger().fine(Misc.format(Arrays.copyOfRange(buffer, 0, 10)) + "..." + Misc.format(Arrays.copyOfRange(buffer, nread - 10, nread)));
+					}
 					output.write(buffer, 0, nread);
 					offset += nread;
 					continue;

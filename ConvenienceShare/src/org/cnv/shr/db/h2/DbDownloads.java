@@ -45,7 +45,18 @@ public class DbDownloads
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK join DOWNLOAD on DID = Q_ID where DSTATE=?;");
 	private static final QueryWrapper DELETE3 = new QueryWrapper("delete from DOWNLOAD where Q_ID in (select Q_ID from DOWNLOAD join SFILE on FID = F_ID where CHKSUM IS NULL or trim(CHKSUM)='');");
 	private static final QueryWrapper SELECTID = new QueryWrapper("select Q_ID from DOWNLOAD where FID=?;");
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from Download where DSTATE=? group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc;");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from Download where DSTATE "
+//			+ "in (" + collect(new int[] {
+//			DownloadState.QUEUED.toInt(),
+//			DownloadState.ALLOCATING.toInt(),
+//			DownloadState.RECOVERING.toInt(),
+//			DownloadState.REQUESTING_METADATA.toInt(),
+//			DownloadState.RECEIVING_METADATA.toInt(),
+//			DownloadState.DOWNLOADING.toInt(),
+//		}) + ")"
+			  + " <> " + DownloadState.ALL_DONE.toInt()
+			  + " and DSTATE <> " + DownloadState.FAILED.toInt()
+				+ " group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select * from Download                group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc, DSTATE asc;");
 
 	public static Integer getPendingDownloadId(SharedFile remoteFile)
@@ -152,7 +163,6 @@ public class DbDownloads
 		{
 			ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
 			StatementWrapper prepareStatement = connection.prepareStatement(DbDownloads.SELECT1);
-			prepareStatement.setInt(1, DownloadState.QUEUED.toInt());
 			return new DbIterator<Download>(connection, prepareStatement.executeQuery(), DbObjects.PENDING_DOWNLOAD);
 		}
 		catch (SQLException e1)
@@ -160,5 +170,25 @@ public class DbDownloads
 			LogWrapper.getLogger().log(Level.INFO, "Unable to list pending downloads.", e1);
 			return new DbIterator.NullIterator<>();
 		}
+	}
+
+	private static String collect(int[] inStates)
+	{
+		StringBuilder builder = new StringBuilder();
+
+		if (inStates.length == 0)
+		{
+			LogWrapper.getLogger().info("Cannot list downloads without having a set of states to be in.");
+			return null;
+		}
+		
+		builder.append(inStates[0]);
+		for (int i=1;i<inStates.length;i++)
+		{
+			builder.append(", ");
+			builder.append(inStates[i]);
+		}
+		
+		return builder.toString();
 	}
 }

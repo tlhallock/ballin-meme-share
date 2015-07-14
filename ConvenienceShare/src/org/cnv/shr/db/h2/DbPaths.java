@@ -52,7 +52,7 @@ public class DbPaths
 	// That is why it is broken up with a limit
 	private static final QueryWrapper DELETE_SOME_UNUSED = new QueryWrapper("delete from PELEM "
 											+ " where PELEM.P_ID <> 0 "
-											+ " and not exists (select RID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM = PELEM.P_ID)"
+											+ " and not exists (select RID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM = PELEM.P_ID limit 1)"
 											+ " limit 10;");
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete ROOT_CONTAINS where RID=? and PELEM=?;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
@@ -263,23 +263,23 @@ public class DbPaths
 		setPathElementIds(parentId, broken);
 		return broken[broken.length-1];
 	}
-	
+
 	public static void removeUnusedPaths()
 	{
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(DELETE_SOME_UNUSED);)
+		int numDeleted = -1;
+		do
 		{
-			int numDeleted;
-			do
+			try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); StatementWrapper stmt = c.prepareStatement(DELETE_SOME_UNUSED);)
 			{
 				numDeleted = stmt.executeUpdate();
 				LogWrapper.getLogger().fine("Removed " + numDeleted + " unused paths.");
-			} while (numDeleted > 0);
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to remove unused paths.", e);
-		}
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to remove unused paths.", e);
+				return;
+			}
+		} while (numDeleted > 0);
 	}
 
 	public static void cleanIgnores(LocalDirectory local)

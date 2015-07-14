@@ -49,6 +49,7 @@ public class AlreadyDownloadedFrame extends javax.swing.JFrame {
         }
         else
         {
+        	Services.colors.childrenChanged(this, jPanel1);
         	repaint();
         }
     }
@@ -66,6 +67,8 @@ public class AlreadyDownloadedFrame extends javax.swing.JFrame {
         jPanel1.add(newPanel);
         jPanel1.repaint();
         setVisible(true);
+
+      	Services.colors.childrenChanged(this, jPanel1);
     }
     
     /**

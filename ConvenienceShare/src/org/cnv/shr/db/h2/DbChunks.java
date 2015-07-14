@@ -43,14 +43,13 @@ import org.cnv.shr.util.LogWrapper;
 public class DbChunks
 {
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK where DID=?;");
-	private static final QueryWrapper SELECT4 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET from CHUNK where DID=? and IS_DOWNLOADED=true;");
-	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
-	private static final QueryWrapper SELECT3 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=? and IS_DOWNLOADED=false limit ?;");
-//	private static final QueryWrapper SELECT2 = new QueryWrapper("select count(C_ID) from CHUNK where DID=?;");
+	private static final QueryWrapper SELECT4 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET from CHUNK where DID=? and DOWNLOAD_STATE=" + ChunkState.NOT_DOWNLOADED.getDbValue() + ";");
+	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set DOWNLOAD_STATE=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
+	private static final QueryWrapper SELECT3 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=? and DOWNLOAD_STATE=" + ChunkState.NOT_DOWNLOADED.getDbValue() + " limit ?;");
 	private static final QueryWrapper SELECT5 = new QueryWrapper("select count(C_ID) from CHUNK where DID=? and END_OFFSET=? and BEGIN_OFFSET=?;");
-//	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set IS_DOWNLOADED=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from CHUNK where DID=?;");
 	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into CHUNK key(DID, BEGIN_OFFSET, END_OFFSET) values (DEFAULT, ?, ?, ?, ?, ?);");
+	private static final QueryWrapper SELECT6 = new QueryWrapper("select count(C_ID) from CHUNK where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and DOWNLOAD_STATE=" + ChunkState.DOWNLOADED.getDbValue() + ";");
 
 	public static final class DbChunk extends DbObject<Integer>
 	{
@@ -59,7 +58,7 @@ public class DbChunks
 			super(id);
 		}
 		public Chunk chunk;
-		public boolean done;
+		public ChunkState state;
 		
 		@Override
 		public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
@@ -70,7 +69,7 @@ public class DbChunks
 			long begin = row.getLong(ndx++);
 			long end = row.getLong(ndx++);
 			String checksum = row.getString(ndx++);
-			done = row.getBoolean(ndx++);
+			state = ChunkState.getState(row.getInt(ndx++));
 			chunk = new Chunk(begin, end, checksum);
 		}
 		@Override
@@ -99,7 +98,7 @@ public class DbChunks
 			stmt.setLong(ndx++, c.getBegin());
 			stmt.setLong(ndx++, c.getEnd());
 			stmt.setString(ndx++, c.getChecksum());
-			stmt.setBoolean(ndx++, false);
+			stmt.setInt(ndx++, ChunkState.NOT_DOWNLOADED.getDbValue());
 			
 			stmt.executeUpdate();
 			
@@ -136,6 +135,7 @@ public class DbChunks
 				{
 					if (!results.next() || results.getInt(1) <= 0)
 					{
+						LogWrapper.getLogger().info("Download " + d + " is missing chunk " + start + "-" + end);
 						return false;
 					}
 				}
@@ -149,6 +149,43 @@ public class DbChunks
 			LogWrapper.getLogger().log(Level.INFO, "Unable to see if we have all chunks for " + d, e);
 			return false;
 		}
+		LogWrapper.getLogger().info("All chunks done for " + d);
+		return true;
+	}
+
+	public static boolean allChunksAreDone(Download d)
+	{
+		long chunkSize = d.getChunkSize();
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				StatementWrapper stmt = c.prepareStatement(SELECT6))
+		{
+			long fileSize = d.getFile().getFileSize();
+			long end   = fileSize; 
+			long start = fileSize - fileSize % chunkSize;
+			while (end > 0)
+			{
+				stmt.setInt(1, d.getId());
+				stmt.setLong(2, end);
+				stmt.setLong(3, start);
+				try (ResultSet results = stmt.executeQuery();)
+				{
+					if (!results.next() || results.getInt(1) <= 0)
+					{
+						LogWrapper.getLogger().info("Download " + d + " has not completed chunk " + start + "-" + end);
+						return false;
+					}
+				}
+				
+				end = start;
+				start = start - chunkSize;
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to see if all chunks are downloaded for " + d, e);
+			return false;
+		}
+		LogWrapper.getLogger().info("All chunks downloaded for " + d);
 		return true;
 	}
 
@@ -178,13 +215,13 @@ public class DbChunks
 		return returnValue;
 	}
 	
-	public static void chunkDone(Download d, Chunk chunk, boolean done)
+	public static void chunkDone(Download d, Chunk chunk, ChunkState done)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(UPDATE1))
 		{
 			int ndx = 1;
-			stmt.setBoolean(ndx++, done);
+			stmt.setInt(ndx++, done.getDbValue());
 			stmt.setInt(ndx++, d.getId());
 			stmt.setLong(ndx++, chunk.getEnd());
 			stmt.setLong(ndx++, chunk.getBegin());
@@ -235,7 +272,45 @@ public class DbChunks
 		}
 		return done / (double) d.getFile().getFileSize();
 	}
+	
+	
+	public enum ChunkState
+	{
+		NOT_DOWNLOADED(1),
+		REQUESTED(2),
+		DOWNLOADED(3),
+		;
+		int state;
+		
+		ChunkState(int dbValue)
+		{
+			this.state = dbValue;
+		}
+		
+		public int getDbValue()
+		{
+			return state;
+		}
+
+		static ChunkState getState(int value)
+		{
+			for (ChunkState v : values())
+			{
+				if (v.state == value)
+				{
+					return v;
+				}
+			}
+			return NOT_DOWNLOADED;
+		}
+
+		public boolean isDone()
+		{
+			return equals(DOWNLOADED);
+		}
+	}
 }
+
 
 //public static double getDownloadPercentage(Download d)
 //{

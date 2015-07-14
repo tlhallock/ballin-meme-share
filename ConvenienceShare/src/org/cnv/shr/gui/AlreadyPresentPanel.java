@@ -31,6 +31,8 @@ public class AlreadyPresentPanel extends javax.swing.JPanel {
     
     private String ident;
     
+    
+    // Needs to be fixed so that it doesn't reject runnables...
     static ExecutorService moveService = Executors.newFixedThreadPool(2);
     
     /**

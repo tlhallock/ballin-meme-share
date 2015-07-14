@@ -36,6 +36,8 @@ import org.cnv.shr.util.LogWrapper;
 
 public class ServeManager
 {
+	private static final int REFRESH_PERIOD = 10 * 1000;
+	
 	private HashMap<String, ServeInstance> serves = new HashMap<>();
 	
 	public synchronized ServeInstance getServeInstance(Communication communication)
@@ -61,6 +63,7 @@ public class ServeManager
 		
 		ServeInstance instance = new ServeInstance(c, file);
 		serves.put(c.getUrl(), instance);
+		Services.timer.scheduleAtFixedRate(instance, REFRESH_PERIOD, REFRESH_PERIOD);
 		Services.notifications.serveAdded(instance);
 		return instance;
 	}
@@ -70,6 +73,7 @@ public class ServeManager
 		ServeInstance serveInstance = serves.get(c.getUrl());
 		Services.notifications.serveRemoved(serveInstance);
 		serves.remove(c.getUrl());
+		serveInstance.cancel();
 	}
 
 	public synchronized List<ServeInstance> getServeInstances()

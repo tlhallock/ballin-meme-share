@@ -46,6 +46,8 @@ import org.cnv.shr.util.LogWrapper;
 
 public class ClientTrackerClient extends TrackerClient
 {
+	private TrackerFrame window;
+	
 	public ClientTrackerClient(TrackerEntry entry)
 	{
 		super(entry);
@@ -74,7 +76,12 @@ public class ClientTrackerClient extends TrackerClient
 	@Override
 	protected ClientTrackerConnection createConnection(int port) throws IOException
 	{
-		return new ClientTrackerConnection(trackerEntry.getIp(), port);
+		ClientTrackerConnection clientTrackerConnection = new ClientTrackerConnection(trackerEntry.getIp(), port);
+		if (window != null)
+		{
+			window.addWindowListener(clientTrackerConnection);
+		}
+		return clientTrackerConnection;
 	}
 
 //	@Override

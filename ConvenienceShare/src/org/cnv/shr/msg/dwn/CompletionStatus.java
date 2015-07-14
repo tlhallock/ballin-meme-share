@@ -27,7 +27,6 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -53,11 +52,6 @@ public class CompletionStatus extends DownloadMessage
 		percentComplete = d;
 	}
 
-	public CompletionStatus(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-	
 	@Override
 	protected int getType()
 	{

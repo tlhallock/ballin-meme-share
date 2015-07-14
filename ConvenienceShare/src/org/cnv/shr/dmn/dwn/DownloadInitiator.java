@@ -40,11 +40,6 @@ public class DownloadInitiator extends TimerTask
 	
 	private static void restart(final Download next)
 	{
-		if (Services.downloads.downloads.size() >= Services.settings.maxDownloads.get())
-		{
-			return;
-		}
-		
 		try
 		{
 			Services.downloads.createDownload(next, false);
@@ -68,16 +63,13 @@ public class DownloadInitiator extends TimerTask
 	public void initiatePendingDownloads()
 	{
 		int index = 0;
+		LogWrapper.getLogger().info("Num downloads: " + Services.downloads.downloads.size());
 		LogWrapper.getLogger().info("Pending downloads:");
 		LogWrapper.getLogger().info("------------------------------------------------------");
 		try (DbIterator<Download> dbIterator = DbDownloads.listPendingDownloads();)
 		{
 			while (dbIterator.hasNext())
 			{
-				if (Services.downloads.downloads.size() >= Services.settings.maxDownloads.get())
-				{
-					return;
-				}
 				Download next = dbIterator.next();
 				LogWrapper.getLogger().info("Pending download " + index++ + ": " + next.toString());
 				restart(next);

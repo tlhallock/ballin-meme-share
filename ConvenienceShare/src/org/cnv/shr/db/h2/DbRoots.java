@@ -49,15 +49,15 @@ public class DbRoots
 	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into IGNORE_PATTERN values (DEFAULT, ?, ?);");
 	private static final QueryWrapper SELECT7 = new QueryWrapper("select PATTERN from IGNORE_PATTERN where RID=?;");
 	private static final QueryWrapper SELECT6 = new QueryWrapper("select * from ROOT where RNAME=? and MID=?;");
-	private static final QueryWrapper SELECT5 = new QueryWrapper("select * from ROOT where PELEM=?;");
+	private static final QueryWrapper SELECT5 = new QueryWrapper("select * from ROOT where PELEM=? and ROOT.IS_LOCAL = true;");
 	private static final QueryWrapper SELECT4 = new QueryWrapper("select * from ROOT where ROOT.IS_LOCAL = true;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select * from ROOT where ROOT.MID = ?;");
 	private static final QueryWrapper SELECT2 = new QueryWrapper("select count(F_ID) as number from SFILE where ROOT = ?;");
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select sum(FSIZE) as totalsize from SFILE where ROOT = ?;");
 	private static final QueryWrapper DELETE4 = new QueryWrapper("delete from IGNORE_PATTERN where RID=?;");
 	private static final QueryWrapper DELETE3 = new QueryWrapper("delete from ROOT where R_ID=?;");
-	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from SFILE where ROOT=?;");
-	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from ROOT_CONTAINS where ROOT_CONTAINS.RID=?;");
+//	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from SFILE where ROOT=?;");
+//	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from ROOT_CONTAINS where ROOT_CONTAINS.RID=?;");
 	
 	public static long getTotalFileSize(RootDirectory d)
 	{
@@ -199,15 +199,15 @@ public class DbRoots
 	public static void deleteRoot(RootDirectory root)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper s1 = c.prepareStatement(DELETE1);
-				StatementWrapper s2 = c.prepareStatement(DELETE2);
+//				StatementWrapper s1 = c.prepareStatement(DELETE1);
+//				StatementWrapper s2 = c.prepareStatement(DELETE2);
 				StatementWrapper s3 = c.prepareStatement(DELETE3);)
 		{
-			s1.setInt(1, root.getId());
-			s2.setInt(1, root.getId());
+//			s1.setInt(1, root.getId());
+//			s2.setInt(1, root.getId());
 			s3.setInt(1, root.getId());
-			s1.execute();
-			s2.execute();
+//			s1.execute();
+//			s2.execute();
 			s3.execute();
 			
 			Services.notifications.localsChanged();
@@ -225,19 +225,61 @@ public class DbRoots
 		private final String[] patterns;
 		long minFileSize = -1;
 		long maxFileSize = -1;
+		private int permissionFlags;
 		
-		IgnorePatterns(String[] patterns, long min, long max)
+		public static final int SKIP_HIDDEN       = 0x00000001;
+		public static final int SKIP_EXECUTABLE   = 0x00000010;
+		public static final int SKIP_NON_WRITABLE = 0x00000100;
+		
+		IgnorePatterns(String[] patterns, LocalDirectory local)
 		{
 			this.patterns = patterns;
-			minFileSize = min;
-			maxFileSize = max;
+			minFileSize = local.getMinFileSize();
+			maxFileSize = local.getMaxFileSize();
+			permissionFlags = local.getPermissionFlags();
 		}
 		
 		public String[] getPatterns()
 		{
 			return this.patterns;
 		}
-		
+
+		public static int createFlags(
+				boolean skipHidden,
+				boolean skipExe,
+				boolean skipRO)
+		{
+			int returnValue = 0;
+			if (skipHidden)
+			{
+				returnValue |= SKIP_HIDDEN;
+			}
+			if (skipExe)
+			{
+				returnValue |= SKIP_EXECUTABLE;
+			}
+			if (skipRO)
+			{
+				returnValue |= SKIP_NON_WRITABLE;
+			}
+			return returnValue;
+		}
+
+		public static boolean isSkipHidden(int flags)
+		{
+			return (flags & SKIP_HIDDEN) != 0;
+		}
+
+		public static boolean isSkipExecutable(int flags)
+		{
+			return (flags & SKIP_EXECUTABLE) != 0;
+		}
+
+		public static boolean isSkipRO(int flags)
+		{
+			return (flags & SKIP_NON_WRITABLE) != 0;
+		}
+
 		public boolean blocks(Path path)
 		{
 			String pathString = path.toString();
@@ -256,6 +298,7 @@ public class DbRoots
 			{
 				return true;
 			}
+
 			try
 			{
 				long fileSize = Files.size(path);
@@ -267,6 +310,31 @@ public class DbRoots
 				{
 					return true;
 				}
+				if (!Files.isReadable(path))
+				{
+					return true;
+				}
+				if ((permissionFlags & SKIP_HIDDEN) != 0)
+				{
+					if (Files.isHidden(path))
+					{
+						return true;
+					}
+				}
+				if ((permissionFlags & SKIP_EXECUTABLE) != 0)
+				{
+					if (Files.isExecutable(path))
+					{
+						return true;
+					}
+				}
+				if ((permissionFlags & SKIP_NON_WRITABLE) != 0)
+				{
+					if (!Files.isWritable(path))
+					{
+						return true;
+					}
+				}
 			}
 			catch (IOException e)
 			{
@@ -276,7 +344,7 @@ public class DbRoots
 			return false;
 		}
 	}
-	
+
 	private static final String[] DUMMY = new String[0];
 	public static IgnorePatterns getIgnores(LocalDirectory local)
 	{
@@ -302,7 +370,7 @@ public class DbRoots
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get ignores.", e);
 		}
-		return new IgnorePatterns(returnValue.toArray(DUMMY), local.getMinFileSize(), local.getMaxFileSize());
+		return new IgnorePatterns(returnValue.toArray(DUMMY), local);
 	}
 
 	public static void setIgnores(LocalDirectory local, String[] ignores)

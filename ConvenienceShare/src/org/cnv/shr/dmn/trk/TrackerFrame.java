@@ -25,6 +25,8 @@
 
 package org.cnv.shr.dmn.trk;
 
+import java.util.LinkedList;
+
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.db.h2.DbMachines;
@@ -36,6 +38,9 @@ import org.cnv.shr.trck.TrackerEntry;
 
 public class TrackerFrame extends BrowserFrame
 {
+	LinkedList<ClientTrackerConnection> connections = new LinkedList<>();
+	
+	
 	@Override
 	protected void runLater(Runnable runnable)
 	{

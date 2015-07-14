@@ -39,6 +39,7 @@ import javax.swing.JFrame;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
+import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPaths;
@@ -57,7 +58,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	
 	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into ROOT key(R_ID) VALUES ("
 			+ "(select R_ID from ROOT where MID=? and RNAME=?)"
-			+ ", ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+			+ ", ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	
 	protected Machine machine;
 	protected String name;
@@ -67,6 +68,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	protected String tags;
 	protected long minFSize = -1;
 	protected long maxFSize = -1;
+	protected int permissionFlags = 0x0;
 
 	protected RootDirectory(final Integer id)
 	{
@@ -97,6 +99,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 		name                             = row.getString("RNAME");
 		minFSize                         = row.getLong  ("MIN_SIZE");
 		maxFSize                         = row.getLong  ("MAX_SIZE");
+		permissionFlags                  = row.getInt   ("PERM_FLAGS");
 		setDefaultSharingState(       SharingState.get(row.getInt(   "SHARING")));
 		
 		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.RMACHINE, row.getInt("MID"));
@@ -130,6 +133,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 			stmt.setInt(ndx++, getDbSharing().getDbValue());
 			stmt.setLong(ndx++, minFSize);
 			stmt.setLong(ndx++, maxFSize);
+			stmt.setInt(ndx++, permissionFlags);
 			
 			stmt.executeUpdate();
 			try (final ResultSet generatedKeys = stmt.getGeneratedKeys();)
@@ -206,6 +210,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 
 	public void setStats()
 	{
+		DbFiles.cleanFiles();
 		totalNumFiles = DbRoots.getNumberOfFiles(this);
 		totalFileSize = DbRoots.getTotalFileSize(this);
 		tryToSave();
@@ -337,5 +342,15 @@ public abstract class RootDirectory extends DbObject<Integer>
 	public void setMinimumSize(long minimumSize)
 	{
 		minFSize = minimumSize;
+	}
+
+	public int getPermissionFlags()
+	{
+		return permissionFlags;
+	}
+	
+	public void setPermissionFlags(int flag)
+	{
+		permissionFlags = flag;
 	}
 }

@@ -220,6 +220,8 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     makeDebugItems();
     downloads.refresh();
     Services.timer.scheduleAtFixedRate(refresh, GUI_REFRESH_RATE, GUI_REFRESH_RATE);
+
+		maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
 	}
 
 	private void makeDebugItems()
@@ -1352,7 +1354,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+    	Services.downloads.downloadThreads.execute(() -> {
         Services.downloads.initiatePendingDownloads();
+    	});
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed

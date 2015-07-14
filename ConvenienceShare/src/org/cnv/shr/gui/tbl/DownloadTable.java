@@ -39,6 +39,7 @@ import org.cnv.shr.db.h2.DbChunks;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
+import org.cnv.shr.dmn.dwn.DownloadManager.GuiInfo;
 import org.cnv.shr.gui.Application;
 import org.cnv.shr.gui.DiskUsage;
 import org.cnv.shr.mdl.Download;
@@ -147,16 +148,7 @@ public class DownloadTable extends DbJTable<Download>
 			@Override
 			void perform(Download download)
 			{
-				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(download);
-				if (dInstance != null)
-				{
-					dInstance.recover();
-					dInstance.continueDownload();
-				}
-				else
-				{
-					LogWrapper.getLogger().info("Implement me for the case when the download is already removed.");
-				}
+				DownloadInstance.testCompletion(download);
 			}
 			
 			@Override
@@ -170,18 +162,8 @@ public class DownloadTable extends DbJTable<Download>
 			@Override
 			void perform(Download download)
 			{
-				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(download);
-				if (dInstance != null)
-				{
-					Download download2 = dInstance.getDownload();
-					DbChunks.removeAllChunks(download2);
-					download2.setState(DownloadState.REQUESTING_METADATA);
-					dInstance.continueDownload();
-				}
-				else
-				{
-					LogWrapper.getLogger().info("Implement me for the case when the download is already removed.");
-				}
+				DbChunks.removeAllChunks(download);
+				download.setState(DownloadState.REQUESTING_METADATA);
 			}
 			
 			@Override
@@ -218,6 +200,21 @@ public class DownloadTable extends DbJTable<Download>
 				return "Set Priority";
 			}
 		});
+		addListener(new TableRightClickListener()
+		{
+			@Override
+			void perform(Download download)
+			{
+				download.setState(DownloadState.QUEUED);
+				download.tryToSave();
+			}
+			
+			@Override
+			String getName()
+			{
+				return "Restart (fix this)";
+			}
+		});
 		
 		table.setEnabled(true);
 	}
@@ -237,39 +234,46 @@ public class DownloadTable extends DbJTable<Download>
 	@Override
 	protected boolean fillRow(Download download, HashMap<String, Object> currentRow)
 	{
-		SharedFile file = download.getFile();
-		RootDirectory directory = file.getRootDirectory();
-		Machine machine = directory.getMachine();
-
+		SharedFile file;
+		RootDirectory directory;
+		Machine machine;
 		FileEntry fileEntry;
+		
+		if (download == null)
+		{
+			return false;
+		}
+		
 		try
 		{
+			file = download.getFile();
+			directory = file.getRootDirectory();
+			machine = directory.getMachine();
+
 			fileEntry = file.getFileEntry();
 		}
-		catch (NullPointerException ex)
+		catch (Exception ex)
 		{
 			DbDownloads.cleanUnchecksummedFiles();
-			LogWrapper.getLogger().log(Level.INFO, "Found unchecksummed file for download.", ex);
+			LogWrapper.getLogger().log(Level.INFO, "Found bad download.", ex);
 			currentRow.clear();
 			return false;
 		}
 		
-		DownloadInstance downloadInstance = Services.downloads.getDownloadInstanceForGui(fileEntry);
+		GuiInfo guiInfo = Services.downloads.getGuiInfo(download);
 		
-		
-		currentRow.put("Machine",           machine.getName()                                                                );
-		currentRow.put("Directory",         directory.getName()                                                              );
-		currentRow.put("File",              file.getPath().getUnbrokenName()                                                 );
-		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                                );
-		currentRow.put("Added on",          new Date(download.getAdded())                                                    );
-		currentRow.put("Status",            download.getState().humanReadable()                                              );
-		currentRow.put("Priority",          String.valueOf(download.getPriority())                                           );
-		currentRow.put("Local path",        download.getTargetFile().toString()                                              );
-		currentRow.put("Number of Mirrors", String.valueOf(downloadInstance == null ? 0 : downloadInstance.getNumSeeders())  );
-		currentRow.put("Speed",             downloadInstance == null ? "N/A" : downloadInstance.getSpeed()                   );
-		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100"                      
-				: downloadInstance == null ? "0.0" : String.valueOf(downloadInstance.getCompletionPercentage(false) * 100)       );
-		currentRow.put("Id",                String.valueOf(download.getId())                                                 );
+		currentRow.put("Machine",           machine.getName()                                                                     );
+		currentRow.put("Directory",         directory.getName()                                                                   );
+		currentRow.put("File",              file.getPath().getUnbrokenName()                                                      );
+		currentRow.put("Size",              new DiskUsage(file.getFileSize())                                                     );
+		currentRow.put("Added on",          new Date(download.getAdded())                                                         );
+		currentRow.put("Status",            download.getState().humanReadable()                                                   );
+		currentRow.put("Priority",          String.valueOf(download.getPriority())                                                );
+		currentRow.put("Local path",        download.getTargetFile().toString()                                                   );
+		currentRow.put("Number of Mirrors", guiInfo.numSeeders                                                                    );
+		currentRow.put("Speed",             guiInfo.speed                                                                         );
+		currentRow.put("Percent",           download.getState().equals(DownloadState.ALL_DONE) ?  "100" : guiInfo.percentComplete );                     
+		currentRow.put("Id",                String.valueOf(download.getId())                                                      );
 		
 		return true;
 	}

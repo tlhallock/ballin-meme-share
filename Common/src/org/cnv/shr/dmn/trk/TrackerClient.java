@@ -76,7 +76,6 @@ public abstract class TrackerClient
 		{
 			throw new IOException("Not able to connect on any ports.", lastException);
 		}
-
 		connection.connect(request);
 		return connection;
 	}

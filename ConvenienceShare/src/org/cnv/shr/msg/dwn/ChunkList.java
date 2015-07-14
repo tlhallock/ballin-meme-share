@@ -27,7 +27,6 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import javax.json.stream.JsonGenerator;
@@ -55,11 +54,6 @@ public class ChunkList extends DownloadMessage
 				}});
 
 	public static int TYPE = 11;
-	
-	public ChunkList(InputStream input) throws IOException
-	{
-		super(input);
-	}
 	
 	public ChunkList(List<Chunk> chunks2, FileEntry descriptor)
 	{

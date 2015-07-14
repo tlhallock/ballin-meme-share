@@ -75,6 +75,14 @@ public class ServeInstance extends TimerTask
 		return local;
 	}
 	
+	public void dblCheckConnection()
+	{
+		if (connection.isClosed())
+		{
+			Services.server.done(connection);
+		}
+	}
+	
 	private void serveChunks(long chunkSize) throws IOException, NoSuchAlgorithmException
 	{
 		local.ensureChecksummed();
@@ -172,10 +180,20 @@ public class ServeInstance extends TimerTask
 			LogWrapper.getLogger().log(Level.INFO, "Unable to send failure reason.", e);
 		}
 		connection.finish();
+		Services.server.done(connection);
 	}
 
+	private long lastChunksSent = 0;
 	public void sendChunks(long chunkSize)
 	{
+		long now = System.currentTimeMillis();
+		if (now < lastChunksSent + 10 * 1000)
+		{
+			LogWrapper.getLogger().info("Just sent chunks at " + lastChunksSent + ", now it is " + now + ".\nwaiting.");
+			return;
+		}
+		lastChunksSent = now;
+		
 		try
 		{
 			LogWrapper.getLogger().info("Sending chunks of size " + chunkSize);
@@ -252,6 +270,7 @@ public class ServeInstance extends TimerTask
 	{
 		Services.downloads.downloadThreads.execute(() ->
 		{
+			dblCheckConnection();
 			try
 			{
 				connection.send(new RequestCompletionStatus(local.getFileEntry()));

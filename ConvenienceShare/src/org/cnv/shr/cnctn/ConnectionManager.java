@@ -52,6 +52,9 @@ public class ConnectionManager
 {
 	private List<ConnectionRunnable> connectionRunnables = new LinkedList<>();
 	
+	// Would love to not hang up when someone tries to connect to a busy port...
+//	private boolean[] freeSockets = new boolean[];
+	
 	
 	private static String getIp(String url)
 	{

@@ -109,6 +109,7 @@ public class Communication implements Closeable
 	private static Socket createSocket(String ip, int port) throws IOException { 
 		Socket socket = new Socket();
 		socket.connect(new InetSocketAddress(ip, port), 2000);
+//		socket.setSoTimeout(2 * 60 * 1000);
 		return socket;
 	}
 	

@@ -53,7 +53,7 @@ import org.cnv.shr.util.Misc;
 public class LocalDirectory extends RootDirectory
 {
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update ROOT set "
-			+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=?, SHARING=?, MIN_SIZE=?, MAX_SIZE=? "
+			+ "PELEM=?, TAGS=?, DESCR=?, TSPACE=?, NFILES=?, RNAME=?, SHARING=?, MIN_SIZE=?, MAX_SIZE=?, PERM_FLAGS=? "
 			+ "where ROOT.R_ID = ?;");
 	
 	
@@ -196,6 +196,7 @@ public class LocalDirectory extends RootDirectory
 			stmt.setInt   (ndx++, getDefaultSharingState().getDbValue());
 			stmt.setLong  (ndx++, minFSize);
 			stmt.setLong  (ndx++, maxFSize);
+			stmt.setInt(   ndx++, permissionFlags);
 			
 			stmt.setInt(ndx++, id);
 			

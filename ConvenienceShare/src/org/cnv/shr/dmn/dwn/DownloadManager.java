@@ -27,12 +27,13 @@ package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
 
@@ -42,6 +43,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.AlreadyDownloadedFrame;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.trck.FileEntry;
@@ -51,7 +53,7 @@ import org.cnv.shr.util.Misc;
 public class DownloadManager
 {
 	// Need to remove old ones...
-	HashMap<FileEntry, DownloadInstance> downloads = new HashMap<>();
+	Hashtable<FileEntry, DownloadInstance> downloads = new Hashtable<>();
 	DownloadInitiator initiator = new DownloadInitiator();
 	ChecksumRequester requester = new ChecksumRequester();
 	public ScheduledExecutorService downloadThreads = Executors.newScheduledThreadPool(0);
@@ -127,49 +129,76 @@ public class DownloadManager
 		{
 			return null;
 		}
-		
-		synchronized (this)
+
+		DownloadInstance instance;
+		FileEntry fileEntry = d.getFile().getFileEntry();
+
+		try
 		{
-			DownloadInstance prev = downloads.get(d.getFile().getFileEntry());
-			if (prev != null)
+			synchronized (creating)
 			{
-				LogWrapper.getLogger().info("Already downloading.");
-				prev.continueDownload();
-				return null;
+				DownloadInstance prev = downloads.get(fileEntry);
+				if (prev != null)
+				{
+					LogWrapper.getLogger().info("Already downloading.");
+					prev.continueDownload();
+					return null;
+				}
+
+				if (!canCreate(fileEntry))
+				{
+					LogWrapper.getLogger().info("Already creating download for " + fileEntry);
+					return null;
+				}
 			}
-	
+
 			d.tryToSave();
-	
+
 			if (downloads.size() >= Services.settings.maxDownloads.get())
 			{
 				return null;
 			}
+			
+			Machine machine = d.getFile().getRootDirectory().getMachine();
+			Communication openConnection = Services.networkManager.openConnection(null, machine, false, "Download file");
+			if (openConnection == null)
+			{
+				throw new IOException("Unable to authenticate to host.");
+			}
+			Seeder primarySeeder = new Seeder(machine, openConnection);
 	
 			LogWrapper.getLogger().info("Creating download instance");
-			DownloadInstance instance = new DownloadInstance(d);
-			instance.allocate();
-			instance.recover();
-			downloads.put(d.getFile().getFileEntry(), instance);
-			Services.notifications.downloadAdded(instance);
-			instance.continueDownload();
-			return instance;
+			instance = new DownloadInstance(d, primarySeeder);
+			downloads.put(fileEntry, instance);
 		}
+		finally
+		{
+			doneCreating(fileEntry);
+		}
+		
+		instance.allocate();
+		instance.recover();
+		instance.continueDownload();
+		Services.notifications.downloadAdded(instance);
+		return instance;
 	}
 
-	public synchronized void remove(DownloadInstance downloadInstance)
+	public void remove(DownloadInstance downloadInstance)
 	{
 		downloads.remove(downloadInstance.getDownload().getFile().getFileEntry());
 		if (downloads.size() >= Services.settings.maxDownloads.get())
 		{
 			return;
 		}
+		guiInfo.remove(downloadInstance.getDownload().getId());
 		initiator.initiatePendingDownloads();
 	}
 
-	public synchronized LinkedList<DownloadInstance> getDownloadInstances(Communication c)
+	public LinkedList<DownloadInstance> getDownloadInstances(Communication c)
 	{
 		LinkedList<DownloadInstance> returnValue = new LinkedList<>();
-		for (DownloadInstance instance : downloads.values())
+
+		for (DownloadInstance instance : ((Map<FileEntry, DownloadInstance>) downloads.clone()).values())
 		{
 			if (instance.contains(c))
 			{
@@ -179,39 +208,23 @@ public class DownloadManager
 		return returnValue;
 	}
 
-	public synchronized DownloadInstance getDownloadInstanceForGui(Download download)
+	public DownloadInstance getDownloadInstanceForGui(Download download)
 	{
-		FileEntry fileEntry = download.getFile().getFileEntry();
-		DownloadInstance downloadInstance = downloads.get(fileEntry);
-		if (downloadInstance == null)
-		{
-			DownloadInstance instance;
-			try
-			{
-				instance = new DownloadInstance(download);
-			}
-			catch (IOException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to create download.", e);
-				return null;
-			}
-			downloads.put(fileEntry, instance);
-		}
-		return downloadInstance;
+		return getDownloadInstanceForGui(download.getFile().getFileEntry());
 	}
 	
-	public synchronized DownloadInstance getDownloadInstanceForGui(FileEntry descriptor)
+	public DownloadInstance getDownloadInstanceForGui(FileEntry descriptor)
 	{
 		DownloadInstance downloadInstance = downloads.get(descriptor);
 		if (downloadInstance == null)
 		{
-			LogWrapper.getLogger().fine("Unable to find download for " + descriptor);
+			LogWrapper.getLogger().finest("Unable to find download for " + descriptor);
 			return null;
 		}
 		return downloadInstance;
 	}
 	
-	public synchronized DownloadInstance getDownloadInstance(FileEntry descriptor, Communication connection)
+	public DownloadInstance getDownloadInstance(FileEntry descriptor, Communication connection)
 	{
 		DownloadInstance downloadInstance = downloads.get(descriptor);
 		if (downloadInstance == null)
@@ -251,5 +264,59 @@ public class DownloadManager
 	public boolean hasPendingChecksumRequest(SharedFileId id)
 	{
 		return requester.hasSharedPendingId(id);
+	}
+	
+	
+	
+	
+	private HashSet<FileEntry> creating = new HashSet<>();
+	private boolean canCreate(FileEntry newOne)
+	{
+		synchronized (creating)
+		{
+			return creating.add(newOne);
+		}
+	}
+	private void doneCreating(FileEntry newOne)
+	{
+		synchronized (creating)
+		{
+			creating.remove(newOne);
+		}
+	}
+	
+	
+	
+	
+	
+	// Should probably revert everything from here: the real problem was creation
+	
+	private Hashtable<Integer, GuiInfo> guiInfo = new Hashtable<>();
+	public void updateGuiInfo(Download instance, GuiInfo info)
+	{
+		guiInfo.put(instance.getId(), info);
+	}
+	public GuiInfo getGuiInfo(Download d)
+	{
+		GuiInfo guiInfo2 = guiInfo.get(d.getId());
+		if (guiInfo2 == null)
+		{
+			return new GuiInfo("0", "N/A", "0.0");
+		}
+		return guiInfo2;
+	}
+	
+	public static final class GuiInfo
+	{
+		public final String numSeeders;
+		public final String speed;
+		public final String percentComplete;
+		
+		public GuiInfo(String numSeeders, String speed, String percentComplete)
+		{
+			this.numSeeders = numSeeders;
+			this.speed = speed;
+			this.percentComplete = percentComplete;
+		}
 	}
 }

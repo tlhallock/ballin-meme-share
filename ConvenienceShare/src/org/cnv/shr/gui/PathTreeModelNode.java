@@ -246,9 +246,6 @@ public class PathTreeModelNode implements TaskListener
 			PathTreeModelNode node = new PathTreeModelNode(this, model, pathElement, syncFully);
 			allChildren.add(node);
 			
-			// TODO: why does queueSyncTask get called on files?
-			
-			
 			model.getIterator().queueSyncTask(p.getSource(), pathElement, node);
 		}
 		// add sub files...

@@ -55,7 +55,7 @@ public class RequestCompletionStatus extends DownloadMessage
 	{
 		for (DownloadInstance instance : Services.downloads.getDownloadInstances(connection))
 		{
-			instance.sendCompletionStatus();
+			instance.sendCompletionStatus(connection);
 		}
 	}
 

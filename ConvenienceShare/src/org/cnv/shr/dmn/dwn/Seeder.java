@@ -48,7 +48,7 @@ public class Seeder
 	long lastRequest;
 	
 	
-	Seeder(DownloadInstance instance, Machine machine, Communication openConnection)
+	Seeder(Machine machine, Communication openConnection)
 	{
 		this.machine = machine;
 		this.connection = openConnection;
