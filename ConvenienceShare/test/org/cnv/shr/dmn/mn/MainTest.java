@@ -5,7 +5,6 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
@@ -13,6 +12,7 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.test.TestActions;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class MainTest
 {
@@ -47,7 +47,7 @@ public class MainTest
 			}
 			else if (args[i].equals("-k") && i < args.length - 1)
 			{
-				new Timer().schedule(new TimerTask() {
+				Misc.timer.schedule(new TimerTask() {
 					@Override
 					public void run()
 					{

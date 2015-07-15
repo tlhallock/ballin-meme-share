@@ -16,13 +16,13 @@ import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.LinkedList;
 import java.util.Random;
-import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class SplashScreen extends JFrame
 {
@@ -38,12 +38,11 @@ public class SplashScreen extends JFrame
 	
 	public static SplashScreen showSplash()
 	{
-		Timer timer = new Timer();
 		TimerTask startUpMonitor = new TimerTask() { public void run() {
 				LogWrapper.getLogger().info("Unable to start main application within one minute!!!!");
 				System.exit(-1);
 			}};
-		timer.schedule(startUpMonitor, 60 * 1000);
+		Misc.timer.schedule(startUpMonitor, 60 * 1000);
 		SplashScreen screen = new SplashScreen();
 
     Rectangle screenBounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().getBounds();
@@ -55,24 +54,25 @@ public class SplashScreen extends JFrame
 				splashWidth,
 				splashHeight));
 		screen.setUndecorated(true);
-		screen.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosed(WindowEvent e)
-			{
-				LogWrapper.getLogger().info("Splash screen closed.");
-				timer.cancel();
-			}
-		});
 
 		LinkedList<Circle> circles = new LinkedList<>();
-		timer.scheduleAtFixedRate(new TimerTask() {
+		TimerTask prettyTask = new TimerTask() {
 			@Override
 			public void run()
 			{
 				circles.add(new Circle(screen.getContentPane().getWidth(), screen.getContentPane().getHeight()));
 				screen.repaint();
-			}}, 1000, 500);
+			}};
+		Misc.timer.scheduleAtFixedRate(prettyTask, 1000, 500);
 
+		screen.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent e)
+			{
+				LogWrapper.getLogger().info("Splash screen closed.");
+				startUpMonitor.cancel();
+			}
+		});
 		screen.getContentPane().setLayout(new GridLayout(0, 1));
 		screen.getContentPane().add(new JPanel() {
 			@Override

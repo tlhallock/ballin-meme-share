@@ -74,9 +74,13 @@ public class LookingFor extends DownloadMessage
 	public void perform(Communication connection) throws Exception
 	{
 		SharedFile file = DbFiles.getFile(checksum, fileSize);
+		if (file == null)
+		{
+			return;
+		}
 		Machine machine = connection.getMachine();
 		checkPermissionsViewable(connection, machine, "Reporting file");
-		connection.send(new MachineHasFile(descriptor, file != null));
+		connection.send(new MachineHasFile(descriptor));
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK

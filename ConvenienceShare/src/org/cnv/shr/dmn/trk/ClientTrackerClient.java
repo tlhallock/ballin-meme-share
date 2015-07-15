@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Seeder;
@@ -129,26 +130,13 @@ public class ClientTrackerClient extends TrackerClient
 	{
 		LogWrapper.getLogger().info("Found seeder " + entry);
 		
-		try
-		{
-			Communication openConnection = Services.networkManager.openConnection(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false, "Download file");
-			if (openConnection == null)
+		Services.networkManager.openConnection(new AutoCloseConnectionParams(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false, "Download file") {
+			@Override
+			public void connectionOpened(Communication connection) throws Exception
 			{
-				return;
+				connection.send(new LookingFor(remoteFile));
 			}
-			try
-			{
-			openConnection.send(new LookingFor(remoteFile));
-			}
-			finally
-			{
-				openConnection.finish();
-			}
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to request seeder.", e);
-		}
+		});
 	}
 
 	private boolean alreadyHasSeeder(Collection<Seeder> seeders, final Machine remote)

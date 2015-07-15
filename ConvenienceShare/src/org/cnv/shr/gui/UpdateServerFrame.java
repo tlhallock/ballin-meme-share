@@ -14,13 +14,14 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.logging.Level;
 
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
+import org.cnv.shr.cnctn.ConnectionParams.KeepOpenConnectionParams;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
@@ -282,7 +283,7 @@ public class UpdateServerFrame extends javax.swing.JFrame {
   				}
   				Services.userThreads.execute(() -> {
   						// should not be on event queue
-  	  				requestLogs(frame, selectedIdents);
+  	  				requestLogs(selectedIdents);
   					});
   				});
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -465,7 +466,7 @@ public class UpdateServerFrame extends javax.swing.JFrame {
     
     
     
-	private static void requestLogs(JFrame frame, HashSet<String> selectedIdents)
+	private void requestLogs(HashSet<String> selectedIdents)
 	{
 		UpdateServerProgress progress = new UpdateServerProgress("Requesting Logs Progress", selectedIdents.size());
 		Services.notifications.registerWindow(progress);
@@ -482,33 +483,18 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 				continue;
 			}
 
-			try
-			{
-				Communication connection = Services.networkManager.openConnection(frame, machine, false, "Get logs");
-				if (connection == null)
-				{
-					continue;
-				}
-				try
+			Services.networkManager.openConnection(new KeepOpenConnectionParams(this, machine, false, "Get logs") {
+				@Override
+				public void connectionOpened(Communication connection) throws Exception
 				{
 					connection.putParam("progress", progress);
 					connection.send(new UpdateInfoRequestRequest("getLogs"));
-				}
-				catch (Exception ex)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to send get logs request to " + identifier, ex);
-					connection.finish();
-				}
-			}
-			catch (IOException e)
-			{
-				LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
-			}
+				}});
 		}
 		progress.dispose();
 	}
 
-	private static void updateVersion(UpdateServerFrame frame, HashSet<String> selectedIdents)
+	private void updateVersion(UpdateServerFrame frame, HashSet<String> selectedIdents)
 	{
 		for (String identifier : selectedIdents)
 		{
@@ -519,19 +505,12 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 				continue;
 			}
 
-			try
-			{
-				Communication connection = Services.networkManager.openConnection(frame, machine, false, "Update cached version info.");
-				if (connection == null)
+			Services.networkManager.openConnection(new AutoCloseConnectionParams(this, machine, false, "Get logs") {
+				@Override
+				public void connectionOpened(Communication connection) throws Exception
 				{
-					continue;
-				}
-				connection.finish();
-			}
-			catch (IOException e)
-			{
-				LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
-			}
+					refresh();
+				}});
 		}
 	}
 	private static void requestUpdates(UpdateServerFrame frame, HashSet<String> selectedIdents)
@@ -545,27 +524,13 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 				continue;
 			}
 
-			try
-			{
-				Communication connection = Services.networkManager.openConnection(frame, machine, false, "Update code info.");
-				if (connection == null)
-				{
-					continue;
-				}
-				try
+			Services.networkManager.openConnection(new KeepOpenConnectionParams(frame, machine, false, "Update code info.") {
+				@Override
+				public void connectionOpened(Communication connection) throws Exception
 				{
 					connection.send(new UpdateInfoRequestRequest("update info"));
 				}
-				catch (Exception ex)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to send update info request to " + identifier, ex);
-					connection.finish();
-				}
-			}
-			catch (IOException e)
-			{
-				LogWrapper.getLogger().info("Unable to connect to machine " + identifier);
-			}
+			});
 		}
 	}
 }

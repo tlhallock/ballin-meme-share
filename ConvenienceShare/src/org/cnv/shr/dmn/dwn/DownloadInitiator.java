@@ -42,7 +42,7 @@ public class DownloadInitiator extends TimerTask
 	{
 		try
 		{
-			Services.downloads.createDownload(next, false);
+			Services.downloads.createDownloadInstance(next, false);
 		}
 		catch (IOException e)
 		{

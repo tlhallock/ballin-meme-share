@@ -33,11 +33,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
-import javax.json.JsonException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
@@ -80,63 +80,46 @@ public class UserActions
 
 	public static void addMachine(final String url, final AddMachineParams params)
 	{
-		Services.userThreads.execute(() ->
+		Services.networkManager.openConnection(new AutoCloseConnectionParams(url, params.acceptKeys, "Add machine") {
+			public void onFail()
 			{
-				try
+				Services.keyManager.addPendingAuthentication(Services.settings.keysFile.getPath(), url);
+			}
+			@Override
+			public void connectionOpened(Communication connection) throws Exception
+			{
+				Machine machine = connection.getMachine();
+				if (params.message)
 				{
-					Communication openConnection = Services.networkManager.openConnection(url, params.acceptKeys, "Add machine");
-					if (openConnection == null)
-					{
-						Services.keyManager.addPendingAuthentication(
-								Services.settings.keysFile.getPath(),
-								url);
-						return;
-					}
+					// enable messaging
+					machine.setAllowsMessages(true);
+				}
 
-					Machine machine;
-					try
+				if (params.visible)
+				{
+					if (params.share)
 					{
-						machine = openConnection.getMachine();
-						if (params.message)
-						{
-							// enable messaging
-							machine.setAllowsMessages(true);
-						}
-	
-						if (params.visible)
-						{
-							if (params.share)
-							{
-								machine.setWeShare(SharingState.DOWNLOADABLE);
-							}
-							else
-							{
-								machine.setWeShare(SharingState.SHARE_PATHS);
-							}
-						}
-						
-						if (params.pin)
-						{
-							machine.setPinned(true);
-							machine.tryToSave();
-						}
-						
-						machine.tryToSave();
+						machine.setWeShare(SharingState.DOWNLOADABLE);
 					}
-					finally
+					else
 					{
-						openConnection.finish();
-					}
-
-					if (params.open)
-					{
-						show(machine);
+						machine.setWeShare(SharingState.SHARE_PATHS);
 					}
 				}
-				catch (IOException e)
+
+				if (params.pin)
 				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to discover " + url, e);
+					machine.setPinned(true);
+					machine.tryToSave();
 				}
+
+				machine.tryToSave();
+
+				if (params.open)
+				{
+					show(machine);
+				}
+			}
 		});
 	}
 
@@ -149,29 +132,14 @@ public class UserActions
 	
 	private static void syncRootsNow(JFrame origin, final Machine m)
 	{
-		String url = m.getUrl();
-		try
-		{
-      LogWrapper.getLogger().info("Synchronizing roots with " + m.getName());
-			Communication openConnection = Services.networkManager.openConnection(origin, m, false, "Synchronize roots");
-			if (openConnection == null)
+    LogWrapper.getLogger().info("Synchronizing roots with " + m.getName());
+		Services.networkManager.openConnection(new AutoCloseConnectionParams(origin, m, false, "Synchronize roots") {
+			@Override
+			public void connectionOpened(Communication connection) throws Exception
 			{
-				return;
+				connection.send(new ListRoots());
 			}
-			try
-			{
-				openConnection.send(new ListRoots());
-			}
-			finally
-			{
-				openConnection.finish();
-			}
-			Services.notifications.remoteChanged(openConnection.getMachine());
-		}
-		catch (IOException | JsonException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to sync roots with " + url, e);
-		}
+		});
 	}
 
 	public static void findMachines(JFrame origin, final Machine m)
@@ -183,66 +151,40 @@ public class UserActions
 	public static void findTrackers(JFrame origin, Machine machine)
 	{
 		Services.userThreads.execute(() -> {
-				try
-				{
-					LogWrapper.getLogger().info("Requesting trackers from " + machine.getName());
-					Services.trackers.trackersRequested(machine);
+				LogWrapper.getLogger().info("Requesting trackers from " + machine.getName());
+				Services.trackers.trackersRequested(machine);
 
-					Communication openConnection = Services.networkManager.openConnection(origin, machine, false, "Find trackers");
-					if (openConnection == null)
+				Services.networkManager.openConnection(new AutoCloseConnectionParams(origin, machine, false, "Find trackers") {
+					@Override
+					public void connectionOpened(Communication connection) throws Exception
 					{
-						return;
+						connection.send(new FindTrackers());
 					}
-					try
-					{
-						openConnection.send(new FindTrackers());
-					}
-					finally
-					{
-						openConnection.finish();
-					}
-				}
-				catch (IOException e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to find trackers from " + machine.getUrl(), e);
-				}
+				});
 		});
 	}
 	
 	public static void findMachines(JFrame origin, final Machine m, HashSet<String> foundUrls)
 	{
 		Services.userThreads.execute(() -> {
-				try
-				{
-					LogWrapper.getLogger().info("Requesting peers from " + m.getName());
+			LogWrapper.getLogger().info("Requesting peers from " + m.getName());
 
-					String url = m.getIp() + ":" + m.getPort();
-					synchronized (foundUrls)
-					{
-						if (!foundUrls.add(url))
-						{
-							return;
-						}
-					}
-					
-					Communication openConnection = Services.networkManager.openConnection(origin, m, false, "Find more machines");
-					if (openConnection == null)
-					{
-						return;
-					}
-					try
-					{
-						openConnection.send(new FindMachines());
-					}
-					finally
-					{
-						openConnection.finish();
-					}
-				}
-				catch (IOException e)
+			String url = m.getIp() + ":" + m.getPort();
+			synchronized (foundUrls)
+			{
+				if (!foundUrls.add(url))
 				{
-					LogWrapper.getLogger().log(Level.INFO, "Unable to discover refresh " + m.getUrl(), e);
+					return;
 				}
+			}
+
+			Services.networkManager.openConnection(new AutoCloseConnectionParams(origin, m, false, "Find more machines") {
+				@Override
+				public void connectionOpened(Communication connection) throws Exception
+				{
+					connection.send(new FindMachines());
+				}
+			});
 		});
 	}
 
@@ -523,32 +465,20 @@ public class UserActions
 
 		// Is the rest of this really necessary?
 		// Permissions should be synced inside of syncRoots...
-		try
-		{
-			Communication openConnection = Services.networkManager.openConnection(origin, machine, false, "Check permissions");
-			if (openConnection == null)
+		Services.networkManager.openConnection(new AutoCloseConnectionParams(origin, machine, false, "Check permissions") {
+			@Override
+			public void connectionOpened(Communication connection) throws Exception
 			{
-				return;
-			}
-
-			try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
-			{
-				openConnection.send(new GetPermission());
-				while (list.hasNext())
+				try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
 				{
-					openConnection.send(new GetPermission((RemoteDirectory) list.next()));
+					connection.send(new GetPermission());
+					while (list.hasNext())
+					{
+						connection.send(new GetPermission((RemoteDirectory) list.next()));
+					}
 				}
 			}
-			finally
-			{
-				openConnection.finish();
-			}
-			Services.notifications.remoteChanged(openConnection.getMachine());
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to sync permissions with " + machine, e);
-		}
+		});
 	}
 
 	public static void show(Machine machine)

@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import javax.swing.JOptionPane;
@@ -49,6 +48,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbChunks;
 import org.cnv.shr.db.h2.DbChunks.ChunkState;
 import org.cnv.shr.db.h2.DbChunks.DbChunk;
+import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
@@ -88,7 +88,7 @@ public class DownloadInstance implements Runnable
 	
 	private RemoteFile remoteFile;
 	private Path destination;
-	private Download download;
+	private Integer downloadId;
 	private Seeder primarySeeder;
 	private long requestedMetaData;
 	
@@ -97,14 +97,14 @@ public class DownloadInstance implements Runnable
 	
 	DownloadInstance(Download d, Seeder primarySeeder) throws IOException
 	{
+		Objects.requireNonNull(this.primarySeeder = primarySeeder, "Must have a primary seeder.");
 		freeSeeders.addLast(primarySeeder);
-		this.download = d;
+		this.downloadId = d.getId();
 		remoteFile = d.getFile();
 		Objects.requireNonNull(remoteFile.getChecksum(), "The remote file should already have a checksum.");
-		Objects.requireNonNull(primarySeeder, "Must have a primary seeder.");
 		setDestinationFile();
 	}
-
+	
 	public synchronized void continueDownload()
 	{
 		Services.downloads.downloadThreads.execute(this);
@@ -113,6 +113,7 @@ public class DownloadInstance implements Runnable
 	public void run()
 	{
 		updateGui();
+		Download download = getDownload();
 		LogWrapper.getLogger().fine("Continuing download " + download);
 		try
 		{
@@ -140,6 +141,7 @@ public class DownloadInstance implements Runnable
 			LogWrapper.getLogger().info("Already quit.");
 			return;
 		}
+		Download download = getDownload();
 		LogWrapper.getLogger().info("Requesting more metadata for " + download);
 		download.setState(DownloadState.REQUESTING_METADATA);
 		
@@ -179,6 +181,7 @@ public class DownloadInstance implements Runnable
 			LogWrapper.getLogger().info("Currently not requesting seeders.");
 			return;
 		}
+		Download download = getDownload();
 
 		DownloadInstance ins = this;
 		lastSeederRequest = now;
@@ -204,9 +207,10 @@ public class DownloadInstance implements Runnable
 		});
 	}
 
-	public synchronized void addSeeder(Machine machine, Communication connection)
+	public synchronized void addSeeder(Machine machine)
 	{
-		freeSeeders.add(new Seeder(machine, connection));
+		// TODO:
+//		freeSeeders.add(new Seeder(machine, connection));
 		queue();
 	}
 
@@ -224,6 +228,7 @@ public class DownloadInstance implements Runnable
 			LogWrapper.getLogger().info("Machine id did not macth. Excepted " + expected + " found " + found);
 			return;
 		}
+		Download download = getDownload();
 		download.setState(DownloadState.RECEIVING_METADATA);
 		
 		for (Chunk chunk : chunks)
@@ -256,6 +261,7 @@ public class DownloadInstance implements Runnable
 		{
 			throw new RuntimeException("Trying to recover with no destination set!");
 		}
+		Download download = getDownload();
 		download.setState(DownloadState.RECOVERING);
 		testCompletion(download);
 		if (isDone())
@@ -317,6 +323,7 @@ public class DownloadInstance implements Runnable
 	
 	synchronized void allocate() throws IOException
 	{
+		Download download = getDownload();
 		if (!download.getState().hasYetTo(DownloadState.ALLOCATING) && Files.size(destination) == remoteFile.getFileSize())
 		{
 			return;
@@ -336,7 +343,8 @@ public class DownloadInstance implements Runnable
 			LogWrapper.getLogger().info("Already quit.");
 			return;
 		}
-		
+
+		Download download = getDownload();
 		LogWrapper.getLogger().info("Queue " + download);
 		
 		dblCheckConnections();
@@ -430,11 +438,12 @@ public class DownloadInstance implements Runnable
 		Services.downloads.downloadThreads.schedule(() ->
 		{
 			complete();
-		}, 1, TimeUnit.SECONDS);
+		}, 5 * 1000);
 	}
 
 	private boolean isDone()
 	{
+		Download download = getDownload();
 		return pendingSeeders.isEmpty() && DbChunks.allChunksAreDone(download);
 	}
 
@@ -483,6 +492,7 @@ public class DownloadInstance implements Runnable
 
 				if (successful)
 				{
+					Download download = getDownload();
 					DbChunks.chunkDone(download, chunk, ChunkState.DOWNLOADED);
 				}
 				connection.send(new CompletionStatus(remoteFile.getFileEntry(), getCompletionPercentage(true)));
@@ -508,6 +518,7 @@ public class DownloadInstance implements Runnable
 		{
 			seeder.done();
 		}
+		Download download = getDownload();
 
 		download.setState(DownloadState.VERIFYING_COMPLETED_DOWNLOAD);
 		LogWrapper.getLogger().info("Verifying checksum of " + download);
@@ -598,18 +609,24 @@ public class DownloadInstance implements Runnable
 		{
 			fail("Unable to get destination file " + destination);
 		}
-		download.setDestination(destination);
+		getDownload().setDestination(destination);
 		
 		LogWrapper.getLogger().info("Downloading \"" + remoteFile.getRootDirectory().getName() + ":" + remoteFile.getPath().getFullPath() + "\" to \"" + destination + "\"");
 	}
 
 	public Path getDestinationFile()
 	{
-		return download.getTargetFile();
+		return getDownload().getTargetFile();
 	}
 	
 	public Download getDownload()
 	{
+		Download download = DbDownloads.getDownload(downloadId);
+		if (download == null)
+		{
+			fail("Lost download");
+			throw new RuntimeException("Lost the download " + downloadId);
+		}
 		return download;
 	}
 	
@@ -648,7 +665,7 @@ public class DownloadInstance implements Runnable
 			return completionSatus;
 		}
 		lastCountRefresh = now;
-		return completionSatus = DbChunks.getDownloadPercentage(download);
+		return completionSatus = DbChunks.getDownloadPercentage(getDownload());
 	}
 	
 	public void sendCompletionStatus(Communication c)
@@ -673,7 +690,12 @@ public class DownloadInstance implements Runnable
 			seeder.done();
 		for (Seeder seeder : readingSeeders)
 			seeder.done();
-		download.setState(DownloadState.FAILED);
+		
+		Download download = DbDownloads.getDownload(downloadId);
+		if (download != null)
+		{
+			download.setState(DownloadState.FAILED);
+		}
 			
 		DownloadInstance instance = this;
 		Services.downloads.downloadThreads.execute(() -> { Services.downloads.remove(instance); });
@@ -750,7 +772,7 @@ public class DownloadInstance implements Runnable
 	
 	private void updateGui()
 	{
-		Services.downloads.updateGuiInfo(download, new GuiInfo(
+		Services.downloads.updateGuiInfo(getDownload(), new GuiInfo(
 				String.valueOf(getNumSeeders()),
 				getSpeed(),
 				String.valueOf(getCompletionPercentage(false) * 100)));

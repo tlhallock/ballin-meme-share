@@ -38,13 +38,9 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import javax.swing.ImageIcon;
@@ -79,6 +75,7 @@ import org.cnv.shr.updt.UpdateInfoImpl;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.NonRejectingExecutor;
 import org.cnv.shr.util.PortMapper;
 
 public class Services
@@ -86,7 +83,7 @@ public class Services
 	/** To take items off the AWT event thread **/
 	public static ExecutorService userThreads;
 	/** To handle outgoing network traffic **/
-	public static ExecutorService connectionThreads;
+	public static NonRejectingExecutor connectionThreads;
 	/** To handle incoming network traffic **/
 	public static RequestHandler[] handlers;
 	public static ServerSocket[] sockets;
@@ -98,7 +95,6 @@ public class Services
 	public static ConnectionManager networkManager;
 	public static MessageReader msgReader;
 	public static KeysService keyManager;
-	public static Timer timer;
 	public static LocalMachine localMachine;
 	public static DbConnectionCache h2DbCache;
 	public static ServeManager server;
@@ -228,8 +224,7 @@ public class Services
 		}
 		
 		userThreads        = Executors.newCachedThreadPool();
-		connectionThreads  = new ThreadPoolExecutor(0, settings.maxDownloads.get(), 
-				60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+		connectionThreads  = new NonRejectingExecutor("cnctns", settings.maxDownloads.get());
 		checksums = new ChecksumManager();
 		
 		startSystemTray(screen);
@@ -294,10 +289,9 @@ public class Services
 			handlers[i].start();
 		}
 		
-		timer = new Timer();
 		downloads.startDownloadInitiator();
-		timer.scheduleAtFixedRate(updateManager, 10000L, 24L * 60L * 60L * 1000L);
-		timer.schedule(h2DbCache, 10 * 60 * 1000);
+		Misc.timer.scheduleAtFixedRate(updateManager, 10000L, 24L * 60L * 60L * 1000L);
+		Misc.timer.schedule(h2DbCache, 10 * 60 * 1000);
 		startLocalSyncer();
 		settings.monitorRepeat.addListener(new SettingListener() {
 			@Override
@@ -327,7 +321,7 @@ public class Services
 				{
 					UserActions.syncAllLocals(null);
 				}};
-			timer.schedule(task, delay, delay);
+				Misc.timer.schedule(task, delay, delay);
 		}
 	}
 	
@@ -400,8 +394,7 @@ public class Services
 		}
 		if (downloads != null)
 			downloads.quitAllDownloads();
-		if (timer != null)
-			timer.cancel();
+		Misc.timer.cancel();
 		if (checksums != null)
 			checksums.quit();
 		if (syncs != null)
@@ -409,7 +402,7 @@ public class Services
 		if (userThreads != null)
 			userThreads.shutdownNow();
 		if (connectionThreads != null)
-			connectionThreads.shutdownNow();
+			connectionThreads.shutdown();
 		if (h2DbCache != null)
 			h2DbCache.close();
 		if (networkManager != null)

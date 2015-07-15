@@ -35,7 +35,6 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -50,7 +49,6 @@ import org.cnv.shr.util.Misc;
 public class Track
 {
 	static KeysService keys;
-	static Timer timer;
 	public static ExecutorService threads;
 	static TrackerGui gui;
 	public static TrackerEntry LOCAL_TRACKER = getLocalTracker();
@@ -92,7 +90,6 @@ public class Track
 		LogWrapper.getLogger().info("Address: " + InetAddress.getLocalHost().getHostAddress());
 		
 		threads = Executors.newCachedThreadPool();
-		timer = new Timer();
 		
 		Class.forName("org.h2.Driver");
 		try

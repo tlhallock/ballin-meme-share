@@ -184,7 +184,7 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		{
 			statement.setFetchSize(i);
 		}
-
+		
 		@Override
 		public void close()
 		{

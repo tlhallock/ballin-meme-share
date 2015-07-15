@@ -27,7 +27,6 @@ package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -43,21 +42,13 @@ import org.cnv.shr.util.LogWrapper;
 
 public class MachineHasFile extends DownloadMessage
 {
-	private boolean hasFile;
-	
 	public static int TYPE = 17;
 	
-	public MachineHasFile(FileEntry entry, boolean hasFile)
+	public MachineHasFile(FileEntry entry)
 	{
 		super(entry);
-		this.hasFile = hasFile;
 	}
 
-	public MachineHasFile(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-	
 	@Override
 	protected int getType()
 	{
@@ -65,32 +56,20 @@ public class MachineHasFile extends DownloadMessage
 	}
 	
 	@Override
-	protected void finishParsing(ByteReader reader) throws IOException
-	{
-		hasFile = reader.readBoolean();
-	}
+	protected void finishParsing(ByteReader reader) throws IOException {}
 	
 	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(hasFile);
-	}
+	protected void finishWriting(AbstractByteWriter buffer) throws IOException {}
 	
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		// Maybe I should not have sent it?
-		// Maybe this should be to remove the connection already present.
-		// No.
-		if (!hasFile) return;
-		
-
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor(), connection);
 		if (downloadInstance == null)
 		{
 			return;
 		}
-		downloadInstance.addSeeder(connection.getMachine(), connection);
+		downloadInstance.addSeeder(connection.getMachine());
 	}
 
 	@Override
@@ -98,7 +77,7 @@ public class MachineHasFile extends DownloadMessage
 	{
 		StringBuilder builder = new StringBuilder();
 		
-		builder.append("I got it! ").append(hasFile).append(":").append(getDescriptor());
+		builder.append("I got it! ").append(getDescriptor());
 		
 		return builder.toString();
 	}
@@ -110,7 +89,6 @@ public class MachineHasFile extends DownloadMessage
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
-		generator.write("hasFile", hasFile);
 		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
@@ -124,10 +102,6 @@ public class MachineHasFile extends DownloadMessage
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsHasFile)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs hasFile");
-				}
 				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
@@ -140,7 +114,6 @@ public class MachineHasFile extends DownloadMessage
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("hasFile")) {
 					needsHasFile = false;
-					hasFile = false;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
@@ -149,7 +122,6 @@ public class MachineHasFile extends DownloadMessage
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("hasFile")) {
 					needsHasFile = false;
-					hasFile = true;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

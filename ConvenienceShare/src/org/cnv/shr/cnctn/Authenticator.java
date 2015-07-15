@@ -29,10 +29,6 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbKeys;
@@ -50,33 +46,37 @@ import org.cnv.shr.util.MissingKeyException;
 
 public class Authenticator
 {
-	private Lock lock = new ReentrantLock();
-	private Condition condition = lock.newCondition();
+//	private Lock lock = new ReentrantLock();
+//	private Condition condition = lock.newCondition();
 	private Boolean authenticated;
 	private HashSet<String> pendingNaunces = new HashSet<>();
 
 	// The machine that the remote says it is
-	private PublicKey remotePublicKey;
 	private PublicKey localPublicKey;
 	
 	private String claimedName;
 	private int claimedPort;
 	private int claimedNumPorts;
 
-	private boolean acceptAnyKeys;
+	private ConnectionParams params;
 	
-	public Authenticator(boolean acceptAnyKeys, PublicKey remote, PublicKey local)
+	public Authenticator(ConnectionParams params)
 	{
-		this.acceptAnyKeys = acceptAnyKeys;
-		this.remotePublicKey = remote;
-		this.localPublicKey = local;
+		this.params = params;
+		this.localPublicKey = Services.keyManager.getPublicKey();
 	}
 
 	public Authenticator()
 	{
-		this.acceptAnyKeys = false;
+		this.params = new ConnectionParams() {
+			@Override
+			public void connectionOpened(Communication connection) throws Exception {}
+			@Override
+			public boolean closeWhenDone() { return false; }
+		};
+		this.localPublicKey = Services.keyManager.getPublicKey();
 	}
-	
+
 	public void setMachineInfo(String name, int port, int nports)
 	{
 		this.claimedName = name;
@@ -95,9 +95,9 @@ public class Authenticator
 			return;
 		}
 
-		if (remotePublicKey == null && key != null)
+		if (params.remoteKey == null && key != null)
 		{
-			remotePublicKey = key;
+			params.remoteKey = key;
 		}
 
 		if (DbMachines.getMachine(id) != null)
@@ -119,46 +119,67 @@ public class Authenticator
 		this.authenticated = isAuthenticated;
 	}
 	
-	void notifyAuthentication()
+	void notifyAuthentication(Communication connection)
 	{
-		lock.lock();
-		try
+//		lock.lock();
+//		try
+//		{
+//			condition.signalAll();
+//		}
+//		finally
+//		{
+//			lock.unlock();
+//		}
+		
+		if (!authenticated)
 		{
-			condition.signalAll();
+			Services.userThreads.execute(() -> { params.onFail(); });
+			return;
 		}
-		finally
-		{
-			lock.unlock();
-		}
+		Services.userThreads.execute(() -> {
+			try
+			{
+				params.connectionOpened(connection);
+				if (params.closeWhenDone())
+				{
+					connection.finish();
+				}
+			}
+			catch (Exception e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to execute callback: " + params.reason, e);
+				connection.finish();
+			}
+		});
 	}
 
-	boolean waitForAuthentication() throws IOException
-	{
-		lock.lock();
-		boolean returnValue = false;
-		try
-		{
-			int count = 0;
-			while (authenticated == null)
-			{
-				if (count++ > 6)
-				{
-					throw new IOException("Connection timed out...");
-				}
-				condition.await(10, TimeUnit.SECONDS);
-			}
-			returnValue = authenticated;
-		}
-		catch (InterruptedException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
-		}
-		finally
-		{
-			lock.unlock();
-		}
-		return returnValue;
-	}
+//	boolean waitForAuthentication() throws IOException
+//	{
+//		lock.lock();
+//		boolean returnValue = false;
+//		try
+//		{
+//			int count = 0;
+//			while (authenticated == null)
+//			{
+//				if (count++ > 6)
+//				{
+//					throw new IOException("Connection timed out...");
+//				}
+//				condition.await(10, TimeUnit.SECONDS);
+//			}
+//			returnValue = authenticated;
+//		}
+//		catch (InterruptedException e)
+//		{
+//			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
+//		}
+//		finally
+//		{
+//			lock.unlock();
+//		}
+//		return returnValue;
+//	}
 
 	
 	public boolean authenticate(Message m)
@@ -173,7 +194,7 @@ public class Authenticator
 	}
 	public void setRemoteKey(PublicKey publicKey)
 	{
-		this.remotePublicKey = publicKey;
+		params.remoteKey = publicKey;
 	}
 	
 	public PublicKey getLocalKey()
@@ -182,7 +203,7 @@ public class Authenticator
 	}
 	public PublicKey getRemoteKey()
 	{
-		return remotePublicKey;
+		return params.remoteKey;
 	}
 
 	public void addPendingNaunce(byte[] original)
@@ -200,7 +221,7 @@ public class Authenticator
 	public boolean canAuthenticateRemote(Communication connection, PublicKey remote, PublicKey local) throws IOException
 	{
 		this.localPublicKey = local;
-		this.remotePublicKey = remote;
+		params.remoteKey = remote;
 		
 		Machine machine = connection.getMachine();
 		
@@ -231,13 +252,13 @@ public class Authenticator
 			LogWrapper.getLogger().info("The remote's key for us will not do.");
 			// not able to verify self to remote, add key
 			localPublicKey = publicKey;
-			final byte[] sentNaunce = IdkWhereToPutThis.createTestNaunce(this, remotePublicKey);
+			final byte[] sentNaunce = IdkWhereToPutThis.createTestNaunce(this, params.remoteKey);
 			connection.send(new NewKey(publicKey, sentNaunce));
 			return;
 		}
 		
 		byte[] decrypted = Services.keyManager.decrypt(localPublicKey, requestedNaunce);
-		byte[] naunceRequest = IdkWhereToPutThis.createTestNaunce(this, remotePublicKey);
+		byte[] naunceRequest = IdkWhereToPutThis.createTestNaunce(this, params.remoteKey);
 		if (!Arrays.equals(publicKey.getEncoded(), localPublicKey.getEncoded()))
 		{
 			LogWrapper.getLogger().info("We have the required key from the remote, but it is old.");
@@ -255,8 +276,8 @@ public class Authenticator
 	{
 		if (authenticated != null 
 				&& authenticated 
-				&& remotePublicKey != null 
-				&& Arrays.equals(newKey.getEncoded(), remotePublicKey.getEncoded()))
+				&& params.remoteKey != null 
+				&& Arrays.equals(newKey.getEncoded(), params.remoteKey.getEncoded()))
 		{
 			return true;
 		}
@@ -266,7 +287,7 @@ public class Authenticator
 	public boolean acceptKey(Communication connection, PublicKey remote, Machine machine)
 	{
 		if (remote == null) return false;
-		return acceptAnyKeys || Services.settings.acceptNewKeys.get() || AcceptKey.showAcceptDialog(
+		return params.acceptAllKeys || Services.settings.acceptNewKeys.get() || AcceptKey.showAcceptDialog(
 				connection.getUrl(),
 				machine.getName(),
 				machine.getIdentifier(),
@@ -284,6 +305,6 @@ public class Authenticator
 
 	public void updateMachineInfo(String remoteIdentifier, String ip)
 	{
-		updateMachineInfo(remoteIdentifier, ip, remotePublicKey);
+		updateMachineInfo(remoteIdentifier, ip, params.remoteKey);
 	}
 }

@@ -116,7 +116,7 @@ public class RootList extends Message
 			// should be deleted...
 			Services.notifications.remoteDirectoryChanged((RemoteDirectory) root);
 		}
-		
+
 		// TODO: should only happen if there was a change...
 		Services.notifications.remoteChanged(machine);
 	}

@@ -27,17 +27,15 @@ package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionParams.KeepOpenConnectionParams;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.AlreadyDownloadedFrame;
@@ -49,6 +47,7 @@ import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.NonRejectingExecutor;
 
 public class DownloadManager
 {
@@ -56,13 +55,13 @@ public class DownloadManager
 	Hashtable<FileEntry, DownloadInstance> downloads = new Hashtable<>();
 	DownloadInitiator initiator = new DownloadInitiator();
 	ChecksumRequester requester = new ChecksumRequester();
-	public ScheduledExecutorService downloadThreads = Executors.newScheduledThreadPool(0);
+	public NonRejectingExecutor downloadThreads = new NonRejectingExecutor("dwnld", Services.settings.maxDownloads.get());
 
-	public DownloadInstance download(SharedFile remoteFile) throws UnknownHostException, IOException
+	public void download(SharedFile remoteFile) throws UnknownHostException, IOException
 	{
-		return download(remoteFile, false);
+		download(remoteFile, false);
 	}
-	public DownloadInstance download(SharedFile remoteFile, boolean force) throws UnknownHostException, IOException
+	public void download(SharedFile remoteFile, boolean force) throws UnknownHostException, IOException
 	{
 		if (remoteFile.isLocal())
 		{
@@ -74,10 +73,10 @@ public class DownloadManager
 					JOptionPane.INFORMATION_MESSAGE);
 			LogWrapper.getLogger().info("Trying to download local file " + remoteFile);
 			Misc.nativeOpen(localFile.getFsFile(), false);
-			return null;
+			return;
 		}
 		LogWrapper.getLogger().info("Trying to download " + remoteFile);
-		return download((RemoteFile) remoteFile, force);
+		download((RemoteFile) remoteFile, force);
 	}
 	
 	private static boolean alreadyHaveCopy(SharedFile remoteFile, String checksum, long fileSize)
@@ -102,19 +101,19 @@ public class DownloadManager
 		return true;
 	}
 	
-	public DownloadInstance download(RemoteFile file, boolean force) throws UnknownHostException, IOException
+	public void download(RemoteFile file, boolean force) throws UnknownHostException, IOException
 	{
-		return createDownload(new Download(file), force);
+		createDownloadInstance(new Download(file), force);
 	}
 
-	DownloadInstance createDownload(Download d, boolean force) throws UnknownHostException, IOException
+	void createDownloadInstance(Download d, boolean force) throws UnknownHostException, IOException
 	{
 		String checksum = d.getFile().getChecksum();
 		
 		if (checksum == null || checksum.length() != SharedFile.CHECKSUM_LENGTH)
 		{
 			requester.requestChecksum(d.getFile());
-			return null;
+			return;
 		}
 		
 		requester.fileHasChecksum(d.getFile());
@@ -122,65 +121,62 @@ public class DownloadManager
 		if (d.getFile().getFileSize() == 0)
 		{
 			AlreadyDownloadedAction.downloadEmptyFile(d.getFile());
-			return null;
+			return;
 		}
 		
 		if (!force && alreadyHaveCopy(d.getFile(), checksum, d.getFile().getFileSize()))
 		{
-			return null;
+			return;
 		}
 
-		DownloadInstance instance;
 		FileEntry fileEntry = d.getFile().getFileEntry();
 
-		try
+		synchronized (creationSync)
 		{
-			synchronized (creating)
+			if (downloads.get(fileEntry) != null)
 			{
-				DownloadInstance prev = downloads.get(fileEntry);
-				if (prev != null)
-				{
-					LogWrapper.getLogger().info("Already downloading.");
-					prev.continueDownload();
-					return null;
-				}
-
-				if (!canCreate(fileEntry))
-				{
-					LogWrapper.getLogger().info("Already creating download for " + fileEntry);
-					return null;
-				}
+				LogWrapper.getLogger().info("Already downloading.");
+				return;
 			}
 
-			d.tryToSave();
-
-			if (downloads.size() >= Services.settings.maxDownloads.get())
+			if (!canCreate(fileEntry))
 			{
-				return null;
+				LogWrapper.getLogger().info("Already creating download for " + fileEntry);
+				return;
 			}
-			
-			Machine machine = d.getFile().getRootDirectory().getMachine();
-			Communication openConnection = Services.networkManager.openConnection(null, machine, false, "Download file");
-			if (openConnection == null)
-			{
-				throw new IOException("Unable to authenticate to host.");
-			}
-			Seeder primarySeeder = new Seeder(machine, openConnection);
-	
-			LogWrapper.getLogger().info("Creating download instance");
-			instance = new DownloadInstance(d, primarySeeder);
-			downloads.put(fileEntry, instance);
 		}
-		finally
+
+		d.tryToSave();
+
+		if (downloads.size() >= Services.settings.maxDownloads.get())
 		{
 			doneCreating(fileEntry);
+			return;
 		}
-		
-		instance.allocate();
-		instance.recover();
-		instance.continueDownload();
-		Services.notifications.downloadAdded(instance);
-		return instance;
+
+		Machine machine = d.getFile().getRootDirectory().getMachine();
+		Services.networkManager.openConnection(new KeepOpenConnectionParams(null, machine, false, "Download file")
+		{
+			@Override
+			public void connectionOpened(Communication connection) throws Exception
+			{
+				Seeder primarySeeder = new Seeder(machine, connection);
+				LogWrapper.getLogger().info("Creating download instance");
+				DownloadInstance instance = new DownloadInstance(d, primarySeeder);
+				downloads.put(fileEntry, instance);
+				doneCreating(fileEntry);
+
+				instance.allocate();
+				instance.recover();
+				instance.continueDownload();
+				Services.notifications.downloadAdded(instance);
+			}
+
+			public void onFail()
+			{
+				doneCreating(fileEntry);
+			}
+		});
 	}
 
 	public void remove(DownloadInstance downloadInstance)
@@ -242,9 +238,9 @@ public class DownloadManager
 	public void startDownloadInitiator()
 	{
 		Services.downloads.downloadThreads.schedule(() -> {
-				Services.timer.scheduleAtFixedRate(initiator, 1000, 10 * 60 * 1000);
+				Misc.timer.scheduleAtFixedRate(initiator, 1000, 10 * 60 * 1000);
 				requester.start();
-		}, 10, TimeUnit.SECONDS);
+		}, 10 * 1000);
 	}
 
 	public void quitAllDownloads()
@@ -269,19 +265,22 @@ public class DownloadManager
 	
 	
 	
-	private HashSet<FileEntry> creating = new HashSet<>();
+	private HashMap<FileEntry, Long> creationSync = new HashMap<>();
 	private boolean canCreate(FileEntry newOne)
 	{
-		synchronized (creating)
+		Long last = null;
+		long now;
+		synchronized (creationSync)
 		{
-			return creating.add(newOne);
+			last = creationSync.put(newOne, now = System.currentTimeMillis());
 		}
+		return last == null || last + 10 * 60 * 100 < now;
 	}
 	private void doneCreating(FileEntry newOne)
 	{
-		synchronized (creating)
+		synchronized (creationSync)
 		{
-			creating.remove(newOne);
+			creationSync.remove(newOne);
 		}
 	}
 	

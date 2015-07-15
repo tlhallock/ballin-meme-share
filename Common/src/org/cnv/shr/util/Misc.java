@@ -54,6 +54,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Timer;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
@@ -65,6 +66,9 @@ import org.cnv.shr.stng.Settings;
 
 public class Misc
 {
+	public static Timer timer = new Timer();
+	
+	
 	public static final String INITIALIZED_STRING = "Succesfully Initialized.";
 	private static final Random random = new Random();
 

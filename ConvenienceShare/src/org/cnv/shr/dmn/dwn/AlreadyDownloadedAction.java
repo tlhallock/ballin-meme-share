@@ -38,6 +38,14 @@ public enum AlreadyDownloadedAction
 		catch (IOException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to copy " + local.getFsFile() + " to " + targetFile, e);
+			try
+			{
+				Services.downloads.download(remote, false);
+			}
+			catch (IOException e1)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to download download from failed copy.", e1);
+			}
 		}
 		// Services.notifications.downloadsChanged();
 		Thread.currentThread().setName(prevName);

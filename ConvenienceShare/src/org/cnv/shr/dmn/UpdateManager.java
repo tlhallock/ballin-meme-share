@@ -386,7 +386,7 @@ public class UpdateManager extends TimerTask
 	private static void waitForInput(UserInputWait wait)
 	{
 		Thread t = Thread.currentThread();
-		Services.timer.schedule(new TimerTask()
+		Misc.timer.schedule(new TimerTask()
 		{
 			@Override
 			public void run()

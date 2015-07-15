@@ -75,12 +75,14 @@ public class ServeInstance extends TimerTask
 		return local;
 	}
 	
-	public void dblCheckConnection()
+	public boolean dblCheckConnection()
 	{
 		if (connection.isClosed())
 		{
 			Services.server.done(connection);
+			return false;
 		}
+		return true;
 	}
 	
 	private void serveChunks(long chunkSize) throws IOException, NoSuchAlgorithmException
@@ -270,7 +272,10 @@ public class ServeInstance extends TimerTask
 	{
 		Services.downloads.downloadThreads.execute(() ->
 		{
-			dblCheckConnection();
+			if (!dblCheckConnection())
+			{
+				return;
+			}
 			try
 			{
 				connection.send(new RequestCompletionStatus(local.getFileEntry()));

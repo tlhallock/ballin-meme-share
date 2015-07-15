@@ -163,7 +163,6 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 						rootDirectory.getPathElement().getFsPath()),
 						DbRoots.getIgnores((LocalDirectory) newRoot));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
-                                
 			}
 			else
 			{
@@ -177,7 +176,7 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
         viewer.setSyncStatus(Color.GREEN, Color.BLACK, "Connected to remote.");
 			}
 		}
-		catch (final IOException e)
+		catch (final IOException | InterruptedException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to create remote synchronizer", e);
 			close();

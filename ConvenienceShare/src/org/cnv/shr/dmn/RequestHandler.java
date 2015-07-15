@@ -61,6 +61,7 @@ public class RequestHandler extends Thread
 	@Override
 	public void run()
 	{
+		Thread.currentThread().setName("handler_" + port);
 		while (!quit)
 		{
 			try

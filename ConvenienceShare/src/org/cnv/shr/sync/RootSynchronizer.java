@@ -100,6 +100,9 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 	{
 		String currentName = Thread.currentThread().getName();
 		Thread.currentThread().setName("Root Synchronizer [" + local.getName() + "]");
+		
+		DbPaths.pathLiesIn(local.getPathElement(), local);
+		
 		SynchronizationTask task = null;
 		try
 		{
@@ -131,6 +134,8 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		{
 			listener.syncDone(this);
 		}
+		
+		Services.userThreads.execute(() -> { DbPaths.removeUnusedPaths(); });
 		
 		Thread.currentThread().setName(currentName);
 	}
@@ -216,6 +221,10 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 			final LinkedList<Pair> subDirectories, 
 			final PathElement element) throws IOException, SQLException
 	{
+		if (element.isAbsolute())
+		{
+			return;
+		}
 		accountedFor.add(element.getUnbrokenName());
 
 		final FileSource fsCopy = files.get(element.getUnbrokenName());

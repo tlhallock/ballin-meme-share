@@ -86,7 +86,7 @@ class UpdateThread extends Thread
 
 	private void ensureEventuallyClosed(Socket socket)
 	{
-		Updater.timer.schedule(new TimerTask()
+		Misc.timer.schedule(new TimerTask()
 		{
 			@Override
 			public void run()

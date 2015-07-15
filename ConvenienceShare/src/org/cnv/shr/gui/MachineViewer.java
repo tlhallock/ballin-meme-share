@@ -33,7 +33,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.util.logging.Level;
@@ -47,6 +46,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.TreePath;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
@@ -69,6 +69,7 @@ import org.cnv.shr.msg.UserMessageMessage;
 import org.cnv.shr.msg.key.PermissionFailure.PermissionFailureEvent;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+
 
 /**
  *
@@ -133,7 +134,7 @@ public class MachineViewer extends javax.swing.JFrame
 					machine.tryToSave();
 				});
 
-		Services.timer.scheduleAtFixedRate(model, PathTreeModel.INACTIVITY_DELAY, PathTreeModel.INACTIVITY_DELAY);
+    Misc.timer.scheduleAtFixedRate(model, PathTreeModel.INACTIVITY_DELAY, PathTreeModel.INACTIVITY_DELAY);
 		addWindowListener(model);
 		jCheckBox1.addActionListener((ActionEvent e) -> {
 			Services.userThreads.execute(() -> {
@@ -1084,33 +1085,20 @@ public class MachineViewer extends javax.swing.JFrame
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-    	MachineViewer b = this;
-    	Services.userThreads.execute(() -> { 
         	Machine machine = getMachine();
   				if (machine == null) return;
-      		try
-      		{
-            Communication connection = Services.networkManager.openConnection(b, machine, false, "Send share request");
-            if (connection == null)
-            {
-            	return;
-            }
-            try
-            {
-            	connection.send(new UserMessageMessage(UserMessage.createShareRequest()));
-            }
-            finally
-            {
-              connection.finish();
-            }
+          Services.networkManager.openConnection(new AutoCloseConnectionParams(this, machine, false, "Send share request") {
+						@Override
+						public void connectionOpened(Communication connection) throws Exception
+						{
+	          	connection.send(new UserMessageMessage(UserMessage.createShareRequest()));
+						}
+					});
 
-        		JOptionPane.showMessageDialog(b, 
-        				"A request to share with " + machine.getName() + " was sent.",
-        				"Request sent",
-        				JOptionPane.INFORMATION_MESSAGE);
-        } catch (IOException ex) {
-            LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }});
+        	JOptionPane.showMessageDialog(this, 
+        			"A request to share with " + machine.getName() + " was sent.",
+        			"Request sent",
+        			JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
@@ -1189,62 +1177,41 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void requestDownloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestDownloadButtonActionPerformed
-    	MachineViewer b = this;
-    	Services.userThreads.execute(() -> {
-    		try {
-            Machine machine = getMachine();
-    				if (machine == null) return;
-						Communication connection = Services.networkManager.openConnection(b, machine, false, "Send share root request");
-            if (connection == null) {
-            	return;
-            }
-            try
-            {
-            		RootDirectory directory = getRootDirectory();
-                connection.send(new UserMessageMessage(UserMessage.createShareRootRequest(directory)));
-            }
-            finally
-            {
-                connection.finish();
-            }
-                
-        		JOptionPane.showMessageDialog(b, 
-        				"A request for permissions to download from " + rootDirectoryName + " was sent.",
-        				"Request sent",
-        				JOptionPane.INFORMATION_MESSAGE);
-        } catch (IOException ex) {
-            LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }});
+        
+    	Machine machine = getMachine();
+    	if (machine == null) return;
+			Services.networkManager.openConnection(new AutoCloseConnectionParams(this, machine, false, "Send share root request") {
+				@Override
+				public void connectionOpened(Communication connection) throws Exception
+				{
+         		RootDirectory directory = getRootDirectory();
+            connection.send(new UserMessageMessage(UserMessage.createShareRootRequest(directory)));
+				}
+			});
+            
+      JOptionPane.showMessageDialog(this, 
+      		"A request for permissions to download from " + rootDirectoryName + " was sent.",
+      		"Request sent",
+      		JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_requestDownloadButtonActionPerformed
 
     private void requestShareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_requestShareButtonActionPerformed
-    	MachineViewer b = this;
-        Services.userThreads.execute(() -> {
-        	try {
-            Machine machine = getMachine();
-    				if (machine == null) return;
-						Communication connection = Services.networkManager.openConnection(b, machine, false, "List directories");
-            if (connection == null)
-            {
-            	return;
-            }
-            try
-            {
-            		RootDirectory directory = getRootDirectory();
-                connection.send(new UserMessageMessage(UserMessage.createListRequest(directory)));
-            }
-            finally
-            {
-                connection.finish();
-            }
+        Machine machine = getMachine();
+    		if (machine == null) return;
+				Services.networkManager.openConnection(new AutoCloseConnectionParams(this, machine, false, "List directories")
+				{
+					@Override
+					public void connectionOpened(Communication connection) throws Exception
+					{
+        		RootDirectory directory = getRootDirectory();
+            connection.send(new UserMessageMessage(UserMessage.createListRequest(directory)));
+					}
+				});
 
-        		JOptionPane.showMessageDialog(b, 
-        				"A request for permissions to view " + rootDirectoryName + " was sent.",
-        				"Request sent",
-        				JOptionPane.INFORMATION_MESSAGE);
-        } catch (IOException ex) {
-            LogWrapper.getLogger().log(Level.INFO, "Unable to sent message:", ex);
-        }});
+        JOptionPane.showMessageDialog(this, 
+        		"A request for permissions to view " + rootDirectoryName + " was sent.",
+        		"Request sent",
+        		JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_requestShareButtonActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed

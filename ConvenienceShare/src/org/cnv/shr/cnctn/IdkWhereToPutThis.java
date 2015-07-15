@@ -27,10 +27,11 @@ package org.cnv.shr.cnctn;
 
 import java.io.IOException;
 import java.security.PublicKey;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TimerTask;
-import java.util.logging.Level;
 
+import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -50,7 +51,7 @@ public class IdkWhereToPutThis
 		return sentNaunce;
 	}
 	
-	
+	// TODO: use this
 	private static TimerTask getAttempter()
 	{
 		return new TimerTask() {
@@ -58,41 +59,27 @@ public class IdkWhereToPutThis
 			public void run()
 			{
 				Services.userThreads.execute(() -> {
-					try
-					{
-						attemptAuthentications(Services.keyManager.getPendingAuthenticationRequests());
-					}
-					catch (IOException e)
-					{
-						e.printStackTrace();
-					}
+					attemptAuthentications(Services.keyManager.getPendingAuthenticationRequests());
 				});
 			}};
 	}
 	
-	public static void attemptAuthentications(Set<String> pendingAuthenticationRequests) throws IOException
+	public static void attemptAuthentications(HashSet<String> pendingAuthenticationRequests)
 	{
-		outer: for (;;)
+		for (String url : (Set<String>) pendingAuthenticationRequests.clone())
 		{
-			for (String url : pendingAuthenticationRequests)
+			Services.networkManager.openConnection(new AutoCloseConnectionParams(url, true, "Re-attempt to add machine")
 			{
-				Communication openConnection;
-				try
+				@Override
+				public void connectionOpened(Communication connection) throws Exception
 				{
-					openConnection = Services.networkManager.openConnection(url, true, "Re-attempt to add machine");
-					if (openConnection != null)
+					synchronized (pendingAuthenticationRequests)
 					{
 						pendingAuthenticationRequests.remove(url);
-						Services.keyManager.writeKeys(Services.settings.keysFile.getPath());
-						continue outer;
 					}
+					Services.keyManager.writeKeys(Services.settings.keysFile.getPath());
 				}
-				catch (Exception e)
-				{
-					LogWrapper.getLogger().log(Level.INFO, "Failed authentications again", e);
-					continue;
-				}
-			}
+			});
 		}
 	}
 }

@@ -79,7 +79,7 @@ public class DownloadTest extends RemotesTest
 			}
 			MyNotificationListener listener = new MyNotificationListener();
 			Services.notifications.add(listener);
-			DownloadInstance download = Services.downloads.download(file);
+			DownloadInstance download = null; Services.downloads.download(file);
 
 			while (!listener.done)
 			{

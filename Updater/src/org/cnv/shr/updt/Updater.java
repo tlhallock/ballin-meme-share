@@ -30,7 +30,6 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Timer;
 import java.util.logging.Level;
 
 import org.cnv.shr.util.KeysService;
@@ -53,7 +52,6 @@ public class Updater
 	
 	static KeysService service; 
 	static UpdateThread updateThread;
-	static Timer timer;
 	static Code code;
 	static CodeMonitor monitor;
 	
@@ -92,8 +90,7 @@ public class Updater
 		updateProps();
 		updateThread.start();
 		
-		timer = new Timer();
-		timer.scheduleAtFixedRate(new KeyUpdater(), A_LONG_TIME, A_LONG_TIME);
+		Misc.timer.scheduleAtFixedRate(new KeyUpdater(), A_LONG_TIME, A_LONG_TIME);
 		
 		monitor = new CodeMonitor(getUpdatesDirectory());
 		new Thread(monitor).start();

@@ -328,6 +328,9 @@ public class PathElement extends DbObject<Long>
 
 	public boolean isAbsolute()
 	{
-		return getUnbrokenName().equals("/") || getId() == 0 || getUnbrokenName().contains(":") || Paths.get(getUnbrokenName()).isAbsolute();
+		return getUnbrokenName().startsWith("/") || getId() == 0 || Paths.get(getUnbrokenName()).isAbsolute()
+				// This probably shouldn't be here...
+				|| (Misc.getOperatingSystem().equals(Misc.OperatingSystem.Windows)
+						&& getUnbrokenName().length() >= 2 && getUnbrokenName().charAt(1) == ':');
 	}
 }

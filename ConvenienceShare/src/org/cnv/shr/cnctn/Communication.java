@@ -56,6 +56,7 @@ import org.cnv.shr.util.CountingOutputStream;
 import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.PausableInputStream2;
 import org.cnv.shr.util.PausableOutputStream;
 
@@ -270,7 +271,7 @@ public class Communication implements Closeable
 		else
 		{
 			LogWrapper.getLogger().info("Remote failed authentication.");
-			authentication.notifyAuthentication();
+			authentication.notifyAuthentication(null);
 		}
 	}
 
@@ -330,7 +331,7 @@ public class Communication implements Closeable
 	{
 		try
 		{
-			Services.timer.schedule(new TimerTask() { public void run() { closeDaConnection(); } }, CLOSE_TIMEOUT);
+			Misc.timer.schedule(new TimerTask() { public void run() { closeDaConnection(); } }, CLOSE_TIMEOUT);
 		}
 		catch (Exception ex)
 		{
@@ -456,7 +457,7 @@ public class Communication implements Closeable
 		{
 			throw new RuntimeException("Expected start object!");
 		}
-		authentication.notifyAuthentication();
+		authentication.notifyAuthentication(this);
 	}
 	
 	// Below methods should already be synchronized on out

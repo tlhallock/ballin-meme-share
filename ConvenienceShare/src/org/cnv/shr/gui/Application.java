@@ -219,7 +219,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     });
     makeDebugItems();
     downloads.refresh();
-    Services.timer.scheduleAtFixedRate(refresh, GUI_REFRESH_RATE, GUI_REFRESH_RATE);
+    Misc.timer.scheduleAtFixedRate(refresh, GUI_REFRESH_RATE, GUI_REFRESH_RATE);
 
 		maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
 	}

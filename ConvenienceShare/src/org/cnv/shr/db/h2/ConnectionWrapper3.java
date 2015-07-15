@@ -31,7 +31,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.TimerTask;
 
-import org.cnv.shr.dmn.Services;
+import org.cnv.shr.util.Misc;
 
 public class ConnectionWrapper3
 {
@@ -188,7 +188,7 @@ public class ConnectionWrapper3
 
 		public void shutDown() throws SQLException
 		{
-			Services.timer.scheduleAtFixedRate(this, 1000, 1000);
+			Misc.timer.scheduleAtFixedRate(this, 1000, 1000);
 		}
 
 		@Override

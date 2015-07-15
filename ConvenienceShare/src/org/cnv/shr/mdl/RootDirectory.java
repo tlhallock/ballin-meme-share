@@ -31,7 +31,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Timer;
 import java.util.logging.Level;
 
 import javax.swing.JFrame;
@@ -189,10 +188,9 @@ public abstract class RootDirectory extends DbObject<Integer>
 			final DebugListener debugListener = new DebugListener(this);
 			localSynchronizer.addListener(debugListener);
 			
-			final Timer t = new Timer();
-			t.scheduleAtFixedRate(debugListener, DebugListener.DEBUG_REPEAT, DebugListener.DEBUG_REPEAT);
+			Misc.timer.scheduleAtFixedRate(debugListener, DebugListener.DEBUG_REPEAT, DebugListener.DEBUG_REPEAT);
 			localSynchronizer.run();
-			t.cancel();
+			debugListener.cancel();
 			setStats();
 
 			LogWrapper.getLogger().info("Done synchronizing " + getPathElement().getFullPath());

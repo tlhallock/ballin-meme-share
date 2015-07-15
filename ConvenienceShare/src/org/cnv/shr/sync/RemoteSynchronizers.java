@@ -26,48 +26,59 @@
 package org.cnv.shr.sync;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Hashtable;
 
 import javax.swing.JFrame;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionParams.KeepOpenConnectionParams;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.RemoteDirectory;
+import org.cnv.shr.util.WaitForObject;
 
 public class RemoteSynchronizers
 {
 	public Hashtable<String, RemoteSynchronizerQueue> synchronizers = new Hashtable<>();
 	
-	private String getKey(RemoteSynchronizerQueue s)
+	private static String getKey(String url, RemoteDirectory r)
 	{
-		return getKey(s.communication, s.root);
-	}
-	private String getKey(Communication c, RemoteDirectory r)
-	{
-		return c.getUrl() + "::" + r.getName();
+		return url + "::" + r.getName();
 	}
 	
 	public RemoteSynchronizerQueue getSynchronizer(Communication c, RemoteDirectory r)
 	{
-		return synchronizers.get(getKey(c, r));
+		return synchronizers.get(getKey(c.getUrl(), r));
 	}
 
-	public RemoteSynchronizerQueue createRemoteSynchronizer(JFrame origin, RemoteDirectory root) throws UnknownHostException, IOException
+	public RemoteSynchronizerQueue createRemoteSynchronizer(JFrame origin, RemoteDirectory root) throws InterruptedException, IOException
 	{
-		Communication c = Services.networkManager.openConnection(origin, root.getMachine(), false, "Synchronize directories");
-		if (c == null)
+		WaitForObject<Communication> waiter = new WaitForObject<>(60 * 1000);
+		
+		Services.networkManager.openConnection(new KeepOpenConnectionParams(origin, root.getMachine(), false, "Synchronize directories") {
+			@Override
+			public void connectionOpened(Communication connection) throws Exception
+			{
+				waiter.set(connection);
+			}
+			public void onFail()
+			{
+				waiter.set(null);
+			}
+		});
+		
+		Communication communication = waiter.get();
+		if (communication == null)
 		{
-			throw new IOException("Unable to connect to remote!");
+			throw new IOException("Unable to open connection.");
 		}
-		RemoteSynchronizerQueue returnValue = new RemoteSynchronizerQueue(c, root);
-		synchronizers.put(getKey(returnValue), returnValue);
+		RemoteSynchronizerQueue returnValue = new RemoteSynchronizerQueue(communication, root);
+		synchronizers.put(getKey(communication.getUrl(), root), returnValue);
 		return returnValue;
 	}
 	
 	public void done(RemoteSynchronizerQueue sync)
 	{
-		synchronizers.remove(getKey(sync));
+			synchronizers.remove(getKey(sync.getUrl(), sync.root));
 	}
 
 	public void closeAll()

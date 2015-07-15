@@ -80,7 +80,7 @@ public class Tracker implements Runnable
 				JsonGenerator generator = TrackObjectUtils.createGenerator(output);
 				
 				EnsureClosed ensureClosed = new EnsureClosed();
-				Track.timer.schedule(ensureClosed, 10 * 60 * 1000);
+				Misc.timer.schedule(ensureClosed, 10 * 60 * 1000);
 				
 				generator.writeStartArray();
 				generator.flush();
@@ -137,7 +137,7 @@ public class Tracker implements Runnable
 	private void waitForClient(JsonParser input)
 	{
 		EnsureClosed ensureClosed = new EnsureClosed();
-		Track.timer.schedule(ensureClosed, 10 * 1000);
+		Misc.timer.schedule(ensureClosed, 10 * 1000);
 		try
 		{
 			input.next().equals(JsonParser.Event.END_ARRAY);

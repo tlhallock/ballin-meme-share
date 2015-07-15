@@ -66,9 +66,11 @@ public class DbMachines
 
 	public static Machine findAnExistingMachine(String ip, int port)
 	{
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-					StatementWrapper stmt = c.prepareStatement(SELECT4);)
+		try
 		{
+			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+			StatementWrapper stmt = c.prepareStatement(SELECT4);
+			
 			stmt.setString(1, ip);
 			stmt.setInt(2, port);
 			stmt.setInt(3, port);

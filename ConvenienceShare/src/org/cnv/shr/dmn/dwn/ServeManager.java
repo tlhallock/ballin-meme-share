@@ -33,6 +33,7 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 
 public class ServeManager
 {
@@ -63,7 +64,7 @@ public class ServeManager
 		
 		ServeInstance instance = new ServeInstance(c, file);
 		serves.put(c.getUrl(), instance);
-		Services.timer.scheduleAtFixedRate(instance, REFRESH_PERIOD, REFRESH_PERIOD);
+		Misc.timer.scheduleAtFixedRate(instance, REFRESH_PERIOD, REFRESH_PERIOD);
 		Services.notifications.serveAdded(instance);
 		return instance;
 	}

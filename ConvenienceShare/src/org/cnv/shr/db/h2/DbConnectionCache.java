@@ -111,7 +111,7 @@ public class DbConnectionCache extends TimerTask
 		
 		for (final ConnectionWrapper wrapper : connections.values())
 		{
-			Services.timer.scheduleAtFixedRate(wrapper, 1000, 1000);
+			Misc.timer.scheduleAtFixedRate(wrapper, 1000, 1000);
 //			Services.timer.schedule(new TimerTask() {
 //				@Override
 //				public void run()

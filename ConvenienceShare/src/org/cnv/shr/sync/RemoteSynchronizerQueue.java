@@ -53,12 +53,12 @@ public class RemoteSynchronizerQueue implements Closeable
 	private HashSet<String> queue = new HashSet<>();
 	
 	private HashMap<String, PathList> directories = new HashMap<>();
-	Communication communication;
+	Communication connection;
 	RemoteDirectory root;
 	
-	public RemoteSynchronizerQueue(final Communication c, final RemoteDirectory root)
+	public RemoteSynchronizerQueue(Communication c, final RemoteDirectory root)
 	{
-		communication = c;
+		this.connection = c;
 		this.root = root;
 	}
 	
@@ -80,10 +80,10 @@ public class RemoteSynchronizerQueue implements Closeable
 			{
 				// TODO: Make sure this is handled well...
 				LogWrapper.getLogger().log(Level.INFO, "Interrupted.", e);
-				communication.close();
+				getConnection().close();
 				throw e;
 			}
-			if (communication.isClosed() || System.currentTimeMillis() - lastCommunication > MAX_TIME_TO_WAIT)
+			if (getConnection().isClosed() || System.currentTimeMillis() - lastCommunication > MAX_TIME_TO_WAIT)
 			{
 				throw new IOException("connection closed.");
 			}
@@ -94,13 +94,14 @@ public class RemoteSynchronizerQueue implements Closeable
 	{
 		final String path = pathElement.getFullPath();
 
-		if (communication.isClosed())
-		{
-			throw new IOException("connection closed.");
-		}
 		lock.lock();
 		try
 		{
+			if (getConnection().isClosed())
+			{
+				throw new IOException("connection closed.");
+			}
+			
 			try
 			{
 				ensureQueued(pathElement);
@@ -143,25 +144,25 @@ public class RemoteSynchronizerQueue implements Closeable
 		}
 	}
 	
-	private void ensureQueued(final PathElement path) throws IOException
+	private void ensureQueued(final PathElement path) throws IOException, InterruptedException
 	{
 		if (queue.contains(path.getFullPath())
 				|| directories.containsKey(path.getFullPath()))
 		{
 			return;
 		}
-		if (communication.isClosed())
+		if (getConnection().isClosed())
 		{
 			return;
 		}
 
 		LogWrapper.getLogger().info("Queuing \"" + path.getFullPath() + "\"");
 		lastCommunication = System.currentTimeMillis();
-		communication.send(new ListPath(root, path));
+		getConnection().send(new ListPath(root, path));
 		queue.add(path.getFullPath());
 	}
 	
-	public void queueDirectoryList(final PathElement path) throws IOException
+	public void queueDirectoryList(final PathElement path) throws IOException, InterruptedException
 	{
 		lock.lock();
 		try
@@ -182,11 +183,24 @@ public class RemoteSynchronizerQueue implements Closeable
 		{
 			Services.syncs.done(this);
 			condition.signalAll();
-			communication.finish();
+			if (connection != null)
+			{
+				connection.finish();
+			}
 		}
 		finally
 		{
 			lock.unlock();
 		}
+	}
+
+	public String getUrl()
+	{
+		return connection.getUrl();
+	}
+	
+	private Communication getConnection()
+	{
+			return connection;
 	}
 }

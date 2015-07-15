@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -98,7 +99,6 @@ public class ChecksumRequester extends Thread
 				LogWrapper.getLogger().log(Level.INFO, "Unable to list checksum requests.", e);
 			}
 			
-			
 			try
 			{
 				Thread.sleep(10 * 1000);
@@ -118,14 +118,20 @@ public class ChecksumRequester extends Thread
 			SharedFileId fileid = new SharedFileId(remote);
 			pending.add(fileid);
 			LogWrapper.getLogger().info("Requesting checksum for " + fileid);
-			Communication openConnection = Services.networkManager.openConnection(null, remote.getRootDirectory().getMachine(), false, "Request checksum");
-			if (openConnection == null)
-			{
-				LogWrapper.getLogger().info("Unable to request checksum of " + fileid);
-				return;
-			}
-			openConnection.send(new ChecksumRequest(remote));
-			waiter.waitForConnectionToClose(openConnection, fileid);
+			Services.networkManager.openConnection(new AutoCloseConnectionParams(null, remote.getRootDirectory().getMachine(), false, "Request checksum") {
+				@Override
+				public void connectionOpened(Communication connection) throws Exception
+				{
+					waiter.setConnection(connection);
+					connection.send(new ChecksumRequest(remote));
+				}
+				public void onFail()
+				{
+					waiter.fileHasChecksum(fileid);
+				}
+			});
+			
+			waiter.waitForConnectionToClose(fileid);
 			
 			LogWrapper.getLogger().info("Done waiting for checksum of " + fileid);
 			
@@ -150,16 +156,15 @@ public class ChecksumRequester extends Thread
 		private boolean requestCompleted;
 		private SharedFileId fileId;
 		
-		public void waitForConnectionToClose(Communication connection, SharedFileId fileid) throws InterruptedException
+		public void waitForConnectionToClose(SharedFileId fileid) throws InterruptedException
 		{
 			this.fileId = fileid;
 			requestCompleted = false;
-			openConnection = connection;
 			
 			lock.lock();
 			try
 			{
-				while (!requestCompleted && !openConnection.isClosed())
+				while (!requestCompleted && (openConnection == null || !openConnection.isClosed()))
 				{
 					LogWrapper.getLogger().info("Still waiting for checksum of " + fileid);
 					condition.await(10, TimeUnit.SECONDS);
@@ -173,6 +178,11 @@ public class ChecksumRequester extends Thread
 			}
 		}
 		
+		public void setConnection(Communication connection)
+		{
+			openConnection = connection;
+		}
+
 		public void connectionClosed(Communication c)
 		{
 			if (openConnection == null)

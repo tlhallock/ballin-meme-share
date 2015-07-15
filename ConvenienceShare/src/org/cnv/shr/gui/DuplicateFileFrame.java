@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-import java.util.Timer;
 import java.util.logging.Level;
 
 import javax.swing.DefaultListModel;
@@ -49,7 +48,6 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
     private final HashSet<Integer> machines = new HashSet<>();
     private final HashMap<String, RootThingy> roots = new HashMap<>();
     private final LinkedList<DuplicateFileEntry> entries = new LinkedList<>();
-    private final Timer timer;
     private boolean modified;
     
     private final Object searchThreadSync = new Object();
@@ -59,7 +57,6 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
      * Creates new form DuplicateFileFrame
      */
     public DuplicateFileFrame() {
-    		timer = new Timer();
         initComponents();
         listPanel.setLayout(new GridLayout(0, 1));
         machinesList.setLayout(new GridLayout(0, 1));
@@ -69,7 +66,6 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
         	@Override
         	public void windowClosed(WindowEvent e)
         	{
-        		timer.cancel();
         		cancelSearch();
         	}
         });

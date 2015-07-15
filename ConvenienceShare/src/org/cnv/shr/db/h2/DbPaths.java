@@ -55,6 +55,14 @@ public class DbPaths
 											+ " and not exists (select RID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM = PELEM.P_ID limit 1)"
 											+ " limit 10;");
 	private static final QueryWrapper DELETE2 = new QueryWrapper("delete ROOT_CONTAINS where RID=? and PELEM=?;");
+	private static final QueryWrapper DELETE2_5 = new QueryWrapper(
+			"delete ROOT_CONTAINS child where "
+					+ "child.PELEM <> 0 and "
+					+ "not exists ("
+					+ "select RID from ROOT_CONTAINS parent where "
+						+ "parent.RID=child.RID "
+						+ "and parent.PELEM = (select PARENT from PELEM"
+							+ " where P_ID = child.PELEM));");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select PELEM.P_ID, PELEM.PARENT, PELEM.BROKEN, PELEM.PELEM from PELEM          " + 
 										 "join ROOT_CONTAINS on ROOT_CONTAINS.RID=? and ROOT_CONTAINS.PELEM = PELEM.P_ID " + 
 										 "where PELEM.PARENT = ?;                                                        ");
@@ -269,7 +277,22 @@ public class DbPaths
 		int numDeleted = -1;
 		do
 		{
-			try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); StatementWrapper stmt = c.prepareStatement(DELETE_SOME_UNUSED);)
+			try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); 
+					 StatementWrapper stmt = c.prepareStatement(DELETE2_5);)
+			{
+				numDeleted = stmt.executeUpdate();
+				LogWrapper.getLogger().fine("Removed " + numDeleted + " unused paths.");
+			}
+			catch (SQLException e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to remove unused paths.", e);
+				return;
+			}
+		} while (numDeleted > 0);
+		do
+		{
+			try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection(); 
+					 StatementWrapper stmt = c.prepareStatement(DELETE_SOME_UNUSED);)
 			{
 				numDeleted = stmt.executeUpdate();
 				LogWrapper.getLogger().fine("Removed " + numDeleted + " unused paths.");

@@ -8,8 +8,6 @@ package org.cnv.shr.gui;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
@@ -18,6 +16,7 @@ import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
+import org.cnv.shr.util.NonRejectingExecutor;
 
 /**
  *
@@ -33,7 +32,7 @@ public class AlreadyPresentPanel extends javax.swing.JPanel {
     
     
     // Needs to be fixed so that it doesn't reject runnables...
-    static ExecutorService moveService = Executors.newFixedThreadPool(2);
+    static NonRejectingExecutor moveService = new NonRejectingExecutor("mvr", 2);
     
     /**
      * Creates new form AlreadyPresentPanel

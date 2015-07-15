@@ -28,14 +28,13 @@ package org.cnv.shr.gui;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
-import java.util.logging.Level;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.msg.UserMessageMessage;
-import org.cnv.shr.util.LogWrapper;
 
 /**
  *
@@ -175,25 +174,14 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
             return;
         }
         
-        Services.userThreads.execute(() -> {
-        	try {
-            Communication connection = Services.networkManager.openConnection(message, machine, false, "Send user message");
-            if (connection == null)
-            {
-            	return;
-            }
-            try
-            {
-                connection.send(new UserMessageMessage(userMessage));
-            }
-            finally
-            {
-            	connection.finish();
-            }
-            dispose();
-        } catch (IOException ex) {
-            LogWrapper.getLogger().log(Level.INFO, "Unable to send message:", ex);
-        }});
+					Services.networkManager.openConnection(new AutoCloseConnectionParams(message, machine, false, "Send user message") {
+						@Override
+						public void connectionOpened(Communication connection) throws IOException
+						{
+							connection.send(new UserMessageMessage(userMessage));
+						}
+					});
+        dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
