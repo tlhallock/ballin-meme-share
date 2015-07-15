@@ -485,7 +485,7 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 
 			Services.networkManager.openConnection(new KeepOpenConnectionParams(this, machine, false, "Get logs") {
 				@Override
-				public void connectionOpened(Communication connection) throws Exception
+				public void opened(Communication connection) throws Exception
 				{
 					connection.putParam("progress", progress);
 					connection.send(new UpdateInfoRequestRequest("getLogs"));
@@ -507,7 +507,7 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 
 			Services.networkManager.openConnection(new AutoCloseConnectionParams(this, machine, false, "Get logs") {
 				@Override
-				public void connectionOpened(Communication connection) throws Exception
+				public void opened(Communication connection) throws Exception
 				{
 					refresh();
 				}});
@@ -526,7 +526,7 @@ public class UpdateServerFrame extends javax.swing.JFrame {
 
 			Services.networkManager.openConnection(new KeepOpenConnectionParams(frame, machine, false, "Update code info.") {
 				@Override
-				public void connectionOpened(Communication connection) throws Exception
+				public void opened(Communication connection) throws Exception
 				{
 					connection.send(new UpdateInfoRequestRequest("update info"));
 				}

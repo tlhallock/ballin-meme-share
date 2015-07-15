@@ -6,15 +6,12 @@
 
 package org.cnv.shr.gui;
 
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.logging.Level;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.AlreadyDownloadedAction;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.NonRejectingExecutor;
 
@@ -268,14 +265,7 @@ public class AlreadyPresentPanel extends javax.swing.JPanel {
 	{
 		moveService.execute(() -> {
 			resolved();
-			try
-			{
-				Services.downloads.download(remote, true);
-			}
-			catch (IOException ex)
-			{
-				LogWrapper.getLogger().log(Level.SEVERE, "Unable to download...", ex);
-			}
+			Services.downloads.download(remote, true);
 		});
 	}
 

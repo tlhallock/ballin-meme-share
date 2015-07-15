@@ -163,4 +163,10 @@ class LogListener implements NotificationListener
 		{
 			LogWrapper.getLogger().info("Found permissions " + remote.getSharesWithUs() + " for directory " + remote);
 		}
+
+		@Override
+		public void downloadsChanged()
+		{
+			LogWrapper.getLogger().info("Downloads changed.");
+		}
 }

@@ -38,19 +38,19 @@ import org.cnv.shr.util.CloseableIterator;
 
 public class MessageTable extends DbJTable<UserMessage>
 {
-	private Application app;
-
 	public MessageTable(Application app, JTable table)
 	{
-		super(table, "Id");
-		this.app = app;
+		super(app, table, "Id");
 		
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(UserMessage t)
+			void perform(UserMessage[] ts)
 			{
-				t.open();
+				for (UserMessage t : ts)
+				{
+					t.open(app);
+				}
 			}
 			
 			@Override
@@ -62,9 +62,12 @@ public class MessageTable extends DbJTable<UserMessage>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(UserMessage t)
+			void perform(UserMessage[] ts)
 			{
-				DbMessages.deleteMessage(t.getId());
+				for (UserMessage t : ts)
+				{
+					DbMessages.deleteMessage(t.getId());
+				}
 			}
 			
 			@Override
@@ -123,5 +126,11 @@ public class MessageTable extends DbJTable<UserMessage>
             return canEdit [columnIndex];
         }
     };
+	}
+
+	@Override
+	protected UserMessage[] createArray(int length)
+	{
+		return new UserMessage[length];
 	}
 }

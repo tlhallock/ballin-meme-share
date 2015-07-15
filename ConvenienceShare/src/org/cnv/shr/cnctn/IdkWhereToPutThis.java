@@ -71,7 +71,7 @@ public class IdkWhereToPutThis
 			Services.networkManager.openConnection(new AutoCloseConnectionParams(url, true, "Re-attempt to add machine")
 			{
 				@Override
-				public void connectionOpened(Communication connection) throws Exception
+				public void opened(Communication connection) throws Exception
 				{
 					synchronized (pendingAuthenticationRequests)
 					{

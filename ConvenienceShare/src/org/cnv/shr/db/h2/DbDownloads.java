@@ -58,6 +58,7 @@ public class DbDownloads
 			  + " and DSTATE <> " + DownloadState.FAILED.toInt()
 				+ " group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select * from Download                group by PRIORITY, Q_ID order by PRIORITY desc, ADDED asc, DSTATE asc;");
+	private static final QueryWrapper COUNT = new QueryWrapper("select count(Q_ID) from Download;");
 
 	public static Integer getPendingDownloadId(SharedFile remoteFile)
 	{
@@ -190,5 +191,23 @@ public class DbDownloads
 		}
 		
 		return builder.toString();
+	}
+
+	public static int getNumDownloads()
+	{
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				 StatementWrapper stmt = c.prepareStatement(COUNT);
+				 ResultSet executeQuery = stmt.executeQuery();)
+		{
+			if (executeQuery.next())
+			{
+				return executeQuery.getInt(1);
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable get number of downloads.", e);
+		}
+		return 0;
 	}
 }

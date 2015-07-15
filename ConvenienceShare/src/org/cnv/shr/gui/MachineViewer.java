@@ -27,6 +27,7 @@ package org.cnv.shr.gui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -98,17 +99,6 @@ public class MachineViewer extends javax.swing.JFrame
         addPathsListener();
         addPopupMenu();
         
-//        class MyTreeUI extends BasicTreeUI
-//        {
-//        	@Override
-//        	public void toggleExpandState(TreePath path)
-//        	{
-//        		super.toggleExpandState(path);
-//        	}
-//        }
-        
-//        filesTree.setUI(new MyTreeUI());
-        // Otherwise the tree changes before we can get the location of the node the user clicked on.
       	filesTree.setToggleClickCount(99999999);
         filesTree.setScrollsOnExpand(true);
         filesTree.setLargeModel(true);
@@ -277,10 +267,18 @@ public class MachineViewer extends javax.swing.JFrame
         JMenuItem item;
         item = new JMenuItem("Recursively cache all subfolders");
         item.addActionListener((ActionEvent ae) -> {
-        	System.out.println(popUpX + "," + popUpY);
           final TreePath pathForLocation = filesTree.getClosestPathForLocation(popUpX, popUpY);
           final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
-          n.syncFully(getRootDirectory());
+
+    			try
+    			{
+    				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    				n.syncFully(getRootDirectory());
+    			}
+    			finally
+    			{
+    				setCursor(Cursor.getDefaultCursor());
+    			}
         });
         menu.add(item);
         item = new JMenuItem("Download all currently cached");
@@ -291,12 +289,20 @@ public class MachineViewer extends javax.swing.JFrame
                 final PathTreeModelNode n = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
                 Services.userThreads.execute(() ->
                 {
-                  CollectingFiles display = new CollectingFiles();
-                  display.setLocation(getLocation());
-                  display.setVisible(true);
-                  display.setAlwaysOnTop(true);
-                  n.getPathElement().downloadAllCurrentlyCached(getRootDirectory(), display);
-                  display.done();
+            			try
+            			{
+            				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    CollectingFiles display = new CollectingFiles();
+                    display.setLocation(getLocation());
+                    display.setVisible(true);
+                    display.setAlwaysOnTop(true);
+                    n.getPathElement().downloadAllCurrentlyCached(getRootDirectory(), display);
+                    display.done();
+            			}
+            			finally
+            			{
+            				setCursor(Cursor.getDefaultCursor());
+            			}
                 });
             }
         });
@@ -371,19 +377,15 @@ public class MachineViewer extends javax.swing.JFrame
         filesTree.setComponentPopupMenu(menu);
 
         filesTree.addMouseListener(new MouseAdapter() {
-//        	
-//            public void doPopup(MouseEvent e) {
-//                if (e.isPopupTrigger()) {
-//                	popUpX = e.getX(); popUpY = e.getY();
-//                  menu.show(e.getComponent(), e.getX(), e.getY());
-//                }
-//            }
-
             @Override
             public void mouseClicked(final MouseEvent e) {
-//            	doPopup(e);
 	            filesTree.setVisibleRowCount(filesTree.getRowCount());
-	            if (e.getClickCount() >= 2) {
+	            if (e.getClickCount() < 2) {
+	            	return;
+	            }
+	            try
+	            {
+		    				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 	              final TreePath pathForLocation = filesTree.getClosestPathForLocation(e.getPoint().x, e.getPoint().y);
 	              currentFilesNode = (PathTreeModelNode) pathForLocation.getPath()[pathForLocation.getPath().length - 1];
 	              // Try our best to toggle (doesn't actually work)...
@@ -394,13 +396,11 @@ public class MachineViewer extends javax.swing.JFrame
 	              filesTree.expandPath(pathForLocation);
 	              filesManager.setCurrentlyDisplaying(machineIdent, rootDirectoryName, currentFilesNode.getFileList(jCheckBox1.isSelected()));
 	            }
+	            finally
+	            {
+		    				setCursor(Cursor.getDefaultCursor());
+	            }
             }
-//
-//            @Override
-//            public void mousePressed(final MouseEvent e) { doPopup(e); }
-//
-//            @Override
-//            public void mouseReleased(final MouseEvent e) { doPopup(e); }
         });
     }
     
@@ -1089,7 +1089,7 @@ public class MachineViewer extends javax.swing.JFrame
   				if (machine == null) return;
           Services.networkManager.openConnection(new AutoCloseConnectionParams(this, machine, false, "Send share request") {
 						@Override
-						public void connectionOpened(Communication connection) throws Exception
+						public void opened(Communication connection) throws Exception
 						{
 	          	connection.send(new UserMessageMessage(UserMessage.createShareRequest()));
 						}
@@ -1182,7 +1182,7 @@ public class MachineViewer extends javax.swing.JFrame
     	if (machine == null) return;
 			Services.networkManager.openConnection(new AutoCloseConnectionParams(this, machine, false, "Send share root request") {
 				@Override
-				public void connectionOpened(Communication connection) throws Exception
+				public void opened(Communication connection) throws Exception
 				{
          		RootDirectory directory = getRootDirectory();
             connection.send(new UserMessageMessage(UserMessage.createShareRootRequest(directory)));
@@ -1201,7 +1201,7 @@ public class MachineViewer extends javax.swing.JFrame
 				Services.networkManager.openConnection(new AutoCloseConnectionParams(this, machine, false, "List directories")
 				{
 					@Override
-					public void connectionOpened(Communication connection) throws Exception
+					public void opened(Communication connection) throws Exception
 					{
         		RootDirectory directory = getRootDirectory();
             connection.send(new UserMessageMessage(UserMessage.createListRequest(directory)));
@@ -1255,9 +1255,20 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        jButton4.setEnabled(false);
+			try
+			{
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    		jButton4.setEnabled(false);
+    		pathsTable.setEnabled(false);
+    		viewNoDirectory();
         CleanBrowsingHistory.removeAllNonEssentialData(getMachine());
         jButton4.setEnabled(!getMachine().isLocal());
+    		pathsTable.setEnabled(true);
+			}
+			finally
+			{
+				setCursor(Cursor.getDefaultCursor());
+			}
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed

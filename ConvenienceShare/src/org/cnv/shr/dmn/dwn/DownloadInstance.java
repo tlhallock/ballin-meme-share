@@ -540,18 +540,6 @@ public class DownloadInstance implements Runnable
 			download.setState(DownloadState.FAILED);
 		}
 
-			// download.setState(DownloadState.PLACING_IN_FS);
-			// try
-			// {
-			// Files.move(destination, download.getTargetFile(),
-			// StandardCopyOption.REPLACE_EXISTING);
-			// }
-			// catch (IOException e)
-			// {
-			// LogWrapper.getLogger().log(Level.INFO,
-			// "Unable to move downloaded file.", e);
-			// }
-
 		LocalDirectory local = getLocalDirectory();
 		if (local != null)
 		{
@@ -575,7 +563,8 @@ public class DownloadInstance implements Runnable
 		DownloadInstance instance = this;
 
 		// Don't hold this lock...
-		Services.downloads.downloadThreads.execute(() -> { Services.downloads.remove(instance); });
+		Services.downloads.downloadThreads.execute(() -> { Services.downloads.remove(remoteFile.getFileEntry()); });
+		Services.downloads.removeGuiInfo(downloadId);
 		Services.notifications.downloadDone(this);
 	}
 
@@ -697,8 +686,8 @@ public class DownloadInstance implements Runnable
 			download.setState(DownloadState.FAILED);
 		}
 			
-		DownloadInstance instance = this;
-		Services.downloads.downloadThreads.execute(() -> { Services.downloads.remove(instance); });
+		Services.downloads.downloadThreads.execute(() -> { Services.downloads.remove(remoteFile.getFileEntry()); });
+		Services.downloads.removeGuiInfo(downloadId);
 		Services.notifications.downloadRemoved(this);
 	}
 

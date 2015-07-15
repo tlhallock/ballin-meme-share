@@ -120,12 +120,12 @@ public class ChecksumRequester extends Thread
 			LogWrapper.getLogger().info("Requesting checksum for " + fileid);
 			Services.networkManager.openConnection(new AutoCloseConnectionParams(null, remote.getRootDirectory().getMachine(), false, "Request checksum") {
 				@Override
-				public void connectionOpened(Communication connection) throws Exception
+				public void opened(Communication connection) throws Exception
 				{
 					waiter.setConnection(connection);
 					connection.send(new ChecksumRequest(remote));
 				}
-				public void onFail()
+				public void failed()
 				{
 					waiter.fileHasChecksum(fileid);
 				}

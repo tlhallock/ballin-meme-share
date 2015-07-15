@@ -32,13 +32,14 @@ import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.ServeInstance;
+import org.cnv.shr.gui.Application;
 import org.cnv.shr.util.CloseableIterator;
 
 public class ServeTable extends DbJTable<ServeInstance>
 {
-	public ServeTable(JTable table)
+	public ServeTable(Application app, JTable table)
 	{
-		super(table, "probably something like the ip");
+		super(app, table, "probably something like the ip");
 		
 		// add listeners...
 	}
@@ -110,5 +111,11 @@ public class ServeTable extends DbJTable<ServeInstance>
 				return types[columnIndex];
 			}
 		};
+	}
+
+	@Override
+	protected ServeInstance[] createArray(int length)
+	{
+		return new ServeInstance[length];
 	}
 }

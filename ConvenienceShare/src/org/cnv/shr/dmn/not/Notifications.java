@@ -208,6 +208,16 @@ public class Notifications implements WindowFocusListener
 			});
 	}
 
+	public void downloadsChanged()
+	{
+		notifiers.add(() -> {
+			for (final NotificationListener listener : getListeners())
+			{
+				listener.downloadsChanged();
+			}
+		});
+	}
+
 	public void downloadDone(final DownloadInstance d)
 	{
 		notifiers.add(() -> {

@@ -180,9 +180,6 @@ public class MachineBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsKeys = true;
-		boolean needsAllowsMessages = true;
-		boolean needsPin = true;
 		boolean needsPort = true;
 		boolean needsNports = true;
 		boolean needsIp = true;
@@ -190,24 +187,15 @@ public class MachineBackup implements Jsonable
 		boolean needsIdentifier = true;
 		boolean needsWeShareToThem = true;
 		boolean needsSharesWithUs = true;
+		boolean needsKeys = true;
+		boolean needsAllowsMessages = true;
+		boolean needsPin = true;
 		boolean needsRoots = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsKeys)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
-				}
-				if (needsAllowsMessages)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
-				}
-				if (needsPin)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
-				}
 				if (needsPort)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
@@ -236,6 +224,18 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
 				}
+				if (needsKeys)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
+				}
+				if (needsAllowsMessages)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
+				}
+				if (needsPin)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
+				}
 				if (needsRoots)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
@@ -244,43 +244,6 @@ public class MachineBackup implements Jsonable
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("keys")) {
-					needsKeys = false;
-					keys.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_FALSE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "allowsMessages":
-					needsAllowsMessages = false;
-					allowsMessages = false;
-					break;
-				case "pin":
-					needsPin = false;
-					pin = false;
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_TRUE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "allowsMessages":
-					needsAllowsMessages = false;
-					allowsMessages = true;
-					break;
-				case "pin":
-					needsPin = false;
-					pin = true;
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
@@ -317,6 +280,43 @@ public class MachineBackup implements Jsonable
 				case "sharesWithUs":
 					needsSharesWithUs = false;
 					sharesWithUs = SharingState.valueOf(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("keys")) {
+					needsKeys = false;
+					keys.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_FALSE:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "allowsMessages":
+					needsAllowsMessages = false;
+					allowsMessages = false;
+					break;
+				case "pin":
+					needsPin = false;
+					pin = false;
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_TRUE:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "allowsMessages":
+					needsAllowsMessages = false;
+					allowsMessages = true;
+					break;
+				case "pin":
+					needsPin = false;
+					pin = true;
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

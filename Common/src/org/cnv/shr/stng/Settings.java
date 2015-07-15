@@ -98,6 +98,7 @@ public class Settings implements SettingListener
 	public FileSetting       codeUpdateKey            = new FileSetting      ("codeUpdateKey         ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "updateKey"    ), false,  true, "File containing key to authenticate code updates.                                                ".trim()); { settings.add(codeUpdateKey        );  }
 	public FileSetting       trackerFile              = new FileSetting      ("trackerFile           ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "trackers"     ), false,  true, "File containing tracker urls.                                                                    ".trim()); { settings.add(trackerFile          );  }
 	public FileSetting       colorsFile               = new FileSetting      ("colorFile             ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "colors.props" ), false,  true, "File storing Gui colors.                                                                         ".trim()); { settings.add(colorsFile           );  }
+	public FileSetting       blackListFile            = new FileSetting      ("blackListFile         ".trim(), new File(applicationDirectory.get().getPath() + File.separator + "blackList.txt"), false,  true, "File to list black listed machines.                                                              ".trim()); { settings.add(blackListFile        );  }
 	
 	public Settings(Path settingsFile)
 	{
@@ -167,7 +168,8 @@ public class Settings implements SettingListener
 		codeUpdateKey   .set(Paths.get(applicationDirectory.get().getPath(), "updateKey"      ));
 		trackerFile     .set(Paths.get(applicationDirectory.get().getPath(), "trackers"       ));
 		colorsFile      .set(Paths.get(applicationDirectory.get().getPath(), "colors.props"   ));
-		compressionFile .set(Paths.get(applicationDirectory.get().getPath(), "compress.json"   ));
+		compressionFile .set(Paths.get(applicationDirectory.get().getPath(), "compress.json"  ));
+		blackListFile   .set(Paths.get(applicationDirectory.get().getPath(), "blackList.txt"  ));
 	}
 	
 	public void listenToSettings()

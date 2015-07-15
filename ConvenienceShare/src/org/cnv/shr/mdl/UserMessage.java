@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
@@ -122,7 +123,7 @@ public class UserMessage extends DbObject<Integer>
 		}
 	}
 
-	public void open()
+	public void open(JFrame origin)
 	{
 		if (type == null)
 		{
@@ -132,23 +133,23 @@ public class UserMessage extends DbObject<Integer>
 		switch (type)
 		{
 		case SHARE:
-			shareMachine();
+			shareMachine(origin);
 			break;
 		case SHARE_ROOT:
-			shareRoot(SharingState.DOWNLOADABLE);
+			shareRoot(origin, SharingState.DOWNLOADABLE);
 			break;
 		case SEE_ROOT:
-			shareRoot(SharingState.SHARE_PATHS);
+			shareRoot(origin, SharingState.SHARE_PATHS);
 			break;
 		case TEXT:
-			showMessage();
+			showMessage(origin);
 			break;
 		default:
 			LogWrapper.getLogger().info("Unknown message type: " + type.dbValue);
 		}
 	}
 	
-	private void shareMachine()
+	private void shareMachine(JFrame origin)
 	{
 		if (machine == null)
 		{
@@ -157,7 +158,7 @@ public class UserMessage extends DbObject<Integer>
 		}
 
 		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
-				Services.notifications.getCurrentContext(), 
+				origin, 
 				"Would you like to share with machine " + machine.getName(), 
 				"Share message sent on " + new Date(sent), 
 				JOptionPane.YES_NO_OPTION))
@@ -168,7 +169,7 @@ public class UserMessage extends DbObject<Integer>
 		}
 	}
 
-	private void shareRoot(SharingState state)
+	private void shareRoot(JFrame origin, SharingState state)
 	{
 		if (machine == null)
 		{
@@ -183,7 +184,7 @@ public class UserMessage extends DbObject<Integer>
 		}
 
 		if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(
-				Services.notifications.getCurrentContext(),
+				origin,
 				"Would you like to share root \"" + localByName.getName() + "\" with machine \"" + machine.getName() + "\"",
 				"Share root message sent on " + new Date(sent),
 				JOptionPane.YES_NO_OPTION))
@@ -254,14 +255,15 @@ public class UserMessage extends DbObject<Integer>
 		return false;
 	}
 
-	private void showMessage()
+	private void showMessage(JFrame origin)
 	{
 		if (machine == null)
 		{
 			LogWrapper.getLogger().info("No machine.");
 			return;
 		}
-		JOptionPane.showMessageDialog(Services.notifications.getCurrentContext(), 
+		JOptionPane.showMessageDialog(
+				origin, 
 				"Machine " + machine.getName() + " says \"" + message + "\"",
 				"Message received on " + new Date(sent),
 				JOptionPane.INFORMATION_MESSAGE);

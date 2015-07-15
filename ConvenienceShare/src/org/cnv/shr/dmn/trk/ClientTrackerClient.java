@@ -132,7 +132,7 @@ public class ClientTrackerClient extends TrackerClient
 		
 		Services.networkManager.openConnection(new AutoCloseConnectionParams(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false, "Download file") {
 			@Override
-			public void connectionOpened(Communication connection) throws Exception
+			public void opened(Communication connection) throws Exception
 			{
 				connection.send(new LookingFor(remoteFile));
 			}

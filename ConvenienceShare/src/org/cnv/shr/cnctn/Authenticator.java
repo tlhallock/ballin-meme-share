@@ -46,8 +46,6 @@ import org.cnv.shr.util.MissingKeyException;
 
 public class Authenticator
 {
-//	private Lock lock = new ReentrantLock();
-//	private Condition condition = lock.newCondition();
 	private Boolean authenticated;
 	private HashSet<String> pendingNaunces = new HashSet<>();
 
@@ -70,7 +68,7 @@ public class Authenticator
 	{
 		this.params = new ConnectionParams() {
 			@Override
-			public void connectionOpened(Communication connection) throws Exception {}
+			public void opened(Communication connection) throws Exception {}
 			@Override
 			public boolean closeWhenDone() { return false; }
 		};
@@ -121,25 +119,15 @@ public class Authenticator
 	
 	void notifyAuthentication(Communication connection)
 	{
-//		lock.lock();
-//		try
-//		{
-//			condition.signalAll();
-//		}
-//		finally
-//		{
-//			lock.unlock();
-//		}
-		
 		if (!authenticated)
 		{
-			Services.userThreads.execute(() -> { params.onFail(); });
+			Services.userThreads.execute(() -> { params.notifyFailed(); });
 			return;
 		}
 		Services.userThreads.execute(() -> {
 			try
 			{
-				params.connectionOpened(connection);
+				params.notifyOpened(connection);
 				if (params.closeWhenDone())
 				{
 					connection.finish();
@@ -153,35 +141,6 @@ public class Authenticator
 		});
 	}
 
-//	boolean waitForAuthentication() throws IOException
-//	{
-//		lock.lock();
-//		boolean returnValue = false;
-//		try
-//		{
-//			int count = 0;
-//			while (authenticated == null)
-//			{
-//				if (count++ > 6)
-//				{
-//					throw new IOException("Connection timed out...");
-//				}
-//				condition.await(10, TimeUnit.SECONDS);
-//			}
-//			returnValue = authenticated;
-//		}
-//		catch (InterruptedException e)
-//		{
-//			LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
-//		}
-//		finally
-//		{
-//			lock.unlock();
-//		}
-//		return returnValue;
-//	}
-
-	
 	public boolean authenticate(Message m)
 	{
 		// Double check identifier and keys...

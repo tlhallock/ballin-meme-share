@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
@@ -88,7 +89,6 @@ public class PathElement extends DbObject<Long>
 			throw new RuntimeException("Value is too big: " + value);
 		}
 	}
-
 
 	public PathElement(PathElement parent, String string, boolean b)
 	{
@@ -255,8 +255,7 @@ public class PathElement extends DbObject<Long>
 	public LinkedList<PathElement> list(RootDirectory local)
 	{
 		LinkedList<PathElement> returnValue = new LinkedList<>();
-		LinkedList<PathElement> broken = new LinkedList<PathElement>();
-		
+		LinkedList<PathElement> brokenQueue = new LinkedList<PathElement>();
 
 		// not as simple as the recursive call, but only opens one statement at a time...
 		PathElement current = this;
@@ -269,7 +268,7 @@ public class PathElement extends DbObject<Long>
 					PathElement next = iterator.next();
 					if (next.isBroken())
 					{
-						broken.add(next);
+						brokenQueue.add(next);
 					}
 					else
 					{
@@ -277,9 +276,10 @@ public class PathElement extends DbObject<Long>
 					}
 				}
 
-				current = broken.isEmpty() ? null : broken.removeLast();
+				current = brokenQueue.isEmpty() ? null : brokenQueue.removeLast();
 			}
 		}
+		returnValue.sort(PATH_COMPARATOR);
 		return returnValue;
 	}
 
@@ -333,4 +333,24 @@ public class PathElement extends DbObject<Long>
 				|| (Misc.getOperatingSystem().equals(Misc.OperatingSystem.Windows)
 						&& getUnbrokenName().length() >= 2 && getUnbrokenName().charAt(1) == ':');
 	}
+
+	public static final Comparator<PathElement> PATH_COMPARATOR = new Comparator<PathElement>()
+	{
+    public int compare(PathElement o1, PathElement o2)
+    {
+    	String fullPath2 = o1.getFullPath();
+			String fullPath3 = o2.getFullPath();
+			boolean lIsDir = fullPath2.endsWith("/");
+			boolean rIsDir = fullPath3.endsWith("/");
+			if (lIsDir && !rIsDir)
+			{
+				return -1;
+			}
+			if (rIsDir && !lIsDir)
+			{
+				return 1;
+			}
+			return fullPath2.compareTo(fullPath3);
+    }
+	};
 }

@@ -35,7 +35,7 @@ public class KeyTable extends DbJTable<KeyPairObject>
 
 	public KeyTable(JTable table, String keyName)
 	{
-		super(table, keyName);
+		super(null, table, keyName);
 		
 		
 		// add listeners...
@@ -60,6 +60,12 @@ public class KeyTable extends DbJTable<KeyPairObject>
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	protected KeyPairObject[] createArray(int length)
+	{
+		return new KeyPairObject[length];
 	}
 
 

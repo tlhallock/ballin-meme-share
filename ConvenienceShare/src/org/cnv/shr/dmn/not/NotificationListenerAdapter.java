@@ -60,6 +60,8 @@ public abstract class NotificationListenerAdapter implements NotificationListene
 	@Override
 	public void downloadDone(final DownloadInstance d)                 {}
 	@Override
+	public void downloadsChanged()                                     {}
+	@Override
 	public void serveAdded(final ServeInstance s)                      {}
 	@Override
 	public void serveRemoved(final ServeInstance s)                    {}

@@ -291,16 +291,24 @@ public class PathList extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsName = true;
+		boolean needsCurrentPath = true;
 		boolean needsSubDirs = true;
 		boolean needsChildren = true;
 		boolean needsIsTheEnd = true;
-		boolean needsName = true;
-		boolean needsCurrentPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsName)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsCurrentPath)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPath");
+				}
 				if (needsSubDirs)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs subDirs");
@@ -313,18 +321,24 @@ public class PathList extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isTheEnd");
 				}
-				if (needsName)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
-				}
-				if (needsCurrentPath)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPath");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_STRING:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				switch(key) {
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "currentPath":
+					needsCurrentPath = false;
+					currentPath = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case START_ARRAY:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
@@ -355,20 +369,6 @@ public class PathList extends Message
 					isTheEnd = true;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "name":
-					needsName = false;
-					name = parser.getString();
-					break;
-				case "currentPath":
-					needsCurrentPath = false;
-					currentPath = parser.getString();
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

@@ -26,6 +26,8 @@
 package org.cnv.shr.sync;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 import org.cnv.shr.mdl.PathElement;
@@ -67,6 +69,13 @@ public class SynchronizationTask
 	public void setResults(final Pair[] array)
 	{
 		synchronizedResults = array;
+		Arrays.sort(synchronizedResults, new Comparator<Pair>() {
+			@Override
+			public int compare(Pair o1, Pair o2)
+			{
+				return PathElement.PATH_COMPARATOR.compare(o1.getPathElement(), o2.getPathElement());
+			}});
+		
 		for (final TaskListener listener : listeners)
 		{
 			listener.syncCompleted(synchronizedResults);

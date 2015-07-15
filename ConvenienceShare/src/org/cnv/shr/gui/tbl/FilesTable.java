@@ -68,15 +68,23 @@ public class FilesTable extends DbJTable<SharedFile>
 	
 	public FilesTable(JTable table, final JFrame origin, JLabel numFilesShowingLabel)
 	{
-		super(table, "I don't think this is used yet.");
+		super(origin, table, "I don't think this is used yet.");
 		numFilesLabel = numFilesShowingLabel;
 
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(SharedFile t)
+			void perform(SharedFile[] ts)
 			{
-        UserActions.download(t);
+				if (JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(origin, "Downloading " + ts.length + " files.", "Continue?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE))
+				{
+					return;
+				}
+				
+				for (SharedFile t : ts)
+				{
+					UserActions.download(t);
+				}
 			}
 
 			@Override
@@ -88,18 +96,19 @@ public class FilesTable extends DbJTable<SharedFile>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(SharedFile t)
+			void perform(SharedFile[] ts)
 			{
-				if (t.isLocal())
+				for (SharedFile t : ts)
 				{
+					if (!t.isLocal())
+					{
+						JOptionPane.showMessageDialog(origin,
+								"Unable to open remote file, download it first.",
+								"Unable to open remote file.",
+								JOptionPane.ERROR_MESSAGE);
+						return;
+					}
 					Misc.nativeOpen(((LocalFile) t).getFsFile(), false);
-				}
-				else
-				{
-					JOptionPane.showMessageDialog(origin,
-							"Unable to open remote file, download it first.",
-							"Unable to open remote file.",
-							JOptionPane.ERROR_MESSAGE);
 				}
 			}
 			@Override
@@ -111,18 +120,19 @@ public class FilesTable extends DbJTable<SharedFile>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(SharedFile t)
+			void perform(SharedFile[] ts)
 			{
-				if (t.isLocal())
+				for (SharedFile t : ts)
 				{
+					if (!t.isLocal())
+					{
+						JOptionPane.showMessageDialog(origin,
+								"Unable to open remote file, download it first.",
+								"Unable to open remote file.",
+								JOptionPane.ERROR_MESSAGE);
+						return;
+					}
 					Misc.nativeOpen(((LocalFile) t).getFsFile(), true);
-				}
-				else
-				{
-					JOptionPane.showMessageDialog(origin,
-							"Unable to open remote file, download it first.",
-							"Unable to open remote file.",
-							JOptionPane.ERROR_MESSAGE);
 				}
 			}
 			@Override
@@ -134,7 +144,7 @@ public class FilesTable extends DbJTable<SharedFile>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(SharedFile t)
+			void perform(SharedFile[] ts)
 			{
 				Machine machine = DbMachines.getMachine(currentMachineIdent);
 				if (!machine.isLocal())
@@ -147,14 +157,17 @@ public class FilesTable extends DbJTable<SharedFile>
 					return;
 				}
 				LinkedList<SharedFile> fileList = new LinkedList<>();
-				fileList.add(t);
+				for (SharedFile t : ts)
+				{
+					fileList.add(t);
+				}
 				LocalDirectory local = DbRoots.getLocalByName(currentRootName);
 				if (local == null)
 				{
 					LogWrapper.getLogger().info("Unable to find local directory with name " + currentRootName);
 					return;
 				}
-		  	SetTagsFrame setTagsFrame = new SetTagsFrame(local,fileList);
+		  	SetTagsFrame setTagsFrame = new SetTagsFrame(local, fileList);
 		  	Services.notifications.registerWindow(setTagsFrame);
 		  	setTagsFrame.setVisible(true);
 			}
@@ -167,7 +180,7 @@ public class FilesTable extends DbJTable<SharedFile>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(SharedFile t)
+			void perform(SharedFile[] ts)
 			{
 				Machine machine = DbMachines.getMachine(currentMachineIdent);
 				if (!machine.isLocal())
@@ -355,5 +368,11 @@ public class FilesTable extends DbJTable<SharedFile>
 		tagsFilter = string2;
 		LogWrapper.getLogger().info("Filtering files table by path=" + filter + " and tags=" + tagsFilter);
 		refresh();
+	}
+
+	@Override
+	protected SharedFile[] createArray(int length)
+	{
+		return new SharedFile[length];
 	}
 }

@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
@@ -82,7 +83,7 @@ public class PathTreeModelNode implements TaskListener
 		PathTreeModelNode n = this;
 		while (n != null)
 		{
-			list.add(n);
+			list.addFirst(n);
 			n = n.parent;
 		}
 		return list.toArray(DUMMY);
@@ -168,8 +169,7 @@ public class PathTreeModelNode implements TaskListener
 		this.sourceChildren = pairs;
 		if (syncFully || children != null)
 		{
-			RootDirectory rootDir = model.getRootDirectory();
-			setToSource(rootDir);
+			setToSource(model.getRootDirectory());
 		}
 	}
 	
@@ -200,15 +200,14 @@ public class PathTreeModelNode implements TaskListener
 	{
 		// List from database...
 		final LinkedList<PathElement> list = element.list(rootDir);
-		// Should clean this one up...
-		for (final PathElement e : list)
+		list.removeIf(new Predicate<PathElement>()
 		{
-			if (e.isAbsolute())
+			@Override
+			public boolean test(PathElement t)
 			{
-				list.remove(e);
-				break;
+				return t.isAbsolute();
 			}
-		}
+		});
 		children = new PathTreeModelNode[list.size()];
 		int ndx = 0;
 		for (final PathElement e : list)
@@ -238,11 +237,11 @@ public class PathTreeModelNode implements TaskListener
 		{
 			final PathElement pathElement = p.getPathElement();
 			String unbrokenName = pathElement.getUnbrokenName();
+			accountedFor.add(unbrokenName);
 			if (pathElement.isAbsolute())
 			{
 				continue;
 			}
-			accountedFor.add(unbrokenName);
 			PathTreeModelNode node = new PathTreeModelNode(this, model, pathElement, syncFully);
 			allChildren.add(node);
 			

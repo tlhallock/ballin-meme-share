@@ -47,7 +47,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 
 	public LocalTable(Application app, JTable table)
 	{
-		super(table, "Path");
+		super(app, table, "Path");
 		this.app = app;
 
 		addListener(new TableRightClickListener()
@@ -58,17 +58,23 @@ public class LocalTable extends DbJTable<LocalDirectory>
 				return "Show";
 			}
 			@Override
-			void perform(LocalDirectory root)
+			void perform(LocalDirectory[] roots)
 			{
-				UserActions.showLocal(root);
+				for (LocalDirectory root : roots)
+				{
+					UserActions.showLocal(root);
+				}
 			}
 		}, true);
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(LocalDirectory root)
+			void perform(LocalDirectory[] roots)
 			{
-				UserActions.remove(root);
+				for (LocalDirectory root : roots)
+				{
+					UserActions.remove(root);
+				}
 			}
 
 			@Override
@@ -80,9 +86,12 @@ public class LocalTable extends DbJTable<LocalDirectory>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(LocalDirectory root)
+			void perform(LocalDirectory[] roots)
 			{
-				Misc.nativeOpen(Paths.get(root.getPathElement().getFsPath()), false);
+				for (LocalDirectory root : roots)
+				{
+					Misc.nativeOpen(Paths.get(root.getPathElement().getFsPath()), false);
+				}
 			}
 
 			@Override
@@ -94,9 +103,12 @@ public class LocalTable extends DbJTable<LocalDirectory>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(LocalDirectory root)
+			void perform(LocalDirectory[] roots)
 			{
-				UserActions.userSync(app, root, Collections.singletonList(app.createLocalListener(root)));
+				for (LocalDirectory root : roots)
+				{
+					UserActions.userSync(app, root, Collections.singletonList(app.createLocalListener(root)));
+				}
 			}
 			@Override
 			public String getName()
@@ -155,5 +167,11 @@ public class LocalTable extends DbJTable<LocalDirectory>
             return canEdit [columnIndex];
         }
     };
+	}
+
+	@Override
+	protected LocalDirectory[] createArray(int length)
+	{
+		return new LocalDirectory[length];
 	}
 }

@@ -25,71 +25,64 @@
 
 package org.cnv.shr.dmn;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.logging.Level;
 
+import org.cnv.shr.stng.SettingListener;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
-public class BlackList
+public class BlackList implements SettingListener
 {
+	private HashSet<String> lines = new HashSet<>();
+	private long timeStamp;
+	
+	public BlackList()
+	{
+		read();
+		Services.settings.blackListFile.addListener(this);
+	}
+	
 	private static void ensureExists(Path path)
 	{
 		Misc.ensureDirectory(path, true);
-		if (!Files.exists(path))
+		if (Files.exists(path))
 		{
-			try
-			{
-				Files.createFile(path);
-			}
-			catch (IOException e)
-			{
-				LogWrapper.getLogger().log(Level.INFO, "Unable to create blacklist file at " + path, e);
-			}
+			return;
 		}
-	}
-	
-	public synchronized boolean contains(String machineId)
-	{
-		Path blackListFile = Services.settings.applicationDirectory.getPath().resolve("blackList.txt");
-		
-		ensureExists(blackListFile);
-		Boolean grep = Misc.grep(blackListFile, machineId);
-		boolean blackListed = grep != null && grep;
-		LogWrapper.getLogger().info(machineId + " is " + (blackListed? "" : "not") + " blacklisted");
-		return blackListed;
-	}
-	public synchronized void add(String machineId)
-	{
-		Path blackListFile = Services.settings.applicationDirectory.getPath().resolve("blackList.txt");
-		Path backup = Paths.get(blackListFile.toString() + ".back");
-		ensureExists(blackListFile);
-		ensureExists(backup);
-		
-		LogWrapper.getLogger().info("Blacklisting " + machineId);
-		if (Misc.sed(blackListFile, backup, null, null))
+		try
 		{
-			Misc.sed(backup, blackListFile, machineId, null);
+			Files.createFile(path);
 		}
-	}
-	public synchronized void remove(String machineId)
-	{
-		Path blackListFile = Services.settings.applicationDirectory.getPath().resolve("blackList.txt");
-		Path backup = Paths.get(blackListFile.toString() + ".back");
-		ensureExists(blackListFile);
-		ensureExists(backup);
-		
-		LogWrapper.getLogger().info("Un-blacklisting " + machineId);
-		if (Misc.sed(blackListFile, backup, null, null))
+		catch (IOException e)
 		{
-			Misc.sed(backup, blackListFile, null, machineId);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to create blacklist file at " + path, e);
 		}
 	}
 
-	// TODO: how to do ips?
+	public synchronized boolean contains(String machineId)
+	{
+		checkTime();
+		return lines.contains(machineId);
+	}
+
+	public synchronized void add(String machineId)
+	{
+		lines.add(machineId);
+		write();
+	}
+
+	public synchronized void remove(String machineId)
+	{
+		lines.remove(machineId);
+		write();
+	}
+
 	public synchronized void setBlacklisted(String machineId, boolean value)
 	{
 		if (value)
@@ -100,5 +93,66 @@ public class BlackList
 		{
 			remove(machineId);
 		}
+	}
+	
+	private void checkTime()
+	{
+		Path blackListFile = Services.settings.blackListFile.getPath();
+		try
+		{
+			if (timeStamp < Files.getLastModifiedTime(blackListFile).toMillis())
+			{
+				read();
+			}
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get modified time of blacklist file: " + blackListFile, e);
+		}
+	}
+	
+	private synchronized void read()
+	{
+		timeStamp = System.currentTimeMillis();
+		Path blackListFile = Services.settings.blackListFile.getPath();
+		ensureExists(blackListFile);
+		try (BufferedReader reader = Files.newBufferedReader(blackListFile);)
+		{
+			lines.clear();
+			String line;
+			while ((line = reader.readLine()) != null)
+			{
+				lines.add(line);
+			}
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to read blacklist file at " + blackListFile, e);
+			write();
+		}
+	}
+	private synchronized void write()
+	{
+		Path blackListFile = Services.settings.blackListFile.getPath();
+		ensureExists(blackListFile);
+		try (BufferedWriter writer = Files.newBufferedWriter(blackListFile);)
+		{
+			for (String str : lines)
+			{
+				writer.write(str);
+				writer.write("\n");
+			}
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to write blacklist file at " + blackListFile, e);
+		}
+	}
+
+	@Override
+	public void settingChanged()
+	{
+		read();
+		write();
 	}
 }

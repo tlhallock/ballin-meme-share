@@ -19,7 +19,8 @@ public abstract class ConnectionParams
 	PublicKey remoteKey;
 	boolean acceptAllKeys;
 	String reason;
-	Runnable failCallback;
+	
+	private boolean notified;
 
 	public ConnectionParams(String url, boolean acceptKeys, String reason)
 	{
@@ -51,9 +52,21 @@ public abstract class ConnectionParams
 		return this;
 	}
 
-	public abstract void connectionOpened(Communication connection) throws Exception;
-	public abstract boolean closeWhenDone();
-	public void onFail() {}
+	protected abstract boolean closeWhenDone();
+	
+	protected abstract void opened(Communication connection) throws Exception;
+	protected void failed() {}
+	
+	protected void notifyOpened(Communication connection) throws Exception
+	{
+		notified = true;
+		opened(connection);
+	}
+	protected void notifyFailed()
+	{
+		notified = true;
+		failed();
+	}
 	
 	int getPortEnd()
 	{
@@ -91,5 +104,13 @@ public abstract class ConnectionParams
 			super(origin, m, acceptKeys, reason);
 		}
 		public final boolean closeWhenDone() { return false; }
+	}
+	
+	public void ensureNotification()
+	{
+		if (!notified)
+		{
+			notifyFailed();
+		}
 	}
 }

@@ -137,21 +137,17 @@ public class LocalBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsIgnores = true;
 		boolean needsMinFSize = true;
 		boolean needsMaxFSize = true;
 		boolean needsName = true;
 		boolean needsDescription = true;
 		boolean needsPath = true;
+		boolean needsIgnores = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsIgnores)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ignores");
-				}
 				if (needsMinFSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs minFSize");
@@ -172,19 +168,14 @@ public class LocalBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
 				}
+				if (needsIgnores)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ignores");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("ignores")) {
-					needsIgnores = false;
-					ignores.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
@@ -227,6 +218,15 @@ public class LocalBackup implements Jsonable
 					defaultSharingState = SharingState.valueOf(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("ignores")) {
+					needsIgnores = false;
+					ignores.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

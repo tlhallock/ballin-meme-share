@@ -27,6 +27,7 @@ package org.cnv.shr.gui;
 
 import java.awt.Component;
 import java.awt.ComponentOrientation;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -136,7 +137,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		remotes = new MachineTable(this, machinesList);
 		downloads = new DownloadTable(this, jTable2);
 		messages = new MessageTable(this, messageTable);
-		serves = new ServeTable(jTable1);
+		serves = new ServeTable(this, jTable1);
 		
 		connectionsPanel.setLayout(new GridLayout(0, 1));
 		
@@ -218,7 +219,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         }
     });
     makeDebugItems();
-    downloads.refresh();
+    refreshDownloads();
     Misc.timer.scheduleAtFixedRate(refresh, GUI_REFRESH_RATE, GUI_REFRESH_RATE);
 
 		maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
@@ -345,7 +346,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
 	public void refreshAll()
 	{
-		downloads.refresh();
+		refreshDownloads();
 		refreshSettings();
 		locals.refresh();
 		remotes.refresh();
@@ -420,6 +421,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jButton7 = new javax.swing.JButton();
         jButton11 = new javax.swing.JButton();
         jButton12 = new javax.swing.JButton();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
         jPanel9 = new javax.swing.JPanel();
         jButton5 = new javax.swing.JButton();
         jScrollPane7 = new javax.swing.JScrollPane();
@@ -525,7 +530,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(addressLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 682, Short.MAX_VALUE)
+                        .addComponent(addressLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton8)))
                 .addContainerGap())
@@ -556,7 +561,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addGroup(jPanel11Layout.createSequentialGroup()
                         .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 364, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jComboBox1, 0, 539, Short.MAX_VALUE)))
+                        .addComponent(jComboBox1, 0, 476, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel11Layout.setVerticalGroup(
@@ -611,7 +616,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 858, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jButton13)
@@ -665,7 +670,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(0, 691, Short.MAX_VALUE)
+                        .addGap(0, 628, Short.MAX_VALUE)
                         .addComponent(jButton4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton1))
@@ -700,7 +705,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 858, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
@@ -721,16 +726,16 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 933, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 870, Short.MAX_VALUE)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
         );
 
         jSplitPane1.setRightComponent(jPanel6);
 
-        jLabel2.setText("Currently set max downloads:");
+        jLabel2.setText("Current maximum number of active downloads:");
 
         maxPending.setText("0");
 
@@ -755,6 +760,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             }
         });
 
+        jLabel6.setText("Current number of downloads:");
+
+        jLabel7.setText("Current number of active downloads:");
+
+        jLabel8.setText("0");
+
+        jLabel9.setText("0");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -762,15 +775,22 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             .addComponent(jSplitPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel2)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel6)
+                    .addComponent(jLabel7))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(maxPending, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(160, 160, 160)
-                .addComponent(jButton12)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton7)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton11)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(maxPending, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton12)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton11)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -784,6 +804,14 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                     .addComponent(jButton11)
                     .addComponent(jButton12))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(jLabel8))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(jLabel9))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSplitPane1))
         );
 
@@ -813,7 +841,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
+                    .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 858, Short.MAX_VALUE)
                     .addGroup(jPanel9Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jButton5)
@@ -866,7 +894,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
+                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 858, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
@@ -883,7 +911,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         connectionsPanel.setLayout(connectionsPanelLayout);
         connectionsPanelLayout.setHorizontalGroup(
             connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 941, Short.MAX_VALUE)
+            .addGap(0, 962, Short.MAX_VALUE)
         );
         connectionsPanelLayout.setVerticalGroup(
             connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -903,7 +931,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jPanel10.setLayout(jPanel10Layout);
         jPanel10Layout.setHorizontalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 945, Short.MAX_VALUE)
+            .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 882, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(refreshConnections)
@@ -938,7 +966,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
         jPanel13.setLayout(jPanel13Layout);
         jPanel13Layout.setHorizontalGroup(
             jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 934, Short.MAX_VALUE)
+            .addGap(0, 962, Short.MAX_VALUE)
         );
         jPanel13Layout.setVerticalGroup(
             jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -957,7 +985,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton18)
                 .addContainerGap())
-            .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 945, Short.MAX_VALUE)
+            .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 882, Short.MAX_VALUE)
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1013,7 +1041,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 921, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 858, Short.MAX_VALUE)
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jCheckBox1)
@@ -1377,9 +1405,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_jButton10ActionPerformed
 
     private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
-    	// Should not be here...
-  		this.maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
-  		downloads.refresh();
+  		refreshDownloads();
       serves.refresh();
     }//GEN-LAST:event_jButton11ActionPerformed
 
@@ -1388,7 +1414,16 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     }//GEN-LAST:event_refreshConnectionsActionPerformed
 
     private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
-       DbDownloads.clearCompleted(); // should be moved to user actions and be run on a different thread.
+			try
+			{
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				DbDownloads.clearCompleted();
+			}
+			finally
+			{
+				setCursor(Cursor.getDefaultCursor());
+			}
+			refreshDownloads();
     }//GEN-LAST:event_jButton12ActionPerformed
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
@@ -1703,6 +1738,10 @@ public class Application extends javax.swing.JFrame implements NotificationListe
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
@@ -1816,6 +1855,15 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			}
 		};
 	}
+
+	private void refreshDownloads()
+	{
+		maxPending.setText(String.valueOf(Services.settings.maxDownloads.get()));
+		jLabel8.setText(String.valueOf(DbDownloads.getNumDownloads()));
+		jLabel9.setText(String.valueOf(Services.downloads.getNumActiveDownloads()));
+		downloads.refresh();
+	}
+	
 	
 	
 	
@@ -1875,19 +1923,25 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			@Override
 			public void downloadAdded(DownloadInstance d)
 			{
-				downloads.refresh();
+				refreshDownloads();
 			}
 
 			@Override
 			public void downloadRemoved(DownloadInstance d)
 			{
-				downloads.refresh();
+				refreshDownloads();
+			}
+
+			@Override
+			public void downloadsChanged()
+			{
+				refreshDownloads();
 			}
 
 			@Override
 			public void downloadDone(DownloadInstance d)
 			{
-				downloads.refresh();
+				refreshDownloads();
 			}
 
 			@Override

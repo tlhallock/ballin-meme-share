@@ -86,7 +86,7 @@ public class UserActions
 				Services.keyManager.addPendingAuthentication(Services.settings.keysFile.getPath(), url);
 			}
 			@Override
-			public void connectionOpened(Communication connection) throws Exception
+			public void opened(Communication connection) throws Exception
 			{
 				Machine machine = connection.getMachine();
 				if (params.message)
@@ -135,7 +135,7 @@ public class UserActions
     LogWrapper.getLogger().info("Synchronizing roots with " + m.getName());
 		Services.networkManager.openConnection(new AutoCloseConnectionParams(origin, m, false, "Synchronize roots") {
 			@Override
-			public void connectionOpened(Communication connection) throws Exception
+			public void opened(Communication connection) throws Exception
 			{
 				connection.send(new ListRoots());
 			}
@@ -156,7 +156,7 @@ public class UserActions
 
 				Services.networkManager.openConnection(new AutoCloseConnectionParams(origin, machine, false, "Find trackers") {
 					@Override
-					public void connectionOpened(Communication connection) throws Exception
+					public void opened(Communication connection) throws Exception
 					{
 						connection.send(new FindTrackers());
 					}
@@ -180,7 +180,7 @@ public class UserActions
 
 			Services.networkManager.openConnection(new AutoCloseConnectionParams(origin, m, false, "Find more machines") {
 				@Override
-				public void connectionOpened(Communication connection) throws Exception
+				public void opened(Communication connection) throws Exception
 				{
 					connection.send(new FindMachines());
 				}
@@ -467,7 +467,7 @@ public class UserActions
 		// Permissions should be synced inside of syncRoots...
 		Services.networkManager.openConnection(new AutoCloseConnectionParams(origin, machine, false, "Check permissions") {
 			@Override
-			public void connectionOpened(Communication connection) throws Exception
+			public void opened(Communication connection) throws Exception
 			{
 				try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
 				{

@@ -58,31 +58,34 @@ public class DownloadTable extends DbJTable<Download>
 	
 	public DownloadTable(Application app, JTable table)
 	{
-		super(table, "Id");
+		super(app, table, "Id");
 		this.app = app;
 
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Download download)
+			void perform(Download[] downloads)
 			{
-				DownloadState state = download.getState();
-				if (state == null)
+				for (Download download : downloads)
 				{
-					// why would this happen?
-					LogWrapper.getLogger().warning("The download has no state.");
-					return;
+					DownloadState state = download.getState();
+					if (state == null)
+					{
+						// why would this happen?
+						LogWrapper.getLogger().warning("The download has no state.");
+						return;
+					}
+					if (!state.equals(DownloadState.ALL_DONE))
+					{
+	
+						JOptionPane.showMessageDialog(app, 
+								"Opening unfinished downloads is not supported yet.",
+								"This download is not done!",
+								 JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					Misc.nativeOpen(download.getTargetFile(), false);
 				}
-				if (!state.equals(DownloadState.ALL_DONE))
-				{
-
-					JOptionPane.showMessageDialog(app, 
-							"Opening unfinished downloads is not supported yet.",
-							"This download is not done!",
-							 JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				Misc.nativeOpen(download.getTargetFile(), false);
 			}
 			
 			@Override
@@ -94,24 +97,27 @@ public class DownloadTable extends DbJTable<Download>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Download download)
+			void perform(Download[] downloads)
 			{
-				DownloadState state = download.getState();
-				if (state == null)
+				for (Download download : downloads)
 				{
-					// why would this happen?
-					LogWrapper.getLogger().warning("The download has no state.");
-					return;
+					DownloadState state = download.getState();
+					if (state == null)
+					{
+						// why would this happen?
+						LogWrapper.getLogger().warning("The download has no state.");
+						return;
+					}
+					if (state.hasYetTo(DownloadState.ALLOCATING))
+					{
+						JOptionPane.showMessageDialog(app, 
+								"Opening queued downloads is not supported yet.",
+								"This download is not done!",
+								 JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					Misc.nativeOpen(download.getTargetFile(), true);
 				}
-				if (state.hasYetTo(DownloadState.ALLOCATING))
-				{
-					JOptionPane.showMessageDialog(app, 
-							"Opening queued downloads is not supported yet.",
-							"This download is not done!",
-							 JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				Misc.nativeOpen(download.getTargetFile(), true);
 			}
 			
 			@Override
@@ -123,18 +129,22 @@ public class DownloadTable extends DbJTable<Download>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Download download)
+			void perform(Download[] downloads)
 			{
-				DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(
-						download.getFile().getFileEntry());
-				if (dInstance != null)
+				for (Download download : downloads)
 				{
-					dInstance.fail("User quit.");
+					DownloadInstance dInstance = Services.downloads.getDownloadInstanceForGui(
+							download.getFile().getFileEntry());
+					if (dInstance != null)
+					{
+						dInstance.fail("User quit.");
+					}
+					download.delete();
 				}
-				download.delete();
 				
 				//Services.notifications.downloadDeleted(download);
 				refresh();
+				
 			}
 			
 			@Override
@@ -146,9 +156,12 @@ public class DownloadTable extends DbJTable<Download>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Download download)
+			void perform(Download[] downloads)
 			{
-				DownloadInstance.testCompletion(download);
+				for (Download download : downloads)
+				{
+					DownloadInstance.testCompletion(download);
+				}
 			}
 			
 			@Override
@@ -160,10 +173,13 @@ public class DownloadTable extends DbJTable<Download>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Download download)
+			void perform(Download[] downloads)
 			{
-				DbChunks.removeAllChunks(download);
-				download.setState(DownloadState.REQUESTING_METADATA);
+				for (Download download : downloads)
+				{
+					DbChunks.removeAllChunks(download);
+					download.setState(DownloadState.REQUESTING_METADATA);
+				}
 			}
 			
 			@Override
@@ -175,14 +191,14 @@ public class DownloadTable extends DbJTable<Download>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Download download)
+			void perform(Download[] downloads)
 			{
 				SpinnerNumberModel sModel = new SpinnerNumberModel();
 				JSpinner spinner = new JSpinner(sModel);
 				if (JOptionPane.OK_OPTION != JOptionPane.showOptionDialog(
 						app,
 						spinner,
-						"Priority for " + download.getId(),
+						"New priorities",
 						JOptionPane.OK_CANCEL_OPTION,
 						JOptionPane.QUESTION_MESSAGE,
 						null, null, null))
@@ -190,8 +206,11 @@ public class DownloadTable extends DbJTable<Download>
 					return;
 				}
 				int priority = ((Number) sModel.getValue()).intValue();
-				download.setPriority(priority);
-				download.tryToSave();
+				for (Download download : downloads)
+				{
+					download.setPriority(priority);
+					download.tryToSave();
+				}
 			}
 			
 			@Override
@@ -203,10 +222,13 @@ public class DownloadTable extends DbJTable<Download>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Download download)
+			void perform(Download[] downloads)
 			{
-				download.setState(DownloadState.QUEUED);
-				download.tryToSave();
+				for (Download download : downloads)
+				{
+					download.setState(DownloadState.QUEUED);
+					download.tryToSave();
+				}
 			}
 			
 			@Override
@@ -313,5 +335,11 @@ public class DownloadTable extends DbJTable<Download>
             return canEdit [columnIndex];
         }
     };
+	}
+
+	@Override
+	protected Download[] createArray(int length)
+	{
+		return new Download[length];
 	}
 }

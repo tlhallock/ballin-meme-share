@@ -58,4 +58,5 @@ public interface NotificationListener
 	void fileDeleted(final SharedFile file)                     ;
 	void permissionsChanged(final Machine remote)               ;
 	void permissionsChanged(final RemoteDirectory remote)       ;
+	void downloadsChanged()                                     ;
 }

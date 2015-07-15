@@ -25,6 +25,7 @@
 
 package org.cnv.shr.gui.tbl;
 
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -56,10 +58,12 @@ public abstract class DbJTable<T> extends MouseAdapter
 	private String keyName;
 	private String[] names;
 	protected JTable table;
+	private JFrame window;
 	
 	
-	public DbJTable(JTable table, String keyName)
+	public DbJTable(JFrame window, JTable table, String keyName)
 	{
+		this.window = window;
 		this.table = table;
 		jPopupMenu = new JPopupMenu();
 		table.setComponentPopupMenu(jPopupMenu);
@@ -391,10 +395,16 @@ public abstract class DbJTable<T> extends MouseAdapter
 		
 		if (me.getClickCount() >= 2 && dblClick != null)
 		{
-			int[] selectedRows = new int[] { nRow };
-			for (int i = selectedRows.length - 1; i >= 0; i--)
+			try
 			{
-				dblClick.perform(create(selectedRows[i]));
+				table.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				T[] createArray = createArray(1);
+				createArray[0] = create(nRow);
+				dblClick.perform(createArray);
+			}
+			finally
+			{
+				table.setCursor(Cursor.getDefaultCursor());
 			}
 		}
 		else
@@ -408,14 +418,14 @@ public abstract class DbJTable<T> extends MouseAdapter
 	
 	
 	
-	
+	protected abstract T[] createArray(int length);
 	
 	
 	abstract class TableRightClickListener implements ActionListener
 	{
 		abstract String getName();
-		abstract void perform(T t);
-
+		abstract void perform(T[] t);
+		
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
@@ -426,27 +436,32 @@ public abstract class DbJTable<T> extends MouseAdapter
 					LogWrapper.getLogger().info("No rows selected!");
 					return;
 				}
+				T[] vals = createArray(selectedRows2.length);
 				for (int i = selectedRows2.length - 1; i >= 0; i--)
 				{
-					final T create = create(selectedRows2[i]);
-					if (create == null)
+					if ((vals[i] = create(selectedRows2[i])) == null)
 					{
 						LogWrapper.getLogger().info("Unable to find record from " + selectedRows2[i]);
 						return;
 					}
-
-					LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
-					Services.userThreads.execute(() -> {
-						try
-						{
-							perform(create);
-						}
-						catch (Exception ex)
-						{
-							LogWrapper.getLogger().log(Level.INFO, null, ex);
-						}
-					});
 				}
+
+				LogWrapper.getLogger().info("Performing action " + getName() + " from " + getClass().getName());
+				Services.userThreads.execute(() -> {
+					try
+					{
+						window.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						perform(vals);
+					}
+					catch (Exception ex)
+					{
+						LogWrapper.getLogger().log(Level.INFO, null, ex);
+					}
+					finally
+					{
+						window.setCursor(Cursor.getDefaultCursor());
+					}
+				});
 			});
 		}
 	}

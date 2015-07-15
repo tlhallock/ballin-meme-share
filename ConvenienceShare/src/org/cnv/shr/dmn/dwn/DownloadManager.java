@@ -52,7 +52,7 @@ import org.cnv.shr.util.NonRejectingExecutor;
 public class DownloadManager
 {
 	// Need to remove old ones...
-	Hashtable<FileEntry, DownloadInstance> downloads = new Hashtable<>();
+	private Hashtable<FileEntry, DownloadInstance> downloads = new Hashtable<>();
 	DownloadInitiator initiator = new DownloadInitiator();
 	ChecksumRequester requester = new ChecksumRequester();
 	public NonRejectingExecutor downloadThreads = new NonRejectingExecutor("dwnld", Services.settings.maxDownloads.get());
@@ -61,7 +61,7 @@ public class DownloadManager
 	{
 		download(remoteFile, false);
 	}
-	public void download(SharedFile remoteFile, boolean force) throws UnknownHostException, IOException
+	public void download(SharedFile remoteFile, boolean force)
 	{
 		if (remoteFile.isLocal())
 		{
@@ -101,12 +101,12 @@ public class DownloadManager
 		return true;
 	}
 	
-	public void download(RemoteFile file, boolean force) throws UnknownHostException, IOException
+	public void download(RemoteFile file, boolean force)
 	{
-		createDownloadInstance(new Download(file), force);
+		createDownload(new Download(file), force);
 	}
 
-	void createDownloadInstance(Download d, boolean force) throws UnknownHostException, IOException
+	void createDownload(Download d, boolean force)
 	{
 		String checksum = d.getFile().getChecksum();
 		
@@ -128,41 +128,70 @@ public class DownloadManager
 		{
 			return;
 		}
+		
 
 		FileEntry fileEntry = d.getFile().getFileEntry();
-
-		synchronized (creationSync)
-		{
 			if (downloads.get(fileEntry) != null)
 			{
 				LogWrapper.getLogger().info("Already downloading.");
 				return;
 			}
 
-			if (!canCreate(fileEntry))
+		d.tryToSave();
+
+		// Should make the initiator a listener...
+		if (getNumActiveDownloads() < Services.settings.maxDownloads.get())
+		{
+			initiator.kick();
+		}
+		Services.notifications.downloadsChanged();
+	}
+	
+	void continueDownloadInstance(Download download)
+	{
+		FileEntry fileEntry = download.getFile().getFileEntry();
+
+		DownloadInstance downloadInstance = downloads.get(fileEntry);
+		if (downloadInstance != null)
+		{
+			LogWrapper.getLogger().info("Already downloading.");
+			downloadInstance.continueDownload();
+			return;
+		}
+
+		synchronized (creationSync)
+		{
+			downloadInstance = downloads.get(fileEntry);
+			if (downloadInstance != null)
+			{
+				LogWrapper.getLogger().info("Already downloading.");
+				downloadInstance.continueDownload();
+				return;
+			}
+
+
+			if (!startCreating(fileEntry))
 			{
 				LogWrapper.getLogger().info("Already creating download for " + fileEntry);
 				return;
 			}
 		}
 
-		d.tryToSave();
-
-		if (downloads.size() >= Services.settings.maxDownloads.get())
+		if (getNumActiveDownloads() + creationSync.size() >= Services.settings.maxDownloads.get())
 		{
 			doneCreating(fileEntry);
 			return;
 		}
-
-		Machine machine = d.getFile().getRootDirectory().getMachine();
+		
+		Machine machine = download.getFile().getRootDirectory().getMachine();
 		Services.networkManager.openConnection(new KeepOpenConnectionParams(null, machine, false, "Download file")
 		{
 			@Override
-			public void connectionOpened(Communication connection) throws Exception
+			public void opened(Communication connection) throws Exception
 			{
 				Seeder primarySeeder = new Seeder(machine, connection);
 				LogWrapper.getLogger().info("Creating download instance");
-				DownloadInstance instance = new DownloadInstance(d, primarySeeder);
+				DownloadInstance instance = new DownloadInstance(download, primarySeeder);
 				downloads.put(fileEntry, instance);
 				doneCreating(fileEntry);
 
@@ -172,22 +201,25 @@ public class DownloadManager
 				Services.notifications.downloadAdded(instance);
 			}
 
-			public void onFail()
+			public void failed()
 			{
 				doneCreating(fileEntry);
 			}
 		});
 	}
-
-	public void remove(DownloadInstance downloadInstance)
+	public int getNumActiveDownloads()
 	{
-		downloads.remove(downloadInstance.getDownload().getFile().getFileEntry());
-		if (downloads.size() >= Services.settings.maxDownloads.get())
+		return downloads.size();
+	}
+
+	public void remove(FileEntry entry)
+	{
+		downloads.remove(entry);
+		if (getNumActiveDownloads() >= Services.settings.maxDownloads.get())
 		{
 			return;
 		}
-		guiInfo.remove(downloadInstance.getDownload().getId());
-		initiator.initiatePendingDownloads();
+		initiator.kick();
 	}
 
 	public LinkedList<DownloadInstance> getDownloadInstances(Communication c)
@@ -234,13 +266,9 @@ public class DownloadManager
 		return downloadInstance;
 	}
 
-
 	public void startDownloadInitiator()
 	{
-		Services.downloads.downloadThreads.schedule(() -> {
-				Misc.timer.scheduleAtFixedRate(initiator, 1000, 10 * 60 * 1000);
-				requester.start();
-		}, 10 * 1000);
+		initiator.start();
 	}
 
 	public void quitAllDownloads()
@@ -250,11 +278,12 @@ public class DownloadManager
 			instance.fail("Closing all downloads.");
 		}
 		requester.interrupt();
+		initiator.interrupt();
 	}
 
 	public void initiatePendingDownloads()
 	{
-		initiator.initiatePendingDownloads();
+		initiator.kick();
 	}
 	
 	public boolean hasPendingChecksumRequest(SharedFileId id)
@@ -266,7 +295,7 @@ public class DownloadManager
 	
 	
 	private HashMap<FileEntry, Long> creationSync = new HashMap<>();
-	private boolean canCreate(FileEntry newOne)
+	private boolean startCreating(FileEntry newOne)
 	{
 		Long last = null;
 		long now;
@@ -294,6 +323,10 @@ public class DownloadManager
 	public void updateGuiInfo(Download instance, GuiInfo info)
 	{
 		guiInfo.put(instance.getId(), info);
+	}
+	public void removeGuiInfo(Integer id)
+	{
+		guiInfo.remove(id);
 	}
 	public GuiInfo getGuiInfo(Download d)
 	{

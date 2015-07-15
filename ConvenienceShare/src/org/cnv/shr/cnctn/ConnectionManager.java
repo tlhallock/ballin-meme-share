@@ -87,64 +87,59 @@ public class ConnectionManager
 //	
 	public void openConnection(ConnectionParams params)
 	{
-		if (Services.blackList.contains(params.identifier))
+		boolean submitted = false;
+		try
 		{
-			LogWrapper.getLogger().info(params.identifier + " is a blacklisted machine.");
-			Services.userThreads.execute(() -> { params.onFail(); });
-			return;
-		}
-		
-		if (params.tryingToConnectToLocal())
-		{
-			LogWrapper.getLogger().info("Can't connect to local machine. No reason for this.");
-			Services.userThreads.execute(() -> { params.onFail(); });
-			return;
-		}
-		
-		Authenticator authentication = new Authenticator(params);
-		
-//		class TmpObject
-//		{
-//			Communication connection;
-//		}
-//		TmpObject o = new TmpObject();
-		
-		Services.connectionThreads.execute(() -> {
-			try (Communication connection = connect(params, authentication);)
+			if (Services.blackList.contains(params.identifier))
 			{
-//				o.connection = connection;
-				if (connection == null)
+				LogWrapper.getLogger().info(params.identifier + " is a blacklisted machine.");
+				return;
+			}
+
+			if (params.tryingToConnectToLocal())
+			{
+				LogWrapper.getLogger().info("Can't connect to local machine. No reason for this.");
+				return;
+			}
+
+			Authenticator authentication = new Authenticator(params);
+
+			Services.connectionThreads.execute(() -> {
+				try (Communication connection = connect(params, authentication);)
 				{
-					return;
+					if (connection == null)
+					{
+						return;
+					}
+					connection.setRemoteIdentifier(params.identifier);
+					connection.setReason(params.reason);
+					connection.send(new WhoIAm());
+					connection.send(new ConnectionReason(params.reason));
+					connection.send(new OpenConnection(params.remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, params.remoteKey)));
+					ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
+					connectionRunnable.run();
 				}
-				connection.setRemoteIdentifier(params.identifier);
-				connection.setReason(params.reason);
-				connection.send(new WhoIAm());
-				connection.send(new ConnectionReason(params.reason));
-				connection.send(new OpenConnection(params.remoteKey, IdkWhereToPutThis.createTestNaunce(authentication, params.remoteKey)));
-				ConnectionRunnable connectionRunnable = new ConnectionRunnable(connection, authentication);
-				connectionRunnable.run();
-			}
-			catch (Exception e)
+				catch (Exception e)
+				{
+					LogWrapper.getLogger().info("Unable to open connection: " + e.getMessage());
+				}
+				finally
+				{
+					params.ensureNotification();
+				}
+			});
+
+			submitted = true;
+		}
+		finally
+		{
+			if (!submitted)
 			{
-				LogWrapper.getLogger().info("Unable to open connection: " + e.getMessage());
+				Services.userThreads.execute(() -> {
+					params.notifyFailed();
+				});
 			}
-		});
-		
-//		if (params.callback != null)
-//		{
-//			return null;
-//		}
-//		
-//		try
-//		{
-//			return authentication.waitForAuthentication() ? o.connection : null;
-//		}
-//		catch (IOException ex)
-//		{
-//			LogWrapper.getLogger().info("Unable to wait for connection: " + ex.getMessage());
-//			return null;
-//		}
+		}
 	}
 	
 	private static Communication connect(ConnectionParams params, Authenticator authentication) throws UnknownHostException, IOException

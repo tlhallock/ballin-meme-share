@@ -176,7 +176,7 @@ public class CreateMessage extends javax.swing.JFrame implements KeyListener {
         
 					Services.networkManager.openConnection(new AutoCloseConnectionParams(message, machine, false, "Send user message") {
 						@Override
-						public void connectionOpened(Communication connection) throws IOException
+						public void opened(Communication connection) throws IOException
 						{
 							connection.send(new UserMessageMessage(userMessage));
 						}

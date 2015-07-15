@@ -38,14 +38,6 @@ public class CleanBrowsingHistory
 	
 	public static void removeAllNonEssentialData(Machine machine)
 	{
-		Services.userThreads.execute(() ->
-		{
-			removeAllNonEssentialDataInternal(machine);
-		});
-	}
-
-	private static void removeAllNonEssentialDataInternal(Machine machine)
-	{
 		if (machine.isLocal())
 		{
 			throw new RuntimeException("Cannot remove local data!!!");
@@ -56,12 +48,8 @@ public class CleanBrowsingHistory
 		cleanMachine(machine);
 		LogWrapper.getLogger().info("Adding removed downloads");
 		add(extracted);
-		
-		Services.userThreads.execute(() ->
-		{
-			LogWrapper.getLogger().info("Cleaning paths.");
-			DbPaths.removeUnusedPaths();
-		});
+		LogWrapper.getLogger().info("Cleaning paths.");
+		DbPaths.removeUnusedPaths();
 	}
 
 	private static void add(LinkedList<DownloadBackup> extracted)

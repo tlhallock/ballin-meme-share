@@ -197,7 +197,6 @@ public class DownloadBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsChunks = true;
 		boolean needsFileSize = true;
 		boolean needsLastModified = true;
 		boolean needsAdded = true;
@@ -208,15 +207,12 @@ public class DownloadBackup implements Jsonable
 		boolean needsRemotePath = true;
 		boolean needsChecksum = true;
 		boolean needsCurrentDownloadState = true;
+		boolean needsChunks = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsChunks)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
-				}
 				if (needsFileSize)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
@@ -257,19 +253,14 @@ public class DownloadBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentDownloadState");
 				}
+				if (needsChunks)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("chunks")) {
-					needsChunks = false;
-					chunks.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				switch(key) {
@@ -323,6 +314,15 @@ public class DownloadBackup implements Jsonable
 					currentDownloadState = parser.getString();
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key.equals("chunks")) {
+					needsChunks = false;
+					chunks.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

@@ -45,14 +45,17 @@ public class MachineTable extends DbJTable<Machine>
 {
 	public MachineTable(Application app, JTable table)
 	{
-		super(table, "Id");
+		super(app, table, "Id");
 		
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Machine machine)
+			void perform(Machine[] machines)
 			{
-				UserActions.show(machine);
+				for (Machine machine : machines)
+				{
+					UserActions.show(machine);
+				}
 			}
 			
 			@Override
@@ -64,9 +67,12 @@ public class MachineTable extends DbJTable<Machine>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Machine t)
+			void perform(Machine[] machines)
 			{
-				UserActions.syncRoots(app, t);
+				for (Machine machine : machines)
+				{
+					UserActions.syncRoots(app, machine);
+				}
 			}
 			
 			@Override
@@ -78,17 +84,21 @@ public class MachineTable extends DbJTable<Machine>
 		addListener(new TableRightClickListener()
 		{
 			@Override
-			void perform(Machine t)
+			void perform(Machine[] machines)
 			{
-				if (t.isLocal())
+				for (Machine machine : machines)
 				{
-					JOptionPane.showMessageDialog(app, 
-							"Unable to delete the local machine.",
-							"Unable to Delete.",
-							JOptionPane.ERROR_MESSAGE);
-					return;
+					if (machine.isLocal())
+					{
+						JOptionPane.showMessageDialog(
+								app, 
+								"Unable to delete the local machine.", 
+								"Unable to Delete.", 
+								JOptionPane.ERROR_MESSAGE);
+						continue;
+					}
+					UserActions.removeMachine(machine);
 				}
-				UserActions.removeMachine(t);
 			}
 			
 			@Override
@@ -167,5 +177,11 @@ public class MachineTable extends DbJTable<Machine>
             return canEdit [columnIndex];
         }
     };
+	}
+
+	@Override
+	protected Machine[] createArray(int length)
+	{
+		return new Machine[length];
 	}
 }

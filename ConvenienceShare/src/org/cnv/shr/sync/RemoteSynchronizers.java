@@ -56,11 +56,11 @@ public class RemoteSynchronizers
 		
 		Services.networkManager.openConnection(new KeepOpenConnectionParams(origin, root.getMachine(), false, "Synchronize directories") {
 			@Override
-			public void connectionOpened(Communication connection) throws Exception
+			public void opened(Communication connection) throws Exception
 			{
 				waiter.set(connection);
 			}
-			public void onFail()
+			public void failed()
 			{
 				waiter.set(null);
 			}

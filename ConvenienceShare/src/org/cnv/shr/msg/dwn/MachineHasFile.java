@@ -95,7 +95,6 @@ public class MachineHasFile extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsHasFile = true;
 		boolean needsDescriptor = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
@@ -110,22 +109,6 @@ public class MachineHasFile extends DownloadMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_FALSE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("hasFile")) {
-					needsHasFile = false;
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_TRUE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("hasFile")) {
-					needsHasFile = false;
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case START_OBJECT:
 				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
 				if (key.equals("descriptor")) {
