@@ -3,6 +3,7 @@ package org.cnv.shr.db.h2;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
@@ -26,15 +27,22 @@ public class DbPaths2
 	};
 	
 	
-	private static final QueryWrapper GET_PATH_ID         = new QueryWrapper("select P_ID from PELEM where VALUE = ?;");
+	private static final QueryWrapper GET_PATH_ID         = new QueryWrapper("select P_ID from PELEM where PELEM = ?;");
 	private static final QueryWrapper INSERT_PATH_ID      = new QueryWrapper("merge into PELEM key(PELEM) values(DEFAULT, ?, ?);");
-	private static final QueryWrapper MERGE_ROOT_CONTAINS = new QueryWrapper("merge into ROOT_CONTAINS key(PELEM) values(DEFAULT, ?, ?, ?);");
+	private static final QueryWrapper MERGE_ROOT_CONTAINS = new QueryWrapper("merge into ROOT_CONTAINS key(PELEM, RID, PARENT) values(DEFAULT, ?, ?, ?);");
 	private static final QueryWrapper FIND_ROOT_CONTAINS  = new QueryWrapper("select RC_ID from ROOT_CONTAINS where RID=? and PELEM=? and PARENT=?;");
 
 	private static final QueryWrapper DELETE_ROOT_CONTAINS  = new QueryWrapper("delete from ROOT_CONTAINS where RC_ID=?;");
 	private static final QueryWrapper COUNT_ROOT_CONTAINS   = new QueryWrapper("select count(RC_ID) from ROOT_CONTAINS where PARENT=?;");
 	private static final QueryWrapper DELETE_PATH           = new QueryWrapper("delete from PELEM where P_ID=?;");
 	private static final QueryWrapper COUNT_CHILD_PATH      = new QueryWrapper("select count(RC_ID) from ROOT_CONTAINS where PELEM=?;");
+	
+	private static final QueryWrapper LIST                  = new QueryWrapper("select RC_ID, P_ID, BROKEN, PELEM.PELEM from ROOT_CONTAINS "
+			+ "join PELEM on ROOT_CONTAINS.PELEM = PELEM.P_ID "
+			+ "where PARENT=?;");
+
+	private static final QueryWrapper COUNT_PATHS           = new QueryWrapper("select count(P_ID) from PELEM;");
+	private static final QueryWrapper COUNT_CONTAINS        = new QueryWrapper("select count(RC_ID) from ROOT_CONTAINS;");
 	
 	// clean up the paths...
 	
@@ -79,27 +87,69 @@ public class DbPaths2
 //	}
 	
 	
-//	public static int getNumRootContainsElements() throws SQLException
-//	public static int getNumPathElementsElements() throws SQLException
-//	{
-//		try (ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();
-//				 StatementWrapper query = wrapper.prepareStatement(COUNT);
-//				 ResultSet results = query.executeQuery();)
-//		{
-//			if (!results.next())
-//			{
-//				throw new RuntimeException("Unable to execute query.");
-//			}
-//			return results.getInt(1);
-//		}
-//	}
+	static int getNumPaths() throws SQLException
+	{
+		try (ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();
+				 StatementWrapper query = wrapper.prepareStatement(COUNT_PATHS);
+				 ResultSet results = query.executeQuery();)
+		{
+			if (!results.next())
+			{
+				throw new RuntimeException("Unable to execute query.");
+			}
+			return results.getInt(1);
+		}
+	}
+	static int getNumContains() throws SQLException
+	{
+		try (ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();
+				 StatementWrapper query = wrapper.prepareStatement(COUNT_CONTAINS);
+				 ResultSet results = query.executeQuery();)
+		{
+			if (!results.next())
+			{
+				throw new RuntimeException("Unable to execute query.");
+			}
+			return results.getInt(1);
+		}
+	}
+	
+	public static LinkedList<PathElement> listPaths(PathElement element)
+	{
+		LinkedList<PathElement> returnValue = new LinkedList<>();
+		
+		try (ConnectionWrapper wrapper     = Services.h2DbCache.getThreadConnection();
+				 StatementWrapper statement    = wrapper.prepareStatement(LIST);)
+		{
+			statement.setLong(1, element.getId());
+			
+			try (ResultSet results = statement.executeQuery())
+			{
+				while (results.next())
+				{
+					int ndx = 1;
+					long containsId = results.getLong(ndx++);
+					long pathId = results.getLong(ndx++);
+					boolean broken = results.getBoolean(ndx++);
+					String value = results.getString(ndx++);
+					
+					returnValue.add(new PathElement(containsId, element.getRoot(), element, value, broken, pathId));
+				}
+			}
+		}
+		catch (SQLException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to list paths", e);
+		}
+		
+		return returnValue;
+	}
 	
 	public static PathElement addPathTo(RootDirectory root, PathElement parent, String value, boolean directory)
 	{
 		PathBreakInfo[] elements = PathBreaker.breakThePath(value, directory);
 		int rootId = root.getId();
 
-		boolean creating = false;
 		Services.h2DbCache.setAutoCommit(false);
 		try (ConnectionWrapper wrapper     = Services.h2DbCache.getThreadConnection();
 				 StatementWrapper getPathId    = wrapper.prepareStatement(GET_PATH_ID);
@@ -125,7 +175,7 @@ public class DbPaths2
 					int ndx = 1;
 					insertPathId.setBoolean(ndx++, info.broken);
 					insertPathId.setString(ndx++, info.element);
-					getPathId.executeUpdate();
+					insertPathId.executeUpdate();
 					try (ResultSet results = getPathId.getGeneratedKeys())
 					{
 						if (!results.next())
@@ -136,12 +186,13 @@ public class DbPaths2
 					}
 				}
 				
-				int ndx = 1;
-				merge.setInt(ndx++, rootId);
-				merge.setLong(ndx++, pathId);
-				merge.setLong(ndx++, parent.getId());
-				merge.executeUpdate();
-				try (ResultSet results = merge.getGeneratedKeys())
+				int ndx;
+				
+				ndx = 1;
+				find.setInt(ndx++, rootId);
+				find.setLong(ndx++, pathId);
+				find.setLong(ndx++, parent.getId());
+				try (ResultSet results = find.executeQuery())
 				{
 					if (results.next())
 					{
@@ -150,12 +201,13 @@ public class DbPaths2
 						continue;
 					}
 				}
-				
+
 				ndx = 1;
-				find.setInt(ndx++, rootId);
-				find.setLong(ndx++, pathId);
-				find.setLong(ndx++, parent.getId());
-				try (ResultSet results = find.executeQuery())
+				merge.setInt(ndx++, rootId);
+				merge.setLong(ndx++, pathId);
+				merge.setLong(ndx++, parent.getId()); 
+				merge.executeUpdate();
+				try (ResultSet results = merge.getGeneratedKeys())
 				{
 					if (!results.next())
 					{
@@ -198,6 +250,8 @@ public class DbPaths2
 				rmRoot.setLong(1, element.getId());
 				rmRoot.execute();
 				
+				// Does not remove the children of this path that are no longer used...
+				
 				countPath.setLong(1, element.getPathId());
 				try (ResultSet executeQuery = countPath.executeQuery();)
 				{
@@ -208,6 +262,7 @@ public class DbPaths2
 					if (executeQuery.getInt(1) <= 0)
 					{
 						rmPath.setLong(1, element.getPathId());
+						rmPath.execute();
 					}
 				}
 				
@@ -234,6 +289,8 @@ public class DbPaths2
 						break;
 					}
 				}
+				
+				wrapper.commit();
 			} while (shouldContinue);
 		}
 		catch (SQLException e)

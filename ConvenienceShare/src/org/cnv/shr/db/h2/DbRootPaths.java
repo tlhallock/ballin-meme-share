@@ -158,7 +158,7 @@ public class DbRootPaths
 		}
 	}
 	
-	public static int getNumRootPathElements() throws SQLException
+	static int getNumRootPathElements() throws SQLException
 	{
 		try (ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();
 				 StatementWrapper query = wrapper.prepareStatement(COUNT);
@@ -170,10 +170,5 @@ public class DbRootPaths
 			}
 			return results.getInt(1);
 		}
-	}
-
-	public static void main(String[] args)
-	{
-		
 	}
 }

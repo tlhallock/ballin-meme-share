@@ -128,7 +128,7 @@ public class PathElement extends DbObject<Long>
 
 	public PathElement getParent()
 	{
-		return parentId;
+		return parent;
 	}
 
 
@@ -371,4 +371,9 @@ public class PathElement extends DbObject<Long>
 			return fullPath2.compareTo(fullPath3);
     }
 	};
+
+	public RootDirectory getRoot()
+	{
+		return root;
+	}
 }

@@ -227,6 +227,8 @@ public class Services
 		connectionThreads  = new NonRejectingExecutor("cnctns", settings.maxDownloads.get());
 		checksums = new ChecksumManager();
 		
+		userThreads.execute(() -> { settings.setIpAddress(); });
+		
 		startSystemTray(screen);
 	}
 

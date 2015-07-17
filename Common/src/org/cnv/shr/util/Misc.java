@@ -560,6 +560,8 @@ public class Misc
 	public static HashSet<String> collectIps()
 	{
 		HashSet<String> ips = new HashSet<>();
+		// Appearantly this can take a long time sometimes.
+		// Should be put on a different thread.
 		try
 		{
 			InetAddress localhost = InetAddress.getLocalHost();

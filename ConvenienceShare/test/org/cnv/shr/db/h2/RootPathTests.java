@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 
+import org.cnv.shr.db.h2.DbConnectionCache;
+import org.cnv.shr.db.h2.DbRootPaths;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.mn.Arguments;
 import org.cnv.shr.stng.Settings;

@@ -103,24 +103,6 @@ public class Settings implements SettingListener
 	public Settings(Path settingsFile)
 	{
 		this.settingsFile = settingsFile;
-		
-		int level = Integer.MIN_VALUE;
-		for (String ip : Misc.collectIps())
-		{
-			int localIpConfidenceLevel = getLocalIpConfidenceLevel(ip);
-			if (localIpConfidenceLevel > level)
-			{
-				localAddress = ip;
-				level = localIpConfidenceLevel;
-			}
-		}
-		if (localAddress == null)
-		{
-			LogWrapper.getLogger().severe("Unable to find local host.");
-			System.exit(-1);
-		}
-		// need to save this, in case the user set it, and give that the highest priority
-		System.out.println("Local host is " + localAddress);
 	}
 	
 	private static int getLocalIpConfidenceLevel(String ip)
@@ -246,9 +228,50 @@ public class Settings implements SettingListener
 		write();
 	}
 
+	private final Object ipSync = new Object();
+	public  void setIpAddress()
+	{
+		synchronized(ipSync)
+		{
+			int level = Integer.MIN_VALUE;
+			for (String ip : Misc.collectIps())
+			{
+				int localIpConfidenceLevel = getLocalIpConfidenceLevel(ip);
+				if (localIpConfidenceLevel > level)
+				{
+					localAddress = ip;
+					level = localIpConfidenceLevel;
+				}
+			}
+			if (localAddress == null)
+			{
+				LogWrapper.getLogger().severe("Unable to find local host.");
+				System.exit(-1);
+			}
+		}
+		// need to save this, in case the user set it, and give that the highest priority
+		System.out.println("Local host is " + localAddress);
+	}
+	
 	public String getLocalIp()
 	{
+		if (localAddress == null)
+		{
+			synchronized (ipSync)
+			{
+				if (localAddress == null)
+				{
+					setIpAddress();
+				}
+			}
+		}
 		return localAddress;
+	}
+
+	public void setLocalAddress(String ip)
+	{
+		localAddress = ip;
+    LogWrapper.getLogger().info("Changed ip to " + ip);
 	}
 
 	@Override
@@ -288,11 +311,5 @@ public class Settings implements SettingListener
 				version = "0";
 		}
 		return version;
-	}
-
-	public void setLocalAddress(String ip)
-	{
-		localAddress = ip;
-    LogWrapper.getLogger().info("Changed ip to " + ip);
 	}
 }
