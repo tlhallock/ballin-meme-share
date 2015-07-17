@@ -25,7 +25,6 @@
 
 package org.cnv.shr.gui.tbl;
 
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -90,7 +89,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 			{
 				for (LocalDirectory root : roots)
 				{
-					Misc.nativeOpen(Paths.get(root.getPathElement().getFsPath()), false);
+					Misc.nativeOpen(root.getFsPath(), false);
 				}
 			}
 
@@ -127,7 +126,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 	@Override
 	protected boolean fillRow(LocalDirectory local, HashMap<String, Object> currentRow)
 	{
-    currentRow.put("Path"           , local.getPathElement().getFullPath()   );
+    currentRow.put("Path"           , local.getPath()   );
     currentRow.put("Name"           , local.getName()                        );
     currentRow.put("Description"    , local.getDescription()                 );
     currentRow.put("Tags"           , local.getTags()                        );

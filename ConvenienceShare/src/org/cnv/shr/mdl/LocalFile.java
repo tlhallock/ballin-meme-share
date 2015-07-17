@@ -25,7 +25,6 @@
 
 package org.cnv.shr.mdl;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -74,7 +73,7 @@ public class LocalFile extends SharedFile
 		lastModified = Files.getLastModifiedTime(f).toMillis();
 
 		Path dir = f.getParent().toRealPath();
-		String root = Misc.deSanitize(local.getPathElement().getFullPath());
+		String root = Misc.deSanitize(local.getPath());
 
 		if (!dir.startsWith(root))
 		{
@@ -194,9 +193,7 @@ public class LocalFile extends SharedFile
 	{
 		return Paths.get(
 				Misc.deSanitize(
-					getRootDirectory().getPathElement().getFullPath() 
-					+ File.separator
-					+ path.getFsPath()));
+					getRootDirectory().getFsPath().resolve(path.getFsPath()).toString()));
 	}
 
 	public void ensureChecksummed() throws IOException

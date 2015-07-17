@@ -141,6 +141,11 @@ public class ConnectionWrapper extends TimerTask implements AutoCloseable
 		return new StatementWrapper(connection.prepareStatement(string), true);
 	}
 
+	public void commit() throws SQLException
+	{
+		connection.commit();
+	}
+
 	public static final class QueryWrapper
 	{
 		private int index;

@@ -95,7 +95,7 @@ public class ServeInstance extends TimerTask
 		if (!local.getRootDirectory().contains(toShare))
 		{
 			// just to double check...
-			throw new FileOutsideOfRootException(local.getRootDirectory().getPathElement().getFullPath(), toShare);
+			throw new FileOutsideOfRootException(local.getRootDirectory().getPath(), toShare);
 		}
 
 		MessageDigest totalDigest = MessageDigest.getInstance(Settings.checksumAlgorithm);

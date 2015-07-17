@@ -18,6 +18,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
@@ -262,11 +263,11 @@ public class CleanBrowsingHistory
 				JsonGenerator generator = TrackObjectUtils.createGenerator(Files.newOutputStream(p), true);)
 		{
 			generator.writeStartObject();
-			generator.write("id", DbPaths.ROOT.getId());
-			generator.write("broken", DbPaths.ROOT.isBroken());
-			generator.write("element", DbPaths.ROOT.getName());
-			generateRoots(connection, DbPaths.ROOT.getId(), rootNames, generator);
-			debugChildPaths(connection, rootNames, generator, DbPaths.ROOT.getId());
+			generator.write("id", DbPaths2.ROOT.getId());
+			generator.write("broken", DbPaths2.ROOT.isBroken());
+			generator.write("element", DbPaths2.ROOT.getName());
+			generateRoots(connection, DbPaths2.ROOT.getId(), rootNames, generator);
+			debugChildPaths(connection, rootNames, generator, DbPaths2.ROOT.getId());
 			generator.writeEnd();
 		}
 		catch (IOException | SQLException e)

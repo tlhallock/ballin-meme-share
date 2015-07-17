@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.AddMachine;
@@ -176,7 +176,7 @@ public class SynchronizationTests extends RemotesTest
 			if (rootDirectory.isLocal())
 			{
 				rootSource = new FileFileSource(new File(
-						Misc.deSanitize(rootDirectory.getPathElement().getFullPath())),
+						Misc.deSanitize(rootDirectory.getPath())),
 										DbRoots.getIgnores((LocalDirectory) rootDirectory));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
 			}
@@ -207,7 +207,7 @@ public class SynchronizationTests extends RemotesTest
 			};
 			
 			final Listener listener = new Listener();
-			iterator.queueSyncTask(rootSource, DbPaths.ROOT, listener);
+			iterator.queueSyncTask(rootSource, DbPaths2.ROOT, listener);
 			
 			// meant to be killed forcefully...
 			new Thread(synchronizer).start();

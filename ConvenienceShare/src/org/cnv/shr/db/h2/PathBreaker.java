@@ -27,6 +27,7 @@ package org.cnv.shr.db.h2;
 
 import java.util.LinkedList;
 
+import org.cnv.shr.db.h2.DbPaths2.PathBreakInfo;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.util.Misc;
 
@@ -35,6 +36,49 @@ public class PathBreaker
 	public static int PATH_ELEMENT_LENGTH = 20;
 	
 	private static final PathElement[] dummy = new PathElement[0];
+	private static final PathBreakInfo[] strDummy = new PathBreakInfo[0];
+
+	public static PathBreakInfo[] breakThePath(String path, boolean directory)
+	{
+		path = Misc.sanitizePath(path, directory);
+		
+		LinkedList<PathBreakInfo> returnValue = new LinkedList<>();
+		
+		StringBuilder builder = new StringBuilder(PATH_ELEMENT_LENGTH);
+		
+		int idx = 0;
+		
+		outer:
+		while (idx < path.length())
+		{
+			for (int i = 0; i < PATH_ELEMENT_LENGTH && idx < path.length(); i++)
+			{
+				char c = path.charAt(idx++);
+				builder.append(c);
+				if (c == '/')
+				{
+					returnValue.add(new PathBreakInfo(builder.toString(), false));
+					builder.setLength(0);
+					continue outer;
+				}
+			}
+			if (idx == path.length())
+			{
+				returnValue.add(new PathBreakInfo(builder.toString(), false));
+				builder.setLength(0);
+				return returnValue.toArray(strDummy);
+			}
+			returnValue.add(new PathBreakInfo(builder.toString(), true));
+			builder.setLength(0);
+		}
+		
+		return returnValue.toArray(strDummy);
+	}
+	
+	
+	
+	
+	
 
 	public static PathElement[] breakPath(PathElement parent, String path, boolean directory)
 	{
@@ -75,7 +119,7 @@ public class PathBreaker
 	
 	public static PathElement[] breakPath(String path, boolean directory)
 	{
-		return breakPath(DbPaths.ROOT, path, directory);
+		return breakPath(DbPaths2.ROOT, path, directory);
 	}
 
 	public static String join(PathElement[] eles)

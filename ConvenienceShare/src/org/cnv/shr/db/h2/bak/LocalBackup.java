@@ -33,7 +33,6 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbRoots.IgnorePatterns;
 import org.cnv.shr.db.h2.MyParserNullable;
@@ -68,7 +67,7 @@ public class LocalBackup implements Jsonable
 		this.tags = root.getTags();
 		this.minFSize = root.getMinFileSize();
 		this.maxFSize = root.getMaxFileSize();
-		this.path = root.getPathElement().getFsPath();
+		this.path = root.getPath();
 		this.totalFileSize = root.diskSpace();
 		this.totalNumFiles = root.numFiles();
 		if (path.charAt(path.length() - 1) != '/')
@@ -103,8 +102,6 @@ public class LocalBackup implements Jsonable
 			LogWrapper.getLogger().log(Level.INFO, "Unable to restore local: " + name, e);
 			return;
 		}
-		DbPaths.pathLiesIn(DbPaths.getPathElement(path, false), local);
-		
 		DbRoots.setIgnores(local, ignores.toArray(DUMMY));
 	}
 

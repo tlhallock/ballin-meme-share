@@ -93,7 +93,7 @@ public class DebugListener extends TimerTask implements SynchronizationListener
 		synchronized (LogWrapper.getLogger())
 		{
 			LogWrapper.getLogger().info("-------------------------------------------------------");
-			LogWrapper.getLogger().info("Synchronizing: " + local.getPathElement().getFullPath());
+			LogWrapper.getLogger().info("Synchronizing: " + local.getPath());
 			LogWrapper.getLogger().info("Current file: " + currentFile);
 			LogWrapper.getLogger().info("File refresh rate: " + filesRefresh / seconds + "/s");
 			LogWrapper.getLogger().info("File add rate: " + filesAdded / seconds + "/s");

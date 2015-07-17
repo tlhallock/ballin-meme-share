@@ -51,7 +51,7 @@ import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRootPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.db.h2.bak.CleanBrowsingHistory;
@@ -61,7 +61,6 @@ import org.cnv.shr.gui.tbl.FilesTable;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
@@ -492,7 +491,7 @@ public class MachineViewer extends javax.swing.JFrame
     		viewNoDirectory();
     		return;
     	}
-        LogWrapper.getLogger().info("Showing directory " + directory.getPathElement());
+        LogWrapper.getLogger().info("Showing directory " + directory.getPath());
         jCheckBox1.setEnabled(true); jCheckBox1.setSelected(false);
         jTextField1.setEnabled(true); jTextField1.setText("");
         jTextField2.setEnabled(true); jTextField2.setText("");
@@ -501,7 +500,7 @@ public class MachineViewer extends javax.swing.JFrame
         this.descriptionLabel.setText(directory.getDescription());
         this.tagsLabel.setText(directory.getTags());
         this.numFilesLabel.setText(directory.getTotalNumberOfFiles());
-        this.pathField.setText(directory.getPathElement().getFullPath()); pathField.setMinimumSize(new Dimension(5, 5));
+        this.pathField.setText(directory.getPath()); pathField.setMinimumSize(new Dimension(5, 5));
         this.diskSpaceLabel.setText(directory.getTotalFileSize());
         ((PathTreeModel) filesTree.getModel()).setRoot(directory);
         filesManager.setFilters("", "");
@@ -1123,13 +1122,13 @@ public class MachineViewer extends javax.swing.JFrame
 
     private void changePathButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changePathButtonActionPerformed
         // change path
-  		RootDirectory root = getRootDirectory();
+	  	RootDirectory root = getRootDirectory();
 			RemoteDirectory remoteDir = (RemoteDirectory) root;
-  		if (!(root instanceof RemoteDirectory))
-  		{
-  			LogWrapper.getLogger().info("Cannot change path of local directory");
-  			return;
-  		}
+	  	if (!(root instanceof RemoteDirectory))
+	  	{
+	  		LogWrapper.getLogger().info("Cannot change path of local directory");
+	  		return;
+	  	}
 			final JFileChooser fc = new JFileChooser();
 			fc.setCurrentDirectory(new File(pathField.getText()));
 			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -1140,32 +1139,41 @@ public class MachineViewer extends javax.swing.JFrame
 			}
 			String newPath = fc.getSelectedFile().getAbsolutePath();
 			String oldPath = remoteDir.getLocalRoot().toString();
-			int showConfirmDialog = JOptionPane.showConfirmDialog(this, "Changing location of local mirror for directory " + remoteDir.getName() + ".\n"
+			int showConfirmDialog = JOptionPane.showConfirmDialog(this, 
+					"Changing location of local mirror for directory " + remoteDir.getName() + ".\n"
 					+ "Please be sure to move any contents of \n" + oldPath + "\nto\n" + newPath + ".\n"
 					+ "Would you like to open these directories now?",
 					"Changing local mirror for " + remoteDir.getName(), 
 					JOptionPane.YES_NO_CANCEL_OPTION);
-			switch (showConfirmDialog)
+
+			try
 			{
-			case JOptionPane.YES_OPTION:
-				Misc.ensureDirectory(Paths.get(oldPath), false);
-				Misc.ensureDirectory(Paths.get(newPath), false);
-				Misc.nativeOpen(Paths.get(oldPath),  false);
-				Misc.nativeOpen(Paths.get(newPath),  false);
-				break;
-			case JOptionPane.NO_OPTION:
-				break;
-			case JOptionPane.CANCEL_OPTION:
-				return;
-				default:
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				switch (showConfirmDialog)
+				{
+				case JOptionPane.YES_OPTION:
+					Misc.ensureDirectory(Paths.get(oldPath), false);
+					Misc.ensureDirectory(Paths.get(newPath), false);
+					Misc.nativeOpen(Paths.get(oldPath),  false);
+					Misc.nativeOpen(Paths.get(newPath),  false);
+					break;
+				case JOptionPane.NO_OPTION:
+					break;
+				case JOptionPane.CANCEL_OPTION:
 					return;
+					default:
+						return;
+				}
+				
+				int rootPath = DbRootPaths.getRootPath(remoteDir.getPath());
+				remoteDir.setLocalMirror(Paths.get(newPath));
+				DbRootPaths.removeRootPath(rootPath);
+	      this.pathField.setText(remoteDir.getPath());
 			}
-			PathElement pathElement = DbPaths.getPathElement(newPath, true);
-			DbPaths.pathDoesNotLieIn(remoteDir.getPathElement(), remoteDir);
-			DbPaths.pathLiesIn(pathElement, remoteDir);
-			remoteDir.setLocalMirror(pathElement);
-				remoteDir.tryToSave();
-	      this.pathField.setText(remoteDir.getPathElement().getFullPath());
+			finally
+			{
+				setCursor(Cursor.getDefaultCursor());
+			}
     }//GEN-LAST:event_changePathButtonActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed

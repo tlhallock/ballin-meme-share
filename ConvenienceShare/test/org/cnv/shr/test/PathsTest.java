@@ -7,6 +7,7 @@ import java.nio.file.Path;
 
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -59,7 +60,7 @@ public class PathsTest extends LocalMachineTest
 
 	private void ensurePathExistsFromTop(LocalDirectory local, String testPath)
 	{
-		PathElement current = DbPaths.ROOT;
+		PathElement current = DbPaths2.ROOT;
 		String remaining = testPath;
 		
 		outer: while (remaining.length() > 0)

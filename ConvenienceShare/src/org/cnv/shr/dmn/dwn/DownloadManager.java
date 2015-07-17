@@ -67,7 +67,7 @@ public class DownloadManager
 		{
 			LocalFile localFile = (LocalFile) remoteFile;
 			JOptionPane.showMessageDialog(Services.notifications.getCurrentContext(),
-					"Unable to download local file: " + remoteFile.getRootDirectory().getPathElement().getFullPath() + ":" + remoteFile.getPath().getFullPath() + "\n" +
+					"Unable to download local file: " + remoteFile.getRootDirectory().getPath() + ":" + remoteFile.getPath().getFullPath() + "\n" +
 					"Instead we will open it.",
 					"Unable to download local file.",
 					JOptionPane.INFORMATION_MESSAGE);

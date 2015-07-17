@@ -40,8 +40,8 @@ import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.mdl.RootDirectoryType;
 import org.cnv.shr.util.LogWrapper;
 
 public class DbRoots
@@ -49,8 +49,10 @@ public class DbRoots
 	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into IGNORE_PATTERN values (DEFAULT, ?, ?);");
 	private static final QueryWrapper SELECT7 = new QueryWrapper("select PATTERN from IGNORE_PATTERN where RID=?;");
 	private static final QueryWrapper SELECT6 = new QueryWrapper("select * from ROOT where RNAME=? and MID=?;");
-	private static final QueryWrapper SELECT5 = new QueryWrapper("select * from ROOT where PELEM=? and ROOT.IS_LOCAL = true;");
-	private static final QueryWrapper SELECT4 = new QueryWrapper("select * from ROOT where ROOT.IS_LOCAL = true;");
+	private static final QueryWrapper SELECT5 = new QueryWrapper("select * from ROOT where PATH=? and ROOT.TYPE in (" 
+			+ RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ");");
+	private static final QueryWrapper SELECT4 = new QueryWrapper("select * from ROOT where ROOT.TYPE in (" 
+			+ RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ");");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select * from ROOT where ROOT.MID = ?;");
 	private static final QueryWrapper SELECT2 = new QueryWrapper("select count(F_ID) as number from SFILE where ROOT = ?;");
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select sum(FSIZE) as totalsize from SFILE where ROOT = ?;");
@@ -141,17 +143,17 @@ public class DbRoots
 
 	public static LocalDirectory getLocal(String path)
 	{
-		PathElement pathElement = DbPaths.getPathElement(path, true);
+		int pathId = DbRootPaths.getRootPath(path);
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper prepareStatement = c.prepareStatement(SELECT5);)
 		{
-			prepareStatement.setLong(1, pathElement.getId());
+			prepareStatement.setLong(1, pathId);
 			try (ResultSet executeQuery = prepareStatement.executeQuery();)
 			{
 				if (executeQuery.next())
 				{
 					LocalDirectory local = (LocalDirectory) DbTables.DbObjects.LROOT.allocate(executeQuery);
-					local.fill(c, executeQuery, new DbLocals().setObject(Services.localMachine).setObject(pathElement));
+					local.fill(c, executeQuery, new DbLocals());
 					return local;
 				}
 			}
@@ -198,6 +200,7 @@ public class DbRoots
 	
 	public static void deleteRoot(RootDirectory root)
 	{
+		int pathId = DbRootPaths.getRootPath(root.getPath());
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 //				StatementWrapper s1 = c.prepareStatement(DELETE1);
 //				StatementWrapper s2 = c.prepareStatement(DELETE2);
@@ -216,6 +219,7 @@ public class DbRoots
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to delete root", e);
 		}
+		DbRootPaths.removeRootPath(pathId);
 		DbPaths.removeUnusedPaths();
 	}
         

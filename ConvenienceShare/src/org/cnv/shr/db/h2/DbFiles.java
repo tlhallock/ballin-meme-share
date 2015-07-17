@@ -40,6 +40,7 @@ import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.mdl.RootDirectoryType;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.LogWrapper;
 
@@ -49,10 +50,13 @@ public class DbFiles
 	private static final QueryWrapper DELETE1   = new QueryWrapper("delete from SFILE where F_ID=?;");
 	private static final QueryWrapper DELETE2   = new QueryWrapper("delete from SFILE where not exists (select RID from ROOT_CONTAINS where ROOT_CONTAINS.RID = SFILE.ROOT and ROOT_CONTAINS.PELEM=SFILE.PELEM);");
 	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from SFILE where PELEM=? and ROOT=?;");
-	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where CHKSUM=? and FSIZE=? and ROOT.IS_LOCAL LIMIT 1;");
-	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NULL and SFILE.MODIFIED < ? LIMIT 200;");
-	private static final QueryWrapper CHECKED   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL and SFILE.CHKSUM IS NOT NULL;");
-	private static final QueryWrapper ALL       = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.IS_LOCAL;");
+	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.TYPE in (" + RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ") and CHKSUM=? and FSIZE=? LIMIT 1;");
+	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.TYPE in (" + RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ") and SFILE.CHKSUM IS NULL and SFILE.MODIFIED < ? LIMIT 200;");
+	private static final QueryWrapper CHECKED   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.TYPE in (" + RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ") and SFILE.CHKSUM IS NOT NULL;");
+	private static final QueryWrapper ALL       = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.TYPE in (" + RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ");");
+	
+	
+	
 
 	public static SharedFile getFile(RootDirectory root, PathElement element)
 	{

@@ -30,6 +30,7 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
@@ -48,7 +49,7 @@ public class RemoteFileSource implements FileSource
 	public RemoteFileSource(RemoteDirectory r, RemoteSynchronizerQueue queue) throws UnknownHostException, IOException
 	{
 		this.sync = queue;
-		this.pathElement = DbPaths.ROOT;
+		this.pathElement = DbPaths2.ROOT;
 	}
 	
 	private RemoteFileSource(RemoteSynchronizerQueue s, RemoteFile f)

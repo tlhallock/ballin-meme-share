@@ -37,6 +37,7 @@ import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
@@ -101,8 +102,6 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		String currentName = Thread.currentThread().getName();
 		Thread.currentThread().setName("Root Synchronizer [" + local.getName() + "]");
 		
-		DbPaths.pathLiesIn(local.getPathElement(), local);
-		
 		SynchronizationTask task = null;
 		try
 		{
@@ -142,7 +141,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 	
 	private void synchronize(final SynchronizationTask task)
 	{
-		DbPaths.pathLiesIn(DbPaths.ROOT, local);
+		DbPaths.pathLiesIn(DbPaths2.ROOT, local);
 		
 		final HashMap<String, FileSource> files = key(task.files);
 		final HashSet<String> accountedFor = new HashSet<>();
@@ -237,8 +236,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 			}
 			
 			// remove directory from database
-			DbPaths.pathDoesNotLieIn(element.getBrokenBegin(), local);
-			
+			DbPaths2.removePathFromRoot(element);
 			return;
 		}
 

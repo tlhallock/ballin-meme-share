@@ -1816,7 +1816,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 	{
 		final DefaultTableModel model = (DefaultTableModel) localsView.getModel();
 		int row = -1;
-		String path = root.getPathElement().getFullPath();
+		String path = root.getPath();
 		for (int i = 0; i < localsView.getRowCount(); i++)
 		{
 			if (model.getValueAt(i, 0).equals(path))

@@ -29,21 +29,17 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
-import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
-import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbTables;
-import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.db.h2.RStringBuilder;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.sync.FileSource;
@@ -52,50 +48,71 @@ import org.cnv.shr.util.Misc;
 
 public class PathElement extends DbObject<Long>
 {
-	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into PELEM key(PARENT, PELEM) values (DEFAULT, ?, ?, ?);");
-	
-	protected PathElement parentId;
+	protected RootDirectory root;
+	protected PathElement parent;
 	protected String value;
 	protected boolean broken;
+	protected long pathId;
 	
 	String fullPath;
 	
-	public PathElement(Long id)
+	public PathElement(
+			Long id,
+			RootDirectory root,
+			PathElement parent,
+			String value,
+			boolean broken,
+			long pathId)
 	{
 		super(id);
+		this.root = root;
+		this.parent = parent;
+		this.value = value;
+		this.broken = broken;
+		this.pathId = pathId;
 	}
 	
-	public PathElement(PathElement parent, String value)
-	{
-		super(null);
-		this.parentId = parent;
-		this.value = value;
-		
-		if (value.length() > PathBreaker.PATH_ELEMENT_LENGTH)
-		{
-			throw new RuntimeException("Value is too big: " + value);
-		}
-	}
+//	public PathElement(Long id)
+//	{
+//		super(id);
+//	}
+//	
+//	public PathElement(PathElement parent, String value)
+//	{
+//		super(null);
+//		this.parentId = parent;
+//		this.value = value;
+//		
+//		if (value.length() > PathBreaker.PATH_ELEMENT_LENGTH)
+//		{
+//			throw new RuntimeException("Value is too big: " + value);
+//		}
+//	}
+//
+//	public PathElement(PathElement current, long integer, String string)
+//	{
+//		super(integer);
+//		parentId = current;
+//		id = integer;
+//		value = string;
+//		
+//		if (value.length() > PathBreaker.PATH_ELEMENT_LENGTH)
+//		{
+//			throw new RuntimeException("Value is too big: " + value);
+//		}
+//	}
+//
+//	public PathElement(PathElement parent, String string, boolean b)
+//	{
+//		super(null);
+//		this.parentId = parent;
+//		this.value = string;
+//		this.broken = b;
+//	}
 
-	public PathElement(PathElement current, long integer, String string)
+	public long getPathId()
 	{
-		super(integer);
-		parentId = current;
-		id = integer;
-		value = string;
-		
-		if (value.length() > PathBreaker.PATH_ELEMENT_LENGTH)
-		{
-			throw new RuntimeException("Value is too big: " + value);
-		}
-	}
-
-	public PathElement(PathElement parent, String string, boolean b)
-	{
-		super(null);
-		this.parentId = parent;
-		this.value = string;
-		this.broken = b;
+		return pathId;
 	}
 	
 	@Override
@@ -127,27 +144,28 @@ public class PathElement extends DbObject<Long>
 	@Override
 	public boolean save(ConnectionWrapper c) throws SQLException
 	{
-		try (StatementWrapper stmt = c.prepareStatement(MERGE1, Statement.RETURN_GENERATED_KEYS);)
-		{
-			int ndx = 1;
-
-			stmt.setLong(ndx++, getParent().getId());
-			stmt.setString(ndx++, value);
-			stmt.setLong(ndx++, getParent().getId());
-			stmt.setBoolean(ndx++, broken);
-			stmt.setString(ndx++, value);
-			stmt.executeUpdate();
-			
-			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
-			{
-				if (generatedKeys.next())
-				{
-					id = generatedKeys.getLong(1);
-					return true;
-				}
-				return false;
-			}
-		}
+		throw new RuntimeException("Implement me!");
+//		try (StatementWrapper stmt = c.prepareStatement(MERGE1, Statement.RETURN_GENERATED_KEYS);)
+//		{
+//			int ndx = 1;
+//
+//			stmt.setLong(ndx++, getParent().getId());
+//			stmt.setString(ndx++, value);
+//			stmt.setLong(ndx++, getParent().getId());
+//			stmt.setBoolean(ndx++, broken);
+//			stmt.setString(ndx++, value);
+//			stmt.executeUpdate();
+//			
+//			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
+//			{
+//				if (generatedKeys.next())
+//				{
+//					id = generatedKeys.getLong(1);
+//					return true;
+//				}
+//				return false;
+//			}
+//		}
 	}
 
 	public String getName()

@@ -284,7 +284,7 @@ public abstract class DbJTable<T> extends MouseAdapter
 	{
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
 		HashMap<String, Object> rowData = new HashMap<>();
-		for (int i=0; i<table.getColumnCount(); i++)
+		for (int i = 0; i < table.getColumnCount(); i++)
 		{
 			rowData.put(model.getColumnName(i), model.getValueAt(row,  i));
 		}

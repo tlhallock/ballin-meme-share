@@ -26,6 +26,7 @@
 package org.cnv.shr.db.h2.bak;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.sql.SQLException;
 import java.util.Map.Entry;
@@ -37,13 +38,11 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbKeys;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.json.JsonStringList;
 import org.cnv.shr.json.JsonStringMap;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
@@ -87,11 +86,7 @@ public class MachineBackup implements Jsonable
 			while (iterator.hasNext())
 			{
 				RootDirectory next = iterator.next();
-				String fullPath = next.getPathElement().getFullPath();
-				if (!fullPath.endsWith("/"))
-				{
-					fullPath = fullPath + "/";
-				}
+				String fullPath = next.getPath();
 				roots.put(next.getName(), fullPath);
 			}
 		}
@@ -143,9 +138,7 @@ public class MachineBackup implements Jsonable
 					continue;
 				}
 			}
-			PathElement pathElement = DbPaths.getPathElement(path, true);
-			root.setLocalMirror(pathElement);
-			DbPaths.pathLiesIn(pathElement, root);
+			root.setLocalMirror(Paths.get(path));
 		}
 	}
 	

@@ -60,11 +60,13 @@ public class DbTables
 		MESSAGES         ("MESSAGE            ".trim(), "M_ID"), 
 		LROOT            ("ROOT               ".trim(), "R_ID"),
 		RROOT            ("ROOT               ".trim(), "R_ID"),
+		MROOT            ("ROOT               ".trim(), "R_ID"),
 		LFILE            ("SFILE              ".trim(), "F_ID"),
 		RFILE            ("SFILE              ".trim(), "F_ID"),
 		LMACHINE         ("MACHINE            ".trim(), "M_ID"),
 		RMACHINE         ("MACHINE            ".trim(), "M_ID"),
 		CHUNK            ("CHUNK              ".trim(), "C_ID"),
+		ROOT_PATH        ("ROOT_PATH          ".trim(), ""),
 		ROOT_CONTAINS    ("ROOT_CONTAINS      ".trim(), ""),
 		SHARE_ROOT       ("SHARE_ROOT         ".trim(), ""),
 		CHKSUM_REQ       ("CHK_REQ            ".trim(), ""),
@@ -184,9 +186,9 @@ public class DbTables
 				}
 				break;
 			case PELEM:
-				if (id == DbPaths.ROOT.getId())
+				if (id == DbPaths2.ROOT.getId())
 				{
-					return DbPaths.ROOT;
+					return DbPaths2.ROOT;
 				}
 				break;
 			default:
@@ -228,6 +230,7 @@ public class DbTables
 		DbObjects.SHARE_ROOT      ,
 		DbObjects.CHUNK           ,
 		DbObjects.CHKSUM_REQ      ,
+		DbObjects.ROOT_PATH       ,
 	};
 
 	public static void debugDb()

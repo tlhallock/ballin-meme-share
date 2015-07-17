@@ -42,7 +42,7 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -139,8 +139,8 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 		close();
 		
 		startRemoteSynchronizer(newRoot);
-		this.root = new PathTreeModelNode(null, this, DbPaths.ROOT, false);
-		iterator.queueSyncTask(rootSource, DbPaths.ROOT, this.root);
+		this.root = new PathTreeModelNode(null, this, DbPaths2.ROOT, false);
+		iterator.queueSyncTask(rootSource, DbPaths2.ROOT, this.root);
 		
 		this.root.expand();
 		for (final TreeModelListener listener : listeners)
@@ -160,7 +160,7 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 			{
         viewer.setSyncStatus(Color.GREEN, Color.BLACK, "Browsing local files.");
 				rootSource = new FileFileSource(new File(
-						rootDirectory.getPathElement().getFsPath()),
+						rootDirectory.getPath()),
 						DbRoots.getIgnores((LocalDirectory) newRoot));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
 			}

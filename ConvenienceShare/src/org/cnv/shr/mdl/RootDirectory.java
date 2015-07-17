@@ -41,7 +41,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbRootPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.SharingState;
@@ -102,11 +102,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 		setDefaultSharingState(       SharingState.get(row.getInt(   "SHARING")));
 		
 		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.RMACHINE, row.getInt("MID"));
-		setPath((PathElement) locals.getObject(c, DbTables.DbObjects.PELEM,    row.getInt("PELEM")));
+		setPath(DbRootPaths.getRootPath(row.getInt("PATH")));
 	}
-
-	protected abstract void setDefaultSharingState(SharingState sharingState);
-	protected abstract void setPath(PathElement object);
 
 	@Override
 	public boolean save(final ConnectionWrapper c) throws SQLException
@@ -121,7 +118,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 			stmt.setInt(ndx++, getMachine().getId());
 			stmt.setString(ndx++, getName());
 
-			stmt.setLong(ndx++, getPathElement().getId());
+			stmt.setInt(ndx++, DbRootPaths.getRootPath(getPath()));
 			stmt.setString(ndx++, getTags());
 			stmt.setString(ndx++, getDescription());
 			stmt.setInt(ndx++, getMachine().getId());
@@ -140,12 +137,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 				if (generatedKeys.next())
 				{
 					id = generatedKeys.getInt(1);
-					DbPaths.pathLiesIn(getPathElement(), this);
 					return true;
-				}
-				if (id != null)
-				{
-					DbPaths.pathLiesIn(getPathElement(), this);
 				}
 				return false;
 			}
@@ -155,12 +147,8 @@ public abstract class RootDirectory extends DbObject<Integer>
 	@Override
 	public String toString()
 	{
-		return machine.getName() + ":" + getPathElement().getFullPath();
+		return machine.getName() + ":" + getPath();
 	}
-	
-	protected abstract SharingState getDbSharing();
-
-	public abstract PathElement getPathElement();
 
 	public Machine getMachine()
 	{
@@ -169,7 +157,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	
 	public final void synchronize(JFrame origin, final List<? extends SynchronizationListener> listeners)
 	{
-		LogWrapper.getLogger().info("Synchronizing " + getPathElement().getFullPath());
+		LogWrapper.getLogger().info("Synchronizing " + getPath());
 
 		try (RootSynchronizer localSynchronizer = createSynchronizer(origin))
 		{
@@ -193,7 +181,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 			debugListener.cancel();
 			setStats();
 
-			LogWrapper.getLogger().info("Done synchronizing " + getPathElement().getFullPath());
+			LogWrapper.getLogger().info("Done synchronizing " + getPath());
 		}
 		catch (final Exception ex)
 		{
@@ -281,28 +269,22 @@ public abstract class RootDirectory extends DbObject<Integer>
 		return name;
 	}
 
-	public abstract boolean pathIsSecure(Path canonicalPath);
-	protected abstract RootSynchronizer createSynchronizer(JFrame origin) throws IOException, InterruptedException;
-	protected abstract void sendNotifications();
-	
-	
-
 	public void stopSynchronizing()
 	{
 		stopSynchronizing(this);
 	}
-	
-	
-	
 
+	
+	
+	
 	private static HashMap<String, RootSynchronizer> synchronizing = new HashMap<>();
 	private static synchronized boolean startSynchronizing(final RootDirectory d, final RootSynchronizer sync)
 	{
 		final RootSynchronizer rootSynchronizer =
-				synchronizing.get(d.getPathElement().getFullPath());
+				synchronizing.get(d.getPath());
 		if (rootSynchronizer == null)
 		{
-			synchronizing.put(d.getPathElement().getFullPath(), sync);
+			synchronizing.put(d.getPath(), sync);
 			return true;
 		}
 		return false;
@@ -310,7 +292,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	
 	private static synchronized void stopSynchronizing(final RootDirectory d)
 	{
-		final RootSynchronizer remove = synchronizing.remove(d.getPathElement().getFullPath());
+		final RootSynchronizer remove = synchronizing.remove(d.getPath());
 		if (remove != null)
 		{
 			remove.quit();
@@ -319,7 +301,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	
 	private static synchronized boolean isSynchronizing(RootDirectory localDirectory)
 	{
-		return synchronizing.containsKey(localDirectory.getPathElement().getFullPath());
+		return synchronizing.containsKey(localDirectory.getPath());
 	}
 	
 	public boolean isSynchronizing()
@@ -351,4 +333,20 @@ public abstract class RootDirectory extends DbObject<Integer>
 	{
 		permissionFlags = flag;
 	}
+	
+	
+	
+	
+
+
+	public abstract boolean pathIsSecure(Path canonicalPath);
+	protected abstract RootSynchronizer createSynchronizer(JFrame origin) throws IOException, InterruptedException;
+	protected abstract void sendNotifications();
+	public abstract RootDirectoryType getType();
+	
+	protected abstract SharingState getDbSharing();
+	public abstract String getPath();
+
+	protected abstract void setDefaultSharingState(SharingState sharingState);
+	protected abstract void setPath(String pathStr);
 }

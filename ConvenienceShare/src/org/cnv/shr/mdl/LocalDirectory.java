@@ -25,21 +25,14 @@
 
 package org.cnv.shr.mdl;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import javax.swing.JFrame;
 
-import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
-import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
-import org.cnv.shr.db.h2.DbFiles;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
@@ -57,8 +50,8 @@ public class LocalDirectory extends RootDirectory
 			+ "where ROOT.R_ID = ?;");
 	
 	
-	private PathElement path;
-	private SharingState defaultShare;
+	protected Path path;
+	protected SharingState defaultShare;
 	
 	public LocalDirectory(String name,
 			String description, 
@@ -77,7 +70,7 @@ public class LocalDirectory extends RootDirectory
 		this.tags = tags;
 		this.minFSize = minFSize;
 		this.maxFSize = maxFSize;
-		this.path = DbPaths.getPathElement(path2, true);
+		this.path = Paths.get(path2).toAbsolutePath();
 		this.defaultShare = defaultSharingState;
 		if (defaultShare == null)
 		{
@@ -89,14 +82,14 @@ public class LocalDirectory extends RootDirectory
 		this.totalNumFiles = totalNumFiles;
 	}
 	
-	public LocalDirectory(PathElement path, String name) throws IOException
+	public LocalDirectory(Path path, String name) throws IOException
 	{
 		super(null);
 		machine = Services.localMachine;
 		if (name == null || name.length() == 0)
 		{
 			// Should check if this local directory already exists...
-			this.name = path.getUnbrokenName();
+			this.name = path.getFileName().toString();
 		}
 		else
 		{
@@ -128,21 +121,16 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	public void setPath(PathElement pathElement)
+	public void setPath(String pathElement)
 	{
-		path = pathElement;
+		path = Paths.get(pathElement);
 	}
 
 	public boolean contains(Path toShare)
 	{
-		return toShare.startsWith(Paths.get(path.getFsPath()));
+		return toShare.startsWith(path);
 	}
 	
-	public LocalFile getFile(String fsPath)
-	{
-		return DbFiles.getFile(this, DbPaths.getPathElement(this, fsPath, false));
-	}
-
 	@Override
 	public String toString()
 	{
@@ -156,7 +144,12 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	public PathElement getPathElement()
+	public String getPath()
+	{
+		return path.toString();
+	}
+	
+	public Path getFsPath()
 	{
 		return path;
 	}
@@ -164,54 +157,52 @@ public class LocalDirectory extends RootDirectory
 	@Override
 	protected RootSynchronizer createSynchronizer(JFrame origin) throws IOException, InterruptedException
 	{
-		File f = new File(getPathElement().getFullPath());
 		// This is probably not necessary...
-		if (Files.isSymbolicLink(Paths.get(f.getCanonicalPath())) || !f.isDirectory())
+		if (Files.isSymbolicLink(path) || !Files.isDirectory(path))
 		{
-			f.delete();
-			throw new RuntimeException("Symbolic link: " + f + ". Skipping");
+			throw new RuntimeException("Symbolic link: " + path + ". Skipping");
 		}
-		FileSource source = new FileFileSource(f, DbRoots.getIgnores(this));
+		FileSource source = new FileFileSource(path.toFile(), DbRoots.getIgnores(this));
 		return new LocalSynchronizer(this, new ConsecutiveDirectorySyncIterator(this, source));
 	}
 
-	@Override
-	public boolean save(final ConnectionWrapper c) throws SQLException
-	{
-		if (id == null)
-		{
-			return super.save(c);
-		}
-		
-		try (StatementWrapper stmt = c.prepareStatement(UPDATE1);)
-		{
-			int ndx = 1;
-			
-			stmt.setLong  (ndx++, getPathElement().getId());
-			stmt.setString(ndx++, getTags());
-			stmt.setString(ndx++, getDescription());
-			stmt.setLong  (ndx++, totalFileSize);
-			stmt.setLong  (ndx++, totalNumFiles);
-			stmt.setString(ndx++, getName());
-			stmt.setInt   (ndx++, getDefaultSharingState().getDbValue());
-			stmt.setLong  (ndx++, minFSize);
-			stmt.setLong  (ndx++, maxFSize);
-			stmt.setInt(   ndx++, permissionFlags);
-			
-			stmt.setInt(ndx++, id);
-			
-			stmt.executeUpdate();
-			try (final ResultSet generatedKeys = stmt.getGeneratedKeys();)
-			{
-				if (generatedKeys.next())
-				{
-					id = generatedKeys.getInt(1);
-					return true;
-				}
-				return false;
-			}
-		}
-	}
+//	@Override
+//	public boolean save(final ConnectionWrapper c) throws SQLException
+//	{
+//		if (id == null)
+//		{
+//			return super.save(c);
+//		}
+//		
+//		try (StatementWrapper stmt = c.prepareStatement(UPDATE1);)
+//		{
+//			int ndx = 1;
+//			
+//			stmt.setLong  (ndx++, getPathElement().getId());
+//			stmt.setString(ndx++, getTags());
+//			stmt.setString(ndx++, getDescription());
+//			stmt.setLong  (ndx++, totalFileSize);
+//			stmt.setLong  (ndx++, totalNumFiles);
+//			stmt.setString(ndx++, getName());
+//			stmt.setInt   (ndx++, getDefaultSharingState().getDbValue());
+//			stmt.setLong  (ndx++, minFSize);
+//			stmt.setLong  (ndx++, maxFSize);
+//			stmt.setInt(   ndx++, permissionFlags);
+//			
+//			stmt.setInt(ndx++, id);
+//			
+//			stmt.executeUpdate();
+//			try (final ResultSet generatedKeys = stmt.getGeneratedKeys();)
+//			{
+//				if (generatedKeys.next())
+//				{
+//					id = generatedKeys.getInt(1);
+//					return true;
+//				}
+//				return false;
+//			}
+//		}
+//	}
 
 	@Override
 	protected void sendNotifications()
@@ -245,5 +236,10 @@ public class LocalDirectory extends RootDirectory
 	public void setName(String text)
 	{
 		this.name = text;
+	}
+
+	public RootDirectoryType getType()
+	{
+		return RootDirectoryType.LOCAL;
 	}
 }

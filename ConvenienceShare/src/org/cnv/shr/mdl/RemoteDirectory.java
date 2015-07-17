@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import javax.swing.JFrame;
 
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.PathSecurity;
@@ -40,12 +41,11 @@ import org.cnv.shr.sync.RemoteFileSource;
 import org.cnv.shr.sync.RemoteSynchronizer;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.sync.RootSynchronizer;
-import org.cnv.shr.util.Misc;
 
 
 public class RemoteDirectory extends RootDirectory
 {
-	PathElement path;
+	private Path path;
 	private SharingState sharesWithUs;
 	
 	public RemoteDirectory(final Machine machine,
@@ -56,9 +56,7 @@ public class RemoteDirectory extends RootDirectory
 	{
 		super(machine, name, tags, description);
 		
-		String pathStr = Services.settings.downloadsDirectory.getPath().resolve(getLocalMirrorName()).toAbsolutePath().toString();
-		path = DbPaths.getPathElement(pathStr, true);
-		Misc.ensureDirectory(Paths.get(pathStr), false);
+		path = Services.settings.downloadsDirectory.getPath().resolve(getLocalMirrorName()).toAbsolutePath();
 		sharesWithUs = defaultShare;
 	}
 
@@ -66,7 +64,7 @@ public class RemoteDirectory extends RootDirectory
 	{
 		super(int1);
 		// just for now...
-		DbPaths.pathLiesIn(DbPaths.ROOT, this);
+		DbPaths.pathLiesIn(DbPaths2.ROOT, this);
 	}
 
 	@Override
@@ -76,20 +74,20 @@ public class RemoteDirectory extends RootDirectory
 	}
 	
 	@Override
-	public PathElement getPathElement()
+	public String getPath()
 	{
-		return path;
+		return path.toString();
 	}
 
 	@Override
-	protected void setPath(final PathElement object)
+	protected void setPath(String path)
 	{
-		this.path = object;
+		this.path = Paths.get(path);
 	}
 
 	public Path getLocalRoot()
 	{
-		return Paths.get(path.getFsPath());
+		return path;
 	}
 	
 	public String getLocalMirrorName()
@@ -115,7 +113,7 @@ public class RemoteDirectory extends RootDirectory
 	@Override
 	public boolean pathIsSecure(final Path canonicalPath)
 	{
-		return canonicalPath.startsWith(path.getFsPath());
+		return canonicalPath.startsWith(path);
 	}
 
 	@Override
@@ -145,8 +143,14 @@ public class RemoteDirectory extends RootDirectory
 		return sharesWithUs;
 	}
 
-	public void setLocalMirror(PathElement pathElement)
+	public void setLocalMirror(Path pathElement)
 	{
 		this.path = pathElement;
+		tryToSave();
+	}
+
+	public RootDirectoryType getType()
+	{
+		return RootDirectoryType.REMOTE;
 	}
 }

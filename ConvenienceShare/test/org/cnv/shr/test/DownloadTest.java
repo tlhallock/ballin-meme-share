@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
@@ -55,7 +56,7 @@ public class DownloadTest extends RemotesTest
 			File makeFile = makeSampleDirectories.get((int) (Math.random() * makeSampleDirectories.size()));
 			Path path2 = Paths.get(makeFile.getAbsolutePath());
 			Path relativize = createTempDirectory.relativize(path2);
-			PathElement pathElement = DbPaths.getPathElement(DbPaths.ROOT, relativize.toString(), true);
+			PathElement pathElement = DbPaths.getPathElement(DbPaths2.ROOT, relativize.toString(), true);
 			SharedFile file = DbFiles.getFile(DbRoots.getRoot(machine, rootName), pathElement);
 
 			class MyNotificationListener extends NotificationListenerAdapter

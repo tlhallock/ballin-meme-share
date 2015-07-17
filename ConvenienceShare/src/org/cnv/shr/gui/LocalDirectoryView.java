@@ -60,9 +60,9 @@ public class LocalDirectoryView extends javax.swing.JFrame
 			setTitle("Unable to open directory.");
 			return;
 		}
-		this.path = root.getPathElement().getFullPath();
+		this.path = root.getPath();
 		setTitle("LocalDirectory: " + path);
-		pathLabel.setText(root.getPathElement().getFullPath());
+		pathLabel.setText(root.getPath());
 
 		jComboBox1.setModel(new PermissionChanger(jComboBox1, root.getDefaultSharingState())
 		{

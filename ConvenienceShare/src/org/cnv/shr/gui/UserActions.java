@@ -41,7 +41,6 @@ import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.SharingState;
@@ -50,7 +49,6 @@ import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.gui.AddMachine.AddMachineParams;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
@@ -255,8 +253,7 @@ public class UserActions
 				LogWrapper.getLogger().info("Local directory with this name already exists.\nTrying " + name + ".");
 			}
 
-			PathElement pathElement = DbPaths.getPathElement(localDirectory, true);
-			LocalDirectory local = new LocalDirectory(pathElement, name);
+			LocalDirectory local = new LocalDirectory(localDirectory, name);
 			local.tryToSave();
 			if (local.getId() == null)
 			{

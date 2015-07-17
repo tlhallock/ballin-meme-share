@@ -592,7 +592,7 @@ public class DownloadInstance implements Runnable
 		{
 			return;
 		}
-		Path path = Paths.get(localDirectory.getPathElement().getFsPath());
+		Path path = localDirectory.getFsPath();
 		destination = PathSecurity.secureMakeDirs(path, Paths.get(remoteFile.getPath().getFullPath()));
 		if (destination == null)
 		{

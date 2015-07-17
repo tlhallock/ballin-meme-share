@@ -28,7 +28,7 @@ package org.cnv.shr.sync;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.sync.FileSource.FileSourceIterator;
@@ -42,7 +42,7 @@ public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterato
 	public ConsecutiveDirectorySyncIterator(final RootDirectory remoteDirectory, final FileSource f) throws IOException, InterruptedException
 	{
 		root = remoteDirectory;
-		stack.addLast(new Node(new SynchronizationTask(DbPaths.ROOT, root, f.listFiles())));
+		stack.addLast(new Node(new SynchronizationTask(DbPaths2.ROOT, root, f.listFiles())));
 		first = true;
 	}
 
