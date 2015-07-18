@@ -29,7 +29,6 @@ import java.awt.Color;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.TimerTask;
@@ -159,8 +158,8 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 			if (rootDirectory.isLocal())
 			{
         viewer.setSyncStatus(Color.GREEN, Color.BLACK, "Browsing local files.");
-				rootSource = new FileFileSource(new File(
-						rootDirectory.getPath()),
+				rootSource = new FileFileSource(
+						rootDirectory.getPath().toFile(),
 						DbRoots.getIgnores((LocalDirectory) newRoot));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
 			}
@@ -417,7 +416,7 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 		public long getFileSize() { throw new RuntimeException("Don't call this."); }
 
 		@Override
-		public SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException { { throw new RuntimeException("Don't call this."); }}
+		public SharedFile create(PathElement element) throws IOException, FileOutsideOfRootException { throw new RuntimeException("Don't call this."); }
 	}
 	private static final class NullIterator extends ExplorerSyncIterator
 	{

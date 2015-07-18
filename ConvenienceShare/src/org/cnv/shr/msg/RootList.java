@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -91,8 +92,15 @@ public class RootList extends Message
 		
 		for (RootListChild rootC : sharedDirectories)
 		{
-			RootDirectory root = rootC.createRoot(connection.getMachine());
-			accountedFor.add(root.getName());
+			try
+			{
+				RootDirectory root = rootC.createRoot(connection.getMachine());
+				accountedFor.add(root.getName());
+			}
+			catch (IOException ex)
+			{
+				LogWrapper.getLogger().log(Level.INFO, "Unable to create root " + rootC.getName(), ex);
+			}
 		}
 
 		List<RootDirectory> toDelete = new LinkedList<>();

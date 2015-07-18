@@ -24,6 +24,7 @@
 package org.cnv.shr.db.h2.bak;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -35,7 +36,7 @@ import org.cnv.shr.db.h2.DbChunks;
 import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
@@ -110,7 +111,7 @@ public class DownloadBackup implements Jsonable
 	}
 	
 	
-	public void save(ConnectionWrapper wrapper)
+	public void save(ConnectionWrapper wrapper) throws IOException
 	{
 		Machine remote = DbMachines.getMachine(remoteMachine);
 		if (remote == null)
@@ -133,8 +134,7 @@ public class DownloadBackup implements Jsonable
 				return;
 			}
 		}
-		PathElement pathElement = DbPaths.getPathElement(remotePath, false);
-		DbPaths.pathLiesIn(pathElement, root);
+		PathElement pathElement = DbPaths2.addFilePath(root, remotePath);
 		RemoteFile remoteFile = new RemoteFile(root, pathElement, fileSize, checksum, tags, lastModified);
 		try
 		{

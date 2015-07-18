@@ -31,7 +31,7 @@ import java.io.IOException;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.mdl.PathElement;
@@ -101,7 +101,7 @@ public class PathListChild implements Jsonable
 	
 	public RemoteFile create() 
 	{
-		final PathElement pathElement = DbPaths.getPathElement(pl.getPath(), name, false);
+		final PathElement pathElement = DbPaths2.addPathTo(pl.getRoot(), pl.getPath(), name, false);
 		return new RemoteFile(pl.getRoot(), pathElement,
 				size, checksum, tags, lastModified);
 	}

@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
@@ -16,14 +15,11 @@ import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbLocals;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.LogWrapper;
 
@@ -35,7 +31,8 @@ public class CleanBrowsingHistory
 			+ "join ROOT on SFILE.ROOT=ROOT.R_ID "
 			+ "where ROOT.MID = ?;");
 
-	private static final QueryWrapper SELECT_ROOT_PATHS = new QueryWrapper("select PELEM from ROOT where MID=?;");
+	private static final QueryWrapper clean    = new QueryWrapper("delete from ROOT_CONTAINS where RID in (select R_ID from ROOT where MID=?);");
+//	private static final QueryWrapper SELECT_ROOT_PATHS = new QueryWrapper("select PELEM from ROOT where MID=?;");
 	
 	public static void removeAllNonEssentialData(Machine machine)
 	{
@@ -50,7 +47,7 @@ public class CleanBrowsingHistory
 		LogWrapper.getLogger().info("Adding removed downloads");
 		add(extracted);
 		LogWrapper.getLogger().info("Cleaning paths.");
-		DbPaths.removeUnusedPaths();
+		DbPaths2.cleanPelem();
 	}
 
 	private static void add(LinkedList<DownloadBackup> extracted)
@@ -61,21 +58,21 @@ public class CleanBrowsingHistory
 			{
 				backup.save(connection);
 			}
-			catch (SQLException e1)
+			catch (SQLException | IOException e1)
 			{
 				LogWrapper.getLogger().log(Level.INFO, "Unable to list download " + backup, e1);
 			}
 		}
 	}
+	
+
 
 	private static void cleanMachine(Machine machine)
 	{
 		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = connection.prepareNewStatement(
-						"delete from ROOT_CONTAINS "
-								+ " where RID in (select R_ID from ROOT where MID=" + machine.getId() + ") "
-								+ " and PELEM not in (" + collectRootPaths(machine) + ");");)
+				StatementWrapper stmt = connection.prepareStatement(clean);)
 		{
+			stmt.setInt(1, machine.getId());
 			stmt.execute();
 		}
 		catch (SQLException e1)
@@ -84,40 +81,40 @@ public class CleanBrowsingHistory
 		}
 	}
 
-	private static String collectRootPaths(Machine machine)
-	{
-		HashSet<Long> toKeep = new HashSet<>();
-		DbLocals locals = new DbLocals();
-		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
-				StatementWrapper prepareStatement = connection.prepareStatement(SELECT_ROOT_PATHS);)
-		{
-			prepareStatement.setInt(1, machine.getId());
-			try (ResultSet results = prepareStatement.executeQuery();)
-			{
-				while (results.next())
-				{
-					PathElement pathElement = DbPaths.getPathElement(results.getLong(1), locals);
-					do
-					{
-						toKeep.add(pathElement.getId());
-						pathElement = pathElement.getParent();
-					} while (pathElement.getId() != 0);
-				}
-			}
-		}
-		catch (SQLException e1)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to list downloads.", e1);
-		}
-		StringBuilder builder = new StringBuilder(5 * toKeep.size());
-		builder.append("0");
-		for (Long l : toKeep)
-		{
-			builder.append(", ");
-			builder.append(l);
-		}
-		return builder.toString();
-	}
+//	private static String collectRootPaths(Machine machine)
+//	{
+//		HashSet<Long> toKeep = new HashSet<>();
+//		DbLocals locals = new DbLocals();
+//		try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
+//				StatementWrapper prepareStatement = connection.prepareStatement(SELECT_ROOT_PATHS);)
+//		{
+//			prepareStatement.setInt(1, machine.getId());
+//			try (ResultSet results = prepareStatement.executeQuery();)
+//			{
+//				while (results.next())
+//				{
+//					PathElement pathElement = DbPaths.getPathElement(results.getLong(1), locals);
+//					do
+//					{
+//						toKeep.add(pathElement.getId());
+//						pathElement = pathElement.getParent();
+//					} while (pathElement.getId() != 0);
+//				}
+//			}
+//		}
+//		catch (SQLException e1)
+//		{
+//			LogWrapper.getLogger().log(Level.INFO, "Unable to list downloads.", e1);
+//		}
+//		StringBuilder builder = new StringBuilder(5 * toKeep.size());
+//		builder.append("0");
+//		for (Long l : toKeep)
+//		{
+//			builder.append(", ");
+//			builder.append(l);
+//		}
+//		return builder.toString();
+//	}
 
 	private static LinkedList<DownloadBackup> collectDownloadBackups(Machine machine)
 	{

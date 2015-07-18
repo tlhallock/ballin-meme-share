@@ -38,6 +38,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.DeleteRootProgress;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
@@ -48,6 +49,7 @@ public class DbRoots
 {
 	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into IGNORE_PATTERN values (DEFAULT, ?, ?);");
 	private static final QueryWrapper SELECT7 = new QueryWrapper("select PATTERN from IGNORE_PATTERN where RID=?;");
+	private static final QueryWrapper SELECT8 = new QueryWrapper("select * from ROOT where RID=?;");
 	private static final QueryWrapper SELECT6 = new QueryWrapper("select * from ROOT where RNAME=? and MID=?;");
 	private static final QueryWrapper SELECT5 = new QueryWrapper("select * from ROOT where PATH=? and ROOT.TYPE in (" 
 			+ RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ");");
@@ -58,8 +60,6 @@ public class DbRoots
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select sum(FSIZE) as totalsize from SFILE where ROOT = ?;");
 	private static final QueryWrapper DELETE4 = new QueryWrapper("delete from IGNORE_PATTERN where RID=?;");
 	private static final QueryWrapper DELETE3 = new QueryWrapper("delete from ROOT where R_ID=?;");
-//	private static final QueryWrapper DELETE2 = new QueryWrapper("delete from SFILE where ROOT=?;");
-//	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from ROOT_CONTAINS where ROOT_CONTAINS.RID=?;");
 	
 	public static long getTotalFileSize(RootDirectory d)
 	{
@@ -114,7 +114,7 @@ public class DbRoots
 			prepareStatement.setInt(1,  machine.getId());
 			return new DbIterator<RootDirectory>(c, 
 					prepareStatement.executeQuery(),
-					machine.isLocal() ? DbTables.DbObjects.LROOT : DbTables.DbObjects.RROOT, 
+					DbObjects.ROOT,
 					new DbLocals().setObject(machine));
 		}
 		catch (SQLException e)
@@ -131,7 +131,7 @@ public class DbRoots
 			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 			return new DbIterator<LocalDirectory>(c, 
 					c.prepareStatement(SELECT4).executeQuery(),
-					DbTables.DbObjects.LROOT, 
+					DbTables.DbObjects.ROOT, 
 					new DbLocals().setObject(Services.localMachine));
 		}
 		catch (SQLException e)
@@ -140,8 +140,31 @@ public class DbRoots
 			return new DbIterator.NullIterator<>();
 		}
 	}
+//	public static RootDirectory getRoot(int id)
+//	{
+//		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+//				StatementWrapper prepareStatement = c.prepareStatement(SELECT8);)
+//		{
+//			prepareStatement.setInt(1, id);
+//			try (ResultSet executeQuery = prepareStatement.executeQuery();)
+//			{
+//				if (executeQuery.next())
+//				{
+//					RootDirectory local = (RootDirectory) getAllocator(executeQuery).allocate(executeQuery);
+//					local.fill(c, executeQuery, new DbLocals());
+//					return local;
+//				}
+//			}
+//			return null;
+//		}
+//		catch (SQLException e)
+//		{
+//			LogWrapper.getLogger().log(Level.INFO, "Unable to get local by path", e);
+//			return null;
+//		}
+//	}
 
-	public static LocalDirectory getLocal(String path)
+	public static LocalDirectory getLocal(Path path) throws IOException
 	{
 		int pathId = DbRootPaths.getRootPath(path);
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
@@ -152,9 +175,7 @@ public class DbRoots
 			{
 				if (executeQuery.next())
 				{
-					LocalDirectory local = (LocalDirectory) DbTables.DbObjects.LROOT.allocate(executeQuery);
-					local.fill(c, executeQuery, new DbLocals());
-					return local;
+					return (LocalDirectory) DbObjects.ROOT.create(c, executeQuery);
 				}
 			}
 			return null;
@@ -180,15 +201,11 @@ public class DbRoots
 			prepareStatement.setInt(2, machine.getId());
 			try (ResultSet executeQuery = prepareStatement.executeQuery();)
 			{
-				DbObjects o = machine.isLocal() ? DbTables.DbObjects.LROOT : DbTables.DbObjects.RROOT;
-				
 				if (!executeQuery.next())
 				{
 					return null;
 				}
-				DbObject allocate = o.allocate(executeQuery);
-				allocate.fill(c, executeQuery, new DbLocals().setObject(machine));
-				return (RootDirectory) allocate;
+				return (RootDirectory) DbObjects.ROOT.create(c, executeQuery, new DbLocals().setObject(machine));
 			}
 		}
 		catch (SQLException e)
@@ -198,29 +215,110 @@ public class DbRoots
 		}
 	}
 	
+
+	private static final QueryWrapper DELETE3_1 = new QueryWrapper("delete from SFILE where ROOT=? "
+			+ "limit 50"
+			+ ";");
+	private static final QueryWrapper DELETE3_2 = new QueryWrapper(
+			"delete from ROOT_CONTAINS r1 where RID=? "
+			+ "and not exists (select RC_ID from ROOT_CONTAINS r2 where r2.PARENT=r1.RC_ID limit 1) "
+			+ "limit 50 "
+			+ ";");
+	private static final QueryWrapper COUNT_PATHS_TO_DELETE = new QueryWrapper(
+			"select count(RC_ID) from ROOT_CONTAINS where RID=?;");
+	private static final QueryWrapper COUNT_FILES_TO_DELETE = new QueryWrapper(
+			"select count(F_ID) from SFILE where ROOT=?;");
+	
 	public static void deleteRoot(RootDirectory root)
 	{
-		int pathId = DbRootPaths.getRootPath(root.getPath());
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-//				StatementWrapper s1 = c.prepareStatement(DELETE1);
-//				StatementWrapper s2 = c.prepareStatement(DELETE2);
-				StatementWrapper s3 = c.prepareStatement(DELETE3);)
+		int pathId;
+		
+		try
 		{
-//			s1.setInt(1, root.getId());
-//			s2.setInt(1, root.getId());
-			s3.setInt(1, root.getId());
-//			s1.execute();
-//			s2.execute();
-			s3.execute();
+			pathId = DbRootPaths.getRootPath(root.getPath());
+		}
+		catch (IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete root", e1);
+			return;
+		}
+		
+		DeleteRootProgress progressBar = new DeleteRootProgress();
+		Services.notifications.registerWindow(progressBar);
+		progressBar.setVisible(true);
+		
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				 StatementWrapper s1 = c.prepareStatement(DELETE3_1);
+				 StatementWrapper s2 = c.prepareStatement(DELETE3_2);
+				 StatementWrapper s3 = c.prepareStatement(DELETE3);
+				 StatementWrapper countFiles = c.prepareStatement(COUNT_FILES_TO_DELETE);
+				 StatementWrapper countPaths = c.prepareStatement(COUNT_PATHS_TO_DELETE);)
+		{
+			int numRemoved = -1;
+			int totalFiles = -1;
+			int totalPaths = -1;
 			
+			countFiles.setInt(1, root.getId());
+			try (ResultSet executeQuery = countFiles.executeQuery();)
+			{
+				if (executeQuery.next())
+				{
+					totalFiles = executeQuery.getInt(1);
+				}
+			}
+			
+			progressBar.begin(0, totalFiles);
+			do
+			{
+				s1.setInt(1, root.getId());
+				numRemoved = s1.executeUpdate();
+				progressBar.updateProgress(numRemoved);
+				LogWrapper.getLogger().fine("Removed " + numRemoved + " files: " + (totalFiles -= numRemoved) + " left.");
+			} while (numRemoved > 0);
+
+			countPaths.setInt(1, root.getId());
+			try (ResultSet executeQuery = countPaths.executeQuery();)
+			{
+				if (executeQuery.next())
+				{
+					totalPaths = executeQuery.getInt(1);
+				}
+			}
+
+			progressBar.begin(1, totalPaths);
+			do
+			{
+				s2.setInt(1, root.getId());
+				numRemoved = s2.executeUpdate();
+				progressBar.updateProgress(numRemoved);
+				LogWrapper.getLogger().fine("Removed " + numRemoved + " paths: " + (totalPaths -= numRemoved) + " left.");
+			} while (numRemoved > 0);
+
+
+			progressBar.begin(2, 1);
+			s3.setInt(1, root.getId());
+			s3.execute();
+
+			LogWrapper.getLogger().fine("Done removing " + root);
+
 			Services.notifications.localsChanged();
+
+			progressBar.begin(3, 1);
+			DbRootPaths.removeRootPath(pathId);
+			LogWrapper.getLogger().fine("Done removing root path. ");
+
+			progressBar.begin(4, 1);
+			DbPaths2.cleanPelem();
+			LogWrapper.getLogger().fine("Done cleaning pelems.");
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to delete root", e);
 		}
-		DbRootPaths.removeRootPath(pathId);
-		DbPaths.removeUnusedPaths();
+		finally
+		{
+			progressBar.dispose();
+		}
 	}
         
 	

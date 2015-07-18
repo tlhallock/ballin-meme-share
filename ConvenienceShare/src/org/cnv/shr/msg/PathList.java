@@ -35,7 +35,7 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbFiles;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.dmn.Services;
@@ -89,7 +89,7 @@ public class PathList extends Message
 			{
 				continue;
 			}
-			final SharedFile local = DbFiles.getFile(localByName, element);
+			final SharedFile local = DbFiles.getFile(element);
 			
 			if (count++ > 100)
 			{
@@ -248,7 +248,7 @@ public class PathList extends Message
 		{
 			return elemCache;
 		}
-		return elemCache = DbPaths.getPathElement(currentPath, true);
+		return elemCache = DbPaths2.addDirectoryPath(getRoot(), currentPath);
 	}
 
 	public LinkedList<PathListChild> getChildren()

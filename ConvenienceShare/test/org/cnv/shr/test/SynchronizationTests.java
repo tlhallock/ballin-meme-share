@@ -48,17 +48,16 @@ public class SynchronizationTests extends RemotesTest
 		try (Closeable c2 = launchLocalMachine(true);)
 		{
 			final Path createTempDirectory = Files.createTempDirectory("root");
-			final String path = createTempDirectory.toFile().getAbsolutePath();
 			final String rootName = Misc.getRandomString(15);
 			
-			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 50);
+			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(createTempDirectory.toString(), 3, 10, 1024, 50);
 			
-			UserActions.addLocalImmediately(createTempDirectory, rootName);
-			Assert.assertNotNull(DbRoots.getLocal(path));
-			UserActions.userSync(null, DbRoots.getLocal(path), null);
+			UserActions.addLocalImmediately(createTempDirectory, rootName, false);
+			Assert.assertNotNull(DbRoots.getLocal(createTempDirectory));
+			UserActions.userSync(null, DbRoots.getLocal(createTempDirectory), null);
 			
 			final long diskSpace = TestUtils.sum(makeSampleDirectories);
-			final LocalDirectory local = DbRoots.getLocal(path);
+			final LocalDirectory local = DbRoots.getLocal(createTempDirectory);
 			Assert.assertEquals(diskSpace, local.diskSpace());
 			Assert.assertEquals(makeSampleDirectories.size(), local.numFiles());
 			Misc.rm(createTempDirectory);
@@ -176,7 +175,7 @@ public class SynchronizationTests extends RemotesTest
 			if (rootDirectory.isLocal())
 			{
 				rootSource = new FileFileSource(new File(
-						Misc.deSanitize(rootDirectory.getPath())),
+						Misc.deSanitize(rootDirectory.getPath().toString())),
 										DbRoots.getIgnores((LocalDirectory) rootDirectory));
 				synchronizer = new LocalSynchronizer((LocalDirectory) rootDirectory, iterator);
 			}
@@ -239,7 +238,7 @@ public class SynchronizationTests extends RemotesTest
 			final String rootName = Misc.getRandomString(15);
 			
 			final LinkedList<File> makeSampleDirectories = TestUtils.makeSampleDirectories(path, 3, 10, 1024, 114);
-			UserActions.addLocalImmediately(createTempDirectory, rootName);
+			UserActions.addLocalImmediately(createTempDirectory, rootName, false);
 			
 			getMachineInfo(0).send(new TestActions.SYNC_ROOTS(Services.localMachine.getIdentifier()));
 			Thread.sleep(2000);

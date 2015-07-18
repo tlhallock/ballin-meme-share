@@ -26,16 +26,16 @@
 package org.cnv.shr.gui;
 
 import java.awt.GridLayout;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbRoots.IgnorePatterns;
 import org.cnv.shr.db.h2.SharingState;
-import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.LogWrapper;
@@ -47,11 +47,13 @@ import org.cnv.shr.util.Misc;
  */
 public class LocalDirectoryView extends javax.swing.JFrame
 {
-	private String path;
+	private Path path;
+	private boolean exitOnSave;
 	LinkedList<LocalSharePermission> permissions = new LinkedList<>();
 
-	public LocalDirectoryView(LocalDirectory root)
+	public LocalDirectoryView(LocalDirectory root, boolean exitOnSave)
 	{
+		this.exitOnSave = exitOnSave;
 		initComponents();
 //		jTextField1.setEditable(!root.isMirror());
 
@@ -62,7 +64,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		}
 		this.path = root.getPath();
 		setTitle("LocalDirectory: " + path);
-		pathLabel.setText(root.getPath());
+		pathLabel.setText(root.getPath().toString());
 
 		jComboBox1.setModel(new PermissionChanger(jComboBox1, root.getDefaultSharingState())
 		{
@@ -122,7 +124,15 @@ public class LocalDirectoryView extends javax.swing.JFrame
 	private LocalDirectory getLocal()
 	{
 		if (path == null) return null;
-		return DbRoots.getLocal(path);
+		try
+		{
+			return DbRoots.getLocal(path);
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, null, e);
+			return null;
+		}
 	}
 	
 	private void save()
@@ -154,9 +164,15 @@ public class LocalDirectoryView extends javax.swing.JFrame
 		local.tryToSave();
 		DbRoots.setIgnores(local, ignoreTextArea.getText().split("\n"));
 		
-		refresh(getLocal());
-
-		Services.userThreads.execute(() -> { DbPaths.cleanIgnores(getLocal()); });
+		if (exitOnSave)
+		{
+			dispose();
+		}
+		else
+		{
+			refresh(getLocal());
+		}
+		// TODO: right here could clean the ignores...
 	}
 
     /**
@@ -425,7 +441,7 @@ public class LocalDirectoryView extends javax.swing.JFrame
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         Misc.ensureDirectory(path, false);
-        Misc.nativeOpen(Paths.get(path), false);
+        Misc.nativeOpen(path, false);
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void updateMinimumSize() {}

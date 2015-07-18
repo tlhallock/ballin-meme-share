@@ -1,5 +1,7 @@
 package org.cnv.shr.db.h2;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -22,8 +24,13 @@ public class DbRootPaths
 	private static final QueryWrapper COUNT         = new QueryWrapper("select count(RP_ID) from ROOT_PATH;");
 	private static final QueryWrapper COUNT_OTHERS  = new QueryWrapper("select count(RP_ID) from ROOT_PATH where PREV=?;");
 	
+	public static int getRootPath(Path path) throws IOException
+	{
+		return getRootPath(path.toAbsolutePath().normalize().toRealPath().toString());
+	}
+	
 
-	public static int getRootPath(String str)
+	static int getRootPath(String str)
 	{
 		LinkedList<String> elements = new LinkedList<>();
 		int start = 0;

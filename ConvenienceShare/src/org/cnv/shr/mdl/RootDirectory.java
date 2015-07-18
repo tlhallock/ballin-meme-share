@@ -38,7 +38,6 @@ import javax.swing.JFrame;
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
-import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbRootPaths;
@@ -101,7 +100,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 		permissionFlags                  = row.getInt   ("PERM_FLAGS");
 		setDefaultSharingState(       SharingState.get(row.getInt(   "SHARING")));
 		
-		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.RMACHINE, row.getInt("MID"));
+		machine = (Machine)   locals.getObject(c, DbTables.DbObjects.MACHINE, row.getInt("MID"));
 		setPath(DbRootPaths.getRootPath(row.getInt("PATH")));
 	}
 
@@ -141,6 +140,11 @@ public abstract class RootDirectory extends DbObject<Integer>
 				}
 				return false;
 			}
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save root:", e);
+			return false;
 		}
 	}
 	
@@ -196,7 +200,6 @@ public abstract class RootDirectory extends DbObject<Integer>
 
 	public void setStats()
 	{
-		DbFiles.cleanFiles();
 		totalNumFiles = DbRoots.getNumberOfFiles(this);
 		totalFileSize = DbRoots.getTotalFileSize(this);
 		tryToSave();
@@ -284,7 +287,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 				synchronizing.get(d.getPath());
 		if (rootSynchronizer == null)
 		{
-			synchronizing.put(d.getPath(), sync);
+			synchronizing.put(d.getPath().toString(), sync);
 			return true;
 		}
 		return false;
@@ -292,7 +295,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	
 	private static synchronized void stopSynchronizing(final RootDirectory d)
 	{
-		final RootSynchronizer remove = synchronizing.remove(d.getPath());
+		final RootSynchronizer remove = synchronizing.remove(d.getPath().toString());
 		if (remove != null)
 		{
 			remove.quit();
@@ -345,7 +348,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 	public abstract RootDirectoryType getType();
 	
 	protected abstract SharingState getDbSharing();
-	public abstract String getPath();
+	public abstract Path getPath();
 
 	protected abstract void setDefaultSharingState(SharingState sharingState);
 	protected abstract void setPath(String pathStr);

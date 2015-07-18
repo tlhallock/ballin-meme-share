@@ -31,8 +31,6 @@ import java.nio.file.Paths;
 
 import javax.swing.JFrame;
 
-import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.PathSecurity;
@@ -41,6 +39,7 @@ import org.cnv.shr.sync.RemoteFileSource;
 import org.cnv.shr.sync.RemoteSynchronizer;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.sync.RootSynchronizer;
+import org.cnv.shr.util.Misc;
 
 
 public class RemoteDirectory extends RootDirectory
@@ -52,19 +51,19 @@ public class RemoteDirectory extends RootDirectory
 			final String name,
 			final String tags, 
 			final String description,
-			final SharingState defaultShare)
+			final SharingState defaultShare) throws IOException
 	{
 		super(machine, name, tags, description);
 		
-		path = Services.settings.downloadsDirectory.getPath().resolve(getLocalMirrorName()).toAbsolutePath();
+		path = Services.settings.downloadsDirectory.getPath().resolve(getLocalMirrorName()).toAbsolutePath().normalize();
+		Misc.ensureDirectory(path, false);
+		path = path.toRealPath();
 		sharesWithUs = defaultShare;
 	}
 
 	public RemoteDirectory(final int int1)
 	{
 		super(int1);
-		// just for now...
-		DbPaths.pathLiesIn(DbPaths2.ROOT, this);
 	}
 
 	@Override
@@ -74,9 +73,9 @@ public class RemoteDirectory extends RootDirectory
 	}
 	
 	@Override
-	public String getPath()
+	public Path getPath()
 	{
-		return path.toString();
+		return path;
 	}
 
 	@Override
@@ -143,8 +142,11 @@ public class RemoteDirectory extends RootDirectory
 		return sharesWithUs;
 	}
 
-	public void setLocalMirror(Path pathElement)
+	public void setLocalMirror(Path pathElement) throws IOException
 	{
+		Misc.ensureDirectory(pathElement, false);
+		pathElement = pathElement.toAbsolutePath().normalize().toRealPath();
+		
 		this.path = pathElement;
 		tryToSave();
 	}

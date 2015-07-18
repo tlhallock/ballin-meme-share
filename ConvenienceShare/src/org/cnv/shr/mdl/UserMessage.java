@@ -86,7 +86,7 @@ public class UserMessage extends DbObject<Integer>
 	{
 		int ndx = 1;
 		this.id = row.getInt(ndx++);
-		this.machine = (Machine) locals.getObject(c, DbObjects.RMACHINE, row.getInt(ndx++));
+		this.machine = (Machine) locals.getObject(c, DbObjects.MACHINE, row.getInt(ndx++));
 		sent = row.getLong(ndx++);
 		type = MessageType.getMessageType(row.getInt(ndx++));
 		message = row.getString(ndx++);

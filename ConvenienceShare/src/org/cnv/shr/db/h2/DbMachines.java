@@ -55,7 +55,7 @@ public class DbMachines
 		{
 			return new DbIterator<>(c,
 					c.prepareStatement(SELECT1_5).executeQuery(),
-					DbTables.DbObjects.RMACHINE);
+					DbTables.DbObjects.MACHINE);
 		}
 		catch (SQLException e)
 		{
@@ -75,7 +75,7 @@ public class DbMachines
 			stmt.setInt(2, port);
 			stmt.setInt(3, port);
 
-			try (DbIterator<Machine> iterator = new DbIterator<>(c, stmt.executeQuery(), DbTables.DbObjects.RMACHINE))
+			try (DbIterator<Machine> iterator = new DbIterator<>(c, stmt.executeQuery(), DbTables.DbObjects.MACHINE))
 			{
 				if (iterator.hasNext())
 				{
@@ -98,7 +98,7 @@ public class DbMachines
 		{
 			return new DbIterator<>(c,
 					c.prepareStatement(SELECT1).executeQuery(),
-					DbTables.DbObjects.RMACHINE);
+					DbTables.DbObjects.MACHINE);
 		}
 		catch (SQLException e)
 		{
@@ -122,9 +122,7 @@ public class DbMachines
 			{
 				if (executeQuery.next())
 				{
-					Machine machine = (Machine) DbObjects.RMACHINE.allocate(executeQuery);
-					machine.fill(c, executeQuery, new DbLocals());
-					return machine;
+					return (Machine) DbObjects.MACHINE.create(c, executeQuery);
 				}
 				else
 				{

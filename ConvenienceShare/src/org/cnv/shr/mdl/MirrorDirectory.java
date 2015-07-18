@@ -15,7 +15,7 @@ public class MirrorDirectory extends LocalDirectory
 			String path2, 
 			SharingState defaultSharingState,
 			Long totalFileSize,
-			Long totalNumFiles)
+			Long totalNumFiles) throws IOException
 	{
 		super(name, description, tags, minFSize, maxFSize, path2, defaultSharingState, totalFileSize, totalNumFiles);
 	}

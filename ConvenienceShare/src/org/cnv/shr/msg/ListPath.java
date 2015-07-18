@@ -33,7 +33,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
@@ -86,7 +86,13 @@ public class ListPath extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
-		PathElement pathElement = DbPaths.getPathElement(path, true);
+		PathElement pathElement = DbPaths2.findDirectoryPath(localByName, path);
+		if (pathElement == null)
+		{
+			LogWrapper.getLogger().info("No such directory");
+			connection.finish();
+			return;
+		}
 		PathList.listPaths(localByName, pathElement, connection);
 	}
 	

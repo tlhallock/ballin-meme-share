@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.cnv.shr.db.h2.PathBreaker;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.ByteListBuffer;
@@ -39,13 +38,13 @@ public class UtilTests
 	@Test
 	public void testPathBreaker()
 	{
-//		String str = "Combinatorial optimization.. theory and algorithms.pdf";
-		String str = "/home/thallock/Documents/Combinatorial optimization.. theory and algorithms.pdf";
-		System.out.println(str);
-		System.out.println(PathBreaker.join(PathBreaker.breakPath(str, false)));
-		System.out.println(PathBreaker.breakPath(str, false)[PathBreaker.breakPath(str, false).length-1].getUnbrokenName());
-		
-		// TODO: asserts
+////		String str = "Combinatorial optimization.. theory and algorithms.pdf";
+//		String str = "/home/thallock/Documents/Combinatorial optimization.. theory and algorithms.pdf";
+//		System.out.println(str);
+//		System.out.println(PathBreaker.join(PathBreaker.breakPath(str, false)));
+//		System.out.println(PathBreaker.breakPath(str, false)[PathBreaker.breakPath(str, false).length-1].getUnbrokenName());
+//		
+//		// TODO: asserts
 	}
 	
 	@Test

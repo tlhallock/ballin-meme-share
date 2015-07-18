@@ -36,7 +36,6 @@ import java.util.LinkedList;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbFiles;
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
@@ -134,15 +133,13 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 			listener.syncDone(this);
 		}
 		
-		Services.userThreads.execute(() -> { DbPaths.removeUnusedPaths(); });
+		DbPaths2.cleanPelem();
 		
 		Thread.currentThread().setName(currentName);
 	}
 	
 	private void synchronize(final SynchronizationTask task)
 	{
-		DbPaths.pathLiesIn(DbPaths2.ROOT, local);
-		
 		final HashMap<String, FileSource> files = key(task.files);
 		final HashSet<String> accountedFor = new HashSet<>();
 		
@@ -201,8 +198,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		}
 		
 		// add path to database
-		final PathElement element = DbPaths.getPathElement(task.current, name, f.isDirectory());
-		DbPaths.pathLiesIn(element, local);
+		final PathElement element = DbPaths2.addPathTo(local, task.current, name, f.isDirectory());
 		
 		if (f.isFile())
 		{
@@ -215,7 +211,8 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		}
 	}
 
-	private void testOnFs(final HashMap<String, FileSource> files, 
+	private void testOnFs(
+			final HashMap<String, FileSource> files, 
 			final HashSet<String> accountedFor, 
 			final LinkedList<Pair> subDirectories, 
 			final PathElement element) throws IOException, SQLException
@@ -227,7 +224,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		accountedFor.add(element.getUnbrokenName());
 
 		final FileSource fsCopy = files.get(element.getUnbrokenName());
-		final SharedFile dbVersion = DbFiles.getFile(local, element);
+		final SharedFile dbVersion = DbFiles.getFile(element);
 		if (fsCopy == null)
 		{
 			if (dbVersion != null)
@@ -253,7 +250,6 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 		if (dbVersion == null)
 		{
 			// add File
-			DbPaths.pathLiesIn(element, local);
 			addFile(element, fsCopy);
 			return;
 		}
@@ -292,7 +288,7 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 	{
 		try
 		{
-			final SharedFile lFile = fsCopy.create(local, element);
+			final SharedFile lFile = fsCopy.create(element);
 			if (!lFile.tryToSave())
 			{
 				return;

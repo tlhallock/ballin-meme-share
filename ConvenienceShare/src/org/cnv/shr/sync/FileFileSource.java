@@ -35,10 +35,8 @@ import java.util.Iterator;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbRoots.IgnorePatterns;
-import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
@@ -165,8 +163,8 @@ public class FileFileSource implements FileSource
 	}
 	
 	@Override
-	public SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException
+	public SharedFile create(PathElement element) throws IOException, FileOutsideOfRootException
 	{
-		return new LocalFile((LocalDirectory) local2, element);
+		return new LocalFile(element);
 	}
 }

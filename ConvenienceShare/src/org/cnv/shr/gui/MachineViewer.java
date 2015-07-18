@@ -34,6 +34,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.util.logging.Level;
@@ -500,7 +501,7 @@ public class MachineViewer extends javax.swing.JFrame
         this.descriptionLabel.setText(directory.getDescription());
         this.tagsLabel.setText(directory.getTags());
         this.numFilesLabel.setText(directory.getTotalNumberOfFiles());
-        this.pathField.setText(directory.getPath()); pathField.setMinimumSize(new Dimension(5, 5));
+        this.pathField.setText(directory.getPath().toString()); pathField.setMinimumSize(new Dimension(5, 5));
         this.diskSpaceLabel.setText(directory.getTotalFileSize());
         ((PathTreeModel) filesTree.getModel()).setRoot(directory);
         filesManager.setFilters("", "");
@@ -1165,10 +1166,19 @@ public class MachineViewer extends javax.swing.JFrame
 						return;
 				}
 				
-				int rootPath = DbRootPaths.getRootPath(remoteDir.getPath());
-				remoteDir.setLocalMirror(Paths.get(newPath));
+				int rootPath;
+				try
+				{
+					rootPath = DbRootPaths.getRootPath(remoteDir.getPath());
+					remoteDir.setLocalMirror(Paths.get(newPath));
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, null, e);
+					return;
+				}
 				DbRootPaths.removeRootPath(rootPath);
-	      this.pathField.setText(remoteDir.getPath());
+	      this.pathField.setText(remoteDir.getPath().toString());
 			}
 			finally
 			{

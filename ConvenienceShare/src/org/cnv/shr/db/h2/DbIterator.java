@@ -99,9 +99,7 @@ public class DbIterator<T extends DbObject> implements CloseableIterator<T>
 				return null;
 			}
 			
-			T t = (T) tableInfo.allocate(results);
-			t.fill(c, results, locals);
-			return t;
+			return (T) tableInfo.create(c, results, locals);
 		}
 		catch (SQLException e)
 		{

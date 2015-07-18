@@ -25,8 +25,11 @@
 
 package org.cnv.shr.gui.tbl;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.logging.Level;
 
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -38,6 +41,7 @@ import org.cnv.shr.gui.NumberOfFiles;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.util.CloseableIterator;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class LocalTable extends DbJTable<LocalDirectory>
@@ -61,7 +65,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 			{
 				for (LocalDirectory root : roots)
 				{
-					UserActions.showLocal(root);
+					UserActions.showLocal(root, false);
 				}
 			}
 		}, true);
@@ -89,7 +93,7 @@ public class LocalTable extends DbJTable<LocalDirectory>
 			{
 				for (LocalDirectory root : roots)
 				{
-					Misc.nativeOpen(root.getFsPath(), false);
+					Misc.nativeOpen(root.getPath(), false);
 				}
 			}
 
@@ -120,13 +124,21 @@ public class LocalTable extends DbJTable<LocalDirectory>
 	@Override
 	protected LocalDirectory create(HashMap<String, Object> currentRow)
 	{
-		return DbRoots.getLocal((String) currentRow.get("Path"));
+		try
+		{
+			return DbRoots.getLocal(Paths.get((String) currentRow.get("Path")));
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, null, e);
+			return null;
+		}
 	}
 
 	@Override
 	protected boolean fillRow(LocalDirectory local, HashMap<String, Object> currentRow)
 	{
-    currentRow.put("Path"           , local.getPath()   );
+    currentRow.put("Path"           , local.getPath().toString()             );
     currentRow.put("Name"           , local.getName()                        );
     currentRow.put("Description"    , local.getDescription()                 );
     currentRow.put("Tags"           , local.getTags()                        );

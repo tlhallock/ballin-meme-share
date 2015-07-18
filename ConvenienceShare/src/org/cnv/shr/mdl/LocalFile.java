@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
@@ -48,22 +49,25 @@ public class LocalFile extends SharedFile
 		super(int1);
 	}
 
-	public LocalFile(LocalDirectory local, PathElement element, String tags, long fileSize, long lastModified, String checksum)
+	public LocalFile(PathElement element, String tags, long fileSize, long lastModified, String checksum)
 	{
 		super(null);
+		Objects.requireNonNull(element);
 
 		this.path = element;
-		this.rootDirectory = local;
+		this.rootDirectory = element.getRoot();
 		this.tags = tags;
 		this.fileSize = fileSize;
 		this.lastModified = lastModified;
 		this.checksum = checksum;
 	}
 	
-	public LocalFile(LocalDirectory local, PathElement element) throws IOException
+	public LocalFile(PathElement element) throws IOException
 	{
 		super(null);
-		rootDirectory = local;
+		Objects.requireNonNull(element);
+		
+		rootDirectory = element.getRoot();
 		path = element;
 		tags = null;
 		
@@ -73,7 +77,7 @@ public class LocalFile extends SharedFile
 		lastModified = Files.getLastModifiedTime(f).toMillis();
 
 		Path dir = f.getParent().toRealPath();
-		String root = Misc.deSanitize(local.getPath());
+		String root = Misc.deSanitize(element.getRoot().getPath().toString());
 
 		if (!dir.startsWith(root))
 		{
@@ -163,24 +167,17 @@ public class LocalFile extends SharedFile
 	}
 
 	@Override
-	public void setChecksum(String checksum) throws IOException
+	public void setChecksum(String checksum) throws IOException, SQLException
 	{
 		if (this.checksum != null && this.checksum.equals(checksum))
 		{
 			return;
 		}
 		this.checksum = checksum;
-		try
+		// save is because refresh doesn't check checksum
+		if (!refreshAndWriteToDb())
 		{
-			// save is because refresh doesn't check checksum
-			if (!refreshAndWriteToDb())
-			{
-				tryToSave();
-			}
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to write to db", e);
+			save(Services.h2DbCache.getThreadConnection());
 		}
 	}
 	
@@ -193,7 +190,7 @@ public class LocalFile extends SharedFile
 	{
 		return Paths.get(
 				Misc.deSanitize(
-					getRootDirectory().getFsPath().resolve(path.getFsPath()).toString()));
+					getRootDirectory().getPath().resolve(path.getFsPath()).toString()));
 	}
 
 	public void ensureChecksummed() throws IOException
@@ -215,7 +212,7 @@ public class LocalFile extends SharedFile
 	@Override
 	protected LocalDirectory fillRoot(ConnectionWrapper c, DbLocals locals, int rootId)
 	{
-		return (LocalDirectory) locals.getObject(c, DbTables.DbObjects.LROOT, rootId);
+		return (LocalDirectory) locals.getObject(c, DbTables.DbObjects.ROOT, rootId);
 	}
 
     public void setTags(String tags)

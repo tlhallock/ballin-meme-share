@@ -239,9 +239,8 @@ public class DuplicateFileFrame extends javax.swing.JFrame {
 			
 			while (results.next())
 			{
-				int id = results.getInt("ROOT");
-				SharedFile allocate = (SharedFile) (selectedThingies.get(id).local ? DbObjects.LFILE : DbObjects.RFILE).allocate(results);
-				allocate.fill(connection, results, locals);
+//				int id = results.getInt("ROOT");
+				SharedFile allocate = (SharedFile) DbObjects.SFILE.create(connection, results);
 				LogWrapper.getLogger().fine("Found file " + allocate);
 				
 				String checksum = allocate.getChecksum();

@@ -49,6 +49,7 @@ import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.gui.AddMachine.AddMachineParams;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.MirrorDirectory;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
@@ -61,7 +62,6 @@ import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.util.CloseableIterator;
 import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.Misc;
 
 public class UserActions
 {
@@ -215,16 +215,16 @@ public class UserActions
 		});
 	}
 
-	public static LocalDirectoryView showLocal(LocalDirectory root)
+	public static LocalDirectoryView showLocal(LocalDirectory root, boolean exitOnSave)
 	{
-		LocalDirectoryView localDirectoryView = new LocalDirectoryView(root);
+		LocalDirectoryView localDirectoryView = new LocalDirectoryView(root, exitOnSave);
 		Services.notifications.registerWindow(localDirectoryView);
 		localDirectoryView.setVisible(true);
 		LogWrapper.getLogger().info("Displaying " + root.getName());
 		return localDirectoryView;
 	}
 
-	public static LocalDirectory addLocalImmediately(Path localDirectory, String name)
+	public static LocalDirectory addLocalImmediately(Path localDirectory, String name, boolean mirror)
 	{
 		try
 		{
@@ -236,8 +236,7 @@ public class UserActions
 				name = localDirectory.getFileName().toString();
 			}
 			
-			String dbPath = Misc.sanitizePath(localDirectory.toString(), true);
-			LocalDirectory local2 = DbRoots.getLocal(dbPath);
+			LocalDirectory local2 = DbRoots.getLocal(localDirectory);
 			if (local2 != null)
 			{
 				LogWrapper.getLogger().info("There is already a local directory at " + localDirectory);
@@ -253,7 +252,7 @@ public class UserActions
 				LogWrapper.getLogger().info("Local directory with this name already exists.\nTrying " + name + ".");
 			}
 
-			LocalDirectory local = new LocalDirectory(localDirectory, name);
+			LocalDirectory local = mirror ? new MirrorDirectory(localDirectory, name) : new LocalDirectory(localDirectory, name);
 			local.tryToSave();
 			if (local.getId() == null)
 			{
@@ -280,7 +279,7 @@ public class UserActions
 	public static void remove(final RootDirectory l)
 	{
 		l.stopSynchronizing();
-		Services.userThreads.execute(() -> { DbRoots.deleteRoot(l); });
+		DbRoots.deleteRoot(l);
 	}
 
 	public static void shareWith(final Machine m, final SharingState share)

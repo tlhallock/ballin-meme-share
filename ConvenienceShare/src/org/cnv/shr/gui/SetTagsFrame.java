@@ -11,7 +11,7 @@ import java.util.List;
 import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbFiles;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.SharedFile;
@@ -185,7 +185,7 @@ public class SetTagsFrame extends javax.swing.JFrame {
        for (int i=0; i<rowCount; i++)
        {
            String path = (String) model.getValueAt(i, modelIndex);
-           SharedFile file = DbFiles.getFile(root, DbPaths.getPathElement(path, false));
+           SharedFile file = DbFiles.getFile(DbPaths2.findFilePath(root, path));
            if (!(file instanceof LocalFile))
            {
                continue;

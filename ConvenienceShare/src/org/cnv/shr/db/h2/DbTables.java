@@ -39,11 +39,14 @@ import org.cnv.shr.mdl.IgnorePattern;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.Machine.LocalMachine;
+import org.cnv.shr.mdl.MirrorDirectory;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
+import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.mdl.RootDirectoryType;
 import org.cnv.shr.mdl.SecurityKey;
+import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.LogWrapper;
@@ -58,13 +61,9 @@ public class DbTables
 		IGNORE_PATTERN   ("IGNORE_PATTERN     ".trim(), "I_ID"),
 		PENDING_DOWNLOAD ("DOWNLOAD           ".trim(), "Q_ID"),
 		MESSAGES         ("MESSAGE            ".trim(), "M_ID"), 
-		LROOT            ("ROOT               ".trim(), "R_ID"),
-		RROOT            ("ROOT               ".trim(), "R_ID"),
-		MROOT            ("ROOT               ".trim(), "R_ID"),
-		LFILE            ("SFILE              ".trim(), "F_ID"),
-		RFILE            ("SFILE              ".trim(), "F_ID"),
-		LMACHINE         ("MACHINE            ".trim(), "M_ID"),
-		RMACHINE         ("MACHINE            ".trim(), "M_ID"),
+		ROOT             ("ROOT               ".trim(), "R_ID"),
+		SFILE            ("SFILE              ".trim(), "F_ID"),
+		MACHINE          ("MACHINE            ".trim(), "M_ID"),
 		CHUNK            ("CHUNK              ".trim(), "C_ID"),
 		ROOT_PATH        ("ROOT_PATH          ".trim(), ""),
 		ROOT_CONTAINS    ("ROOT_CONTAINS      ".trim(), ""),
@@ -131,7 +130,18 @@ public class DbTables
 			}
 		}
 
-		public DbObject allocate(ResultSet row) throws SQLException
+		public DbObject create(ConnectionWrapper c, ResultSet row) throws SQLException
+		{
+			return create(c, row, new DbLocals());
+		}
+		public DbObject create(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
+		{
+			DbObject object = allocate(row);
+			object.fill(c, row, locals);
+			return object;
+		}
+
+		private DbObject allocate(ResultSet row) throws SQLException
 		{
 			switch(this)
 			{  
@@ -140,13 +150,32 @@ public class DbTables
 				case IGNORE_PATTERN   : return new IgnorePattern  (row.getInt(pKey));        
 				case PENDING_DOWNLOAD : return new Download       (row.getInt(pKey));
 				case MESSAGES         : return new UserMessage    (row.getInt(pKey));   
-				case LROOT            : return new LocalDirectory (row.getInt(pKey));         
-				case RROOT            : return new RemoteDirectory(row.getInt(pKey));   
-				case LFILE            : return new LocalFile      (row.getInt(pKey));  
-				case RFILE            : return new RemoteFile     (row.getInt(pKey));  
-				case RMACHINE         : return new Machine        (row.getInt(pKey));
-				case LMACHINE         : return Services.localMachine;  
 				case CHUNK            : return new DbChunk        (row.getInt(pKey));
+				case ROOT             : 
+					RootDirectoryType findType = RootDirectoryType.findType(row.getInt("TYPE"));
+					if (findType == null)
+					{
+						throw new RuntimeException("Unkown root type: " + row.getInt("TYPE"));
+					}
+					switch (findType)
+					{
+					case LOCAL:
+						return new LocalDirectory(row.getInt(pKey));
+					case MIRROR:
+						return new MirrorDirectory(row.getInt(pKey));
+					case REMOTE:
+						return new RemoteDirectory(row.getInt(pKey));
+						default:
+							throw new RuntimeException("Unkown root type: " + findType);
+					}
+				case SFILE            :
+					if (row.getBoolean("IS_LOCAL"))
+						return new LocalFile      (row.getInt(pKey));
+					return new RemoteFile     (row.getInt(pKey)); 
+				case MACHINE          : 
+					if (row.getBoolean("IS_LOCAL"))
+						return Services.localMachine;
+					return new Machine        (row.getInt(pKey));
 				default:
 				return null;
 			}
@@ -159,12 +188,9 @@ public class DbTables
 			if (object instanceof IgnorePattern  ) return IGNORE_PATTERN  ;       
 			if (object instanceof Download       ) return PENDING_DOWNLOAD;
 			if (object instanceof UserMessage    ) return MESSAGES        ;  
-			if (object instanceof LocalDirectory ) return LROOT           ;        
-			if (object instanceof RemoteDirectory) return RROOT           ;  
-			if (object instanceof LocalFile      ) return LFILE           ; 
-			if (object instanceof RemoteFile     ) return RFILE           ; 
-			if (object instanceof LocalMachine   ) return LMACHINE        ;
-			if (object instanceof Machine        ) return RMACHINE        ;
+			if (object instanceof RootDirectory  ) return ROOT            ;        
+			if (object instanceof SharedFile     ) return SFILE           ; 
+			if (object instanceof Machine        ) return MACHINE         ;
 			if (object instanceof DbChunk        ) return CHUNK           ;
 			return null;
 		}
@@ -178,20 +204,22 @@ public class DbTables
 		{
 			switch (this)
 			{
-			case RMACHINE:
-			case LMACHINE:
+			case MACHINE:
 				if (id == Services.localMachine.getId())
 				{
 					return Services.localMachine;
 				}
 				break;
+			case ROOT_CONTAINS:
 			case PELEM:
-				if (id == DbPaths2.ROOT.getId())
-				{
-					return DbPaths2.ROOT;
-				}
-				break;
+			case ROOT_PATH:
+				throw new RuntimeException("Can't get path, root path, or root contains from find...");
 			default:
+			}
+			DbObject object = locals.getObject(this, id);
+			if (object != null)
+			{
+				return object;
 			}
 			try (StatementWrapper stmt = c.prepareNewStatement("select * from " + getTableName() + " where " + pKey + " = ?;"))
 			{
@@ -202,9 +230,7 @@ public class DbTables
 					{
 						return null;
 					}
-					DbObject object = allocate(executeQuery);
-					object.fill(c, executeQuery, locals);
-					return object;
+					return create(c, executeQuery, locals);
 				}
 			}
 			catch (SQLException ex)
@@ -216,28 +242,11 @@ public class DbTables
 	}
 	
 
-	public static final DbObjects[] ALL_TABLES  = new DbObjects[]
-	{
-		DbObjects.PUBLIC_KEY      ,
-		DbObjects.PELEM           ,
-		DbObjects.IGNORE_PATTERN  ,
-		DbObjects.PENDING_DOWNLOAD,
-		DbObjects.MESSAGES        , 
-		DbObjects.LROOT           ,
-		DbObjects.LFILE           ,
-		DbObjects.LMACHINE        ,
-		DbObjects.ROOT_CONTAINS   ,
-		DbObjects.SHARE_ROOT      ,
-		DbObjects.CHUNK           ,
-		DbObjects.CHKSUM_REQ      ,
-		DbObjects.ROOT_PATH       ,
-	};
-
 	public static void debugDb()
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();)
 		{
-			for (DbObjects table : ALL_TABLES)
+			for (DbObjects table : DbObjects.values())
 			{
 				table.debug(c);
 			}
@@ -252,7 +261,7 @@ public class DbTables
 	{
 		try
 		{
-			for (DbObjects table : ALL_TABLES)
+			for (DbObjects table : DbObjects.values())
 			{
 				table.delete(c);
 			}

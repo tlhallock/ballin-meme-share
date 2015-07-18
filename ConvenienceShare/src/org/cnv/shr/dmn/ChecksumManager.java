@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -39,7 +40,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.DbFiles;
-import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.dmn.not.NotificationListenerAdapter;
 import org.cnv.shr.gui.DiskUsage;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -58,7 +58,7 @@ public class ChecksumManager extends Thread
 	
 	private boolean stop;
 	
-	private DbIterator<LocalFile> iterator;
+	private Iterator<LocalFile> iterator;
 	
 	public ChecksumManager()
 	{
@@ -102,7 +102,7 @@ public class ChecksumManager extends Thread
 			if (stop) return null;
 			if (iterator == null)
 			{
-				iterator = DbFiles.getSomeUnchecksummedFiles();
+				iterator = DbFiles.getSomeUnchecksummedFiles().iterator();
 				count++;
 			}
 			LocalFile next;
@@ -113,7 +113,6 @@ public class ChecksumManager extends Thread
 				return next;
 			}
 
-			iterator.close();
 			iterator = null;
 			if (count < 2)
 			{
@@ -166,6 +165,7 @@ public class ChecksumManager extends Thread
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to calculate or set checksum of " + sf, e);
 			errors.put(errorsKey, System.currentTimeMillis());
+			iterator = null;
 		}
 	}
 	
@@ -222,7 +222,6 @@ public class ChecksumManager extends Thread
 	{
 		lock.lock();
 		stop = true;
-		iterator.close();
 		condition.signalAll();
 		lock.unlock();
 	}

@@ -42,7 +42,7 @@ import javax.swing.table.DefaultTableModel;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.DiskUsage;
@@ -242,7 +242,7 @@ public class FilesTable extends DbJTable<SharedFile>
     final String basename = (String) currentRow.get("Name");
     final String fullPath = dirname + basename;
     RootDirectory directory = getRootDirectory();
-    return DbFiles.getFile(directory, DbPaths.getPathElement(fullPath, false));
+    return DbFiles.getFile(DbPaths2.findFilePath(directory, fullPath));
 	}
 
 	private RootDirectory getRootDirectory()

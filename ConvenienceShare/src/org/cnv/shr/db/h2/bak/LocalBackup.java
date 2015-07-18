@@ -26,6 +26,7 @@
 package org.cnv.shr.db.h2.bak;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -67,7 +68,7 @@ public class LocalBackup implements Jsonable
 		this.tags = root.getTags();
 		this.minFSize = root.getMinFileSize();
 		this.maxFSize = root.getMaxFileSize();
-		this.path = root.getPath();
+		this.path = root.getPath().toString();
 		this.totalFileSize = root.diskSpace();
 		this.totalNumFiles = root.numFiles();
 		if (path.charAt(path.length() - 1) != '/')
@@ -81,7 +82,7 @@ public class LocalBackup implements Jsonable
 		}
 	}
 	
-	public void save(ConnectionWrapper wrapper)
+	public void save(ConnectionWrapper wrapper) throws IOException
 	{
 		LocalDirectory local = new LocalDirectory(
 				name,

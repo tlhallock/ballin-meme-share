@@ -33,7 +33,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.mdl.LocalDirectory;
@@ -68,8 +68,8 @@ public class FileBackup implements Jsonable
 	public void save(ConnectionWrapper wrapper)
 	{
 		LocalDirectory localByName = DbRoots.getLocalByName(rootName);
-		PathElement element = DbPaths.getPathElement(path, false);
-		LocalFile localFile = new LocalFile(localByName, element, tags, fileSize, lastModified, checksum);
+		PathElement element = DbPaths2.addFilePath(localByName, path);
+		LocalFile localFile = new LocalFile(element, tags, fileSize, lastModified, checksum);
 		try
 		{
 			localFile.save(wrapper);
@@ -79,7 +79,6 @@ public class FileBackup implements Jsonable
 			LogWrapper.getLogger().log(Level.INFO, "Unable to restore file " + path, e);
 			return;
 		}
-		DbPaths.pathLiesIn(element, localByName);
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK

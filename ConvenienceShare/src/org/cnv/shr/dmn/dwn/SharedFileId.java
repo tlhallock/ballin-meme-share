@@ -32,7 +32,7 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
@@ -102,17 +102,17 @@ public class SharedFileId implements Jsonable
 	
 	public LocalFile getLocal()
 	{
-		PathElement pathElement = DbPaths.getPathElement(path, false);
 		LocalDirectory local = DbRoots.getLocalByName(rootName);
-		return DbFiles.getFile(local, pathElement);
+		PathElement pathElement = DbPaths2.findFilePath(local, path);
+		return DbFiles.getLocalFile(pathElement);
 	}
 	
 	public RemoteFile getRemote()
 	{
 		Machine machine = DbMachines.getMachine(machineIdent);
 		RootDirectory root = DbRoots.getRoot(machine, rootName);
-		PathElement pathElement = DbPaths.getPathElement(path, false);
-		return (RemoteFile) DbFiles.getFile(root, pathElement);
+		PathElement pathElement = DbPaths2.findFilePath(root, path);
+		return DbFiles.getRemoteFile(pathElement);
 	}
 	
 	@Override

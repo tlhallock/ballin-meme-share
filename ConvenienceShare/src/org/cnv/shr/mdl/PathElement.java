@@ -35,11 +35,9 @@ import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbFiles;
-import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
-import org.cnv.shr.db.h2.DbPaths;
-import org.cnv.shr.db.h2.DbTables;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.RStringBuilder;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.sync.FileSource;
@@ -72,11 +70,11 @@ public class PathElement extends DbObject<Long>
 		this.pathId = pathId;
 	}
 	
-//	public PathElement(Long id)
-//	{
-//		super(id);
-//	}
-//	
+	public PathElement(Long id)
+	{
+		super(id);
+	}
+	
 //	public PathElement(PathElement parent, String value)
 //	{
 //		super(null);
@@ -135,10 +133,12 @@ public class PathElement extends DbObject<Long>
 	@Override
 	public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException
 	{
-		id       = row.getLong("P_ID");
-		parentId = (PathElement) locals.getObject(c, DbTables.DbObjects.PELEM, row.getInt("PARENT"));
-		broken   = row.getBoolean("BROKEN");
-		value    = row.getString("PELEM");
+		throw new RuntimeException("When does this happen?");
+//		
+//		id       = row.getLong("P_ID");
+//		parentId = (PathElement) locals.getObject(c, DbTables.DbObjects.PELEM, row.getInt("PARENT"));
+//		broken   = row.getBoolean("BROKEN");
+//		value    = row.getString("PELEM");
 	}
 
 	@Override
@@ -223,7 +223,7 @@ public class PathElement extends DbObject<Long>
 		{
 			return;
 		}
-		SharedFile file = DbFiles.getFile(root, this);
+		SharedFile file = DbFiles.getFile(this);
 		if (file != null)
 		{
 			if (file.isLocal())
@@ -251,9 +251,9 @@ public class PathElement extends DbObject<Long>
 			child.downloadAllCurrentlyCached(root, monitor);
 		}
 	}
-	public void getFilesList(RootDirectory root, LinkedList<SharedFile> files)
+	public void getFilesList(LinkedList<SharedFile> files)
 	{
-		SharedFile file = DbFiles.getFile(root, this);
+		SharedFile file = DbFiles.getFile(this);
 		if (file != null)
 		{
 			files.add(file);
@@ -266,7 +266,7 @@ public class PathElement extends DbObject<Long>
 			{
 				continue;
 			}
-			child.getFilesList(root, files);
+			child.getFilesList(files);
 		}
 	}
 	
@@ -279,23 +279,22 @@ public class PathElement extends DbObject<Long>
 		PathElement current = this;
 		while (current != null)
 		{
-			try (DbIterator<PathElement> iterator = DbPaths.listPathElements(local, current);)
+			for (PathElement next : DbPaths2.listPaths(local, current))
 			{
-				while (iterator.hasNext())
+				if (next.equals(this))
 				{
-					PathElement next = iterator.next();
-					if (next.isBroken())
-					{
-						brokenQueue.add(next);
-					}
-					else
-					{
-						returnValue.add(next);
-					}
+					continue;
 				}
-
-				current = brokenQueue.isEmpty() ? null : brokenQueue.removeLast();
+				if (next.isBroken())
+				{
+					brokenQueue.add(next);
+				}
+				else
+				{
+					returnValue.add(next);
+				}
 			}
+			current = brokenQueue.isEmpty() ? null : brokenQueue.removeLast();
 		}
 		returnValue.sort(PATH_COMPARATOR);
 		return returnValue;

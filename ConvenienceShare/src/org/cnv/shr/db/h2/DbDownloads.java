@@ -131,9 +131,7 @@ public class DbDownloads
 				{
 					return null;
 				}
-				DbObject allocate = DbObjects.PENDING_DOWNLOAD.allocate(executeQuery);
-				allocate.fill(c, executeQuery, new DbLocals());
-				return (Download) allocate;
+				return (Download) DbObjects.PENDING_DOWNLOAD.create(c, executeQuery);
 			}
 		}
 		catch (SQLException e)

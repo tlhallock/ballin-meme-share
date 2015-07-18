@@ -27,6 +27,7 @@ package org.cnv.shr.db.h2;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
@@ -34,13 +35,9 @@ import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbIterator.NullIterator;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.PathElement;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.mdl.RootDirectory;
-import org.cnv.shr.mdl.RootDirectoryType;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.util.LogWrapper;
 
@@ -48,23 +45,21 @@ public class DbFiles
 {
 	private static final QueryWrapper SELECT2   = new QueryWrapper("select * from SFILE where F_ID=?;");
 	private static final QueryWrapper DELETE1   = new QueryWrapper("delete from SFILE where F_ID=?;");
-	private static final QueryWrapper DELETE2   = new QueryWrapper("delete from SFILE where not exists (select RID from ROOT_CONTAINS where ROOT_CONTAINS.RID = SFILE.ROOT and ROOT_CONTAINS.PELEM=SFILE.PELEM);");
-	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from SFILE where PELEM=? and ROOT=?;");
-	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.TYPE in (" + RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ") and CHKSUM=? and FSIZE=? LIMIT 1;");
-	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.TYPE in (" + RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ") and SFILE.CHKSUM IS NULL and SFILE.MODIFIED < ? LIMIT 200;");
-	private static final QueryWrapper CHECKED   = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.TYPE in (" + RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ") and SFILE.CHKSUM IS NOT NULL;");
-	private static final QueryWrapper ALL       = new QueryWrapper("select * from SFILE join ROOT on SFILE.ROOT=ROOT.R_ID where ROOT.TYPE in (" + RootDirectoryType.LOCAL.getDbValue() + ", " + RootDirectoryType.MIRROR.getDbValue() + ");");
+	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from SFILE where PATH=?;");
+	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE where IS_LOCAL and CHKSUM=? and FSIZE=? LIMIT 1;");
+	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE where IS_LOCAL and SFILE.CHKSUM IS NULL and SFILE.MODIFIED < ? LIMIT 100;");
+	private static final QueryWrapper CHECKED   = new QueryWrapper("select * from SFILE where IS_LOCAL and SFILE.CHKSUM IS NOT NULL;");
+	private static final QueryWrapper ALL       = new QueryWrapper("select * from SFILE where IS_LOCAL;");
 	
 	
 	
 
-	public static SharedFile getFile(RootDirectory root, PathElement element)
+	public static SharedFile getFile(PathElement element)
 	{
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(SELECT1);)
+				 StatementWrapper stmt = c.prepareStatement(SELECT1);)
 		{
 			stmt.setLong(1, element.getId());
-			stmt.setInt(2, root.getId());
 
 			try (ResultSet executeQuery = stmt.executeQuery();)
 			{
@@ -72,10 +67,9 @@ public class DbFiles
 				{
 					return null;
 				}
-				DbObjects lfile = root.isLocal() ? DbTables.DbObjects.LFILE : DbTables.DbObjects.RFILE;
-				DbObject allocate = lfile.allocate(executeQuery);
-				allocate.fill(c, executeQuery, new DbLocals().setObject(element).setObject(root));
-				return (SharedFile) allocate;
+				return (SharedFile) DbObjects.SFILE.create(c, executeQuery, new DbLocals()
+						.setObject(element)
+						.setObject(element.getRoot()));
 			}
 		}
 		catch (SQLException e)
@@ -100,13 +94,14 @@ public class DbFiles
 		}
 	}
 	
-	public static RemoteFile getFile(RemoteDirectory root, PathElement element)
+	public static RemoteFile getRemoteFile(PathElement element)
 	{
-		return (RemoteFile) getFile((RootDirectory) root, element);
+		return (RemoteFile) getFile(element);
 	}
-	public static LocalFile getFile(LocalDirectory root, PathElement element)
+	
+	public static LocalFile getLocalFile(PathElement element)
 	{
-		return (LocalFile) getFile((RootDirectory) root, element);
+		return (LocalFile) getFile(element);
 	}
 
 	public static SharedFile getFile(int int1)
@@ -122,9 +117,7 @@ public class DbFiles
 				{
 					return null;
 				}
-				DbObject allocated = DbTables.DbObjects.RFILE.allocate(executeQuery);
-				allocated.fill(c, executeQuery, new DbLocals());
-				return (SharedFile) allocated;
+				return (SharedFile) DbTables.DbObjects.SFILE.create(c, executeQuery);
 			}
 		}
 		catch (SQLException e)
@@ -152,9 +145,7 @@ public class DbFiles
 				{
 					return null;
 				}
-				DbObject allocated = DbTables.DbObjects.LFILE.allocate(executeQuery);
-				allocated.fill(c, executeQuery, new DbLocals());
-				return (LocalFile) allocated;
+				return (LocalFile) DbTables.DbObjects.SFILE.create(c, executeQuery);
 			}
 		}
 		catch (SQLException e)
@@ -166,20 +157,27 @@ public class DbFiles
 	
 
 
-	public static DbIterator<LocalFile> getSomeUnchecksummedFiles()
+	public static LinkedList<LocalFile> getSomeUnchecksummedFiles()
 	{
-		ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-		try
+		LinkedList<LocalFile> returnValue = new LinkedList<>();
+		
+		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+				 StatementWrapper prepareStatement = c.prepareStatement(UNCHECKED);)
 		{
-			StatementWrapper prepareStatement = c.prepareStatement(UNCHECKED);
 			prepareStatement.setLong(1, System.currentTimeMillis() - 5 * 60 * 1000);
-			return new DbIterator<LocalFile>(c, prepareStatement.executeQuery(), DbTables.DbObjects.LFILE);
+			try (ResultSet results = prepareStatement.executeQuery())
+			{
+				while (results.next())
+				{
+					returnValue.add((LocalFile) DbTables.DbObjects.SFILE.create(c, results));
+				}
+			}
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to list files without a checksum", e);
-			return new NullIterator<LocalFile>();
 		}
+		return returnValue;
 	}
 
 	public static DbIterator<LocalFile> getChecksummedFiles()
@@ -189,7 +187,7 @@ public class DbFiles
 			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 			StatementWrapper prepareStatement = c.prepareStatement(CHECKED);
 			prepareStatement.setFetchSize(50);
-			return new DbIterator<LocalFile>(c, prepareStatement.executeQuery(), DbTables.DbObjects.LFILE);
+			return new DbIterator<LocalFile>(c, prepareStatement.executeQuery(), DbTables.DbObjects.SFILE);
 		}
 		catch (SQLException e)
 		{
@@ -205,7 +203,7 @@ public class DbFiles
 			ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 			StatementWrapper prepareStatement = c.prepareStatement(ALL);
 			prepareStatement.setFetchSize(50);
-			return new DbIterator<LocalFile>(c, prepareStatement.executeQuery(), DbTables.DbObjects.LFILE);
+			return new DbIterator<LocalFile>(c, prepareStatement.executeQuery(), DbTables.DbObjects.SFILE);
 		}
 		catch (SQLException e)
 		{
@@ -214,17 +212,16 @@ public class DbFiles
 		}
 	}
 
-	public static void cleanFiles()
-	{
-		
-		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				 StatementWrapper wrapper = c.prepareStatement(DELETE2);)
-		{
-			wrapper.execute();
-		}
-		catch (SQLException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable clean unused files.", e);
-		}
-	}
+//	public static void cleanFiles()
+//	{
+//		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
+//				 StatementWrapper wrapper = c.prepareStatement(DELETE2);)
+//		{
+//			wrapper.execute();
+//		}
+//		catch (SQLException e)
+//		{
+//			LogWrapper.getLogger().log(Level.INFO, "Unable clean unused files.", e);
+//		}
+//	}
 }

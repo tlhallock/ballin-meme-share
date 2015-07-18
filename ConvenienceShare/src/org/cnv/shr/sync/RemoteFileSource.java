@@ -29,12 +29,10 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 
-import org.cnv.shr.db.h2.DbPaths;
 import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.msg.PathList;
 import org.cnv.shr.msg.PathListChild;
@@ -62,7 +60,7 @@ public class RemoteFileSource implements FileSource
 	private RemoteFileSource(RemoteSynchronizerQueue s, PathElement p, String name, boolean directory)
 	{
 		sync = s;
-		pathElement = DbPaths.getPathElement(p, name, directory);
+		pathElement = DbPaths2.addPathTo(p.getRoot(), p, name, directory);
 	}
 	
 	RemoteSynchronizerQueue getQueue()
@@ -162,7 +160,7 @@ public class RemoteFileSource implements FileSource
 	}
 	
 	@Override
-	public SharedFile create(RootDirectory local2, PathElement element) throws IOException, FileOutsideOfRootException
+	public SharedFile create(PathElement element) throws IOException, FileOutsideOfRootException
 	{
 		return remoteFile;
 	}

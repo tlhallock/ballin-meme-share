@@ -61,7 +61,7 @@ public class LocalDirectory extends RootDirectory
 			String path2, 
 			SharingState defaultSharingState,
 			Long totalFileSize,
-			Long totalNumFiles)
+			Long totalNumFiles) throws IOException
 	{
 		super(null);
 		this.machine = Services.localMachine;
@@ -70,7 +70,9 @@ public class LocalDirectory extends RootDirectory
 		this.tags = tags;
 		this.minFSize = minFSize;
 		this.maxFSize = maxFSize;
-		this.path = Paths.get(path2).toAbsolutePath();
+		this.path = Paths.get(path2).toAbsolutePath().normalize();
+		Misc.ensureDirectory(path, false);
+		this.path = path.toRealPath();
 		this.defaultShare = defaultSharingState;
 		if (defaultShare == null)
 		{
@@ -144,16 +146,11 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	public String getPath()
-	{
-		return path.toString();
-	}
-	
-	public Path getFsPath()
+	public Path getPath()
 	{
 		return path;
 	}
-
+	
 	@Override
 	protected RootSynchronizer createSynchronizer(JFrame origin) throws IOException, InterruptedException
 	{

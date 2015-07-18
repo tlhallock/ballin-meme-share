@@ -74,6 +74,6 @@ public class RemoteFile extends SharedFile
 	@Override
 	protected RemoteDirectory fillRoot(ConnectionWrapper c, DbLocals locals, int rootId)
 	{
-		return (RemoteDirectory) locals.getObject(c, DbTables.DbObjects.RROOT, rootId);
+		return (RemoteDirectory) locals.getObject(c, DbTables.DbObjects.ROOT, rootId);
 	}
 }

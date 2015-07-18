@@ -83,7 +83,7 @@ public class RootListChild implements Jsonable
 		isShared    = SharingState.get(reader.readInt());
 	}
 	
-	RemoteDirectory createRoot(Machine machine)
+	RemoteDirectory createRoot(Machine machine) throws IOException
 	{
 		RootDirectory root = DbRoots.getRoot(machine, name);
 		if (root != null && !root.isLocal())

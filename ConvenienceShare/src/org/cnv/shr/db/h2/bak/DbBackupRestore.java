@@ -272,7 +272,7 @@ public class DbBackupRestore
 	private static void readMachines(JsonParser parser, 
 			ConnectionWrapper wrapper,
 			DbRestoreProgress p,
-			CountingInputStream newInputStream)
+			CountingInputStream newInputStream) throws IOException
 	{
 		Event next;
 		while (parser.hasNext())
@@ -292,7 +292,7 @@ public class DbBackupRestore
 	private static void readDirectories(JsonParser parser,
 			ConnectionWrapper wrapper, 
 			DbRestoreProgress p, 
-			CountingInputStream newInputStream)
+			CountingInputStream newInputStream) throws IOException
 	{
 		Event next;
 		while (parser.hasNext())
@@ -332,7 +332,7 @@ public class DbBackupRestore
 	private static void readDownloads(JsonParser parser,
 			ConnectionWrapper wrapper, 
 			DbRestoreProgress p, 
-			CountingInputStream newInputStream)
+			CountingInputStream newInputStream) throws IOException
 	{
 		Event next;
 		while (parser.hasNext())

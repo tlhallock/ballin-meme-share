@@ -26,6 +26,7 @@
 package org.cnv.shr.db.h2.bak;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.sql.SQLException;
@@ -86,13 +87,13 @@ public class MachineBackup implements Jsonable
 			while (iterator.hasNext())
 			{
 				RootDirectory next = iterator.next();
-				String fullPath = next.getPath();
+				String fullPath = next.getPath().toString();
 				roots.put(next.getName(), fullPath);
 			}
 		}
 	}
 	
-	public void save(ConnectionWrapper wrapper)
+	public void save(ConnectionWrapper wrapper) throws IOException
 	{
 		Machine machine = new Machine(
 				ip,

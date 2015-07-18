@@ -528,28 +528,7 @@ public class Misc
 			builder.setLength(0);
 			try (ResultSet executeQuery2 = c.prepareStatement("select * from " + tableName + ";").executeQuery();)
 			{
-				int ncols = executeQuery2.getMetaData().getColumnCount();
-				for (int i = 1; i <= ncols; i++)
-				{
-					builder.append(executeQuery2.getMetaData().getColumnName(i)).append(",");
-				}
-				builder.append('\n');
-				LogWrapper.getLogger().info(builder.toString());
-				builder.setLength(0);
-
-				while (executeQuery2.next())
-				{
-					for (int i = 1; i <= ncols; i++)
-					{
-						builder.append(executeQuery2.getObject(i)).append(",");
-					}
-					builder.append('\n');
-					LogWrapper.getLogger().info(builder.toString());
-					builder.setLength(0);
-				}
-				builder.append("----------------------------------------------").append('\n');
-				LogWrapper.getLogger().info(builder.toString());
-				builder.setLength(0);
+				debugQuery(builder, executeQuery2);
 			}
 		}
 		catch (SQLException ex)
@@ -557,6 +536,33 @@ public class Misc
 			LogWrapper.getLogger().log(Level.INFO, "Unable to debug", ex);
 		}
 	}
+	
+	public static void debugQuery(StringBuilder builder, ResultSet executeQuery2) throws SQLException
+	{
+		int ncols = executeQuery2.getMetaData().getColumnCount();
+		for (int i = 1; i <= ncols; i++)
+		{
+			builder.append(executeQuery2.getMetaData().getColumnName(i)).append(",");
+		}
+		builder.append('\n');
+		LogWrapper.getLogger().info(builder.toString());
+		builder.setLength(0);
+
+		while (executeQuery2.next())
+		{
+			for (int i = 1; i <= ncols; i++)
+			{
+				builder.append(executeQuery2.getObject(i)).append(",");
+			}
+			builder.append('\n');
+			LogWrapper.getLogger().info(builder.toString());
+			builder.setLength(0);
+		}
+		builder.append("----------------------------------------------").append('\n');
+		LogWrapper.getLogger().info(builder.toString());
+		builder.setLength(0);
+	}
+	
 	public static HashSet<String> collectIps()
 	{
 		HashSet<String> ips = new HashSet<>();

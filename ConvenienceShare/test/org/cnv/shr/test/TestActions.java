@@ -1,5 +1,6 @@
 package org.cnv.shr.test;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.nio.file.Paths;
@@ -7,7 +8,7 @@ import java.util.LinkedList;
 
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbMachines;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
@@ -98,9 +99,9 @@ public class TestActions
 		}
 		
 		@Override
-		public void perform()
+		public void perform() throws IOException
 		{
-			UserActions.userSync(null, DbRoots.getLocal(local), null);
+			UserActions.userSync(null, DbRoots.getLocal(Paths.get(local)), null);
 		}
 	};
 	public static class ADD_LOCAL extends TestAction
@@ -117,7 +118,7 @@ public class TestActions
 		@Override
 		public void perform()
 		{
-			UserActions.addLocalImmediately(Paths.get(local), name);
+			UserActions.addLocalImmediately(Paths.get(local), name, false);
 		}
 	};
 	public static class SYNC_REMOTE extends TestAction
@@ -149,9 +150,9 @@ public class TestActions
 		}
 		
 		@Override
-		public void perform()
+		public void perform() throws IOException
 		{
-			UserActions.remove(DbRoots.getLocal(local));
+			UserActions.remove(DbRoots.getLocal(Paths.get(local)));
 		}
 	};
 	public static class SHARE_WITH extends TestAction
@@ -189,9 +190,9 @@ public class TestActions
 		{
 			UserActions.download(
 					DbFiles.getFile(
-							DbRoots.getRoot(
-									DbMachines.getMachine(ident), name), 
-							DbPaths.getPathElement(path, false)));
+							DbPaths2.findFilePath(
+									DbRoots.getRoot(
+											DbMachines.getMachine(ident), name), path)));
 		}
 	};
 	

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 
 import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
@@ -36,12 +37,12 @@ import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbFiles;
 import org.cnv.shr.db.h2.DbLocals;
 import org.cnv.shr.db.h2.DbObject;
-import org.cnv.shr.db.h2.DbTables;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.trck.FileEntry;
 
 public abstract class SharedFile extends DbObject<Integer>
 {
-	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into SFILE key(PELEM, ROOT) values ((select F_ID from SFILE where PELEM=? and ROOT=?), ?, ?, ?, ?, ?, ?, ?, ?);");
+	private static final QueryWrapper MERGE1 = new QueryWrapper("merge into SFILE key(PATH, ROOT) values ((select F_ID from SFILE where PATH=? and ROOT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	
 	
 	protected RootDirectory rootDirectory;
@@ -100,7 +101,7 @@ public abstract class SharedFile extends DbObject<Integer>
 		return checksum;
 	}
 
-	public void setChecksum(String checksum) throws IOException
+	public void setChecksum(String checksum) throws IOException, SQLException
 	{
 		this.checksum = checksum;
 	}
@@ -129,7 +130,8 @@ public abstract class SharedFile extends DbObject<Integer>
 		int rootId = row.getInt("ROOT");
 		
 		rootDirectory =  fillRoot(c, locals, rootId);
-		path          =    (PathElement) locals.getObject(c, DbTables.DbObjects.PELEM, row.getInt("PELEM"));
+		path          =  DbPaths2.getPath(row.getLong("PATH"));
+		Objects.requireNonNull(path);
 		
 		tags = row.getString("TAGS");
 		fileSize = row.getLong("FSIZE");
@@ -156,6 +158,7 @@ public abstract class SharedFile extends DbObject<Integer>
 			stmt.setInt(ndx++, 0/*remote state*/);
 			stmt.setLong(ndx++, lastModified);
 			stmt.setInt(ndx++, 0 /*error*/);
+			stmt.setBoolean(ndx++, isLocal());
 			stmt.executeUpdate();
 			try (ResultSet generatedKeys = stmt.getGeneratedKeys();)
 			{
@@ -168,7 +171,7 @@ public abstract class SharedFile extends DbObject<Integer>
 
 				if (id == null)
 				{
-					id = DbFiles.getFile(rootDirectory, path).getId();
+					id = DbFiles.getFile(path).getId();
 				}
 				return true;
 			}

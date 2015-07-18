@@ -81,9 +81,7 @@ public class DbMessages
 				{
 					return null;
 				}
-				DbObject allocate = DbObjects.MESSAGES.allocate(results);
-				allocate.fill(c, results, new DbLocals());
-				return (UserMessage) allocate;
+				return (UserMessage) DbObjects.MESSAGES.create(c, results);
 			}
 		}
 		catch (SQLException e)

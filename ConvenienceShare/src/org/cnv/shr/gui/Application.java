@@ -227,7 +227,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 
 	private void makeDebugItems()
 	{
-		for (DbObjects table : DbTables.ALL_TABLES)
+		for (DbObjects table : DbObjects.values())
 		{
 			JMenuItem item = new JMenuItem(table.getTableName());
 			item.addActionListener((ActionEvent e) -> {
@@ -1335,18 +1335,19 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 				return;
 			}
 			Services.userThreads.execute(() -> {
-				LocalDirectory local = UserActions.addLocalImmediately(Paths.get(fc.getSelectedFile().getAbsolutePath()), null);
+				LocalDirectory local = UserActions.addLocalImmediately(Paths.get(fc.getSelectedFile().getAbsolutePath()), null, false);
 				if (local == null)
 				{
 					return;
 				}
 				locals.refresh();
 				
-				UserActions.showLocal(local).addWindowListener(new WindowAdapter() {
+				UserActions.showLocal(local, true).addWindowListener(new WindowAdapter() {
 					@Override
 					public void windowClosed(WindowEvent e)
 					{
 						List<SynchronizationListener> singletonList = Collections.singletonList(createLocalListener(local));
+						LogWrapper.getLogger().info("Why doesn't this work?");
 						UserActions.userSync(app, local, singletonList);
 					}
 				});
@@ -1816,7 +1817,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 	{
 		final DefaultTableModel model = (DefaultTableModel) localsView.getModel();
 		int row = -1;
-		String path = root.getPath();
+		String path = root.getPath().toString();
 		for (int i = 0; i < localsView.getRowCount(); i++)
 		{
 			if (model.getValueAt(i, 0).equals(path))

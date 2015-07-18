@@ -50,7 +50,7 @@ import org.cnv.shr.db.h2.DbChunks.ChunkState;
 import org.cnv.shr.db.h2.DbChunks.DbChunk;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
-import org.cnv.shr.db.h2.DbPaths;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadManager.GuiInfo;
@@ -58,9 +58,10 @@ import org.cnv.shr.dmn.trk.ClientTrackerClient;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Download;
 import org.cnv.shr.mdl.Download.DownloadState;
-import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.MirrorDirectory;
+import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
@@ -540,13 +541,23 @@ public class DownloadInstance implements Runnable
 			download.setState(DownloadState.FAILED);
 		}
 
-		LocalDirectory local = getLocalDirectory();
+		MirrorDirectory local;
+		try
+		{
+			local = getLocalDirectory();
+		}
+		catch (IOException e1)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get local directory", e1);
+			fail("Unable to get mirror directory.");
+			return;
+		}
 		if (local != null)
 		{
 			try
 			{
-				LocalFile localFile = new LocalFile(local, remoteFile.getPath());
-				DbPaths.pathLiesIn(remoteFile.getPath(), local);
+				PathElement addFilePath = DbPaths2.addFilePath(local, remoteFile.getPath().getFullPath());
+				LocalFile localFile = new LocalFile(addFilePath);
 				localFile.save(Services.h2DbCache.getThreadConnection());
 				
 				Services.userThreads.execute(() ->
@@ -560,23 +571,21 @@ public class DownloadInstance implements Runnable
 			}
 		}
 
-		DownloadInstance instance = this;
-
 		// Don't hold this lock...
 		Services.downloads.downloadThreads.execute(() -> { Services.downloads.remove(remoteFile.getFileEntry()); });
 		Services.downloads.removeGuiInfo(downloadId);
 		Services.notifications.downloadDone(this);
 	}
 
-	private LocalDirectory getLocalDirectory()
+	private MirrorDirectory getLocalDirectory() throws IOException
 	{
 		Path localRoot = remoteFile.getRootDirectory().getLocalRoot();
 		Misc.ensureDirectory(localRoot, true);
 		
-		LocalDirectory local = DbRoots.getLocal(localRoot.toString());
+		MirrorDirectory local = (MirrorDirectory) DbRoots.getLocal(localRoot);
 		if (local == null)
 		{
-			local = UserActions.addLocalImmediately(localRoot, remoteFile.getRootDirectory().getLocalMirrorName());
+			local = (MirrorDirectory) UserActions.addLocalImmediately(localRoot, remoteFile.getRootDirectory().getLocalMirrorName(), true);
 			if (local == null)
 			{
 				fail("Unable to create local mirror");
@@ -585,14 +594,14 @@ public class DownloadInstance implements Runnable
 		return local;
 	}
 
-	public synchronized void setDestinationFile()
+	public synchronized void setDestinationFile() throws IOException
 	{
-		LocalDirectory localDirectory = getLocalDirectory();
+		MirrorDirectory localDirectory = getLocalDirectory();
 		if (localDirectory == null)
 		{
 			return;
 		}
-		Path path = localDirectory.getFsPath();
+		Path path = localDirectory.getPath();
 		destination = PathSecurity.secureMakeDirs(path, Paths.get(remoteFile.getPath().getFullPath()));
 		if (destination == null)
 		{

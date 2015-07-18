@@ -139,7 +139,7 @@ public class PathTreeModelNode implements TaskListener
 		{
 			return null;
 		}
-		return DbFiles.getFile(rootDir, element);
+		return DbFiles.getFile(element);
 	}
 	
 	public synchronized void syncFully(RootDirectory rootDir)
@@ -254,7 +254,7 @@ public class PathTreeModelNode implements TaskListener
 			{
 				continue;
 			}
-			final SharedFile file = DbFiles.getFile(rootDir, childElement);
+			final SharedFile file = DbFiles.getFile(childElement);
 			if (file == null)
 			{
 				continue;
@@ -290,7 +290,7 @@ public class PathTreeModelNode implements TaskListener
 
 		if (recursive)
 		{
-			element.getFilesList(model.getRootDirectory(), list);
+			element.getFilesList(list);
 			return list;
 		}
 		
