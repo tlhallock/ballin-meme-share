@@ -506,6 +506,7 @@ public class MachineViewer extends javax.swing.JFrame
         ((PathTreeModel) filesTree.getModel()).setRoot(directory);
         filesManager.setFilters("", "");
         filesManager.refresh();
+        // TODO: dble check this
         if (directory.isLocal())
         {
         	updatePermissionBoxesLocal();

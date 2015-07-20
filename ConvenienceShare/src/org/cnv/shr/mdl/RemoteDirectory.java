@@ -67,12 +67,6 @@ public class RemoteDirectory extends RootDirectory
 	}
 
 	@Override
-	public boolean isLocal()
-	{
-		return false;
-	}
-	
-	@Override
 	public Path getPath()
 	{
 		return path;

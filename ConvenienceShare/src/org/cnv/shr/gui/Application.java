@@ -1830,8 +1830,9 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 		{
 			return null;
 		}
-
+		
 		final HashMap<String, Object> map = new HashMap<>();
+		map.put("Path", path);
 		
 		final int dirRow = row;
 		return new DebugListener(root)

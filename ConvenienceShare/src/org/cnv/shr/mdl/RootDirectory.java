@@ -121,7 +121,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 			stmt.setString(ndx++, getTags());
 			stmt.setString(ndx++, getDescription());
 			stmt.setInt(ndx++, getMachine().getId());
-			stmt.setBoolean(ndx++, isLocal());
+			stmt.setInt(ndx++, getType().getDbValue());
 			stmt.setLong(ndx++, totalFileSize);
 			stmt.setLong(ndx++, totalNumFiles);
 			stmt.setString(ndx++, getName());
@@ -204,9 +204,7 @@ public abstract class RootDirectory extends DbObject<Integer>
 		totalFileSize = DbRoots.getTotalFileSize(this);
 		tryToSave();
 	}
-
-	public abstract boolean isLocal();
-
+	
 	public long numFiles()
 	{
 		return totalNumFiles;
@@ -352,4 +350,10 @@ public abstract class RootDirectory extends DbObject<Integer>
 
 	protected abstract void setDefaultSharingState(SharingState sharingState);
 	protected abstract void setPath(String pathStr);
+
+	public final boolean isLocal()
+	{
+		return getType().equals(RootDirectoryType.LOCAL)
+				|| getType().equals(RootDirectoryType.MIRROR);
+	}
 }

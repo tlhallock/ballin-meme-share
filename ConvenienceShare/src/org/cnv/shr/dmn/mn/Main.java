@@ -51,7 +51,7 @@ public class Main
 	{
 		Arguments a = new Arguments();
 		a.parseArgs(args);
-		a.deleteDb = true;
+//		a.deleteDb = true;
 		SplashScreen screen = null;
 		if (a.showGui)
 		{

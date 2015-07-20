@@ -140,12 +140,6 @@ public class LocalDirectory extends RootDirectory
 	}
 
 	@Override
-	public boolean isLocal()
-	{
-		return true;
-	}
-
-	@Override
 	public Path getPath()
 	{
 		return path;
