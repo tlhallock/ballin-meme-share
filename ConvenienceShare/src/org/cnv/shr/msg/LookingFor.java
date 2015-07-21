@@ -99,8 +99,8 @@ public class LookingFor extends DownloadMessage
 	public void parse(JsonParser parser) {       
 		String key = null;                         
 		boolean needsFileSize = true;
-		boolean needsChecksum = true;
 		boolean needsDescriptor = true;
+		boolean needsChecksum = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -110,20 +110,20 @@ public class LookingFor extends DownloadMessage
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
 				}
-				if (needsChecksum)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
-				}
 				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+				}
+				if (needsChecksum)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("fileSize")) {
 					needsFileSize = false;
 					fileSize = Long.parseLong(parser.getString());
@@ -131,20 +131,20 @@ public class LookingFor extends DownloadMessage
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("checksum")) {
-					needsChecksum = false;
-					checksum = parser.getString();
+			case START_OBJECT:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("descriptor")) {
+					needsDescriptor = false;
+					descriptor = new FileEntry(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_OBJECT:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("descriptor")) {
-					needsDescriptor = false;
-					descriptor = new FileEntry(parser);
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("checksum")) {
+					needsChecksum = false;
+					checksum = parser.getString();
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
@@ -156,13 +156,13 @@ public class LookingFor extends DownloadMessage
 	public static String getJsonName() { return "LookingFor"; }
 	public String getJsonKey() { return getJsonName(); }
 	public LookingFor(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 
 	@Override

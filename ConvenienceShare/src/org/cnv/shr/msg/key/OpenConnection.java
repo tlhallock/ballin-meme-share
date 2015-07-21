@@ -148,7 +148,7 @@ public class OpenConnection extends KeyMessage
 				key = parser.getString();              
 				break;                                 
 			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "sourcePublicKey":
 					needsSourcePublicKey = false;
@@ -171,12 +171,12 @@ public class OpenConnection extends KeyMessage
 	public static String getJsonName() { return "OpenConnection"; }
 	public String getJsonKey() { return getJsonName(); }
 	public OpenConnection(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

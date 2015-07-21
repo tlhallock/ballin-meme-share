@@ -153,7 +153,7 @@ public class FileRequest extends DownloadMessage
 				key = parser.getString();              
 				break;                                 
 			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("chunkSize")) {
 					needsChunkSize = false;
 					chunkSize = Long.parseLong(parser.getString());
@@ -162,7 +162,7 @@ public class FileRequest extends DownloadMessage
 				}
 				break;
 			case START_OBJECT:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("descriptor")) {
 					needsDescriptor = false;
 					descriptor = new FileEntry(parser);
@@ -177,12 +177,12 @@ public class FileRequest extends DownloadMessage
 	public static String getJsonName() { return "FileRequest"; }
 	public String getJsonKey() { return getJsonName(); }
 	public FileRequest(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

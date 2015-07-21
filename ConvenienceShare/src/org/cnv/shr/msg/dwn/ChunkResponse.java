@@ -119,18 +119,14 @@ public class ChunkResponse extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsIsCompressed = true;
 		boolean needsChunk = true;
 		boolean needsDescriptor = true;
+		boolean needsIsCompressed = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsIsCompressed)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isCompressed");
-				}
 				if (needsChunk)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunk");
@@ -139,30 +135,16 @@ public class ChunkResponse extends DownloadMessage
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
 				}
+				if (needsIsCompressed)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isCompressed");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_FALSE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("isCompressed")) {
-					needsIsCompressed = false;
-					isCompressed = false;
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_TRUE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("isCompressed")) {
-					needsIsCompressed = false;
-					isCompressed = true;
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case START_OBJECT:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "chunk":
 					needsChunk = false;
@@ -175,6 +157,24 @@ public class ChunkResponse extends DownloadMessage
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
+			case VALUE_FALSE:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("isCompressed")) {
+					needsIsCompressed = false;
+					isCompressed = false;
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_TRUE:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("isCompressed")) {
+					needsIsCompressed = false;
+					isCompressed = true;
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
@@ -182,12 +182,12 @@ public class ChunkResponse extends DownloadMessage
 	public static String getJsonName() { return "ChunkResponse"; }
 	public String getJsonKey() { return getJsonName(); }
 	public ChunkResponse(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

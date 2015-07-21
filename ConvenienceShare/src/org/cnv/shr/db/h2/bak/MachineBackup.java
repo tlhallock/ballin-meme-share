@@ -176,15 +176,15 @@ public class MachineBackup implements Jsonable
 		String key = null;                         
 		boolean needsPort = true;
 		boolean needsNports = true;
+		boolean needsKeys = true;
+		boolean needsAllowsMessages = true;
+		boolean needsPin = true;
+		boolean needsRoots = true;
 		boolean needsIp = true;
 		boolean needsName = true;
 		boolean needsIdentifier = true;
 		boolean needsWeShareToThem = true;
 		boolean needsSharesWithUs = true;
-		boolean needsKeys = true;
-		boolean needsAllowsMessages = true;
-		boolean needsPin = true;
-		boolean needsRoots = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -197,6 +197,22 @@ public class MachineBackup implements Jsonable
 				if (needsNports)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
+				}
+				if (needsKeys)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
+				}
+				if (needsAllowsMessages)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
+				}
+				if (needsPin)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
+				}
+				if (needsRoots)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
 				}
 				if (needsIp)
 				{
@@ -218,28 +234,12 @@ public class MachineBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
 				}
-				if (needsKeys)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
-				}
-				if (needsAllowsMessages)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
-				}
-				if (needsPin)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
-				}
-				if (needsRoots)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "port":
 					needsPort = false;
@@ -252,8 +252,54 @@ public class MachineBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
+			case START_ARRAY:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("keys")) {
+					needsKeys = false;
+					keys.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_FALSE:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "allowsMessages":
+					needsAllowsMessages = false;
+					allowsMessages = false;
+					break;
+				case "pin":
+					needsPin = false;
+					pin = false;
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_TRUE:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "allowsMessages":
+					needsAllowsMessages = false;
+					allowsMessages = true;
+					break;
+				case "pin":
+					needsPin = false;
+					pin = true;
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("roots")) {
+					needsRoots = false;
+					roots.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "ip":
 					needsIp = false;
@@ -278,52 +324,6 @@ public class MachineBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("keys")) {
-					needsKeys = false;
-					keys.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_FALSE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "allowsMessages":
-					needsAllowsMessages = false;
-					allowsMessages = false;
-					break;
-				case "pin":
-					needsPin = false;
-					pin = false;
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_TRUE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "allowsMessages":
-					needsAllowsMessages = false;
-					allowsMessages = true;
-					break;
-				case "pin":
-					needsPin = false;
-					pin = true;
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case START_OBJECT:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("roots")) {
-					needsRoots = false;
-					roots.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
@@ -331,12 +331,12 @@ public class MachineBackup implements Jsonable
 	public static String getJsonName() { return "MachineBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public MachineBackup(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

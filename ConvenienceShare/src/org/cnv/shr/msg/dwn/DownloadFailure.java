@@ -96,39 +96,39 @@ public class DownloadFailure extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsMessage = true;
 		boolean needsDescriptor = true;
+		boolean needsMessage = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsMessage)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
-				}
 				if (needsDescriptor)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+				}
+				if (needsMessage)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("message")) {
-					needsMessage = false;
-					message = parser.getString();
+			case START_OBJECT:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("descriptor")) {
+					needsDescriptor = false;
+					descriptor = new FileEntry(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_OBJECT:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("descriptor")) {
-					needsDescriptor = false;
-					descriptor = new FileEntry(parser);
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("message")) {
+					needsMessage = false;
+					message = parser.getString();
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
@@ -140,12 +140,12 @@ public class DownloadFailure extends DownloadMessage
 	public static String getJsonName() { return "DownloadFailure"; }
 	public String getJsonKey() { return getJsonName(); }
 	public DownloadFailure(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -103,6 +103,16 @@ import org.cnv.shr.msg.swup.GotLogs;
 import org.cnv.shr.msg.swup.UpdateInfoMessage;
 import org.cnv.shr.msg.swup.UpdateInfoRequest;
 import org.cnv.shr.msg.swup.UpdateInfoRequestRequest;
+import org.cnv.shr.phone.clnt.OperatorInfo;
+import org.cnv.shr.phone.msg.ClientInfo;
+import org.cnv.shr.phone.msg.Dial;
+import org.cnv.shr.phone.msg.Hangup;
+import org.cnv.shr.phone.msg.HeartBeatRequest;
+import org.cnv.shr.phone.msg.HeartBeatResponse;
+import org.cnv.shr.phone.msg.NoMoreMessages;
+import org.cnv.shr.phone.msg.PhoneRing;
+import org.cnv.shr.phone.msg.VoiceMail;
+import org.cnv.shr.phone.srv.ServerSettings;
 import org.cnv.shr.prts.JsonPortMapping;
 import org.cnv.shr.prts.PortMapArguments;
 import org.cnv.shr.trck.CommentEntry;
@@ -130,6 +140,7 @@ public class GenerateParserCode
 		Paths.get("/work/ballin-meme-share/Updater/src"),
 		Paths.get("/work/ballin-meme-share/Installer/src"),
 		Paths.get("/work/ballin-meme-share/Tracker/src"),
+		Paths.get("/work/ballin-meme-share/PhoneService/src"),
 	};
 	
 	
@@ -217,6 +228,18 @@ public class GenerateParserCode
 				ShowApplication.class            ,
 				ConnectionReason.class           ,
 				
+				
+				OperatorInfo.class,
+				ServerSettings.class,
+				VoiceMail.class,
+				PhoneRing.class,
+				HeartBeatRequest.class,
+				Hangup.class,
+				HeartBeatResponse.class,
+				Dial.class,
+				NoMoreMessages.class,
+				ClientInfo.class,
+				
 				org.cnv.shr.db.h2.bak.LocalBackup.class,
 				org.cnv.shr.db.h2.bak.MachineBackup.class,
 				org.cnv.shr.db.h2.bak.FileBackup.class,
@@ -247,11 +270,11 @@ public class GenerateParserCode
 		}
 	}
 
-	private static void printParser(PrintStream output, Class<?> c)
+	private static void printParser(PrintStream output, Class<?> c, boolean minimal)
 	{
 		HashMap<Event, List<Parser>> parsers = getParsersFor(c);
 		// if none, we can make it cooler
-		printParsers(parsers, output);
+		printParsers(parsers, output, minimal);
 	}
 
 	private static HashMap<Event, List<Parser>> getParsersFor(Class<?> c)
@@ -310,7 +333,7 @@ public class GenerateParserCode
 		return parser;
 	}
 	
-	private static void printParsers(HashMap<JsonParser.Event, List<Parser>> parsers, PrintStream ps)
+	private static void printParsers(HashMap<JsonParser.Event, List<Parser>> parsers, PrintStream ps, boolean minimal)
 	{
 		HashSet<String> alreadyValidated = new HashSet<>();
 		ps.println("\t@Override                                    ");
@@ -344,10 +367,17 @@ public class GenerateParserCode
 		ps.println("\t\t\t	break;                                 ");
                 parsers.entrySet().stream().forEach((entry) -> {
                     entry.getValue().stream().forEach((p) -> {
-                        p.print(ps);
+                        p.print(ps, minimal);
                     });
             });
-		ps.println("\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown type found in message: \" + e);");
+    if (minimal)
+    {
+  		ps.println("\t\t\tdefault: Services.logger.warning(\"Unknown type found in message: \" + e);");
+    }
+    else
+    {
+  		ps.println("\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown type found in message: \" + e);");
+    }
 		ps.println("\t\t\t}");
 		ps.println("\t\t}");
 		ps.println("\t}");
@@ -393,10 +423,10 @@ public class GenerateParserCode
                     });
 		}
 
-		public void print(PrintStream ps)
+		public void print(PrintStream ps, boolean minimal)
 		{
 			ps.println("\t\t\tcase " + jsonType.name() + ":");
-			ps.println("\t\t\t\tif (key==null) { LogWrapper.getLogger().warning(\"Value with no key!\"); break; }");
+			ps.println("\t\t\t\tif (key==null) { throw new RuntimeException(\"Value with no key!\"); }");
 
 			if (fields.size() == 1)
 			{
@@ -409,7 +439,15 @@ public class GenerateParserCode
           }
           ps.println("\t\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
           ps.println("\t\t\t\t} else {");
-          ps.println("\t\t\t\t\tLogWrapper.getLogger().warning(\"Unknown key: \" + key);");
+          
+          if (minimal)
+          {
+          	ps.println("\t\t\t\t\tServices.logger.warning(\"Unknown key: \" + key);");
+          }
+          else
+          {
+          	ps.println("\t\t\t\t\tLogWrapper.getLogger().warning(\"Unknown key: \" + key);");
+          }
 				}
 			}
 			else
@@ -425,19 +463,26 @@ public class GenerateParserCode
 					ps.println("\t\t\t\t\t" + f.getName() + getAssignment(jsonType, f) + ";");
 					ps.println("\t\t\t\t\tbreak;");
 				}
-				ps.println("\t\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown key: \" + key);");
+        if (minimal)
+        {
+        	ps.println("\t\t\t\tdefault: Services.logger.warning(\"Unknown key: \" + key);");
+        }
+        else
+        {
+        	ps.println("\t\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown key: \" + key);");
+        }
 			}
 			ps.println("\t\t\t\t}");
 			// ps.println("\t\t\tkey=null;");
 			ps.println("\t\t\t\tbreak;");
 		}
 		
-		public void print(StringBuilder builder)
+		public void print(StringBuilder builder, boolean minimal)
 		{
 			ByteArrayOutputStream writer = new ByteArrayOutputStream();
 			try (PrintStream stream = new PrintStream(writer))
 			{
-				print(stream);
+				print(stream, minimal);
 			}
 			builder.append(writer.toString());
 		}
@@ -488,6 +533,9 @@ public class GenerateParserCode
 		
 		case "[B":               return " = Misc.format(parser.getString())";
 		case "java.lang.String": return " = parser.getString()";
+		case "java.nio.file.Path": return " = Paths.get(parser.getString())";
+		case "org.cnv.shr.phone.cmn.PhoneNumberWildCard": return " = new org.cnv.shr.phone.cmn.PhoneNumberWildCard(parser)";
+		case "org.cnv.shr.phone.cmn.PhoneNumber": return " = new org.cnv.shr.phone.cmn.PhoneNumber(parser)";
 		default:
 		}
 		throw new RuntimeException("Need an assignment for " + f.getType().getName());
@@ -502,6 +550,8 @@ public class GenerateParserCode
 		case "org.cnv.shr.json.JsonStringSet":
 		case "org.cnv.shr.json.JsonStringList":
 			return JsonParser.Event.START_ARRAY;
+		case "org.cnv.shr.phone.cmn.PhoneNumberWildCard": 
+		case "org.cnv.shr.phone.cmn.PhoneNumber":
 		case "org.cnv.shr.json.JsonStringMap":
 		case "org.cnv.shr.json.JsonMap":
 			return JsonParser.Event.START_OBJECT;
@@ -530,6 +580,7 @@ public class GenerateParserCode
 		case "org.cnv.shr.db.h2.SharingState":
 		case "[B":
 		case "java.security.PublicKey":
+		case "java.nio.file.Path":
 		case "java.lang.String":
 			return JsonParser.Event.VALUE_STRING;
 		default:
@@ -538,7 +589,7 @@ public class GenerateParserCode
 		}
 	}
 
-	private static void printGenerator(PrintStream output, Class<?> c)
+	private static void printGenerator(PrintStream output, Class<?> c, boolean minimal)
 	{
 		output.println("\t@Override");
 		output.println("\tpublic void generate(JsonGenerator generator, String key) {");
@@ -636,6 +687,13 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 	case "double":
 		output.println("\t\tgenerator.write(\"" + fieldName + "\", " + fieldName + ");");
 		break;
+	case "java.nio.file.Path":
+		output.println("\t\tgenerator.write(\"" + fieldName + "\", " + fieldName + ".toString());");
+		break;
+	case "org.cnv.shr.phone.cmn.PhoneNumber":
+	case "org.cnv.shr.phone.cmn.PhoneNumberWildCard":
+		output.println("\t\t" + fieldName + ".generate(generator, \"" + fieldName + "\");");
+		break;
 	default:
 		throw new RuntimeException("Nothing for " + typeName + " " + fieldName);
 	}
@@ -652,13 +710,15 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 				return resolve;
 			}
 		}
-		return null;
+		throw new RuntimeException("Unable to find class for " + c.getName());
 	}
 	
 	private static void replaceFile(Class<?> c) throws IOException 
 	{
 		Path original = getPathForFile(c);
 		Path backup   = Paths.get(original.toString() + ".new");
+		
+		boolean minimal = original.toString().contains("PhoneService");
 		
 		try (PrintStream output = new PrintStream(Files.newOutputStream(backup));
 				 BufferedReader input  = Files.newBufferedReader(original);)
@@ -681,11 +741,12 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 				case 1: // skipping
 					if (line.contains(GENERATOR_UNIQUE) && line.contains("END"))
 					{
-						printGenerator(output, c);
-						printParser(output, c);
+						printGenerator(output, c, minimal);
+						printParser(output, c, minimal);
 						printType(output, c);
+						if (!minimal)
 						printConstructor(output, c);
-						printToString(output, c);
+						printToString(output, c, minimal);
 //						printValidator(output, c);
 						output.println(line);
 						state = 2;
@@ -705,15 +766,22 @@ private static void printField(PrintStream output, Class<?> typeName, String fie
 		Files_move(backup, original);
 	}
 
-	private static void printToString(PrintStream output, Class<?> c)
+	private static void printToString(PrintStream output, Class<?> c, boolean minimal)
 	{
-		output.println("\tpublic String toDebugString() {                                                    ");
-		output.println("\t\tByteArrayOutputStream output = new ByteArrayOutputStream();                      ");
-		output.println("\t\ttry (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {");
-		output.println("\t\t\tgenerate(generator, null);                                                     ");
-		output.println("\t\t}                                                                                ");
-		output.println("\t\treturn new String(output.toByteArray());                                         ");
-		output.println("\t}                                                                                  ");
+		output.println("\tpublic String toDebugString() {                                                      ");
+		output.println("\t\tByteArrayOutputStream output = new ByteArrayOutputStream();                        ");
+		if (minimal)                                                                                        
+		{                                                                                                   
+			output.println("\t\ttry (JsonGenerator generator = Services.createGenerator(output, true);)         {");
+		}
+		else
+		{
+			output.println("\t\ttry (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {");
+		}
+		output.println("\t\t\tgenerate(generator, null);                                                       ");
+		output.println("\t\t}                                                                                  ");
+		output.println("\t\treturn new String(output.toByteArray());                                           ");
+		output.println("\t}                                                                                    ");
 	}
 
 	private static void printConstructor(PrintStream ps, Class<?> c)

@@ -77,7 +77,7 @@ public class JsonPortMapping implements Jsonable
 				key = parser.getString();              
 				break;                                 
 			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "internalPort":
 					needsInternalPort = false;
@@ -91,7 +91,7 @@ public class JsonPortMapping implements Jsonable
 				}
 				break;
 			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "ip":
 					ip = parser.getString();
@@ -114,12 +114,12 @@ public class JsonPortMapping implements Jsonable
 	public static String getJsonName() { return "JsonPortMapping"; }
 	public String getJsonKey() { return getJsonName(); }
 	public JsonPortMapping(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

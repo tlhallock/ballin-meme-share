@@ -202,12 +202,12 @@ public class DownloadBackup implements Jsonable
 		boolean needsAdded = true;
 		boolean needsPriority = true;
 		boolean needsChunkSize = true;
+		boolean needsChunks = true;
 		boolean needsRemoteMachine = true;
 		boolean needsRemoteDirectory = true;
 		boolean needsRemotePath = true;
 		boolean needsChecksum = true;
 		boolean needsCurrentDownloadState = true;
-		boolean needsChunks = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -233,6 +233,10 @@ public class DownloadBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
 				}
+				if (needsChunks)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
+				}
 				if (needsRemoteMachine)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteMachine");
@@ -253,16 +257,12 @@ public class DownloadBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentDownloadState");
 				}
-				if (needsChunks)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "fileSize":
 					needsFileSize = false;
@@ -287,8 +287,17 @@ public class DownloadBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
+			case START_ARRAY:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("chunks")) {
+					needsChunks = false;
+					chunks.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "remoteMachine":
 					needsRemoteMachine = false;
@@ -316,15 +325,6 @@ public class DownloadBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("chunks")) {
-					needsChunks = false;
-					chunks.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
@@ -332,12 +332,12 @@ public class DownloadBackup implements Jsonable
 	public static String getJsonName() { return "DownloadBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public DownloadBackup(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

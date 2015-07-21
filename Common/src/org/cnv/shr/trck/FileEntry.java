@@ -166,7 +166,7 @@ public class FileEntry extends TrackObject
 				key = parser.getString();              
 				break;                                 
 			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("fileSize")) {
 					needsFileSize = false;
 					fileSize = Long.parseLong(parser.getString());
@@ -175,7 +175,7 @@ public class FileEntry extends TrackObject
 				}
 				break;
 			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("checksum")) {
 					needsChecksum = false;
 					checksum = parser.getString();
@@ -190,12 +190,12 @@ public class FileEntry extends TrackObject
 	public static String getJsonName() { return "FileEntry"; }
 	public String getJsonKey() { return getJsonName(); }
 	public FileEntry(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }

@@ -82,35 +82,44 @@ public class PortMapArguments implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsAction = true;
 		boolean needsPorts = true;
+		boolean needsAction = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsAction)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
-				}
 				if (needsPorts)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ports");
+				}
+				if (needsAction)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("routerIndex")) {
 					routerIndex = Integer.parseInt(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
+			case START_ARRAY:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("ports")) {
+					needsPorts = false;
+					ports.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "upnpLib":
 					upnpLib = parser.getString();
@@ -122,15 +131,6 @@ public class PortMapArguments implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("ports")) {
-					needsPorts = false;
-					ports.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
@@ -138,13 +138,13 @@ public class PortMapArguments implements Jsonable
 	public static String getJsonName() { return "PortMapArguments"; }
 	public String getJsonKey() { return getJsonName(); }
 	public PortMapArguments(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 
 }

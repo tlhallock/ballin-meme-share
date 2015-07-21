@@ -137,10 +137,10 @@ public class LocalBackup implements Jsonable
 		String key = null;                         
 		boolean needsMinFSize = true;
 		boolean needsMaxFSize = true;
+		boolean needsIgnores = true;
 		boolean needsName = true;
 		boolean needsDescription = true;
 		boolean needsPath = true;
-		boolean needsIgnores = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -154,6 +154,10 @@ public class LocalBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs maxFSize");
 				}
+				if (needsIgnores)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ignores");
+				}
 				if (needsName)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
@@ -166,16 +170,12 @@ public class LocalBackup implements Jsonable
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
 				}
-				if (needsIgnores)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ignores");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
 			case VALUE_NUMBER:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "minFSize":
 					needsMinFSize = false;
@@ -194,8 +194,17 @@ public class LocalBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
+			case START_ARRAY:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("ignores")) {
+					needsIgnores = false;
+					ignores.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "name":
 					needsName = false;
@@ -218,15 +227,6 @@ public class LocalBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				if (key.equals("ignores")) {
-					needsIgnores = false;
-					ignores.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
@@ -234,13 +234,13 @@ public class LocalBackup implements Jsonable
 	public static String getJsonName() { return "LocalBackup"; }
 	public String getJsonKey() { return getJsonName(); }
 	public LocalBackup(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	
 	

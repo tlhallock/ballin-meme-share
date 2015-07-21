@@ -292,24 +292,16 @@ public class PathList extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsName = true;
-		boolean needsCurrentPath = true;
 		boolean needsSubDirs = true;
 		boolean needsChildren = true;
 		boolean needsIsTheEnd = true;
+		boolean needsName = true;
+		boolean needsCurrentPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsName)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
-				}
-				if (needsCurrentPath)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPath");
-				}
 				if (needsSubDirs)
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs subDirs");
@@ -322,26 +314,20 @@ public class PathList extends Message
 				{
 					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isTheEnd");
 				}
+				if (needsName)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+				}
+				if (needsCurrentPath)
+				{
+					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPath");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
-				switch(key) {
-				case "name":
-					needsName = false;
-					name = parser.getString();
-					break;
-				case "currentPath":
-					needsCurrentPath = false;
-					currentPath = parser.getString();
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case START_ARRAY:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "subDirs":
 					needsSubDirs = false;
@@ -355,7 +341,7 @@ public class PathList extends Message
 				}
 				break;
 			case VALUE_FALSE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("isTheEnd")) {
 					needsIsTheEnd = false;
 					isTheEnd = false;
@@ -364,12 +350,26 @@ public class PathList extends Message
 				}
 				break;
 			case VALUE_TRUE:
-				if (key==null) { LogWrapper.getLogger().warning("Value with no key!"); break; }
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("isTheEnd")) {
 					needsIsTheEnd = false;
 					isTheEnd = true;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "currentPath":
+					needsCurrentPath = false;
+					currentPath = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
@@ -379,12 +379,12 @@ public class PathList extends Message
 	public static String getJsonName() { return "PathList"; }
 	public String getJsonKey() { return getJsonName(); }
 	public PathList(JsonParser parser) { parse(parser); }
-	public String toDebugString() {                                                    
-		ByteArrayOutputStream output = new ByteArrayOutputStream();                      
+	public String toDebugString() {                                                      
+		ByteArrayOutputStream output = new ByteArrayOutputStream();                        
 		try (JsonGenerator generator = TrackObjectUtils.createGenerator(output, true);) {
-			generate(generator, null);                                                     
-		}                                                                                
-		return new String(output.toByteArray());                                         
-	}                                                                                  
+			generate(generator, null);                                                       
+		}                                                                                  
+		return new String(output.toByteArray());                                           
+	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 }
