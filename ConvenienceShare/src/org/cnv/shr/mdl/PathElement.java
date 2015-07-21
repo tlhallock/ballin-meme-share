@@ -26,7 +26,6 @@
 package org.cnv.shr.mdl;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -68,11 +67,21 @@ public class PathElement extends DbObject<Long>
 		this.value = value;
 		this.broken = broken;
 		this.pathId = pathId;
+		
+		if (value == null || value.length() == 0)
+		{
+			throw new RuntimeException("Cannot create zero length path!");
+		}
 	}
 	
 	public PathElement(Long id)
 	{
 		super(id);
+	}
+	
+	public boolean isRoot()
+	{
+		return false;
 	}
 	
 //	public PathElement(PathElement parent, String value)
@@ -196,19 +205,12 @@ public class PathElement extends DbObject<Long>
 		{
 			return fullPath;
 		}
-		PathElement c = this;
-		RStringBuilder builder = new RStringBuilder();
-		while (c.getParent() != c)
-		{
-			builder.preppend(c.value);
-			c = c.getParent();
-		}
-		return fullPath = builder.toString();
+		return getParent().getFullPath() + value;
 	}
 	
 	public String getFsPath()
 	{
-		return Misc.deSanitize(getFullPath());
+		return Misc.deSanitize(getFullPath().substring(1));
 	}
 
 	public interface CollectingFilesMonitor
@@ -242,7 +244,7 @@ public class PathElement extends DbObject<Long>
 			return;
 		}
 		
-		for (PathElement child : list(root))
+		for (PathElement child : list())
 		{
 			if (child.equals(this))
 			{
@@ -260,7 +262,7 @@ public class PathElement extends DbObject<Long>
 			return;
 		}
 		
-		for (PathElement child : list(root))
+		for (PathElement child : list())
 		{
 			if (child.equals(this))
 			{
@@ -270,7 +272,7 @@ public class PathElement extends DbObject<Long>
 		}
 	}
 	
-	public LinkedList<PathElement> list(RootDirectory local)
+	public LinkedList<PathElement> list()
 	{
 		LinkedList<PathElement> returnValue = new LinkedList<>();
 		LinkedList<PathElement> brokenQueue = new LinkedList<PathElement>();
@@ -279,7 +281,7 @@ public class PathElement extends DbObject<Long>
 		PathElement current = this;
 		while (current != null)
 		{
-			for (PathElement next : DbPaths2.listPaths(local, current))
+			for (PathElement next : DbPaths2.listPaths(current))
 			{
 				if (next.equals(this))
 				{
@@ -341,14 +343,6 @@ public class PathElement extends DbObject<Long>
 			c = c.getParent();
 		}
 		return c;
-	}
-
-	public boolean isAbsolute()
-	{
-		return getUnbrokenName().startsWith("/") || getId() == 0 || Paths.get(getUnbrokenName()).isAbsolute()
-				// This probably shouldn't be here...
-				|| (Misc.getOperatingSystem().equals(Misc.OperatingSystem.Windows)
-						&& getUnbrokenName().length() >= 2 && getUnbrokenName().charAt(1) == ':');
 	}
 
 	public static final Comparator<PathElement> PATH_COMPARATOR = new Comparator<PathElement>()

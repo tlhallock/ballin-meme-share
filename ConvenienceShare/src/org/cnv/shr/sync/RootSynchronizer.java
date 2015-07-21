@@ -217,10 +217,6 @@ public abstract class RootSynchronizer implements Runnable, Closeable
 			final LinkedList<Pair> subDirectories, 
 			final PathElement element) throws IOException, SQLException
 	{
-		if (element.isAbsolute())
-		{
-			return;
-		}
 		accountedFor.add(element.getUnbrokenName());
 
 		final FileSource fsCopy = files.get(element.getUnbrokenName());

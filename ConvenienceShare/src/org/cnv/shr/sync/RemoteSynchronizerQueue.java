@@ -146,8 +146,9 @@ public class RemoteSynchronizerQueue implements Closeable
 	
 	private void ensureQueued(final PathElement path) throws IOException, InterruptedException
 	{
-		if (queue.contains(path.getFullPath())
-				|| directories.containsKey(path.getFullPath()))
+		String fullPath = path.getFullPath();
+		
+		if (queue.contains(fullPath) || directories.containsKey(fullPath))
 		{
 			return;
 		}
@@ -156,10 +157,10 @@ public class RemoteSynchronizerQueue implements Closeable
 			return;
 		}
 
-		LogWrapper.getLogger().info("Queuing \"" + path.getFullPath() + "\"");
+		LogWrapper.getLogger().info("Queuing \"" + fullPath + "\"");
 		lastCommunication = System.currentTimeMillis();
 		getConnection().send(new ListPath(root, path));
-		queue.add(path.getFullPath());
+		queue.add(fullPath);
 	}
 	
 	public void queueDirectoryList(final PathElement path) throws IOException, InterruptedException

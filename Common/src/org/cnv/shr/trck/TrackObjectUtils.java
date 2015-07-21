@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -82,6 +83,9 @@ public class TrackObjectUtils
 			@Override
 			public int read(char[] cbuf, int offset, int length) throws IOException
 			{
+				System.out.println("BEGIN read from stream buffer");
+				try
+				{
 				int amountToRead = length;
 				int available = input.available();
 				if (amountToRead > available)
@@ -92,8 +96,10 @@ public class TrackObjectUtils
 				// This doesn't hurt, because we can block for 1 byte: we aren't waiting while we have something to return.
 				if (amountToRead < 1 && cbuf.length > 0)
 				{
+					System.out.println("Reading another anyway...");
 					amountToRead = 1;
 				}
+				amountToRead = 1;
 				int read = super.read(cbuf, offset, amountToRead);
 				if (read == 0)
 				{
@@ -103,8 +109,17 @@ public class TrackObjectUtils
 				{
 					LogWrapper.getLogger().info("Hit end of stream while inside json...");
 				}
+				if (read > 0)
+				{
+					LogWrapper.getLogger().info("Returned json: " + new String(Arrays.copyOfRange(cbuf, offset, offset + read)) + "\n");
+				}
 				
 				return read;
+				}
+				finally
+				{
+					System.out.println("End read from stream buffer");
+				}
 			}
 		});
 		return parser;

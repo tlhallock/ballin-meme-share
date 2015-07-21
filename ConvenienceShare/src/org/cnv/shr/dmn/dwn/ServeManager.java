@@ -25,13 +25,16 @@
 
 package org.cnv.shr.dmn.dwn;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalFile;
+import org.cnv.shr.msg.Wait;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -39,14 +42,14 @@ public class ServeManager
 {
 	private static final int REFRESH_PERIOD = 10 * 1000;
 	
-	private HashMap<String, ServeInstance> serves = new HashMap<>();
+	private Hashtable<String, ServeInstance> serves = new Hashtable<>();
 	
 	public synchronized ServeInstance getServeInstance(Communication communication)
 	{
 		return serves.get(communication.getUrl());
 	}
 
-	public synchronized ServeInstance serve(LocalFile file, Communication c)
+	public synchronized ServeInstance serve(LocalFile file, Communication c) throws IOException
 	{
 		for (ServeInstance instance : serves.values())
 		{
@@ -58,7 +61,19 @@ public class ServeManager
 		
 		if (serves.size() >= Services.settings.maxSimServers.get())
 		{
+			Services.userThreads.execute(() -> {
+				synchronized (serves)
+				{
+					for (ServeInstance instance : serves.values())
+					{
+						instance.dblCheckConnection();
+					}
+				}
+			});
+			
 			LogWrapper.getLogger().info("Over number of simultaneous servers.");
+			c.send(new Wait());
+			c.finish();
 			return null;
 		}
 		
@@ -80,7 +95,7 @@ public class ServeManager
 	public synchronized List<ServeInstance> getServeInstances()
 	{
 		LinkedList<ServeInstance> returnValue = new LinkedList<>();
-		returnValue.addAll(serves.values());
+		returnValue.addAll(((Map<String, ServeInstance>) serves.clone()).values());
 		return returnValue;
 	}
 }

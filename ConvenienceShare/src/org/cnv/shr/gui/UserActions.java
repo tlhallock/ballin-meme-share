@@ -279,7 +279,7 @@ public class UserActions
 	public static void remove(final RootDirectory l)
 	{
 		l.stopSynchronizing();
-		DbRoots.deleteRoot(l);
+		DbRoots.deleteRoot(l, true);
 	}
 
 	public static void shareWith(final Machine m, final SharingState share)

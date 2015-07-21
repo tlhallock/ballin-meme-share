@@ -111,24 +111,31 @@ public abstract class RootDirectory extends DbObject<Integer>
 		{
 			this.name = name.substring(0, MAX_DIRECTORY_NAME_LENGTH);
 		}
+		int rootPathId = DbRootPaths.getRootPath(getPath());
+		if (rootPathId < 0)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to save root, as there is no root path.");
+			return false;
+		}
+		
 		try (StatementWrapper stmt = c.prepareStatement(MERGE1);)
 		{
 			int ndx = 1;
-			stmt.setInt(ndx++, getMachine().getId());
+			stmt.setInt   (ndx++, getMachine().getId());
 			stmt.setString(ndx++, getName());
 
-			stmt.setInt(ndx++, DbRootPaths.getRootPath(getPath()));
+			stmt.setInt   (ndx++, rootPathId);
 			stmt.setString(ndx++, getTags());
 			stmt.setString(ndx++, getDescription());
-			stmt.setInt(ndx++, getMachine().getId());
-			stmt.setInt(ndx++, getType().getDbValue());
-			stmt.setLong(ndx++, totalFileSize);
-			stmt.setLong(ndx++, totalNumFiles);
+			stmt.setInt   (ndx++, getMachine().getId());
+			stmt.setInt   (ndx++, getType().getDbValue());
+			stmt.setLong  (ndx++, totalFileSize);
+			stmt.setLong  (ndx++, totalNumFiles);
 			stmt.setString(ndx++, getName());
-			stmt.setInt(ndx++, getDbSharing().getDbValue());
-			stmt.setLong(ndx++, minFSize);
-			stmt.setLong(ndx++, maxFSize);
-			stmt.setInt(ndx++, permissionFlags);
+			stmt.setInt   (ndx++, getDbSharing().getDbValue());
+			stmt.setLong  (ndx++, minFSize);
+			stmt.setLong  (ndx++, maxFSize);
+			stmt.setInt   (ndx++, permissionFlags);
 			
 			stmt.executeUpdate();
 			try (final ResultSet generatedKeys = stmt.getGeneratedKeys();)
@@ -140,11 +147,6 @@ public abstract class RootDirectory extends DbObject<Integer>
 				}
 				return false;
 			}
-		}
-		catch (IOException e)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to save root:", e);
-			return false;
 		}
 	}
 	

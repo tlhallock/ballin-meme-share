@@ -42,7 +42,7 @@ public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterato
 	public ConsecutiveDirectorySyncIterator(final RootDirectory remoteDirectory, final FileSource f) throws IOException, InterruptedException
 	{
 		root = remoteDirectory;
-		stack.addLast(new Node(new SynchronizationTask(DbPaths2.ROOT, root, f.listFiles())));
+		stack.addLast(new Node(new SynchronizationTask(DbPaths2.getRoot(root), f.listFiles())));
 		first = true;
 	}
 
@@ -93,7 +93,7 @@ public class ConsecutiveDirectorySyncIterator extends SyncrhonizationTaskIterato
 				
 				try (FileSourceIterator grandChildren = childFile.listFiles();)
 				{
-					stack.addLast(new Node(new SynchronizationTask(dbDir, root, grandChildren)));
+					stack.addLast(new Node(new SynchronizationTask(dbDir, grandChildren)));
 					index++;
 					return true;
 				}

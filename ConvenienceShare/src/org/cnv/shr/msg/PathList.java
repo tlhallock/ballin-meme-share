@@ -75,17 +75,18 @@ public class PathList extends Message
 		currentPath = pathElement.getFullPath();
 	}
 	
-	static void listPaths(final LocalDirectory localByName, final PathElement pathElement, Communication communication) throws IOException, PermissionException
+	static void listPaths(final PathElement pathElement, Communication communication) throws IOException, PermissionException
 	{
+		LocalDirectory localByName = (LocalDirectory) pathElement.getRoot();
 		checkPermissionsVisible(communication, communication.getMachine(), localByName, "List a path");
 
 		System.out.println("Listing " + localByName.getName() + ":" + pathElement.getFullPath());
 		
 		int count = 0;
 		PathList currentMessage = new PathList(localByName, pathElement);
-		for (final PathElement element : pathElement.list(localByName))
+		for (final PathElement element : pathElement.list())
 		{
-			if (element.getId() == 0 || element.getFullPath().equals("/"))
+			if (element.isRoot())
 			{
 				continue;
 			}
@@ -159,7 +160,7 @@ public class PathList extends Message
 //		return builder.toString();
 
 		final StringBuilder builder = new StringBuilder();
-		System.out.println("[machine=" + name + "   currentpath=" + currentPath + "]:");
+		builder.append("[root=\"" + name + "\" currentpath=\"" + currentPath + "\"]:");
 		builder.append("\tSubdirectories: " + subDirs.size());
 		builder.append("\tFiles: " + children.size());
 		return builder.toString();

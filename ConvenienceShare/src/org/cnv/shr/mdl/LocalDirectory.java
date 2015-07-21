@@ -36,6 +36,7 @@ import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.sync.ConsecutiveDirectorySyncIterator;
 import org.cnv.shr.sync.FileFileSource;
 import org.cnv.shr.sync.FileSource;
@@ -148,10 +149,10 @@ public class LocalDirectory extends RootDirectory
 	@Override
 	protected RootSynchronizer createSynchronizer(JFrame origin) throws IOException, InterruptedException
 	{
-		// This is probably not necessary...
 		if (Files.isSymbolicLink(path) || !Files.isDirectory(path))
 		{
-			throw new RuntimeException("Symbolic link: " + path + ". Skipping");
+			UserActions.remove(this);
+			throw new RuntimeException("Root no longer exists: " + path + ". Skipping");
 		}
 		FileSource source = new FileFileSource(path.toFile(), DbRoots.getIgnores(this));
 		return new LocalSynchronizer(this, new ConsecutiveDirectorySyncIterator(this, source));

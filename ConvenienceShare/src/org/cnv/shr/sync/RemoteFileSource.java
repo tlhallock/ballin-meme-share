@@ -47,7 +47,7 @@ public class RemoteFileSource implements FileSource
 	public RemoteFileSource(RemoteDirectory r, RemoteSynchronizerQueue queue) throws UnknownHostException, IOException
 	{
 		this.sync = queue;
-		this.pathElement = DbPaths2.ROOT;
+		this.pathElement = DbPaths2.getRoot(r);
 	}
 	
 	private RemoteFileSource(RemoteSynchronizerQueue s, RemoteFile f)

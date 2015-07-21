@@ -206,7 +206,7 @@ public class SynchronizationTests extends RemotesTest
 			};
 			
 			final Listener listener = new Listener();
-			iterator.queueSyncTask(rootSource, DbPaths2.ROOT, listener);
+			iterator.queueSyncTask(rootSource, DbPaths2.getRoot(rootDirectory), listener);
 			
 			// meant to be killed forcefully...
 			new Thread(synchronizer).start();

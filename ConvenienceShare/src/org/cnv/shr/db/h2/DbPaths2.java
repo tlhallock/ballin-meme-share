@@ -1,11 +1,20 @@
 package org.cnv.shr.db.h2;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
+
+import javax.json.stream.JsonGenerator;
 
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
@@ -13,21 +22,34 @@ import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RootDirectory;
+import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.LogWrapper;
 
 public class DbPaths2
 {
-	public static PathElement ROOT = new PathElement((long) 0, null, null, "", false, 0)
+	public static PathElement getRoot(RootDirectory root)
 	{
-		@Override
-		public PathElement getParent()
+		return new PathElement((long) 0, root, null, "/", false, 0)
 		{
-			return ROOT;
-		}
-		@Override
-		public void fill(ConnectionWrapper c, ResultSet row, DbLocals locals) throws SQLException {}
-	};
-	
+			@Override
+			public PathElement getParent()
+			{
+				return this;
+			}
+
+			public String getFullPath()
+			{
+				return "/";
+			}
+
+			public boolean isRoot()
+			{
+				return true;
+			}
+			
+			public RootDirectory getRoot() { return root; }
+		};
+	}
 	
 	private static final QueryWrapper GET_PATH_ID         = new QueryWrapper("select P_ID from PELEM where PELEM = ?;");
 	private static final QueryWrapper INSERT_PATH_ID      = new QueryWrapper("merge into PELEM key(PELEM) values(DEFAULT, ?, ?);");
@@ -42,13 +64,15 @@ public class DbPaths2
 	private static final QueryWrapper LIST                  = new QueryWrapper(
 			"select RC_ID, P_ID, BROKEN, PELEM.PELEM from ROOT_CONTAINS "
 			+ "join PELEM on ROOT_CONTAINS.PELEM = PELEM.P_ID "
-			+ "where PARENT=?;");
+			+ "where RID = ? "
+			+ "and RC_ID <> 0 "
+			+ "and PARENT=?;");
 
 	private static final QueryWrapper COUNT_PATHS           = new QueryWrapper("select count(P_ID) from PELEM;");
 	private static final QueryWrapper COUNT_CONTAINS        = new QueryWrapper("select count(RC_ID) from ROOT_CONTAINS;");
 	
 
-	private static final QueryWrapper CLEAN_PELEM           = new QueryWrapper("delete from PELEM where not exists (select count(RC_ID) from ROOT_CONTAINS where ROOT_CONTAINS.PELEM=PELEM.P_ID);");
+	private static final QueryWrapper CLEAN_PELEM           = new QueryWrapper("delete from PELEM where not exists (select RC_ID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM=PELEM.P_ID limit 1);");
 	
 //	private static final QueryWrapper GET_PATH              = new QueryWrapper(
 //			"select RID, P_ID, BROKEN, PELEM.PELEM from ROOT_CONTAINS "
@@ -93,7 +117,7 @@ public class DbPaths2
 	{
 		if (id == 0)
 		{
-			return ROOT;
+			return getRoot(root);
 		}
 
 		int rootId;
@@ -170,22 +194,18 @@ public class DbPaths2
 
 	public static LinkedList<PathElement> listPaths(RootDirectory root)
 	{
-		return listPaths(root, ROOT);
+		return listPaths(getRoot(root));
 	}
 	public static LinkedList<PathElement> listPaths(PathElement element)
 	{
 		Objects.requireNonNull(element.getRoot());
-		return listPaths(element.getRoot(), element);
-	}
-	
-	public static LinkedList<PathElement> listPaths(RootDirectory root, PathElement element)
-	{
 		LinkedList<PathElement> returnValue = new LinkedList<>();
 		
 		try (ConnectionWrapper wrapper     = Services.h2DbCache.getThreadConnection();
-				 StatementWrapper statement    = wrapper.prepareStatement(LIST);)
+				StatementWrapper statement    = wrapper.prepareStatement(LIST);)
 		{
-			statement.setLong(1, element.getId());
+			statement.setInt(1, element.getRoot().getId());
+			statement.setLong(2, element.getId());
 			
 			try (ResultSet results = statement.executeQuery())
 			{
@@ -197,7 +217,7 @@ public class DbPaths2
 					boolean broken = results.getBoolean(ndx++);
 					String value = results.getString(ndx++);
 					
-					returnValue.add(new PathElement(containsId, root, element, value, broken, pathId));
+					returnValue.add(new PathElement(containsId, element.getRoot(), element, value, broken, pathId));
 				}
 			}
 		}
@@ -208,19 +228,23 @@ public class DbPaths2
 		
 		return returnValue;
 	}
-
+	
 	public static PathElement addDirectoryPath(RootDirectory root, String fullPath)
 	{
-		return addPathTo(root, ROOT, fullPath, true);
+		return addPathTo(root, getRoot(root), fullPath, true);
 	}
 	
 	public static PathElement addFilePath(RootDirectory root, String fullPath)
 	{
-		return addPathTo(root, ROOT, fullPath, false);
+		return addPathTo(root, getRoot(root), fullPath, false);
 	}
 	
 	public static PathElement addPathTo(RootDirectory root, PathElement parent, String value, boolean directory)
 	{
+		if (value.equals("/"))
+		{
+			return getRoot(root);
+		}
 		PathBreakInfo[] elements = PathBreaker.breakThePath(value, directory);
 		int rootId = root.getId();
 
@@ -258,6 +282,12 @@ public class DbPaths2
 						}
 						pathId = results.getLong(1);
 					}
+				}
+				
+				if (pathId == 0)
+				{
+					// This is the root...
+					continue;
 				}
 				
 				int ndx;
@@ -307,12 +337,16 @@ public class DbPaths2
 
 	public static PathElement findFilePath(RootDirectory root, String fullPath)
 	{
-		return findPathIn(root, ROOT, fullPath, false);
+		return findPathIn(root, getRoot(root), fullPath, false);
 	}
 
 	public static PathElement findDirectoryPath(RootDirectory root, String fullPath)
 	{
-		return findPathIn(root, ROOT, fullPath, true);
+		if (fullPath.equals("/"))
+		{
+			return getRoot(root);
+		}
+		return findPathIn(root, getRoot(root), fullPath, true);
 	}
 
 	public static PathElement findPathIn(RootDirectory root, PathElement parent, String value, boolean directory)
@@ -324,6 +358,7 @@ public class DbPaths2
 				 StatementWrapper getPathId    = wrapper.prepareStatement(GET_PATH_ID);
 				 StatementWrapper find         = wrapper.prepareStatement(FIND_ROOT_CONTAINS))
 		{
+			// skip the root element...
 			for (int i=0; i<elements.length; i++)
 			{
 				PathBreakInfo info = elements[i];
@@ -340,6 +375,12 @@ public class DbPaths2
 					{
 						return null;
 					}
+				}
+				
+				if (pathId == 0)
+				{
+					// This is the root...
+					continue;
 				}
 				
 				int ndx;
@@ -371,6 +412,11 @@ public class DbPaths2
 
 	public static void removePathFromRoot(PathElement element)
 	{
+		if (element.isRoot())
+		{
+			LogWrapper.getLogger().info("Cannot delete the root path.");
+			return;
+		}
 		Services.h2DbCache.setAutoCommit(false);
 		try (ConnectionWrapper wrapper  = Services.h2DbCache.getThreadConnection();
 				 StatementWrapper rmRoot    = wrapper.prepareStatement(DELETE_ROOT_CONTAINS);
@@ -408,7 +454,7 @@ public class DbPaths2
 				}
 				
 				element = element.getParent();
-				if (element.getId() == 0)
+				if (element.isRoot())
 				{
 					break;
 				}
@@ -463,4 +509,236 @@ public class DbPaths2
 			this.broken  = broken;
 		}
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+//private static void generateRoots(
+//		ConnectionWrapper connection, 
+//		long childId, 
+//		HashMap<Integer, String> rootNames, 
+//		JsonGenerator generator)
+//		throws SQLException
+//{
+//	generator.writeStartArray("roots");
+//	try (StatementWrapper rootStmt = connection.prepareNewStatement(
+//			"select RID from ROOT_CONTAINS where PELEM = " + childId + ";");
+//			ResultSet rootResults = rootStmt.executeQuery();)
+//	{
+//		while (rootResults.next())
+//		{
+//			int rootId = rootResults.getInt(1);
+//			String string = rootNames.get(rootId);
+//			if (string == null)
+//			{
+//				try (StatementWrapper nameStmt = connection.prepareNewStatement(
+//						"select MNAME, RNAME from ROOT join MACHINE on MID=M_ID where R_ID=" + rootId + " limit 1;");
+//						ResultSet rootName = nameStmt.executeQuery();)
+//				{
+//					if (rootName.next())
+//						string = rootName.getString(1) + ":" + rootName.getString(2);
+//					else
+//						string = "Unkown root";
+//				}
+//				rootNames.put(rootId, string);
+//			}
+//			generator.write(string);
+//		}
+//	}
+//	generator.writeEnd();
+//}
+	
+
+//	private static final QueryWrapper LIST_CONTAINS_CHILDREN = new QueryWrapper("select "
+//		+ "ROOT_CONTAINS.RC_ID, PELEM.BROKEN, PELEM.PELEM "
+//			+ "from ROOT_CONTAINS join PELEM on ROOT_CONTAINS.PELEM=PELEM.R_ID "
+//			+ "where ROOT_CONTAINS.PARENT = ? "
+//			+ "and RID=?;");
+
+	private static final QueryWrapper LIST_CONTAINS_CHILDREN = new QueryWrapper("select "
+		+ "ROOT_CONTAINS.RC_ID, ROOT_CONTAINS.PELEM "
+			+ "from ROOT_CONTAINS "
+			+ "where ROOT_CONTAINS.PARENT = ? "
+			+ "and RID=?;");
+
+	private static final QueryWrapper GET_PATH_INFO = new QueryWrapper("select "
+		+ " PELEM.BROKEN, PELEM.PELEM "
+			+ "from PELEM "
+			+ "where PELEM.P_ID = ? limit 1;");
+
+private static final QueryWrapper LIST_ALL_ROOTS = new QueryWrapper("select distinct RID from ROOT_CONTAINS;");
+
+private static void debugChildPaths(
+		ConnectionWrapper connection,
+		JsonGenerator generator,
+		long rcId,
+		int rootId) 
+				throws SQLException
+{
+	class TmpObject
+	{
+		long childId;
+		boolean broken;
+		String element;
+	}
+	LinkedList<TmpObject> toGenerate = new LinkedList<>();
+	// Recursive, so cannot reuse statement... (Not true anymore)
+	try (StatementWrapper prepareStatement = connection.prepareStatement(LIST_CONTAINS_CHILDREN);
+			 StatementWrapper info = connection.prepareStatement(GET_PATH_INFO);)
+	{
+		prepareStatement.setLong(1, rcId);
+		prepareStatement.setLong(2, rootId);
+		try (ResultSet results = prepareStatement.executeQuery();)
+		{
+			while (results.next())
+			{
+				TmpObject o = new TmpObject();
+				
+				o.childId = results.getLong(1);
+				if (o.childId == rcId)
+				{
+					if (rcId == 0)
+					{
+						continue;
+					}
+					throw new RuntimeException("Path is child of itself: " + o.childId);
+				}
+				
+				info.setLong(1, results.getLong(2));
+				try (ResultSet executeQuery = info.executeQuery();)
+				{
+					if (!executeQuery.next())
+					{
+						throw new RuntimeException("Can't follow pathId...");
+					}
+					o.broken = executeQuery.getBoolean(1);
+					o.element = executeQuery.getString(2);
+				}
+
+				toGenerate.addLast(o);
+			}
+		}
+	}
+
+	generator.writeStartArray("children");
+	for (TmpObject obj : toGenerate)
+	{
+		generator.writeStartObject();
+		generator.write("id", obj.childId);
+		generator.write("broken", obj.broken);
+		generator.write("element", obj.element);
+//		generateRoots(connection, obj.childId, rootNames, generator);
+		debugChildPaths(connection, generator, obj.childId, rootId);
+		generator.writeEnd();
+	}
+	generator.writeEnd();
+}
+
+private static HashMap<Integer, String> getRootNames(ConnectionWrapper connection) throws SQLException
+{
+	HashSet<Integer> rootIds = new HashSet<>();
+	try (StatementWrapper prepareStatement = connection.prepareStatement(LIST_ALL_ROOTS); 
+			 ResultSet executeQuery = prepareStatement.executeQuery();)
+	{
+		while (executeQuery.next())
+		{
+			rootIds.add(executeQuery.getInt(1));
+		}
+	}
+
+	if (rootIds.isEmpty())
+	{
+		throw new RuntimeException("Did not find any roots in root contains");
+	}
+	StringBuilder nameBuilder = new StringBuilder();
+	nameBuilder.append("select R_ID, MNAME, RNAME from ROOT join MACHINE on MID=M_ID where R_ID in (");
+	Iterator<Integer> iterator = rootIds.iterator();
+	nameBuilder.append(iterator.next());
+	while (iterator.hasNext())
+	{
+		nameBuilder.append(", ").append(iterator.next());
+	}
+	nameBuilder.append(");");
+
+	HashMap<Integer, String> rootNames = new HashMap<>();
+	try (StatementWrapper nameStmt = connection.prepareNewStatement(nameBuilder.toString());
+			 ResultSet names = nameStmt.executeQuery();)
+	{
+		while (names.next())
+		{
+			String value = names.getString(2) + ":" + names.getString(3);
+			rootNames.put(names.getInt(1), value);
+		}
+	}
+	return rootNames;
+}
+
+public static void debugPaths(Path p)
+{
+	LogWrapper.getLogger().info("Debugging the paths to " + p);
+	try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
+			JsonGenerator generator = TrackObjectUtils.createGenerator(Files.newOutputStream(p), true);)
+	{
+		HashMap<Integer, String> rootNames = getRootNames(connection);
+		
+		generator.writeStartObject();
+		generator.write("numPaths", DbPaths2.getNumPaths());
+		generator.write("numContains", DbPaths2.getNumContains());
+		generator.writeStartArray("roots");
+		
+		for (Map.Entry<Integer, String> rootId : rootNames.entrySet())
+		{
+			generator.writeStartObject();
+			generator.write("rootName", rootId.getValue());
+			generator.write("id", 0);
+			generator.write("broken", false);
+			generator.write("element", "/");
+			debugChildPaths(connection, generator, 0, rootId.getKey());
+			generator.writeEnd();
+		}
+		generator.writeEnd();
+		generator.writeEnd();
+	}
+	catch (IOException | SQLException e)
+	{
+		LogWrapper.getLogger().log(Level.INFO, "Unable to debug paths to " + p, e);
+	}
+	LogWrapper.getLogger().info("Done debugging paths: " + p);
+}
 }

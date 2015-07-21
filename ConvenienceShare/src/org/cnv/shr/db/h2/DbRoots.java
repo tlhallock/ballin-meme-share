@@ -167,6 +167,11 @@ public class DbRoots
 	public static LocalDirectory getLocal(Path path) throws IOException
 	{
 		int pathId = DbRootPaths.getRootPath(path);
+		if (pathId < 0)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to get local by path");
+			return null;
+		}
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper prepareStatement = c.prepareStatement(SELECT5);)
 		{
@@ -228,35 +233,50 @@ public class DbRoots
 			"select count(RC_ID) from ROOT_CONTAINS where RID=?;");
 	private static final QueryWrapper COUNT_FILES_TO_DELETE = new QueryWrapper(
 			"select count(F_ID) from SFILE where ROOT=?;");
+
+	private static final QueryWrapper COUNT_PATHS_TO_CLEAN = new QueryWrapper(
+			"select count(P_ID) from PELEM where not exists (select RC_ID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM=PELEM.P_ID limit 1);");
+	private static final QueryWrapper REMOVE_PATHS = new QueryWrapper(
+			"delete from PELEM where not exists (select RC_ID from ROOT_CONTAINS where ROOT_CONTAINS.PELEM=PELEM.P_ID limit 1) limit 500;");
 	
-	public static void deleteRoot(RootDirectory root)
+	
+	
+	
+	
+	public static void deleteRoot(RootDirectory root, boolean completely)
 	{
-		int pathId;
-		
-		try
+		int pathId = DbRootPaths.getRootPath(root.getPath());
+		if (pathId < 0)
 		{
-			pathId = DbRootPaths.getRootPath(root.getPath());
-		}
-		catch (IOException e1)
-		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to delete root", e1);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to delete root");
 			return;
 		}
 		
-		DeleteRootProgress progressBar = new DeleteRootProgress();
+		DeleteRootProgress progressBar = new DeleteRootProgress(new String[]
+    {
+        "Deleting files",
+        "Deleting paths",
+        "Deleting root path",
+        "Deleting root info",
+        "Cleaning strings",
+    });
 		Services.notifications.registerWindow(progressBar);
 		progressBar.setVisible(true);
+		progressBar.setAlwaysOnTop(true);
 		
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				 StatementWrapper s1 = c.prepareStatement(DELETE3_1);
 				 StatementWrapper s2 = c.prepareStatement(DELETE3_2);
 				 StatementWrapper s3 = c.prepareStatement(DELETE3);
+				 StatementWrapper s4 = c.prepareStatement(REMOVE_PATHS);
 				 StatementWrapper countFiles = c.prepareStatement(COUNT_FILES_TO_DELETE);
-				 StatementWrapper countPaths = c.prepareStatement(COUNT_PATHS_TO_DELETE);)
+				 StatementWrapper countPaths = c.prepareStatement(COUNT_PATHS_TO_DELETE);
+				 StatementWrapper countClean = c.prepareStatement(COUNT_PATHS_TO_CLEAN);)
 		{
 			int numRemoved = -1;
 			int totalFiles = -1;
 			int totalPaths = -1;
+			int totalClean = -1;
 			
 			countFiles.setInt(1, root.getId());
 			try (ResultSet executeQuery = countFiles.executeQuery();)
@@ -295,20 +315,38 @@ public class DbRoots
 			} while (numRemoved > 0);
 
 
-			progressBar.begin(2, 1);
-			s3.setInt(1, root.getId());
-			s3.execute();
-
-			LogWrapper.getLogger().fine("Done removing " + root);
+			if (completely)
+			{
+				progressBar.begin(2, 1);
+				s3.setInt(1, root.getId());
+				s3.execute();
+	
+				LogWrapper.getLogger().fine("Done removing " + root);
+	
+				progressBar.begin(3, 1);
+				DbRootPaths.removeRootPath(pathId);
+				LogWrapper.getLogger().fine("Done removing root path. ");
+			}
+			
 
 			Services.notifications.localsChanged();
+			
 
-			progressBar.begin(3, 1);
-			DbRootPaths.removeRootPath(pathId);
-			LogWrapper.getLogger().fine("Done removing root path. ");
+			try (ResultSet executeQuery = countClean.executeQuery();)
+			{
+				if (executeQuery.next())
+				{
+					totalClean = executeQuery.getInt(1);
+				}
+			}
+			progressBar.begin(4, totalClean);
+			do
+			{
+				numRemoved = s4.executeUpdate();
+				progressBar.updateProgress(numRemoved);
+				LogWrapper.getLogger().fine("Cleaned " + numRemoved + " paths: " + (totalClean -= numRemoved) + " left.");
+			} while (numRemoved > 0);
 
-			progressBar.begin(4, 1);
-			DbPaths2.cleanPelem();
 			LogWrapper.getLogger().fine("Done cleaning pelems.");
 		}
 		catch (SQLException e)
@@ -500,7 +538,7 @@ public class DbRoots
 				}
 				if (ignore.length() <= 0)
 				{
-					LogWrapper.getLogger().info("Unable to add ignore because it is the emptry string.");
+					LogWrapper.getLogger().info("Unable to add ignore because it is the empty string.");
 					continue;
 				}
 				if (!ignoresAdded.add(ignore))

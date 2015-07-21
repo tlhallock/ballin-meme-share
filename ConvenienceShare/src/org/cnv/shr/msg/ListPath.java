@@ -93,7 +93,7 @@ public class ListPath extends Message
 			connection.finish();
 			return;
 		}
-		PathList.listPaths(localByName, pathElement, connection);
+		PathList.listPaths(pathElement, connection);
 	}
 	
 	@Override

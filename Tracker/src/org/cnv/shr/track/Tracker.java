@@ -74,8 +74,8 @@ public class Tracker implements Runnable
 
 			try (Socket socket = serverSocket.accept();)
 			{
-				PausableInputStream2 input  = new PausableInputStream2(socket.getInputStream());
-				PausableOutputStream output = new PausableOutputStream(socket.getOutputStream());
+				PausableInputStream2 input  = new PausableInputStream2(/*LogStreams.newLogInputStream( */socket.getInputStream() /*, "socket")*/);
+				PausableOutputStream output = new PausableOutputStream(/*LogStreams.newLogOutputStream(*/socket.getOutputStream()/*, "socket")*/);
 				JsonParser parser       = TrackObjectUtils.createParser(input);
 				JsonGenerator generator = TrackObjectUtils.createGenerator(output);
 				
@@ -349,6 +349,7 @@ public class Tracker implements Runnable
 			if (!Track.storesMetaData)
 			{
 				fail("This tracker does not store metadata.", input, output);
+				return;
 			}
 			other = store.getMachine(request.getParam("other"));
 			store.listFiles(other, new Lister<FileEntry>(output));
@@ -358,6 +359,7 @@ public class Tracker implements Runnable
 			if (!TrackObjectUtils.read(input, other))
 			{
 				fail("List ratings without a machine", input, output);
+				return;
 			}
 			param = request.getParam("offset");
 			if (param != null)

@@ -12,10 +12,10 @@ package org.cnv.shr.gui;
  */
 public class DeleteRootProgress extends javax.swing.JFrame {
 
-    /**
-     * Creates new form DeleteRootProgress
-     */
-    public DeleteRootProgress() {
+	private String[] messages;
+	
+    public DeleteRootProgress(String[] messages) {
+    	this.messages = messages;
         initComponents();
     }
 
@@ -103,15 +103,6 @@ public class DeleteRootProgress extends javax.swing.JFrame {
         repaint();
     }
     
-    private static final String[] messages = new String[]
-    {
-        "Deleting files",
-        "Deleting paths",
-        "Deleting root path",
-        "Deleting root info",
-        "Cleaning strings",
-    };
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

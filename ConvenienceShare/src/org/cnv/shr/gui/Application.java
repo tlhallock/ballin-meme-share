@@ -69,12 +69,12 @@ import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.DbDownloads;
 import org.cnv.shr.db.h2.DbIterator;
 import org.cnv.shr.db.h2.DbMessages;
+import org.cnv.shr.db.h2.DbPaths2;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.db.h2.TrackerInfoExport;
-import org.cnv.shr.db.h2.bak.CleanBrowsingHistory;
 import org.cnv.shr.db.h2.bak.DbBackupRestore;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
@@ -1707,7 +1707,7 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 			{
 				return;
 			}
-                        CleanBrowsingHistory.debugPaths(Paths.get(fc.getSelectedFile().getAbsolutePath()));
+			Services.userThreads.execute(() -> { DbPaths2.debugPaths(Paths.get(fc.getSelectedFile().getAbsolutePath())); });
     }//GEN-LAST:event_jMenuItem23ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

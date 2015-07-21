@@ -24,9 +24,18 @@ public class DbRootPaths
 	private static final QueryWrapper COUNT         = new QueryWrapper("select count(RP_ID) from ROOT_PATH;");
 	private static final QueryWrapper COUNT_OTHERS  = new QueryWrapper("select count(RP_ID) from ROOT_PATH where PREV=?;");
 	
-	public static int getRootPath(Path path) throws IOException
+	public static int getRootPath(Path path)
 	{
-		return getRootPath(path.toAbsolutePath().normalize().toRealPath().toString());
+		path = path.toAbsolutePath().normalize();
+		try
+		{
+			path = path.toRealPath();
+		}
+		catch (IOException e)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "No longer able to get real path of " + path + ".\nDoes it still exist?", e);
+		}
+		return getRootPath(path.toString());
 	}
 	
 

@@ -109,7 +109,32 @@ public class Communication implements Closeable
 	}
 	private static Socket createSocket(String ip, int port) throws IOException { 
 		Socket socket = new Socket();
+		
+		class TimeOutObject extends TimerTask
+		{
+			boolean done;
+
+			@Override
+			public void run()
+			{
+				if (done)
+				{
+					return;
+				}
+				try
+				{
+					socket.close();
+				}
+				catch (IOException e)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to close on timeout.", e);
+				}
+			}
+		}
+		TimeOutObject obj = new TimeOutObject();
+		Misc.timer.schedule(obj, 2000);
 		socket.connect(new InetSocketAddress(ip, port), 2000);
+		obj.done = true;
 //		socket.setSoTimeout(2 * 60 * 1000);
 		return socket;
 	}

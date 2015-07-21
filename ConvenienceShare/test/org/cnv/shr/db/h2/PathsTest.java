@@ -1,5 +1,6 @@
 package org.cnv.shr.db.h2;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -14,6 +15,7 @@ import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.stng.Settings;
 import org.cnv.shr.util.Misc;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -21,6 +23,7 @@ import org.junit.Test;
 
 public class PathsTest
 {
+	private static final String LOCAL_DIR = "this_does_not_exist";
 	private static LocalDirectory local;
 	private static Machine machine;
 
@@ -52,7 +55,8 @@ public class PathsTest
 		
 		machine.tryToSave();
 		
-		local = new LocalDirectory("localTest", "test description", "test tags", -1, -1, "/this_does_not_exist", SharingState.DO_NOT_SHARE, (long) 0, (long) 50);
+		Misc.ensureDirectory(new File(LOCAL_DIR), false);
+		local = new LocalDirectory("localTest", "test description", "test tags", -1, -1, LOCAL_DIR, SharingState.DO_NOT_SHARE, (long) 0, (long) 50);
 		local.setMachine(machine);
 		local.tryToSave();
 	}
@@ -63,10 +67,16 @@ public class PathsTest
 		Services.h2DbCache.close();
 	}
 
+	@AfterClass
+	public static void after() throws IOException 
+	{
+		Misc.rm(Paths.get(LOCAL_DIR).toAbsolutePath());
+	}
+
 	@Test
 	public void simpleTest() throws SQLException
 	{
-		DbPaths2.addPathTo(local, DbPaths2.ROOT, "here", true);
+		DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here", true);
 		Assert.assertEquals(1 + 1, DbPaths2.getNumPaths());
 		Assert.assertEquals(1 + 1, DbPaths2.getNumContains());
 	}
@@ -75,7 +85,7 @@ public class PathsTest
 	@Test
 	public void simpleTestWithSlash() throws SQLException
 	{
-		DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/", true);
+		DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/", true);
 		Assert.assertEquals(1 + 1, DbPaths2.getNumPaths());
 		Assert.assertEquals(1 + 1, DbPaths2.getNumContains());
 	}
@@ -84,7 +94,7 @@ public class PathsTest
 	@Test
 	public void simpleTestThree() throws SQLException
 	{
-		DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/foo", true);
+		DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/foo", true);
 		Assert.assertEquals(1 + 3, DbPaths2.getNumPaths());
 		Assert.assertEquals(1 + 4, DbPaths2.getNumContains());
 	}
@@ -92,16 +102,16 @@ public class PathsTest
 	@Test
 	public void simpleList() throws SQLException
 	{
-		PathElement firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/foo", true);
+		PathElement firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/foo", true);
 		LinkedList<PathElement> listPaths = DbPaths2.listPaths(firstEndPoint.getParent());
 		Assert.assertEquals(1, listPaths.size());
 	}
 	@Test
 	public void simpleListTwice() throws SQLException
 	{
-		PathElement firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/foo", true);
+		PathElement firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/foo", true);
 		LinkedList<PathElement> listPaths = DbPaths2.listPaths(firstEndPoint.getParent());
-		Assert.assertEquals(1, listPaths.size());firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/foo", true);
+		Assert.assertEquals(1, listPaths.size());firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/foo", true);
 		listPaths = DbPaths2.listPaths(firstEndPoint.getParent());
 		Assert.assertEquals(1, listPaths.size());
 	}
@@ -109,8 +119,8 @@ public class PathsTest
 	@Test
 	public void simpleListTwo() throws SQLException
 	{
-		PathElement firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/foo", true);
-		PathElement secondEndPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/bar", true);
+		PathElement firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/foo", true);
+		PathElement secondEndPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/bar", true);
 		LinkedList<PathElement> listPaths = DbPaths2.listPaths(firstEndPoint.getParent());
 		Assert.assertEquals(1 + 4, DbPaths2.getNumPaths());
 		Assert.assertEquals(1 + 5, DbPaths2.getNumContains());
@@ -122,8 +132,8 @@ public class PathsTest
 	@Test
 	public void simpleListRemoveOneOfTwo() throws SQLException
 	{
-		PathElement firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/foo", true);
-		PathElement secondEndPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/bar", true);		
+		PathElement firstEndPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/foo", true);
+		PathElement secondEndPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/bar", true);		
 		Assert.assertEquals(1 + 4, DbPaths2.getNumPaths());
 		Assert.assertEquals(1 + 5, DbPaths2.getNumContains());
 		DbPaths2.removePathFromRoot(secondEndPoint);		
@@ -138,7 +148,7 @@ public class PathsTest
 	@Test
 	public void simpleListRemoveAll() throws SQLException
 	{
-		PathElement endPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/foo", true);
+		PathElement endPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/foo", true);
 		Assert.assertEquals(1 + 3, DbPaths2.getNumPaths());
 		Assert.assertEquals(1 + 4, DbPaths2.getNumContains());
 		DbPaths2.removePathFromRoot(endPoint);		
@@ -151,25 +161,23 @@ public class PathsTest
 		Assert.assertEquals(0, listPaths.size());
 	}
 
-	// This test fails.
-	// This is because rows of PELEM below the parent are not deleted even if they are not needed.
-	// This means we should create a clean PELEM method.
-	// Or while a ROOT_CONTAINS we should delete all children paths that are not used.
 	@Test
 	public void simpleListRemoveAllParent() throws SQLException
 	{
-		PathElement endPoint = DbPaths2.addPathTo(local, DbPaths2.ROOT, "here/another/here/foo/bar", true).getParent();
+		PathElement endPoint = DbPaths2.addPathTo(local, DbPaths2.getRoot(local), "here/another/here/foo/bar", true).getParent();
 		Assert.assertEquals(1 + 4, DbPaths2.getNumPaths());
 		Assert.assertEquals(1 + 5, DbPaths2.getNumContains());
 		DbPaths2.removePathFromRoot(endPoint);
 		DbObjects.PELEM.debug(Services.h2DbCache.getThreadConnection());
 		
-		// TODO: uncomment this
-//		Assert.assertEquals(1 + 2, DbPaths2.getNumPaths());
 		Assert.assertEquals(1 + 3, DbPaths2.getNumContains());
+		// Not entirely cleaned...
+		Assert.assertEquals(1 + 3, DbPaths2.getNumPaths());
 		
-		DbObjects.ROOT_CONTAINS.debug(Services.h2DbCache.getThreadConnection());
-
+		DbPaths2.cleanPelem();
+		// Now it should be cleaned...
+		Assert.assertEquals(1 + 2, DbPaths2.getNumPaths());
+		
 		LinkedList<PathElement> listPaths = DbPaths2.listPaths(endPoint.getParent());
 		Assert.assertEquals(0, listPaths.size());
 	}

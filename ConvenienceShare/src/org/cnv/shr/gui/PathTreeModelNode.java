@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
@@ -109,7 +108,7 @@ public class PathTreeModelNode implements TaskListener
 	@Override
 	public String toString()
 	{
-		if (element.getId() == 0)
+		if (element.isRoot())
 		{
 			RootDirectory rootDir = model.getRootDirectory();
 			return rootDir == null ? "No directory chosen" : rootDir.getName();
@@ -159,7 +158,7 @@ public class PathTreeModelNode implements TaskListener
 		}
 		if (sourceChildren != null)
 		{
-			setToSource(root);
+			setToSource();
 		}
 	}
 	
@@ -169,7 +168,7 @@ public class PathTreeModelNode implements TaskListener
 		this.sourceChildren = pairs;
 		if (syncFully || children != null)
 		{
-			setToSource(model.getRootDirectory());
+			setToSource();
 		}
 	}
 	
@@ -188,26 +187,18 @@ public class PathTreeModelNode implements TaskListener
 
 		if (sourceChildren != null)
 		{
-			setToSource(rootDir);
+			setToSource();
 		}
 		else
 		{
-			setToDb(rootDir);
+			setToDb();
 		}
 	}
 
-	private synchronized void setToDb(RootDirectory rootDir)
+	private synchronized void setToDb()
 	{
 		// List from database...
-		final LinkedList<PathElement> list = element.list(rootDir);
-		list.removeIf(new Predicate<PathElement>()
-		{
-			@Override
-			public boolean test(PathElement t)
-			{
-				return t.isAbsolute();
-			}
-		});
+		final LinkedList<PathElement> list = element.list();
 		children = new PathTreeModelNode[list.size()];
 		int ndx = 0;
 		for (final PathElement e : list)
@@ -216,7 +207,7 @@ public class PathTreeModelNode implements TaskListener
 		}
 	}
 	
-	public synchronized void setToSource(RootDirectory rootDir)
+	public synchronized void setToSource()
 	{
 		long now = System.currentTimeMillis();
 		if (children != null && lastSync + 5 * 60 * 1000 > now)
@@ -238,17 +229,13 @@ public class PathTreeModelNode implements TaskListener
 			final PathElement pathElement = p.getPathElement();
 			String unbrokenName = pathElement.getUnbrokenName();
 			accountedFor.add(unbrokenName);
-			if (pathElement.isAbsolute())
-			{
-				continue;
-			}
 			PathTreeModelNode node = new PathTreeModelNode(this, model, pathElement, syncFully);
 			allChildren.add(node);
 			
 			model.getIterator().queueSyncTask(p.getSource(), pathElement, node);
 		}
 		// add sub files...
-		for (final PathElement childElement : element.list(rootDir))
+		for (final PathElement childElement : element.list())
 		{
 			if (accountedFor.contains(childElement.getUnbrokenName()))
 			{

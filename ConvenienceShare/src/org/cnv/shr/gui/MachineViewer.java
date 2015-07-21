@@ -102,7 +102,6 @@ public class MachineViewer extends javax.swing.JFrame
       	filesTree.setToggleClickCount(99999999);
         filesTree.setScrollsOnExpand(true);
         filesTree.setLargeModel(true);
-        setSyncStatus(Color.GRAY, Color.WHITE, "Not viewing any root.");
         setMachine(rMachine);
         viewNoDirectory();
         
@@ -470,6 +469,8 @@ public class MachineViewer extends javax.swing.JFrame
     }
 
     private void viewNoDirectory() {
+      setSyncStatus(Color.GRAY, Color.WHITE, "Not viewing any root.");
+      getRoot().viewNoRoot();
     		jButton9.setEnabled(false);
         this.rootDirectoryName = null;
         jCheckBox1.setEnabled(false);
@@ -1274,20 +1275,23 @@ public class MachineViewer extends javax.swing.JFrame
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-			try
+			Services.userThreads.execute(() -> 
 			{
-				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-    		jButton4.setEnabled(false);
-    		pathsTable.setEnabled(false);
-    		viewNoDirectory();
-        CleanBrowsingHistory.removeAllNonEssentialData(getMachine());
-        jButton4.setEnabled(!getMachine().isLocal());
-    		pathsTable.setEnabled(true);
-			}
-			finally
-			{
-				setCursor(Cursor.getDefaultCursor());
-			}
+	    	try
+				{
+					setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+	    		jButton4.setEnabled(false);
+	    		pathsTable.setEnabled(false);
+	    		viewNoDirectory();
+	        CleanBrowsingHistory.removeAllNonEssentialData(getMachine());
+	        jButton4.setEnabled(!getMachine().isLocal());
+	    		pathsTable.setEnabled(true);
+				}
+				finally
+				{
+					setCursor(Cursor.getDefaultCursor());
+				}
+			});
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed

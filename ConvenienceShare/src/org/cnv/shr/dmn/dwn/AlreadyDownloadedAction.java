@@ -40,7 +40,7 @@ public enum AlreadyDownloadedAction
 			LogWrapper.getLogger().log(Level.INFO, "Unable to copy " + local.getFsFile() + " to " + targetFile, e);
 			Services.downloads.download(remote, false);
 		}
-		// Services.notifications.downloadsChanged();
+		 Services.notifications.downloadsChanged();
 		Thread.currentThread().setName(prevName);
 	}
 

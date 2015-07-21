@@ -29,8 +29,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
@@ -43,7 +41,6 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.json.JsonList;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -103,7 +100,7 @@ public class RootList extends Message
 			}
 		}
 
-		List<RootDirectory> toDelete = new LinkedList<>();
+//		List<RootDirectory> toDelete = new LinkedList<>();
 		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
 		{
 			while (list.hasNext())
@@ -113,17 +110,17 @@ public class RootList extends Message
 				{
 					continue;
 				}
-				toDelete.add(next);
-				DbRoots.deleteRoot(next);
+//				toDelete.add(next);
+				DbRoots.deleteRoot(next, true);
 			}
 		}
 		
-		for (RootDirectory root : toDelete)
-		{
-			DbRoots.deleteRoot(root);
-			// should be deleted...
-			Services.notifications.remoteDirectoryChanged((RemoteDirectory) root);
-		}
+//		for (RootDirectory root : toDelete)
+//		{
+//			DbRoots.deleteRoot(root, true);
+//			// should be deleted...
+//			Services.notifications.remoteDirectoryChanged((RemoteDirectory) root);
+//		}
 
 		// TODO: should only happen if there was a change...
 		Services.notifications.remoteChanged(machine);

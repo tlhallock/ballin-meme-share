@@ -64,7 +64,7 @@ public class ExplorerSyncIterator extends SyncrhonizationTaskIterator
 
 			try (FileSourceIterator grandChildren = t.file.listFiles();)
 			{
-				final SynchronizationTask synchronizationTask = new SynchronizationTask(t.dbDir, root, grandChildren);
+				final SynchronizationTask synchronizationTask = new SynchronizationTask(t.dbDir, grandChildren);
 				synchronizationTask.addListener(t.listener);
 				return synchronizationTask;
 			}

@@ -37,7 +37,6 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.mdl.LocalFile;
-import org.cnv.shr.msg.Wait;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -97,8 +96,6 @@ public class ChunkRequest extends DownloadMessage
 			serveInstance = Services.server.serve(local, connection);
 			if (serveInstance == null)
 			{
-				connection.send(new Wait());
-				connection.finish();
 				return;
 			}
 		}

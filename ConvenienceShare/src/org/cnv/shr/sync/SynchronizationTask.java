@@ -31,7 +31,6 @@ import java.util.Comparator;
 import java.util.LinkedList;
 
 import org.cnv.shr.mdl.PathElement;
-import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.sync.FileSource.FileSourceIterator;
 
 public class SynchronizationTask
@@ -44,10 +43,10 @@ public class SynchronizationTask
 	
 	PathElement current;
 	
-	SynchronizationTask(final PathElement current, final RootDirectory local, final FileSourceIterator grandChildren)
+	SynchronizationTask(final PathElement current, final FileSourceIterator grandChildren)
 	{
 		this.current = current;
-		dbPaths = current.list(local);
+		dbPaths = current.list();
 		
 		while (grandChildren.hasNext())
 		{

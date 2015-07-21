@@ -129,13 +129,12 @@ public class DownloadManager
 			return;
 		}
 		
-
 		FileEntry fileEntry = d.getFile().getFileEntry();
-			if (downloads.get(fileEntry) != null)
-			{
-				LogWrapper.getLogger().info("Already downloading.");
-				return;
-			}
+		if (downloads.get(fileEntry) != null)
+		{
+			LogWrapper.getLogger().info("Already downloading.");
+			return;
+		}
 
 		d.tryToSave();
 

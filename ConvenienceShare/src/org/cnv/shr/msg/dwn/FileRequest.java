@@ -37,7 +37,6 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
-import org.cnv.shr.msg.Wait;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
@@ -99,8 +98,6 @@ public class FileRequest extends DownloadMessage
 		ServeInstance serve = Services.server.serve(local, connection);
 		if (serve == null)
 		{
-			connection.send(new Wait());
-			connection.finish();
 			return;
 		}
 		

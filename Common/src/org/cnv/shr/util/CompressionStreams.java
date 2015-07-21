@@ -77,8 +77,6 @@ public class CompressionStreams
 		zip.setLevel(9);
 		zip.putNextEntry(createZipEntry(0));
 		
-		
-		
 		HardToCloseOutputStream outerStream = new HardToCloseOutputStream()
 		{
 			int nextName = 1;
@@ -93,6 +91,8 @@ public class CompressionStreams
 			{
 				zip.write(b, off, len);
 				stats.uncompressed+=len;
+				
+				System.out.println("Compressed " + new String(b, off, len));
 			}
 
 			@Override
@@ -108,6 +108,7 @@ public class CompressionStreams
 				zip.flush();
 				delegate.flush();
 				LogWrapper.getLogger().info(stats.toString());
+				System.out.println("Flushed");
 			}
 			@Override
 			public void actuallyClose() throws IOException
@@ -130,8 +131,16 @@ public class CompressionStreams
 			@Override
 			public int available() throws IOException
 			{
+				if (delegate.available() > 0)
+				{
+					System.out.println("delegate available: allot");
+					return Integer.MAX_VALUE;
+				}
+				
+					System.out.println("zip available: 0");
+					return 0;
 				// ZipInputStream doesn't know anything...
-				return delegate.available();
+//				return delegate.available();
 			}
 			@Override
 			public int read() throws IOException
@@ -151,6 +160,14 @@ public class CompressionStreams
 				do
 				{
 					read = zip.read(buf, off, len);
+					if (read > 0)
+					{
+						System.out.println("Uncompressed: \"" + new String(buf, off, read) + "\"");
+						if (new String(buf, off, read).equals("["))
+						{
+							System.out.println("Read my start array...");
+						}
+					}
 				}
 				while (read < 0 && zip.getNextEntry() != null);
 				return read;

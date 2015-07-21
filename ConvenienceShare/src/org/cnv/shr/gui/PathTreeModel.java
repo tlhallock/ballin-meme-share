@@ -132,19 +132,30 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 		return iterator;
 	}
 	
+	public void viewNoRoot()
+	{
+		final PathTreeModelNode oldroot = this.root;
+		close();
+		root = new PathTreeModelNode(null, this, new NoPath(), false);
+		for (final TreeModelListener listener : listeners)
+		{
+			listener.treeStructureChanged(new TreeModelEvent(this, (TreePath) null));
+		}
+	}
+	
 	public void setRoot(final RootDirectory newRoot)
 	{
 		final PathTreeModelNode oldroot = this.root;
 		close();
 		
 		startRemoteSynchronizer(newRoot);
-		this.root = new PathTreeModelNode(null, this, DbPaths2.ROOT, false);
-		iterator.queueSyncTask(rootSource, DbPaths2.ROOT, this.root);
+		this.root = new PathTreeModelNode(null, this, DbPaths2.getRoot(newRoot), false);
+		iterator.queueSyncTask(rootSource, DbPaths2.getRoot(newRoot), this.root);
 		
 		this.root.expand();
 		for (final TreeModelListener listener : listeners)
 		{
-			listener.treeStructureChanged(new TreeModelEvent(this, new Object[] {oldroot}));
+			listener.treeStructureChanged(new TreeModelEvent(this, (TreePath) null));
 		}
 	}
 
@@ -312,6 +323,11 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 		public boolean equals(final PathElement e)
 		{
 			return e instanceof NoPath;
+		}
+		
+		public LinkedList<PathElement> list()
+		{
+			return new LinkedList<PathElement>();
 		}
 	}
 	

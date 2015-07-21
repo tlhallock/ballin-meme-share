@@ -2,6 +2,7 @@ package org.cnv.shr.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import org.cnv.shr.util.CompressionStreams.HardToCloseInputStream;
 
@@ -48,7 +49,13 @@ public class PausableInputStream2 extends HardToCloseInputStream
 	{
 		while (!paused)
 		{
-			read(null, 0, Integer.MAX_VALUE);
+			byte[] buffer = new byte[1024];
+			int read = read(buffer, 0, buffer.length);
+			if (read > 0)
+			{
+				LogWrapper.getLogger().info("Skipping " + read + " bytes: " + new String(Arrays.copyOf(buffer, read)));
+			}
+//			read(null, 0, Integer.MAX_VALUE);
 		}
 		paused = false;
 	}
@@ -78,6 +85,20 @@ public class PausableInputStream2 extends HardToCloseInputStream
 		{
 			int nread = delegate.read(buf, off, len);
 			return nread;
+		}
+		
+		if (delegate.available() == 0)
+		{
+			System.out.println("pausable nothing in the delegate.");
+		}
+		else
+		{
+			System.out.println("pausable something in the delegate...");
+		}
+		
+		if (saidNo)
+		{
+			System.out.println("We said no");
 		}
 
 		// if much?
@@ -166,7 +187,16 @@ public class PausableInputStream2 extends HardToCloseInputStream
 		return delegate.skip(n);
 	}
 
+	
+	boolean saidNo;
 	public int available() throws IOException
+	{
+		int returnValue = myAvailable();
+		System.out.println("Pausable available = " + returnValue);
+		saidNo = returnValue == 0;
+		return returnValue;
+	}
+	public int myAvailable() throws IOException
 	{
 		if (bufferEnd - bufferBegin > 0)
 		{
@@ -177,6 +207,7 @@ public class PausableInputStream2 extends HardToCloseInputStream
 //			System.out.println(Misc.format(Arrays.copyOfRange(buffer, bufferBegin, bufferEnd)));
 			return bufferEnd - bufferBegin;
 		}
+		
 		return delegate.available();
 	}
 
