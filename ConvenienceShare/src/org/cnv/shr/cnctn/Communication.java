@@ -99,7 +99,7 @@ public class Communication implements Closeable
 	
 	private HashMap<String, Object> params = new HashMap<>();
 	
-	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = false;
+	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = true;
 	
 	/** Initiator **/
 	public Communication(Authenticator authentication, String ip, int port) throws UnknownHostException, IOException

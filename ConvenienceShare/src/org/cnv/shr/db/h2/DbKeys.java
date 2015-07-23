@@ -50,7 +50,7 @@ public class DbKeys
 	private static final QueryWrapper SELECT2 = new QueryWrapper("select KEYSTR from PUBLIC_KEY where MID=? order by ADDED desc limit 1;");
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from PUBLIC_KEY where MID=? and KEYSTR=?;");
 	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into PUBLIC_KEY key(MID, KEYSTR) values (DEFAULT, ?, ?, ?, ?);");
-	private static final QueryWrapper SELECT1 = new QueryWrapper("select KEYSTR, ADDED from PUBLIC_KEY where MID=?;");
+	private static final QueryWrapper SELECT1 = new QueryWrapper("select KEYSTR, ADDED from PUBLIC_KEY where MID=? order by ADDED desc;");
 	private static final PublicKey[] dummy = new PublicKey[0];
 //	private static final String NULLKEY = getNullKey();
 	
