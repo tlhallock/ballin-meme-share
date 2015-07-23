@@ -1,3 +1,6 @@
-[submodule "jsonp~git"]
-	path = jsonp~git
+[submodule "SourceDependencies/dependencies/snappy"]
+	path = SourceDependencies/dependencies/snappy
+	url = https://github.com/dain/snappy.git
+[submodule "SourceDependencies/dependencies/jsonp~git"]
+	path = SourceDependencies/dependencies/jsonp~git
 	url = git://java.net/jsonp~git

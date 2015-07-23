@@ -1,5 +1,5 @@
 git add Common/src/org/cnv/shr/
-git add Common/json/patch
+#git add Common/json/patch
 git add Updater/src/org/cnv/shr/
 git add Tracker/src/org/cnv/shr/
 git add Installer/src/org/cnv/shr/
@@ -9,6 +9,7 @@ git add PhoneService/src/org/cnv/shr/
 git add ConvenienceShare/test/
 git add scripts/build.xml
 git add help/UserManual.tex
-git add add_src
+git add scripts/add_src
 git add ConvenienceShare/src/res/create_h2.sql
 git add Tracker/src/res/create.sql
+git add .gitmodules

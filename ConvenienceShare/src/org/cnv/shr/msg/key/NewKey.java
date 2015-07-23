@@ -132,11 +132,11 @@ public class NewKey extends KeyMessage
 			case END_OBJECT:                         
 				if (needsNewKey)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs newKey");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.NewKey\" needs \"newKey\"");
 				}
 				if (needsNaunceRequest)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.NewKey\" needs \"naunceRequest\"");
 				}
 				return;                                
 			case KEY_NAME:                           

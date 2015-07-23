@@ -1,11 +1,13 @@
 package org.cnv.shr.phone.cmn;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.phone.msg.ClientInfo;
 import org.cnv.shr.phone.msg.Dial;
+import org.cnv.shr.phone.msg.DialFail;
 import org.cnv.shr.phone.msg.Hangup;
 import org.cnv.shr.phone.msg.HeartBeatRequest;
 import org.cnv.shr.phone.msg.HeartBeatResponse;
@@ -80,15 +82,18 @@ public class MetaHandler
 			{
 				return new ClientInfo(parameters);
 			}});
-		
-		
-		
-		
+
+		allocators.put(DialFail.getJsonName(), new Allocator() {
+			@Override
+			PhoneMessage create(ConnectionParams parameters)
+			{
+				return new DialFail(parameters);
+			}});
 	}
 
 	
 	
-	public PhoneMessage parse(JsonParser parser, ConnectionParams parameters)
+	public PhoneMessage parse(JsonParser parser, ConnectionParams parameters) throws IOException
 	{
 		String key = null;
 		while (parser.hasNext())

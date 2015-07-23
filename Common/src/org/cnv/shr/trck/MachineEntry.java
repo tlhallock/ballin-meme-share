@@ -139,54 +139,40 @@ public class MachineEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsBeginPort = true;
-		boolean needsEndPort = true;
 		boolean needsIdent = true;
 		boolean needsName = true;
 		boolean needsIp = true;
+		boolean needsBeginPort = true;
+		boolean needsEndPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsBeginPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs beginPort");
-				}
-				if (needsEndPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs endPort");
-				}
 				if (needsIdent)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"ident\"");
 				}
 				if (needsName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"name\"");
 				}
 				if (needsIp)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"ip\"");
+				}
+				if (needsBeginPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"beginPort\"");
+				}
+				if (needsEndPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"endPort\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "beginPort":
-					needsBeginPort = false;
-					beginPort = Integer.parseInt(parser.getString());
-					break;
-				case "endPort":
-					needsEndPort = false;
-					endPort = Integer.parseInt(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -204,6 +190,20 @@ public class MachineEntry extends TrackObject
 				case "ip":
 					needsIp = false;
 					ip = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "beginPort":
+					needsBeginPort = false;
+					beginPort = Integer.parseInt(parser.getString());
+					break;
+				case "endPort":
+					needsEndPort = false;
+					endPort = Integer.parseInt(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

@@ -83,39 +83,39 @@ public class TrackerRequest extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsParams = true;
 		boolean needsAction = true;
+		boolean needsParams = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsParams)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs params");
-				}
 				if (needsAction)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.TrackerRequest\" needs \"action\"");
+				}
+				if (needsParams)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.TrackerRequest\" needs \"params\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case START_OBJECT:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("params")) {
-					needsParams = false;
-					params.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("action")) {
 					needsAction = false;
 					action = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("params")) {
+					needsParams = false;
+					params.parse(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

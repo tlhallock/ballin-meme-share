@@ -146,15 +146,15 @@ public class SharedFileId implements Jsonable
 			case END_OBJECT:                         
 				if (needsMachineIdent)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machineIdent");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.dwn.SharedFileId\" needs \"machineIdent\"");
 				}
 				if (needsRootName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.dwn.SharedFileId\" needs \"rootName\"");
 				}
 				if (needsPath)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.dwn.SharedFileId\" needs \"path\"");
 				}
 				return;                                
 			case KEY_NAME:                           

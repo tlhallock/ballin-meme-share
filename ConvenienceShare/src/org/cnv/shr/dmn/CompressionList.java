@@ -139,11 +139,11 @@ public class CompressionList implements Jsonable
 			case END_OBJECT:                         
 				if (needsWhiteList)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs whiteList");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.CompressionList\" needs \"whiteList\"");
 				}
 				if (needsBlackList)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs blackList");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.CompressionList\" needs \"blackList\"");
 				}
 				return;                                
 			case KEY_NAME:                           

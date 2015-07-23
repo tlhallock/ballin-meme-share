@@ -1,15 +1,19 @@
 package org.cnv.shr.phone.cmn;
 
-import java.nio.file.Path;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import javax.json.stream.JsonGenerator;
+import javax.json.stream.JsonParser;
 
 public class Serializer
 {
-	public static boolean serialize(Path path /*, JsonGenerator generator*/)
+	public static boolean serialize(InputStream input, JsonGenerator generator)
 	{
 		return false;
 	}
 	
-	public static boolean deSerialize(Path path /*, JsonParser parser */)
+	public static boolean deSerialize(JsonParser parser, OutputStream output)
 	{
 		return false;
 	}

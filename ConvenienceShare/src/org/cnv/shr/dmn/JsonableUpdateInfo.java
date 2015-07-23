@@ -96,34 +96,25 @@ public class JsonableUpdateInfo implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsPort = true;
 		boolean needsIp = true;
+		boolean needsPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
 				if (needsIp)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.JsonableUpdateInfo\" needs \"ip\"");
+				}
+				if (needsPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.JsonableUpdateInfo\" needs \"port\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("port")) {
-					needsPort = false;
-					port = Integer.parseInt(parser.getString());
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -135,6 +126,15 @@ public class JsonableUpdateInfo implements Jsonable
 					pKey = KeyPairObject.deSerializePublicKey(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("port")) {
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

@@ -111,7 +111,7 @@ public class ConnectionOpened extends KeyMessage
 			case END_OBJECT:                         
 				if (needsDecryptedNaunce)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.ConnectionOpened\" needs \"decryptedNaunce\"");
 				}
 				return;                                
 			case KEY_NAME:                           

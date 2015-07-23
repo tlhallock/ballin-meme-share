@@ -38,7 +38,7 @@ public class PortMapper3
 	PortMapper3(Path argumentsFile) throws IOException
 	{
 		try (InputStream input = Files.newInputStream(argumentsFile);
-				JsonParser parser = TrackObjectUtils.createParser(input))
+				 JsonParser parser = TrackObjectUtils.createParser(input))
 		{
 			arguments = new PortMapArguments(parser);
 		}

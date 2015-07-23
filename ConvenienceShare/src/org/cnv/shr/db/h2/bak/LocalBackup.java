@@ -137,10 +137,10 @@ public class LocalBackup implements Jsonable
 		String key = null;                         
 		boolean needsMinFSize = true;
 		boolean needsMaxFSize = true;
-		boolean needsIgnores = true;
 		boolean needsName = true;
 		boolean needsDescription = true;
 		boolean needsPath = true;
+		boolean needsIgnores = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -148,27 +148,27 @@ public class LocalBackup implements Jsonable
 			case END_OBJECT:                         
 				if (needsMinFSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs minFSize");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"minFSize\"");
 				}
 				if (needsMaxFSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs maxFSize");
-				}
-				if (needsIgnores)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ignores");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"maxFSize\"");
 				}
 				if (needsName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"name\"");
 				}
 				if (needsDescription)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"description\"");
 				}
 				if (needsPath)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"path\"");
+				}
+				if (needsIgnores)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"ignores\"");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -194,15 +194,6 @@ public class LocalBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_ARRAY:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("ignores")) {
-					needsIgnores = false;
-					ignores.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -225,6 +216,15 @@ public class LocalBackup implements Jsonable
 					defaultSharingState = SharingState.valueOf(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("ignores")) {
+					needsIgnores = false;
+					ignores.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

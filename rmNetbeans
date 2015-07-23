@@ -1,3 +1,0 @@
-rm -r ./Installer/nbproject ./Common/nbproject ./Tracker/nbproject ./Updater/nbproject ./ConvenienceShare/nbproject
-find -name manifest.* -delete
-rm ./ConvenienceShare/build.xml ./Updater/build.xml ./Tracker/build.xml ./Common/build.xml ./Installer/build.xml

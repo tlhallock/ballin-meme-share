@@ -98,7 +98,7 @@ public class KeyFailure extends KeyMessage
 			case END_OBJECT:                         
 				if (needsReason)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs reason");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.KeyFailure\" needs \"reason\"");
 				}
 				return;                                
 			case KEY_NAME:                           

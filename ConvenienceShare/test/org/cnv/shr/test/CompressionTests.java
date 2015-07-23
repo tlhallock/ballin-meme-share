@@ -16,7 +16,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.CompressionStreams;
+import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.CountingOutputStream;
 import org.cnv.shr.util.PausableInputStream2;
@@ -34,7 +34,7 @@ public class CompressionTests
 		try (ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				 PausableOutputStream output = new PausableOutputStream(bOut))
 		{
-			try (OutputStream zipOutputStream = CompressionStreams.newCompressedOutputStream(output);)
+			try (OutputStream zipOutputStream = CompressionStreams2.newCompressedOutputStream(output);)
 			{
 				zipOutputStream.write("here is a string.".getBytes());
 				zipOutputStream.flush();
@@ -51,7 +51,7 @@ public class CompressionTests
 			try (ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
 					 PausableInputStream2 input = new PausableInputStream2(bIn);)
 			{
-				try (BufferedReader reader = new BufferedReader(new InputStreamReader(CompressionStreams.newCompressedInputStream(input))))
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(CompressionStreams2.newCompressedInputStream(input))))
 				{
 					String line;
 					while ((line = reader.readLine()) != null)
@@ -118,7 +118,7 @@ public class CompressionTests
 				};)
 				{
 					int ndx = 0;
-					try (InputStream input = CompressionStreams.newCompressedInputStream(new PausableInputStream2(input2)))
+					try (InputStream input = CompressionStreams2.newCompressedInputStream(new PausableInputStream2(input2)))
 					{
 						int read;
 						while ((read = input.read()) >= 0)
@@ -147,7 +147,7 @@ public class CompressionTests
 					}
 				};)
 		{
-			try (OutputStream output = CompressionStreams.newCompressedOutputStream(new PausableOutputStream(outputStream));)
+			try (OutputStream output = CompressionStreams2.newCompressedOutputStream(new PausableOutputStream(outputStream));)
 			{
 				output.write(bytes);
 			}
@@ -228,11 +228,11 @@ public class CompressionTests
 	public void testFlush() throws IOException
 	{
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		OutputStream cout = CompressionStreams.newCompressedOutputStream(new PausableOutputStream(output));
+		OutputStream cout = CompressionStreams2.newCompressedOutputStream(new PausableOutputStream(output));
 		byte[] bytes = "1".getBytes();
 		cout.write(bytes);
 		cout.flush();
-		InputStream newCompressedInputStream = CompressionStreams.newCompressedInputStream(new PausableInputStream2(new ByteArrayInputStream(output.toByteArray())));
+		InputStream newCompressedInputStream = CompressionStreams2.newCompressedInputStream(new PausableInputStream2(new ByteArrayInputStream(output.toByteArray())));
 		byte[] bSoFar = new byte[bytes.length];
 		int soFar = 0;
 		while (soFar < bSoFar.length)

@@ -129,15 +129,15 @@ public class ChunkResponse extends DownloadMessage
 			case END_OBJECT:                         
 				if (needsChunk)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunk");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.ChunkResponse\" needs \"chunk\"");
 				}
 				if (needsDescriptor)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.DownloadMessage\" needs \"descriptor\"");
 				}
 				if (needsIsCompressed)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isCompressed");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.ChunkResponse\" needs \"isCompressed\"");
 				}
 				return;                                
 			case KEY_NAME:                           

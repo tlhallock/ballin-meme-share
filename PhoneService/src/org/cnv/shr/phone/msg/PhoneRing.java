@@ -70,15 +70,15 @@ public class PhoneRing extends PhoneMessage
 			case END_OBJECT:                         
 				if (needsReplyPort)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs replyPort");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.PhoneRing\" needs \"replyPort\"");
 				}
 				if (needsIdent)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.PhoneRing\" needs \"ident\"");
 				}
 				if (needsUniqueKey)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs uniqueKey");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.PhoneRing\" needs \"uniqueKey\"");
 				}
 				return;                                
 			case KEY_NAME:                           

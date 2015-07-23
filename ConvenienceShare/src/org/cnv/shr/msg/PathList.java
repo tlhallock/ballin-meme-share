@@ -292,40 +292,54 @@ public class PathList extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsName = true;
+		boolean needsCurrentPath = true;
 		boolean needsSubDirs = true;
 		boolean needsChildren = true;
 		boolean needsIsTheEnd = true;
-		boolean needsName = true;
-		boolean needsCurrentPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsSubDirs)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs subDirs");
-				}
-				if (needsChildren)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs children");
-				}
-				if (needsIsTheEnd)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isTheEnd");
-				}
 				if (needsName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathList\" needs \"name\"");
 				}
 				if (needsCurrentPath)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPath");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathList\" needs \"currentPath\"");
+				}
+				if (needsSubDirs)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathList\" needs \"subDirs\"");
+				}
+				if (needsChildren)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathList\" needs \"children\"");
+				}
+				if (needsIsTheEnd)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathList\" needs \"isTheEnd\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "currentPath":
+					needsCurrentPath = false;
+					currentPath = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case START_ARRAY:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -356,20 +370,6 @@ public class PathList extends Message
 					isTheEnd = true;
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "name":
-					needsName = false;
-					name = parser.getString();
-					break;
-				case "currentPath":
-					needsCurrentPath = false;
-					currentPath = parser.getString();
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

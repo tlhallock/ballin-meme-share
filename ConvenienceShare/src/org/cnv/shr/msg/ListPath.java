@@ -127,11 +127,11 @@ public class ListPath extends Message
 			case END_OBJECT:                         
 				if (needsRootName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.ListPath\" needs \"rootName\"");
 				}
 				if (needsPath)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.ListPath\" needs \"path\"");
 				}
 				return;                                
 			case KEY_NAME:                           

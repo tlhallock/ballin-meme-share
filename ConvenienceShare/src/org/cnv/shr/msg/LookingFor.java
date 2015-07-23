@@ -98,35 +98,35 @@ public class LookingFor extends DownloadMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsFileSize = true;
-		boolean needsDescriptor = true;
 		boolean needsChecksum = true;
+		boolean needsDescriptor = true;
+		boolean needsFileSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsFileSize)
+				if (needsChecksum)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.LookingFor\" needs \"checksum\"");
 				}
 				if (needsDescriptor)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.DownloadMessage\" needs \"descriptor\"");
 				}
-				if (needsChecksum)
+				if (needsFileSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.LookingFor\" needs \"fileSize\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
+			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("fileSize")) {
-					needsFileSize = false;
-					fileSize = Long.parseLong(parser.getString());
+				if (key.equals("checksum")) {
+					needsChecksum = false;
+					checksum = parser.getString();
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
@@ -140,11 +140,11 @@ public class LookingFor extends DownloadMessage
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case VALUE_STRING:
+			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("checksum")) {
-					needsChecksum = false;
-					checksum = parser.getString();
+				if (key.equals("fileSize")) {
+					needsFileSize = false;
+					fileSize = Long.parseLong(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

@@ -112,19 +112,19 @@ public class FileBackup implements Jsonable
 			case END_OBJECT:                         
 				if (needsFileSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"fileSize\"");
 				}
 				if (needsLastModified)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"lastModified\"");
 				}
 				if (needsPath)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs path");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"path\"");
 				}
 				if (needsRootName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"rootName\"");
 				}
 				return;                                
 			case KEY_NAME:                           

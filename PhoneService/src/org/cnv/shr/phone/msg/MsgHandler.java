@@ -8,6 +8,7 @@ public interface MsgHandler
 	public void onRing        (PhoneRing ring);
 	public void onError       (Hangup hangup);
 	public void onHeartBeatAwk(HeartBeatResponse res);
+	public void onMissedCall  (PhoneLine line, DialFail dialFail);
 	
 	// server messages
 	public void onHeartBeatReq(PhoneLine line, HeartBeatRequest req);
@@ -16,6 +17,6 @@ public interface MsgHandler
 	
 
 	// both
-	public void onVoicemail   (VoiceMail mail);
+	public void onVoicemail   (PhoneLine phoneLine, VoiceMail mail);
 	public void onNoMore      ();
 }

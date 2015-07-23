@@ -131,15 +131,15 @@ public class UpdateInfoRequest extends Message
 			case END_OBJECT:                         
 				if (needsPublicKey)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs publicKey");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.swup.UpdateInfoRequest\" needs \"publicKey\"");
 				}
 				if (needsNaunceRequest)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.swup.UpdateInfoRequest\" needs \"naunceRequest\"");
 				}
 				if (needsAction)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.swup.UpdateInfoRequest\" needs \"action\"");
 				}
 				return;                                
 			case KEY_NAME:                           

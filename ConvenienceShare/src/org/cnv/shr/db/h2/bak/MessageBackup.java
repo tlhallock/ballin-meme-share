@@ -102,19 +102,19 @@ public class MessageBackup implements Jsonable
 			case END_OBJECT:                         
 				if (needsSent)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sent");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MessageBackup\" needs \"sent\"");
 				}
 				if (needsMachine)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machine");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MessageBackup\" needs \"machine\"");
 				}
 				if (needsMessageType)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs messageType");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MessageBackup\" needs \"messageType\"");
 				}
 				if (needsMessage)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MessageBackup\" needs \"message\"");
 				}
 				return;                                
 			case KEY_NAME:                           

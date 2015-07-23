@@ -37,7 +37,7 @@ import javax.json.stream.JsonParser.Event;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerRequest;
-import org.cnv.shr.util.CompressionStreams;
+import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -108,7 +108,7 @@ public abstract class TrackerConnection implements Closeable
 		// handshake done...
 		generator.writeEnd();
 		generator.close();
-		generator = TrackObjectUtils.createGenerator(CompressionStreams.newCompressedOutputStream(out));
+		generator = TrackObjectUtils.createGenerator(CompressionStreams2.newCompressedOutputStream(out));
 		generator.writeStartArray();
 		request.generate(generator);
 		generator.flush();
@@ -118,7 +118,7 @@ public abstract class TrackerConnection implements Closeable
 			throw new IOException("Expected end of old stream.");
 		}
 		in.startAgain();
-		parser = TrackObjectUtils.createParser(CompressionStreams.newCompressedInputStream(in));
+		parser = TrackObjectUtils.createParser(CompressionStreams2.newCompressedInputStream(in));
 		
 		System.out.println("here...");
 

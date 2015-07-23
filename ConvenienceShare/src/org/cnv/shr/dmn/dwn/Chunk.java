@@ -162,16 +162,24 @@ public class Chunk implements Jsonable
 			case END_OBJECT:                         
 				if (needsBegin)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs begin");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.dwn.Chunk\" needs \"begin\"");
 				}
 				if (needsEnd)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs end");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.dmn.dwn.Chunk\" needs \"end\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("checksum")) {
+					checksum = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -184,14 +192,6 @@ public class Chunk implements Jsonable
 					end = Long.parseLong(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("checksum")) {
-					checksum = parser.getString();
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

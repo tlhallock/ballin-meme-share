@@ -42,7 +42,7 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
-import org.cnv.shr.util.CompressionStreams;
+import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -91,7 +91,7 @@ public class GetLogs extends Message
 			// Temporarily disable file logs...
 			LogWrapper.logToFile(null, -1);
 
-			try (OutputStream output = CompressionStreams.newCompressedOutputStream(connection.getOutput());
+			try (OutputStream output = CompressionStreams2.newCompressedOutputStream(connection.getOutput());
 					 InputStream input = Files.newInputStream(logFile);)
 			{
 				long rem = logSize - pushedSoFar;
@@ -167,7 +167,7 @@ public class GetLogs extends Message
 			case END_OBJECT:                         
 				if (needsDecryptedNaunce)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.swup.GetLogs\" needs \"decryptedNaunce\"");
 				}
 				return;                                
 			case KEY_NAME:                           

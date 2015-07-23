@@ -46,7 +46,7 @@ public class PhoneLine implements Closeable
 		params = new ConnectionParams();
 	}
 	
-	public PhoneMessage readMessage()
+	public PhoneMessage readMessage() throws IOException
 	{
 		synchronized (parser)
 		{
@@ -94,7 +94,6 @@ public class PhoneLine implements Closeable
 	{
 		this.info = clientInfo;
 		clientInfo.setIp(socket.getInetAddress().getHostAddress());
-		clientInfo.setPort(socket.getPort());
 	}
 
 	public void flush() throws IOException

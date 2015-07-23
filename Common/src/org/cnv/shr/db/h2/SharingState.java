@@ -129,7 +129,7 @@ public enum SharingState implements Jsonable
 			case END_OBJECT:                         
 				if (needsState)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs state");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.SharingState\" needs \"state\"");
 				}
 				return;                                
 			case KEY_NAME:                           

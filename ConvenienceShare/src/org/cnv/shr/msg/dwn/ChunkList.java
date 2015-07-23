@@ -139,11 +139,11 @@ public class ChunkList extends DownloadMessage
 			case END_OBJECT:                         
 				if (needsChunks)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.ChunkList\" needs \"chunks\"");
 				}
 				if (needsDescriptor)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.DownloadMessage\" needs \"descriptor\"");
 				}
 				return;                                
 			case KEY_NAME:                           

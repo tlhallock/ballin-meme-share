@@ -132,7 +132,7 @@ public class GetPermission extends Message
 			case END_OBJECT:                         
 				if (needsRootName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.GetPermission\" needs \"rootName\"");
 				}
 				return;                                
 			case KEY_NAME:                           

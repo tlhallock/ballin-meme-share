@@ -21,6 +21,8 @@ public class ServerSettings implements Storable
 	
 	public Path voiceRootMailPath = Paths.get("voicemail.d");
 	
+	public long MAXIMUM_VOICE_MAIL_TIME = 24 * 60 * 60 * 1000;
+	
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator, String key) {
@@ -33,45 +35,60 @@ public class ServerSettings implements Storable
 		generator.write("connectionPortBegin", connectionPortBegin);
 		generator.write("connectionPortEnd", connectionPortEnd);
 		generator.write("voiceRootMailPath", voiceRootMailPath.toString());
+		generator.write("MAXIMUM_VOICE_MAIL_TIME", MAXIMUM_VOICE_MAIL_TIME);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsVoiceRootMailPath = true;
 		boolean needsMetaPortBegin = true;
 		boolean needsMetaPortEnd = true;
 		boolean needsConnectionPortBegin = true;
 		boolean needsConnectionPortEnd = true;
-		boolean needsVoiceRootMailPath = true;
+		boolean needsMAXIMUM_VOICE_MAIL_TIME = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsVoiceRootMailPath)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"voiceRootMailPath\"");
+				}
 				if (needsMetaPortBegin)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs metaPortBegin");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"metaPortBegin\"");
 				}
 				if (needsMetaPortEnd)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs metaPortEnd");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"metaPortEnd\"");
 				}
 				if (needsConnectionPortBegin)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs connectionPortBegin");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"connectionPortBegin\"");
 				}
 				if (needsConnectionPortEnd)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs connectionPortEnd");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"connectionPortEnd\"");
 				}
-				if (needsVoiceRootMailPath)
+				if (needsMAXIMUM_VOICE_MAIL_TIME)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs voiceRootMailPath");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"MAXIMUM_VOICE_MAIL_TIME\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("voiceRootMailPath")) {
+					needsVoiceRootMailPath = false;
+					voiceRootMailPath = Paths.get(parser.getString());
+				} else {
+					Services.logger.warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -91,16 +108,11 @@ public class ServerSettings implements Storable
 					needsConnectionPortEnd = false;
 					connectionPortEnd = Integer.parseInt(parser.getString());
 					break;
+				case "MAXIMUM_VOICE_MAIL_TIME":
+					needsMAXIMUM_VOICE_MAIL_TIME = false;
+					MAXIMUM_VOICE_MAIL_TIME = Long.parseLong(parser.getString());
+					break;
 				default: Services.logger.warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("voiceRootMailPath")) {
-					needsVoiceRootMailPath = false;
-					voiceRootMailPath = Paths.get(parser.getString());
-				} else {
-					Services.logger.warning("Unknown key: " + key);
 				}
 				break;
 			default: Services.logger.warning("Unknown type found in message: " + e);

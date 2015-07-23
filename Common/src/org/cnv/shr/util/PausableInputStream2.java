@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import org.cnv.shr.util.CompressionStreams.HardToCloseInputStream;
+import org.cnv.shr.util.HardToCloseStreams.HardToCloseInputStream;
+
 
 /**
  * The json parser continues to read after the current object.
@@ -74,6 +75,15 @@ public class PausableInputStream2 extends HardToCloseInputStream
 	{
 		return read(b, 0, b.length);
 	}
+	
+	private int delegateRead(byte buf[], int off, int len) throws IOException
+	{
+//		if (delegate.available() == 0)
+//		{
+//			return 0;
+//		}
+		return delegate.read(buf, off, len);
+	}
 
 	public int read(byte buf[], int off, int len) throws IOException
 	{
@@ -83,7 +93,7 @@ public class PausableInputStream2 extends HardToCloseInputStream
 		}
 		if (rawMode)
 		{
-			int nread = delegate.read(buf, off, len);
+			int nread = delegateRead(buf, off, len);
 			return nread;
 		}
 		
@@ -96,22 +106,21 @@ public class PausableInputStream2 extends HardToCloseInputStream
 			System.out.println("pausable something in the delegate...");
 		}
 		
-		if (saidNo)
-		{
-			System.out.println("We said no");
-		}
-
 		// if much?
 		for (;;)
 		{
 			if (bufferBegin >= bufferEnd)
 			{
 				bufferBegin = 0;
-				bufferEnd = delegate.read(buffer, 0, Math.min(buffer.length, len));
+				bufferEnd = delegateRead(buffer, 0, Math.min(buffer.length, len));
 				if (bufferEnd < 0)
 				{
 					return -1;
 				}
+//				if (bufferEnd == 0)
+//				{
+//					return 0;
+//				}
 				continue;
 			}
 			if (buffer[bufferBegin] != PAUSE_BYTE)
@@ -165,17 +174,21 @@ public class PausableInputStream2 extends HardToCloseInputStream
 				{
 					remLen = len;
 				}
-				int read = delegate.read(buffer, bufferEnd, remLen);
+				int read = delegateRead(buffer, bufferEnd, remLen);
 				if (read < 0)
 				{
 					throw new IOException("Unescaped pause character!!");
 				}
+//				if (read == 0)
+//				{
+//					return 0;
+//				}
 				bufferEnd += read;
 				continue;
 			}
 			buffer[bufferBegin = 0] = PAUSE_BYTE;
-			bufferEnd = 1 + delegate.read(buffer, 1, Math.min(buffer.length - 1, len));
-			if (bufferEnd < 0)
+			bufferEnd = 1 + delegateRead(buffer, 1, Math.min(buffer.length - 1, len));
+			if (bufferEnd <= 0)
 			{
 				throw new IOException("Unescaped pause character!!");
 			}
@@ -186,14 +199,11 @@ public class PausableInputStream2 extends HardToCloseInputStream
 	{
 		return delegate.skip(n);
 	}
-
 	
-	boolean saidNo;
 	public int available() throws IOException
 	{
 		int returnValue = myAvailable();
 		System.out.println("Pausable available = " + returnValue);
-		saidNo = returnValue == 0;
 		return returnValue;
 	}
 	public int myAvailable() throws IOException

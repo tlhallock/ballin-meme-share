@@ -215,15 +215,15 @@ public class PermissionFailure extends Message
 			case END_OBJECT:                         
 				if (needsRootName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs rootName");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.PermissionFailure\" needs \"rootName\"");
 				}
 				if (needsCurrentPermission)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentPermission");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.PermissionFailure\" needs \"currentPermission\"");
 				}
 				if (needsAction)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.PermissionFailure\" needs \"action\"");
 				}
 				return;                                
 			case KEY_NAME:                           

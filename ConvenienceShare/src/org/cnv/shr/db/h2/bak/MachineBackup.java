@@ -174,93 +174,70 @@ public class MachineBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsPort = true;
-		boolean needsNports = true;
-		boolean needsKeys = true;
 		boolean needsAllowsMessages = true;
 		boolean needsPin = true;
 		boolean needsRoots = true;
+		boolean needsPort = true;
+		boolean needsNports = true;
 		boolean needsIp = true;
 		boolean needsName = true;
 		boolean needsIdentifier = true;
 		boolean needsWeShareToThem = true;
 		boolean needsSharesWithUs = true;
+		boolean needsKeys = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs port");
-				}
-				if (needsNports)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs nports");
-				}
-				if (needsKeys)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs keys");
-				}
 				if (needsAllowsMessages)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs allowsMessages");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"allowsMessages\"");
 				}
 				if (needsPin)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs pin");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"pin\"");
 				}
 				if (needsRoots)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs roots");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"roots\"");
+				}
+				if (needsPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"port\"");
+				}
+				if (needsNports)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"nports\"");
 				}
 				if (needsIp)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"ip\"");
 				}
 				if (needsName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"name\"");
 				}
 				if (needsIdentifier)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs identifier");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"identifier\"");
 				}
 				if (needsWeShareToThem)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs weShareToThem");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"weShareToThem\"");
 				}
 				if (needsSharesWithUs)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharesWithUs");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"sharesWithUs\"");
+				}
+				if (needsKeys)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"keys\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "port":
-					needsPort = false;
-					port = Integer.parseInt(parser.getString());
-					break;
-				case "nports":
-					needsNports = false;
-					nports = Integer.parseInt(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case START_ARRAY:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("keys")) {
-					needsKeys = false;
-					keys.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_FALSE:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -298,6 +275,20 @@ public class MachineBackup implements Jsonable
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "port":
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+					break;
+				case "nports":
+					needsNports = false;
+					nports = Integer.parseInt(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -322,6 +313,15 @@ public class MachineBackup implements Jsonable
 					sharesWithUs = SharingState.valueOf(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("keys")) {
+					needsKeys = false;
+					keys.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

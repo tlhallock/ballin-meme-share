@@ -1,0 +1,16 @@
+
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.hallock</groupId>
+  <artifactId>ConvenienceShare</artifactId>
+  <version>1</version>
+  
+  
+  <dependencies>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.4.187</version>
+    </dependency>
+  </dependencies>
+</project>

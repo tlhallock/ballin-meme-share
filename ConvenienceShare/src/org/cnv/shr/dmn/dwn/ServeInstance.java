@@ -48,7 +48,7 @@ import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.msg.dwn.RequestCompletionStatus;
 import org.cnv.shr.stng.Settings;
-import org.cnv.shr.util.CompressionStreams;
+import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
 
@@ -227,7 +227,7 @@ public class ServeInstance extends TimerTask
 
 				if (compress)
 				{
-					try (OutputStream out = CompressionStreams.newCompressedOutputStream(connection.getOutput()))
+					try (OutputStream out = CompressionStreams2.newCompressedOutputStream(connection.getOutput()))
 					{
 						ChunkData.write(chunk, local.getFsFile(), out);
 					}

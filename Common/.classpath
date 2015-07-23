@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="json/patch"/>
-	<classpathentry kind="src" path="json/impl"/>
-	<classpathentry kind="src" path="java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/work/ballin-meme-share/libs/FlexiProvider-1.7p7.signed.jar"/>
 	<classpathentry kind="lib" path="/work/ballin-meme-share/libs/CoDec-build17-jdk13.jar"/>
+	<classpathentry kind="lib" path="/home/thallock/Applications/eclipse/plugins/org.junit_4.11.0.v201303080030/junit.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://junit-team.github.io/junit/javadoc/latest/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SourceDependencies"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

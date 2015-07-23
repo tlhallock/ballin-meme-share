@@ -100,7 +100,7 @@ public class RevokeKey extends Message
 			case END_OBJECT:                         
 				if (needsRevoke)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs revoke");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.RevokeKey\" needs \"revoke\"");
 				}
 				return;                                
 			case KEY_NAME:                           

@@ -103,9 +103,12 @@ import org.cnv.shr.msg.swup.GotLogs;
 import org.cnv.shr.msg.swup.UpdateInfoMessage;
 import org.cnv.shr.msg.swup.UpdateInfoRequest;
 import org.cnv.shr.msg.swup.UpdateInfoRequestRequest;
+import org.cnv.shr.phone.clnt.DialerParams;
 import org.cnv.shr.phone.clnt.OperatorInfo;
+import org.cnv.shr.phone.cmn.PhoneNumber;
 import org.cnv.shr.phone.msg.ClientInfo;
 import org.cnv.shr.phone.msg.Dial;
+import org.cnv.shr.phone.msg.DialFail;
 import org.cnv.shr.phone.msg.Hangup;
 import org.cnv.shr.phone.msg.HeartBeatRequest;
 import org.cnv.shr.phone.msg.HeartBeatResponse;
@@ -239,6 +242,10 @@ public class GenerateParserCode
 				Dial.class,
 				NoMoreMessages.class,
 				ClientInfo.class,
+				DialFail.class,
+				DialerParams.class,
+				PhoneNumber.class,
+//				PhoneNumberWildCard.class,
 				
 				org.cnv.shr.db.h2.bak.LocalBackup.class,
 				org.cnv.shr.db.h2.bak.MachineBackup.class,
@@ -416,7 +423,7 @@ public class GenerateParserCode
                         return f;
                     }).map((f) -> {
                         ps.println("\t\t\t\t{");
-                        ps.println("\t\t\t\t\tthrow new org.cnv.shr.util.IncompleteMessageException(\"Message needs " + f.getName() + "\");");
+                        ps.println("\t\t\t\t\tthrow new javax.json.JsonException(\"Incomplete json: type=\\\"" + f.getDeclaringClass().getName() + "\\\" needs \\\"" + f.getName() + "\\\"\");");
                         return f;
                     }).forEach((_item) -> {
                         ps.println("\t\t\t\t}");

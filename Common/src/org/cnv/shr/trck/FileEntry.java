@@ -146,39 +146,39 @@ public class FileEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsFileSize = true;
 		boolean needsChecksum = true;
+		boolean needsFileSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsFileSize)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
-				}
 				if (needsChecksum)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.FileEntry\" needs \"checksum\"");
+				}
+				if (needsFileSize)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.FileEntry\" needs \"fileSize\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("fileSize")) {
-					needsFileSize = false;
-					fileSize = Long.parseLong(parser.getString());
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("checksum")) {
 					needsChecksum = false;
 					checksum = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("fileSize")) {
+					needsFileSize = false;
+					fileSize = Long.parseLong(parser.getString());
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

@@ -130,19 +130,19 @@ public class KeyChange extends KeyMessage
 			case END_OBJECT:                         
 				if (needsOldKey)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs oldKey");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.KeyChange\" needs \"oldKey\"");
 				}
 				if (needsNewKey)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs newKey");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.KeyChange\" needs \"newKey\"");
 				}
 				if (needsDecryptedProof)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedProof");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.KeyChange\" needs \"decryptedProof\"");
 				}
 				if (needsNaunceRequest)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.KeyChange\" needs \"naunceRequest\"");
 				}
 				return;                                
 			case KEY_NAME:                           

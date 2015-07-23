@@ -19,7 +19,7 @@ import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
 import org.cnv.shr.util.ByteReader;
-import org.cnv.shr.util.CompressionStreams;
+import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -52,7 +52,7 @@ public class GotLogs extends Message
 			byte[] buffer = new byte[Misc.BUFFER_SIZE];
 			Misc.ensureDirectory(log, true);
 			try (OutputStream output = Files.newOutputStream(log);
-					 InputStream in = CompressionStreams.newCompressedInputStream(connection.getIn());)
+					 InputStream in = CompressionStreams2.newCompressedInputStream(connection.getIn());)
 			{
 				while (remaining > 0)
 				{
@@ -112,7 +112,7 @@ public class GotLogs extends Message
 			case END_OBJECT:                         
 				if (needsLogSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs logSize");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.swup.GotLogs\" needs \"logSize\"");
 				}
 				return;                                
 			case KEY_NAME:                           

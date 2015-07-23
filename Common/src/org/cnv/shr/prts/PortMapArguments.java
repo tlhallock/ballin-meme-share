@@ -82,42 +82,25 @@ public class PortMapArguments implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsPorts = true;
 		boolean needsAction = true;
+		boolean needsPorts = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsPorts)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ports");
-				}
 				if (needsAction)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.prts.PortMapArguments\" needs \"action\"");
+				}
+				if (needsPorts)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.prts.PortMapArguments\" needs \"ports\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("routerIndex")) {
-					routerIndex = Integer.parseInt(parser.getString());
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case START_ARRAY:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("ports")) {
-					needsPorts = false;
-					ports.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -129,6 +112,23 @@ public class PortMapArguments implements Jsonable
 					action = parser.getString();
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("ports")) {
+					needsPorts = false;
+					ports.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("routerIndex")) {
+					routerIndex = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

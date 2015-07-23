@@ -37,11 +37,11 @@ public class LastVersionEntry implements Jsonable
 			case END_OBJECT:                         
 				if (needsIdentifier)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs identifier");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.updt.LastVersionEntry\" needs \"identifier\"");
 				}
 				if (needsVersion)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs version");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.updt.LastVersionEntry\" needs \"version\"");
 				}
 				return;                                
 			case KEY_NAME:                           

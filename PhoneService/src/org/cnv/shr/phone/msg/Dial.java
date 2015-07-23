@@ -64,11 +64,11 @@ public class Dial extends PhoneMessage
 			case END_OBJECT:                         
 				if (needsNumber)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs number");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Dial\" needs \"number\"");
 				}
 				if (needsUniqueKey)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs uniqueKey");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Dial\" needs \"uniqueKey\"");
 				}
 				return;                                
 			case KEY_NAME:                           

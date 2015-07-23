@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import org.cnv.shr.phone.cmn.PhoneLine;
 import org.cnv.shr.phone.msg.ClientInfo;
 import org.cnv.shr.phone.msg.Dial;
+import org.cnv.shr.phone.msg.DialFail;
 import org.cnv.shr.phone.msg.Hangup;
 import org.cnv.shr.phone.msg.HeartBeatRequest;
 import org.cnv.shr.phone.msg.HeartBeatResponse;
@@ -17,18 +18,16 @@ import org.cnv.shr.phone.msg.VoiceMail;
 
 public class Operator implements Runnable, MsgHandler
 {
-	private PhoneProvider isp;
+	private PhoneProvider provider;
 	private ServerSocket server;
-	private VoiceMailManager manager;
 	private int port;
 	
 	private boolean clientHasMore;
 
-	public Operator(PhoneProvider isp, VoiceMailManager manager, int port) throws IOException
+	public Operator(PhoneProvider isp, int port) throws IOException
 	{
-		this.isp = isp;
+		this.provider = isp;
 		server = new ServerSocket(port);
-		this.manager = manager;
 		this.port = port;
 	}
 
@@ -58,9 +57,9 @@ public class Operator implements Runnable, MsgHandler
 					readMessage.perform(phoneLine, this);
 				}
 				
-				isp.sendPending(phoneLine);
+				provider.sendPending(phoneLine);
 
-				isp.unregister(info);
+				provider.unregister(info);
 				phoneLine.sendMessage(new NoMoreMessages());
 				phoneLine.flush();
 			}
@@ -70,7 +69,7 @@ public class Operator implements Runnable, MsgHandler
 			}
 			finally
 			{
-				isp.unregister(info);
+				provider.unregister(info);
 			}
 		}
 	}
@@ -84,13 +83,13 @@ public class Operator implements Runnable, MsgHandler
 	@Override
 	public void onDial(PhoneLine line, Dial dial) throws InterruptedException
 	{
-		isp.handleDial(dial, line);
+		provider.handleDial(dial, line);
 	}
 
 	@Override
-	public void onVoicemail(VoiceMail mail)
+	public void onVoicemail(PhoneLine phoneLine, VoiceMail mail)
 	{
-		manager.newVoiceMail(null, mail);
+		provider.onVoiceMail(phoneLine, mail);
 	}
 
 	@Override
@@ -103,7 +102,7 @@ public class Operator implements Runnable, MsgHandler
 	public void onClientInfo(PhoneLine line, ClientInfo clientInfo)
 	{
 		line.setInfo(clientInfo);
-		isp.register(clientInfo, line);
+		provider.register(clientInfo, line);
 	}
 	
 	
@@ -128,6 +127,12 @@ public class Operator implements Runnable, MsgHandler
 
 	@Override
 	public void onHeartBeatAwk(HeartBeatResponse res)
+	{
+		// unexpected message...
+	}
+
+	@Override
+	public void onMissedCall(PhoneLine line, DialFail dialFail)
 	{
 		// unexpected message...
 	}

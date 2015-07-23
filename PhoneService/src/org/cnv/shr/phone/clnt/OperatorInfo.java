@@ -27,6 +27,21 @@ public class OperatorInfo implements Storable
 		parse(parser);
 	}
 
+	public int hashCode()
+	{
+		return toString().hashCode();
+	}
+	
+	public boolean equals(Object other)
+	{
+		return other instanceof OperatorInfo && toString().equals(other.toString());
+	}
+	
+	public String toString()
+	{
+		return ip + ":" + beginPort + "-" + endPort;
+	}
+	
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator, String key) {
@@ -42,30 +57,39 @@ public class OperatorInfo implements Storable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsIp = true;
 		boolean needsBeginPort = true;
 		boolean needsEndPort = true;
-		boolean needsIp = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsIp)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.OperatorInfo\" needs \"ip\"");
+				}
 				if (needsBeginPort)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs beginPort");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.OperatorInfo\" needs \"beginPort\"");
 				}
 				if (needsEndPort)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs endPort");
-				}
-				if (needsIp)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ip");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.OperatorInfo\" needs \"endPort\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("ip")) {
+					needsIp = false;
+					ip = parser.getString();
+				} else {
+					Services.logger.warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -78,15 +102,6 @@ public class OperatorInfo implements Storable
 					endPort = Integer.parseInt(parser.getString());
 					break;
 				default: Services.logger.warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("ip")) {
-					needsIp = false;
-					ip = parser.getString();
-				} else {
-					Services.logger.warning("Unknown key: " + key);
 				}
 				break;
 			default: Services.logger.warning("Unknown type found in message: " + e);

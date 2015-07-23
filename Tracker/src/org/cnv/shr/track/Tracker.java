@@ -44,7 +44,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerAction;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.trck.TrackerRequest;
-import org.cnv.shr.util.CompressionStreams;
+import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.PausableInputStream2;
@@ -98,7 +98,7 @@ public class Tracker implements Runnable
 				}
 				parser.close();
 				input.startAgain();
-				parser = TrackObjectUtils.createParser(CompressionStreams.newCompressedInputStream(input));
+				parser = TrackObjectUtils.createParser(CompressionStreams2.newCompressedInputStream(input));
 				if (!parser.next().equals(JsonParser.Event.START_ARRAY))
 				{
 					throw new IOException("Client content did not start with an array.");
@@ -107,7 +107,7 @@ public class Tracker implements Runnable
 				// Handshake done
 				generator.writeEnd();
 				generator.close();
-				generator = TrackObjectUtils.createGenerator(CompressionStreams.newCompressedOutputStream(output));
+				generator = TrackObjectUtils.createGenerator(CompressionStreams2.newCompressedOutputStream(output));
 				generator.writeStartArray();
 				generator.flush();
 				

@@ -137,11 +137,11 @@ public class OpenConnection extends KeyMessage
 			case END_OBJECT:                         
 				if (needsSourcePublicKey)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sourcePublicKey");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.OpenConnection\" needs \"sourcePublicKey\"");
 				}
 				if (needsRequestedNaunce)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs requestedNaunce");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.OpenConnection\" needs \"requestedNaunce\"");
 				}
 				return;                                
 			case KEY_NAME:                           

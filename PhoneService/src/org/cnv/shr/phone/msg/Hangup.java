@@ -53,11 +53,11 @@ public class Hangup extends PhoneMessage
 			case END_OBJECT:                         
 				if (needsCode)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs code");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Hangup\" needs \"code\"");
 				}
 				if (needsMessage)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Hangup\" needs \"message\"");
 				}
 				return;                                
 			case KEY_NAME:                           

@@ -134,7 +134,7 @@ public class NewAesKey extends Message
 			case END_OBJECT:                         
 				if (needsEncryptedAesKey)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs encryptedAesKey");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.NewAesKey\" needs \"encryptedAesKey\"");
 				}
 				return;                                
 			case KEY_NAME:                           

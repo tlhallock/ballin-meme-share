@@ -132,11 +132,11 @@ public class RootListChild implements Jsonable
 			case END_OBJECT:                         
 				if (needsName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs name");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.RootListChild\" needs \"name\"");
 				}
 				if (needsIsShared)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs isShared");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.RootListChild\" needs \"isShared\"");
 				}
 				return;                                
 			case KEY_NAME:                           

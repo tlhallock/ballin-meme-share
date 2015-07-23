@@ -192,7 +192,7 @@ public class RootList extends Message
 			case END_OBJECT:                         
 				if (needsSharedDirectories)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs sharedDirectories");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.RootList\" needs \"sharedDirectories\"");
 				}
 				return;                                
 			case KEY_NAME:                           

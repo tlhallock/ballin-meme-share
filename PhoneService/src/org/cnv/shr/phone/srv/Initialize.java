@@ -12,13 +12,12 @@ public class Initialize
 	{
 		ServerSettings settings = new ServerSettings();
 		
-		VoiceMailManager manager = new VoiceMailManager(settings.voiceRootMailPath);
-		
+		VoiceMailManager manager = new VoiceMailManager(settings);
 		PhoneProvider isp = new PhoneProvider(manager, settings.connectionPortBegin, settings.connectionPortEnd);
 		
 		for (int port = settings.metaPortBegin; port < settings.metaPortEnd; port++)
 		{
-			Services.executor.execute(new Operator(isp, manager, port));
+			Services.executor.execute(new Operator(isp, port));
 		}
 	}
 }

@@ -59,7 +59,7 @@ public class TrackerFound extends Message
 			case END_OBJECT:                         
 				if (needsEntry)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs entry");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.TrackerFound\" needs \"entry\"");
 				}
 				return;                                
 			case KEY_NAME:                           

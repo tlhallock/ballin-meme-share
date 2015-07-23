@@ -47,49 +47,35 @@ public class JsonPortMapping implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsInternalPort = true;
-		boolean needsExternalPort = true;
 		boolean needsProtocol = true;
 		boolean needsDescription = true;
+		boolean needsInternalPort = true;
+		boolean needsExternalPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsInternalPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs internalPort");
-				}
-				if (needsExternalPort)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs externalPort");
-				}
 				if (needsProtocol)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs protocol");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.prts.JsonPortMapping\" needs \"protocol\"");
 				}
 				if (needsDescription)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs description");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.prts.JsonPortMapping\" needs \"description\"");
+				}
+				if (needsInternalPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.prts.JsonPortMapping\" needs \"internalPort\"");
+				}
+				if (needsExternalPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.prts.JsonPortMapping\" needs \"externalPort\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "internalPort":
-					needsInternalPort = false;
-					internalPort = Integer.parseInt(parser.getString());
-					break;
-				case "externalPort":
-					needsExternalPort = false;
-					externalPort = Integer.parseInt(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -103,6 +89,20 @@ public class JsonPortMapping implements Jsonable
 				case "description":
 					needsDescription = false;
 					description = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "internalPort":
+					needsInternalPort = false;
+					internalPort = Integer.parseInt(parser.getString());
+					break;
+				case "externalPort":
+					needsExternalPort = false;
+					externalPort = Integer.parseInt(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

@@ -105,7 +105,7 @@ public class Failure extends Message
 			case END_OBJECT:                         
 				if (needsMessage)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs message");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.Failure\" needs \"message\"");
 				}
 				return;                                
 			case KEY_NAME:                           

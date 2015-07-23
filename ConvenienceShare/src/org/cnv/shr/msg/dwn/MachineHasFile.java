@@ -103,7 +103,7 @@ public class MachineHasFile extends DownloadMessage
 			case END_OBJECT:                         
 				if (needsDescriptor)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs descriptor");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.DownloadMessage\" needs \"descriptor\"");
 				}
 				return;                                
 			case KEY_NAME:                           

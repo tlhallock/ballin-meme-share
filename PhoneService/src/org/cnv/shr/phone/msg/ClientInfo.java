@@ -8,15 +8,15 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.phone.cmn.ConnectionParams;
 import org.cnv.shr.phone.cmn.PhoneLine;
+import org.cnv.shr.phone.cmn.PhoneNumber;
 import org.cnv.shr.phone.cmn.Services;
 
 public class ClientInfo extends PhoneMessage
 {
 	@MyParserNullable
 	private String ip;
-	@MyParserNullable
-	private int port;
 	private String ident;
+	
 	private long refreshRate;
 	
 	public ClientInfo(ConnectionParams params)
@@ -24,11 +24,22 @@ public class ClientInfo extends PhoneMessage
 		super(params);
 	}
 	
+	public ClientInfo(PhoneNumber number)
+	{
+		this.ip = number.getIp();
+		this.ident = number.getIdent();
+	}
+	
 	public ClientInfo(String ident)
 	{
 		this.ident = ident;
 	}
-
+	
+	public PhoneNumber getNumber()
+	{
+		return new PhoneNumber(ident, ip);
+	}
+	
 	public int hashCode()
 	{
 		return getKeyString().hashCode(); 
@@ -39,14 +50,9 @@ public class ClientInfo extends PhoneMessage
 		if (other instanceof ClientInfo)
 		{
 			ClientInfo oinfo = (ClientInfo) other;
-			return ip.equals(oinfo.ip) && port == oinfo.port && ident.equals(oinfo.ident);
+			return ip.equals(oinfo.ip) && ident.equals(oinfo.ident);
 		}
 		return false;
-	}
-
-	public void setPort(int port2)
-	{
-		this.port = port2;
 	}
 
 	public void setIp(String hostAddress)
@@ -56,7 +62,7 @@ public class ClientInfo extends PhoneMessage
 
 	private String getKeyString()
 	{
-		return ip + ":" + port + "[" + ident + "]";
+		return ip + ":" + "[" + ident + "]";
 	}
 
 	@Override
@@ -77,24 +83,33 @@ public class ClientInfo extends PhoneMessage
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
-		if (ip!=null)
 		generator.write("ip", ip);
-		generator.write("port", port);
 		generator.write("ident", ident);
+		generator.write("refreshRate", refreshRate);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsRefreshRate = true;
+		boolean needsIp = true;
 		boolean needsIdent = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsRefreshRate)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.ClientInfo\" needs \"refreshRate\"");
+				}
+				if (needsIp)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.ClientInfo\" needs \"ip\"");
+				}
 				if (needsIdent)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs ident");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.ClientInfo\" needs \"ident\"");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -102,8 +117,9 @@ public class ClientInfo extends PhoneMessage
 				break;                                 
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("port")) {
-					port = Integer.parseInt(parser.getString());
+				if (key.equals("refreshRate")) {
+					needsRefreshRate = false;
+					refreshRate = Long.parseLong(parser.getString());
 				} else {
 					Services.logger.warning("Unknown key: " + key);
 				}
@@ -112,6 +128,7 @@ public class ClientInfo extends PhoneMessage
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "ip":
+					needsIp = false;
 					ip = parser.getString();
 					break;
 				case "ident":

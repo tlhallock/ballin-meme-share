@@ -66,7 +66,7 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.trck.FileEntry;
-import org.cnv.shr.util.CompressionStreams;
+import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -472,7 +472,7 @@ public class DownloadInstance implements Runnable
 				if (compressed)
 				{
 					LogWrapper.getLogger().info("Chunk is compressed.");
-					try (InputStream in = CompressionStreams.newCompressedInputStream(connection.getIn()))
+					try (InputStream in = CompressionStreams2.newCompressedInputStream(connection.getIn()))
 					{
 						successful = ChunkData.read(chunk, destination.toFile(), in);
 					}

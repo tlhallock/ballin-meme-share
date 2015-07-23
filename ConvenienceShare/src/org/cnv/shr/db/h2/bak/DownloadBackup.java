@@ -202,12 +202,12 @@ public class DownloadBackup implements Jsonable
 		boolean needsAdded = true;
 		boolean needsPriority = true;
 		boolean needsChunkSize = true;
-		boolean needsChunks = true;
 		boolean needsRemoteMachine = true;
 		boolean needsRemoteDirectory = true;
 		boolean needsRemotePath = true;
 		boolean needsChecksum = true;
 		boolean needsCurrentDownloadState = true;
+		boolean needsChunks = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -215,47 +215,47 @@ public class DownloadBackup implements Jsonable
 			case END_OBJECT:                         
 				if (needsFileSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs fileSize");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"fileSize\"");
 				}
 				if (needsLastModified)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs lastModified");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"lastModified\"");
 				}
 				if (needsAdded)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs added");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"added\"");
 				}
 				if (needsPriority)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs priority");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"priority\"");
 				}
 				if (needsChunkSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunkSize");
-				}
-				if (needsChunks)
-				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs chunks");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"chunkSize\"");
 				}
 				if (needsRemoteMachine)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteMachine");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"remoteMachine\"");
 				}
 				if (needsRemoteDirectory)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remoteDirectory");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"remoteDirectory\"");
 				}
 				if (needsRemotePath)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs remotePath");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"remotePath\"");
 				}
 				if (needsChecksum)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs checksum");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"checksum\"");
 				}
 				if (needsCurrentDownloadState)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentDownloadState");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"currentDownloadState\"");
+				}
+				if (needsChunks)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"chunks\"");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -287,15 +287,6 @@ public class DownloadBackup implements Jsonable
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
-			case START_ARRAY:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("chunks")) {
-					needsChunks = false;
-					chunks.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -323,6 +314,15 @@ public class DownloadBackup implements Jsonable
 					currentDownloadState = parser.getString();
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case START_ARRAY:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("chunks")) {
+					needsChunks = false;
+					chunks.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

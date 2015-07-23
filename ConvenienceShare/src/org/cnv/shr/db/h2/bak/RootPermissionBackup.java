@@ -87,15 +87,15 @@ public class RootPermissionBackup implements Jsonable
 			case END_OBJECT:                         
 				if (needsMachineIdent)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs machineIdent");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.RootPermissionBackup\" needs \"machineIdent\"");
 				}
 				if (needsLocalName)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs localName");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.RootPermissionBackup\" needs \"localName\"");
 				}
 				if (needsCurrentState)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs currentState");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.RootPermissionBackup\" needs \"currentState\"");
 				}
 				return;                                
 			case KEY_NAME:                           

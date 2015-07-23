@@ -121,11 +121,11 @@ public class ConnectionOpenAwk extends KeyMessage
 			case END_OBJECT:                         
 				if (needsDecryptedNaunce)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs decryptedNaunce");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.ConnectionOpenAwk\" needs \"decryptedNaunce\"");
 				}
 				if (needsNaunceRequest)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs naunceRequest");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.ConnectionOpenAwk\" needs \"naunceRequest\"");
 				}
 				return;                                
 			case KEY_NAME:                           

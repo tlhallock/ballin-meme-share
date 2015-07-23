@@ -159,7 +159,7 @@ public class KeyNotFound extends KeyMessage
 			case END_OBJECT:                         
 				if (needsTests)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs tests");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.key.KeyNotFound\" needs \"tests\"");
 				}
 				return;                                
 			case KEY_NAME:                           

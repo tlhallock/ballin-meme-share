@@ -100,7 +100,7 @@ public class UpdateInfoRequestRequest extends Message
 			case END_OBJECT:                         
 				if (needsAction)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs action");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.swup.UpdateInfoRequestRequest\" needs \"action\"");
 				}
 				return;                                
 			case KEY_NAME:                           

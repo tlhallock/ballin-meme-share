@@ -113,7 +113,7 @@ public class EmptyMessage extends Message
 			case END_OBJECT:                         
 				if (needsSize)
 				{
-					throw new org.cnv.shr.util.IncompleteMessageException("Message needs size");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.EmptyMessage\" needs \"size\"");
 				}
 				return;                                
 			case KEY_NAME:                           
