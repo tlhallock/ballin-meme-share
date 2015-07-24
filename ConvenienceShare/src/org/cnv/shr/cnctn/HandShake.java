@@ -1,8 +1,6 @@
 package org.cnv.shr.cnctn;
 
 import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.PublicKey;
 
 import javax.json.stream.JsonGenerator;
@@ -14,42 +12,18 @@ import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.MissingKeyException;
-import org.iq80.snappy.SnappyFramedInputStream;
-import org.iq80.snappy.SnappyFramedOutputStream;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
 public class HandShake
 {
-	public static void handleHandShake(Socket socket)
-	{
-		try (JsonParser parser       = TrackObjectUtils.createParser(   new SnappyFramedInputStream(socket.getInputStream(), true));
-				 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(socket.getOutputStream()));)
-		{
-			generator.writeStartArray();
-			
-			
-			generator.writeEnd();
-		}
-		catch (UnknownHostException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 	
 	
-	private static final void sendInfo(JsonGenerator generator, RSAPublicKey key)
+	protected static final void sendInfo(JsonGenerator generator, RSAPublicKey key)
 	{
 		generator.writeStartObject();
 		generator.write("ident", Services.localMachine.getIdentifier());
@@ -59,10 +33,11 @@ public class HandShake
 		generator.writeEnd();
 	}
 	
-	private static final MachineUpdateInfo getRemoteInfo(JsonParser parser, String ip, int port)
+	protected static final RemoteInfo readInfo(JsonParser parser)
 	{
-		MachineUpdateInfo returnValue = new MachineUpdateInfo();
+		RemoteInfo returnValue = new RemoteInfo();
 		String key = null;
+		
 		outer:
 		while (parser.hasNext())
 		{
@@ -93,6 +68,7 @@ public class HandShake
 				switch (key)
 				{
 				case "port":
+					returnValue.port = parser.getInt();
 					break;
 				default:
 					LogWrapper.getLogger().warning("Unknown key: " + key);
@@ -102,34 +78,38 @@ public class HandShake
 				LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
-
-		if (returnValue.ident == null || returnValue.name == null || returnValue.publicKey == null)
+		return returnValue;
+	}
+	
+	
+	protected void ensureCanConnect(
+			RemoteInfo info,
+			String ip,
+			int port,
+			String expectedIdentifier)
+	{
+		if (info.ident == null || info.name == null || info.publicKey == null)
 		{
 			throw new RuntimeException("Did not find remote info.");
 		}
 
-		if (Services.blackList.contains(returnValue.ident))
+		if (Services.blackList.contains(info.ident))
 		{
-			throw new RuntimeException(returnValue.ident + " is a blacklisted machine.");
+			throw new RuntimeException(info.ident + " is a blacklisted machine.");
 		}
 		
-		if (!UserActions.checkIfMachineShouldNotReplaceOld(returnValue.ident, ip, port))
+		if (!UserActions.checkIfMachineShouldNotReplaceOld(info.ident, ip, port))
 		{
 			throw new RuntimeException("A different machine at " + ip + " already exists");
 		}
-		
-		Machine existingMachine = DbMachines.getMachine(returnValue.ident);
-		
-		
-		return returnValue;
 	}
 
-	private static final boolean authenticateTheRemote(
+	protected static boolean authenticateTheRemote(
 			JsonGenerator generator, 
 			JsonParser parser,
-			String identifier)
+			String expectedIdentifier)
 	{
-		Machine machine = DbMachines.getMachine(identifier);
+		Machine machine = DbMachines.getMachine(expectedIdentifier);
 		
 		generator.writeStartArray("naunceTests");
 		for (PublicKey key : DbKeys.getKeys(machine))
@@ -194,10 +174,9 @@ public class HandShake
 	}
 
 
-	private static final boolean authenticateToRemote(
+	protected static boolean authenticateToRemote(
 			JsonGenerator generator, 
-			JsonParser parser,
-			String identifier)
+			JsonParser parser)
 	{
 		outer:
 		while (parser.hasNext())
@@ -218,6 +197,8 @@ public class HandShake
 				LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
+	
+	
 		return false;
 	}
 	
@@ -244,56 +225,21 @@ public class HandShake
 		}
 		return false;
 	}
+
+	
+	static enum ConnectionType
+	{
+		JSON,
+		DATA,
+	}
 	
 	
-	public static HandShakeResults initiateHandShake(HandShakeParams params)
-	{
-		HandShakeResults results = new HandShakeResults();
-		try (Socket socket           = new Socket(params.ip, params.port);
-				 JsonParser parser       = TrackObjectUtils.createParser(   new SnappyFramedInputStream(socket.getInputStream(), true));
-				 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(socket.getOutputStream()));)
-		{
-			generator.writeStartArray();
-			
-			results.localKey = Services.keyManager.getPublicKey();
-			sendInfo(generator, results.localKey);
-			authenticateToRemote(generator, parser);
-			
-			results.remoteKey = params.remoteKey;
-			if (params.remoteKey != null)
-			{
-				final byte[] original = Misc.createNaunce(Services.settings.minNaunce.get());
-				final byte[] sentNaunce = Services.keyManager.encrypt(params.remoteKey, original);
-			}
-			
-			
-			
-			generator.writeEnd();
-			
-
-		}
-		catch (UnknownHostException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	private static void authenticateToRemote(JsonGenerator generator, JsonParser parser)
-	{
-		
-	}
-
-	static class MachineUpdateInfo
+	static class RemoteInfo
 	{
 		String ident;
 		RSAPublicKey publicKey;
 		String name;
+		int port;
 	}
 	
 	static class HandShakeParams
