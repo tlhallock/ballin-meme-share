@@ -27,7 +27,6 @@ package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -41,19 +40,11 @@ import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class GetPermission extends Message
 {
-	public static int TYPE = 9;
-	
 	private String rootName;
-	
-	public GetPermission(InputStream is) throws IOException
-	{
-		super(is);
-	}
 	
 	public GetPermission()
 	{
@@ -63,24 +54,6 @@ public class GetPermission extends Message
 	public GetPermission(RemoteDirectory remote)
 	{
 		rootName = remote.getName();
-	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		rootName = reader.readString();
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(rootName);
 	}
 
 	@Override

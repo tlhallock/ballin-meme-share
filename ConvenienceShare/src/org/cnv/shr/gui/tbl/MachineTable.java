@@ -129,7 +129,6 @@ public class MachineTable extends DbJTable<Machine>
 			currentRow.put("Total files size",  new DiskUsage(stats.totalDiskSpace)                                  );
 			currentRow.put("Last Ip",           Services.settings.getLocalIp()                                       );
 			currentRow.put("Port",              Services.settings.servePortBeginE.get()                              );
-			currentRow.put("Number of ports",   Services.settings.numHandlers.get()                                  );
 		}
 		else
 		{
@@ -141,7 +140,6 @@ public class MachineTable extends DbJTable<Machine>
 			currentRow.put("Total files size",  new DiskUsage(stats.totalDiskSpace)                    );
       currentRow.put("Last Ip",           machine.getIp()                                        );
       currentRow.put("Port",              machine.getPort()                                      );
-      currentRow.put("Number of ports",   machine.getNumberOfPorts()                             );
 		}
 		return true;
 	}
@@ -159,14 +157,14 @@ public class MachineTable extends DbJTable<Machine>
 
         },
         new String [] {
-            "Name", "Current Address", "Id", "Sharing", "Number of files", "Total files size", "Last Ip", "Port", "Number of ports"
+            "Name", "Current Address", "Id", "Sharing", "Number of files", "Total files size", "Last Ip", "Port",
         }
     ) {
         Class[] types = new Class [] {
-            java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, NumberOfFiles.class, DiskUsage.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class
+            java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, NumberOfFiles.class, DiskUsage.class, java.lang.String.class, java.lang.Integer.class
         };
         boolean[] canEdit = new boolean [] {
-            false, false, false, false, false, false, false, false, false
+            false, false, false, false, false, false, false, false
         };
 
         public Class getColumnClass(int columnIndex) {

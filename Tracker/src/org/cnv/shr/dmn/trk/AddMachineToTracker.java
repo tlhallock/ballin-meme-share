@@ -178,7 +178,7 @@ public class AddMachineToTracker extends javax.swing.JFrame {
             return;
         }
         // add here...
-        MachineEntry entry = new MachineEntry(ident, "", url, beginPort, endPort, name);
+        MachineEntry entry = new MachineEntry(ident, "", url, beginPort, name);
         store.machineFound(entry, System.currentTimeMillis());
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed

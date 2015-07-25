@@ -31,19 +31,15 @@ import java.util.logging.Level;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.msg.PermissionException;
-import org.cnv.shr.util.ConnectionStatistics;
 import org.cnv.shr.util.LogWrapper;
 
 public class ConnectionRunnable implements Runnable
 {
 	Communication connection;
-	Authenticator authentication;
-	ConnectionStatistics stats;
 	
-	public ConnectionRunnable(final Communication c, final Authenticator authentication)
+	public ConnectionRunnable(final Communication c)
 	{
 		this.connection = c;
-		this.authentication = authentication;
 	}
 	
 	@Override
@@ -52,18 +48,12 @@ public class ConnectionRunnable implements Runnable
 		try
 		{
 			Services.networkManager.add(this);
-			connection.initParser();
 			while (connection.needsMore())
 			{
 				Message request = Services.msgReader.readMsg(connection.getParser(), connection.getUrl());
-				
 				if (request == null)
 				{
 					continue;
-				}
-				if (!authentication.authenticate(request))
-				{
-					break;
 				}
 
 				connection.setLastReceived(request.getJsonKey());

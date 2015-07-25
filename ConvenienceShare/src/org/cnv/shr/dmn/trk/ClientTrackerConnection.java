@@ -56,7 +56,6 @@ public class ClientTrackerConnection extends TrackerConnection implements Window
 				publicKey,
 				"not used.",
 				Services.settings.servePortBeginE.get(),
-				Services.settings.servePortBeginE.get() + Services.settings.numHandlers.get(),
 				Services.settings.machineName.get());
 	}
 

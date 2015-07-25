@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
@@ -40,8 +41,6 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -54,13 +53,6 @@ public class GetLogs extends Message
 	{
 		this.decryptedNaunce = decryptedNaunce;
 	}
-	
-	@Override
-	protected int getType() { return 0; }
-	@Override
-	protected void parse(ByteReader reader) throws IOException {}
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
 
 	public String toString()
 	{
@@ -70,7 +62,8 @@ public class GetLogs extends Message
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (!connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
+		byte[] param = (byte[]) connection.getParam("decryptedNaunce");
+		if (!Arrays.equals(decryptedNaunce, param))
 		{
 			LogWrapper.getLogger().info("Update server machine failed authentication. Not serving logs.");
 			connection.finish();

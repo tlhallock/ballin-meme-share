@@ -26,8 +26,6 @@
 package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -38,8 +36,6 @@ import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class ChunkResponse extends DownloadMessage
@@ -55,28 +51,6 @@ public class ChunkResponse extends DownloadMessage
 		super(descriptor);
 		chunk = c;
 		this.isCompressed = compressed;
-	}
-	
-	public ChunkResponse(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-	
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-	
-	@Override
-	protected void finishParsing(ByteReader reader) throws IOException
-	{
-		chunk = new Chunk(reader);
-	}
-	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException
-	{
-		chunk.write(buffer);
 	}
 	
 	@Override

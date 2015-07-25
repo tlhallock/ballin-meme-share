@@ -409,7 +409,7 @@ public class UserActions
 					{
 						continue;
 					}
-					String url = next.getIp() + ":" + next.getPortBegin();
+					String url = next.getIp() + ":" + next.getPort();
 					if (!foundUrls.add(url))
 					{
 						continue;

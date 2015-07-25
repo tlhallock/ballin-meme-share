@@ -197,42 +197,22 @@ public class DownloadBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsFileSize = true;
-		boolean needsLastModified = true;
-		boolean needsAdded = true;
-		boolean needsPriority = true;
-		boolean needsChunkSize = true;
 		boolean needsRemoteMachine = true;
 		boolean needsRemoteDirectory = true;
 		boolean needsRemotePath = true;
 		boolean needsChecksum = true;
 		boolean needsCurrentDownloadState = true;
 		boolean needsChunks = true;
+		boolean needsFileSize = true;
+		boolean needsLastModified = true;
+		boolean needsAdded = true;
+		boolean needsPriority = true;
+		boolean needsChunkSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsFileSize)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"fileSize\"");
-				}
-				if (needsLastModified)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"lastModified\"");
-				}
-				if (needsAdded)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"added\"");
-				}
-				if (needsPriority)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"priority\"");
-				}
-				if (needsChunkSize)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"chunkSize\"");
-				}
 				if (needsRemoteMachine)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"remoteMachine\"");
@@ -257,36 +237,30 @@ public class DownloadBackup implements Jsonable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"chunks\"");
 				}
+				if (needsFileSize)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"fileSize\"");
+				}
+				if (needsLastModified)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"lastModified\"");
+				}
+				if (needsAdded)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"added\"");
+				}
+				if (needsPriority)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"priority\"");
+				}
+				if (needsChunkSize)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.DownloadBackup\" needs \"chunkSize\"");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "fileSize":
-					needsFileSize = false;
-					fileSize = Long.parseLong(parser.getString());
-					break;
-				case "lastModified":
-					needsLastModified = false;
-					lastModified = Long.parseLong(parser.getString());
-					break;
-				case "added":
-					needsAdded = false;
-					added = Long.parseLong(parser.getString());
-					break;
-				case "priority":
-					needsPriority = false;
-					priority = Integer.parseInt(parser.getString());
-					break;
-				case "chunkSize":
-					needsChunkSize = false;
-					chunkSize = Long.parseLong(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -323,6 +297,32 @@ public class DownloadBackup implements Jsonable
 					chunks.parse(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "fileSize":
+					needsFileSize = false;
+					fileSize = Long.parseLong(parser.getString());
+					break;
+				case "lastModified":
+					needsLastModified = false;
+					lastModified = Long.parseLong(parser.getString());
+					break;
+				case "added":
+					needsAdded = false;
+					added = Long.parseLong(parser.getString());
+					break;
+				case "priority":
+					needsPriority = false;
+					priority = Integer.parseInt(parser.getString());
+					break;
+				case "chunkSize":
+					needsChunkSize = false;
+					chunkSize = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

@@ -26,7 +26,6 @@
 package org.cnv.shr.msg.swup;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -37,16 +36,12 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class UpdateInfoRequest extends Message
 {
-	public static final int TYPE = 38;
-	
 	private PublicKey publicKey;
 	private byte[] naunceRequest;
 	private String action;
@@ -56,26 +51,6 @@ public class UpdateInfoRequest extends Message
 		this.publicKey = pKey;
 		this.naunceRequest = encrypted;
 		this.action = action;
-	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		naunceRequest = reader.readVarByteArray();
-		publicKey = reader.readPublicKey();
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.appendVarByteArray(naunceRequest);
-		buffer.append(publicKey);
 	}
 
 	@Override

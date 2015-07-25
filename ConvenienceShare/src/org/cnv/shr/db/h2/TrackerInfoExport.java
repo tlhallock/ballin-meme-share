@@ -36,7 +36,6 @@ public class TrackerInfoExport
 							KeyPairObject.serialize(key),
 							next.getIp(),
 							next.getPort(),
-							next.getPort() + next.getNumberOfPorts(),
 							next.getName()).generate(generator, null);
 				}
 			}

@@ -27,7 +27,6 @@ package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashSet;
 import java.util.logging.Level;
 
@@ -43,14 +42,10 @@ import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class RootList extends Message
 {
-	public static int TYPE = 3;
-	
 	private JsonList<RootListChild> sharedDirectories = new JsonList<>(
 			new JsonList.Allocator<RootListChild>()
 			{
@@ -70,12 +65,6 @@ public class RootList extends Message
 			}
 		}
 	}
-	
-	public RootList(InputStream i) throws IOException
-	{
-		super(i);
-	}
-	
 	private void add(RootDirectory root)
 	{
 		sharedDirectories.add(new RootListChild(root));
@@ -125,34 +114,6 @@ public class RootList extends Message
 		// TODO: should only happen if there was a change...
 		Services.notifications.remoteChanged(machine);
 	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		int numFolders = reader.readInt();
-		for (int i = 0; i < numFolders; i++)
-		{
-			sharedDirectories.add(new RootListChild(reader));
-		}
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(Services.localMachine.getIdentifier());
-		buffer.append(sharedDirectories.size());
-		for (RootListChild dir : sharedDirectories)
-		{
-			dir.append(buffer);
-		}
-	}
-	
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
 	
 	@Override
 	public String toString()

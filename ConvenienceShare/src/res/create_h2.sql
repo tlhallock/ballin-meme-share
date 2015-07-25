@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS  MACHINE (
    MNAME          varchar(50)   NOT NULL,
    IP             varchar(256)   NOT NULL,
    PORT           INT,
-   NPORTS         INT           NOT NULL DEFAULT  1,
    LAST_ACTIVE    LONG,
    SHARING        INTEGER       NOT NULL  DEFAULT TRUE,
    SHARES_WITH_US INTEGER,

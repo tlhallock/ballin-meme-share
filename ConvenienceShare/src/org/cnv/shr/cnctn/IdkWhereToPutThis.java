@@ -25,31 +25,27 @@
 
 package org.cnv.shr.cnctn;
 
-import java.io.IOException;
-import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TimerTask;
 
 import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.util.LogWrapper;
-import org.cnv.shr.util.Misc;
 
 public class IdkWhereToPutThis
 {
-	public static byte[] createTestNaunce(Authenticator authentication, PublicKey remoteKey) throws IOException
-	{
-		if (remoteKey == null)
-		{
-			LogWrapper.getLogger().info("Unable to create naunce: remote key is null.");
-			return new byte[0];
-		}
-		final byte[] original = Misc.createNaunce(Services.settings.minNaunce.get());
-		final byte[] sentNaunce = Services.keyManager.encrypt(remoteKey, original);
-		authentication.addPendingNaunce(original);
-		return sentNaunce;
-	}
+//	public static byte[] createTestNaunce(Authenticator authentication, PublicKey remoteKey) throws IOException
+//	{
+//		if (remoteKey == null)
+//		{
+//			LogWrapper.getLogger().info("Unable to create naunce: remote key is null.");
+//			return new byte[0];
+//		}
+//		final byte[] original = Misc.createNaunce(Services.settings.minNaunce.get());
+//		final byte[] sentNaunce = Services.keyManager.encrypt(remoteKey, original);
+//		authentication.addPendingNaunce(original);
+//		return sentNaunce;
+//	}
 	
 	// TODO: use this
 	private static TimerTask getAttempter()

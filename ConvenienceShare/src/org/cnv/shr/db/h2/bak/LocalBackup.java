@@ -135,25 +135,17 @@ public class LocalBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsMinFSize = true;
-		boolean needsMaxFSize = true;
 		boolean needsName = true;
 		boolean needsDescription = true;
 		boolean needsPath = true;
 		boolean needsIgnores = true;
+		boolean needsMinFSize = true;
+		boolean needsMaxFSize = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsMinFSize)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"minFSize\"");
-				}
-				if (needsMaxFSize)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"maxFSize\"");
-				}
 				if (needsName)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"name\"");
@@ -170,30 +162,18 @@ public class LocalBackup implements Jsonable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"ignores\"");
 				}
+				if (needsMinFSize)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"minFSize\"");
+				}
+				if (needsMaxFSize)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.LocalBackup\" needs \"maxFSize\"");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "minFSize":
-					needsMinFSize = false;
-					minFSize = Long.parseLong(parser.getString());
-					break;
-				case "maxFSize":
-					needsMaxFSize = false;
-					maxFSize = Long.parseLong(parser.getString());
-					break;
-				case "totalFileSize":
-					totalFileSize = Long.parseLong(parser.getString());
-					break;
-				case "totalNumFiles":
-					totalNumFiles = Long.parseLong(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -225,6 +205,26 @@ public class LocalBackup implements Jsonable
 					ignores.parse(parser);
 				} else {
 					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "minFSize":
+					needsMinFSize = false;
+					minFSize = Long.parseLong(parser.getString());
+					break;
+				case "maxFSize":
+					needsMaxFSize = false;
+					maxFSize = Long.parseLong(parser.getString());
+					break;
+				case "totalFileSize":
+					totalFileSize = Long.parseLong(parser.getString());
+					break;
+				case "totalNumFiles":
+					totalNumFiles = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

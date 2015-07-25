@@ -36,6 +36,8 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import javax.json.stream.JsonParser;
+
 public class LogWrapper
 {
 	private static Logger logger = Logger.getGlobal();
@@ -64,7 +66,39 @@ public class LogWrapper
 		});
 	}
 	
-	
+	public static String getUnknownMessageAttributeStr(String msgType, JsonParser p, JsonParser.Event e)
+	{
+		String msg = "Unkown attribute in type " + msgType + ". Attribute=" + e;
+		switch (e)
+		{
+		case END_ARRAY:
+			break;
+		case END_OBJECT:
+			break;
+		case KEY_NAME:
+			break;
+		case START_ARRAY:
+			break;
+		case START_OBJECT:
+			break;
+		case VALUE_FALSE:
+			msg += "value = " + false;
+			break;
+		case VALUE_NULL:
+			msg += "value = " + null;
+			break;
+		case VALUE_NUMBER:
+			msg += "value = " + p.getBigDecimal();
+			break;
+		case VALUE_STRING:
+			msg += "value = " + p.getString();
+			break;
+		case VALUE_TRUE:
+			msg += "value = " + true;
+			break;
+		}
+		return msg;
+	}
 	
 	
 	private static Handler fileHandler;

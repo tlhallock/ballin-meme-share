@@ -26,8 +26,6 @@
 package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Objects;
 
 import javax.json.stream.JsonGenerator;
@@ -40,24 +38,16 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class MachineFound extends Message
 {
 	protected String ip;
 	protected int port;
-	protected int nports;
 	protected String name;
 	protected String ident;
 	@MyParserIgnore
 	private long lastActive;
-	
-	public MachineFound(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
 
 	public MachineFound()
 	{
@@ -72,7 +62,6 @@ public class MachineFound extends Message
 		name       = m.getName();
 		ident      = m.getIdentifier();
 		lastActive = m.getLastActive();
-		nports     = m.getNumberOfPorts();
 		Objects.requireNonNull(ip);
 	}
 	
@@ -94,39 +83,8 @@ public class MachineFound extends Message
 				name,
 				null,
 				ip,
-				port,
-				nports);
+				port);
 	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		ip          = reader.readString();
-		port        = reader.readInt();
-		name        = reader.readString();
-		ident       = reader.readString();
-		lastActive  = reader.readLong();
-		nports      = reader.readInt();
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(ip);
-		buffer.append(port);
-		buffer.append(name);
-		buffer.append(ident);
-		buffer.append(lastActive);
-		buffer.append(nports);
-	}
-
-	public static int TYPE = 18;
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
 	
 	@Override
 	public String toString()
@@ -147,7 +105,6 @@ public class MachineFound extends Message
 			generator.writeStartObject();
 		generator.write("ip", ip);
 		generator.write("port", port);
-		generator.write("nports", nports);
 		generator.write("name", name);
 		generator.write("ident", ident);
 		generator.writeEnd();
@@ -159,7 +116,6 @@ public class MachineFound extends Message
 		boolean needsName = true;
 		boolean needsIdent = true;
 		boolean needsPort = true;
-		boolean needsNports = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -180,10 +136,6 @@ public class MachineFound extends Message
 				if (needsPort)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.MachineFound\" needs \"port\"");
-				}
-				if (needsNports)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.MachineFound\" needs \"nports\"");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -209,16 +161,11 @@ public class MachineFound extends Message
 				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "port":
+				if (key.equals("port")) {
 					needsPort = false;
 					port = Integer.parseInt(parser.getString());
-					break;
-				case "nports":
-					needsNports = false;
-					nports = Integer.parseInt(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

@@ -3,9 +3,6 @@ package org.cnv.shr.cnctn;
 
 public class HandshakeTest
 {
-	public static void before()
-	{
-	}
 	
 	
 	private static void client()
@@ -15,6 +12,8 @@ public class HandshakeTest
 	
 	private static void server()
 	{
+//		HandshakeServer handshakeServer = new HandshakeServer(8090, 8099);
+//		handshakeServer./
 		
 	}
 	
@@ -22,5 +21,7 @@ public class HandshakeTest
 	
 	public static void main(String[] args)
 	{
+		new Thread(() -> { server(); } );
+		client();
 	}
 }

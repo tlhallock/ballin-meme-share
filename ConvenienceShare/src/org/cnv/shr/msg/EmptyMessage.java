@@ -26,16 +26,12 @@
 package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class EmptyMessage extends Message
@@ -47,38 +43,6 @@ public class EmptyMessage extends Message
 		this.size = size;
 	}
 	
-	public EmptyMessage(InputStream input) throws IOException
-	{
-		super(input);
-	}
-	
-	public static int TYPE = 30;
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		size = reader.readInt();
-		for (int i = 0; i < size; i++)
-		{
-			reader.readByte();
-		}
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(size);
-		for (int i = 0; i < size; i++)
-		{
-			buffer.append((byte) 0);
-		}
-	}
-
 	@Override
 	public void perform(Communication connection) {}
 	

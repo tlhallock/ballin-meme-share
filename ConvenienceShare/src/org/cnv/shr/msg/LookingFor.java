@@ -26,8 +26,6 @@
 package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -40,14 +38,10 @@ import org.cnv.shr.msg.dwn.DownloadMessage;
 import org.cnv.shr.msg.dwn.MachineHasFile;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class LookingFor extends DownloadMessage
 {
-	public static int TYPE = 28;
-	
 	private String checksum;
 	private long fileSize;
 	
@@ -57,17 +51,6 @@ public class LookingFor extends DownloadMessage
 		super(file);
 		checksum = file.getChecksum();
 		fileSize = file.getFileSize();
-	}
-
-	public LookingFor(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
 	}
 
 	@Override
@@ -164,18 +147,4 @@ public class LookingFor extends DownloadMessage
 		return new String(output.toByteArray());                                           
 	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-
-	@Override
-	protected void finishParsing(ByteReader reader) throws IOException
-	{
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException
-	{
-		// TODO Auto-generated method stub
-		
-	}
 }

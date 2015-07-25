@@ -82,7 +82,7 @@ public class TrackerFrame extends BrowserFrame
 		}
 		else if (JOptionPane.showConfirmDialog(this, "This machine is not currently in the database, would you like to add it?", "Not currently in database", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
 		{
-			AddMachine addMachine = new AddMachine(currentMachine.getIp() + ":" + currentMachine.getPortBegin());
+			AddMachine addMachine = new AddMachine(currentMachine.getIp() + ":" + currentMachine.getPort());
 			addMachine.setAlwaysOnTop(true);
 			Services.notifications.registerWindow(addMachine);
 			addMachine.setVisible(true);

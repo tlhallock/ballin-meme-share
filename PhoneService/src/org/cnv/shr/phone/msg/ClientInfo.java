@@ -83,6 +83,7 @@ public class ClientInfo extends PhoneMessage
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
+		if (ip!=null)
 		generator.write("ip", ip);
 		generator.write("ident", ident);
 		generator.write("refreshRate", refreshRate);
@@ -91,44 +92,29 @@ public class ClientInfo extends PhoneMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsRefreshRate = true;
-		boolean needsIp = true;
 		boolean needsIdent = true;
+		boolean needsRefreshRate = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsRefreshRate)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.ClientInfo\" needs \"refreshRate\"");
-				}
-				if (needsIp)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.ClientInfo\" needs \"ip\"");
-				}
 				if (needsIdent)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.ClientInfo\" needs \"ident\"");
+				}
+				if (needsRefreshRate)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.ClientInfo\" needs \"refreshRate\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("refreshRate")) {
-					needsRefreshRate = false;
-					refreshRate = Long.parseLong(parser.getString());
-				} else {
-					Services.logger.warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
 				case "ip":
-					needsIp = false;
 					ip = parser.getString();
 					break;
 				case "ident":
@@ -136,6 +122,15 @@ public class ClientInfo extends PhoneMessage
 					ident = parser.getString();
 					break;
 				default: Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("refreshRate")) {
+					needsRefreshRate = false;
+					refreshRate = Long.parseLong(parser.getString());
+				} else {
+					Services.logger.warning("Unknown key: " + key);
 				}
 				break;
 			default: Services.logger.warning("Unknown type found in message: " + e);

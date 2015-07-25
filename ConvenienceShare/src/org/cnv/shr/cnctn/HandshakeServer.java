@@ -3,107 +3,132 @@ package org.cnv.shr.cnctn;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.InvalidKeyException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.trck.TrackObjectUtils;
+import org.cnv.shr.util.KeysService;
+import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.WaitForObject;
 import org.iq80.snappy.SnappyFramedInputStream;
 import org.iq80.snappy.SnappyFramedOutputStream;
 
+import de.flexiprovider.core.rijndael.RijndaelKey;
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
-public class HandshakeServer extends HandShake
+public class HandshakeServer extends HandShake implements Runnable
 {
 	private static Executor handlerThreads = Executors.newCachedThreadPool();
 	
-	
+	ServerSocket serverSocket;
+	private int port;
 	private PortStatus[] ports;
 	private boolean quit;
 	
-	public HandshakeServer(int begin, int end)
+	public HandshakeServer(ServerSocket serverSocket, int begin, int end) throws IOException
 	{
-		ports = new PortStatus[end - begin - 1];
-		for (int i = 0; i < end; i++)
+		ports = new PortStatus[end - begin];
+		for (int i = 0; i < ports.length; i++)
 		{
-			ports[i] = new PortStatus(begin + i + 1);
+			ports[i] = new PortStatus(begin + i);
 		}
+		this.serverSocket = serverSocket;
 	}
 	
-	public void handleConnections(int port, int beginBegin, int portEnd)
+	public void run()
 	{
-		try (ServerSocket serverSocket = new ServerSocket();)
+		handleConnections();
+	}
+	
+	public void handleConnections()
+	{
+		while (!quit)
 		{
-			while (!quit)
+			try (Socket socket = serverSocket.accept(); 
+					 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(socket.getOutputStream()));
+					 JsonParser parser = TrackObjectUtils.createParser(         new SnappyFramedInputStream(socket.getInputStream(), true));)
 			{
-				try (Socket socket = serverSocket.accept(); JsonParser parser = TrackObjectUtils.createParser(new SnappyFramedInputStream(socket.getInputStream(), true)); JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(socket.getOutputStream()));)
+				generator.writeStartArray();
+
+				RSAPublicKey localKey = Services.keyManager.getPublicKey();
+				sendInfo(generator, localKey, null);
+
+				RemoteInfo preferredKey = readInfo(parser);
+				if (preferredKey == null)
+					return;
+				if (!authenticateTheRemote(generator, parser, preferredKey.ident, false))
+					return;
+				if (!authenticateToRemote(generator, parser))
+					return;
+
+				DbMachines.updateMachineInfo(preferredKey.ident, preferredKey.name, preferredKey.publicKey, socket.getInetAddress().getHostAddress(), preferredKey.port);
+
+				RijndaelKey outgoing = KeysService.createAesKey();
+				EncryptionKey.sendOpenParams(generator, preferredKey.publicKey, outgoing);
+				RijndaelKey incoming = new EncryptionKey(parser, localKey).encryptionKey;
+
+				PortStatus chosenPort = createHandlerRunnable(outgoing, incoming, preferredKey.ident, preferredKey.reason).get();
+				if (chosenPort == null)
 				{
-					generator.writeStartArray();
-
-					RSAPublicKey localKey = Services.keyManager.getPublicKey();
-					sendInfo(generator, localKey);
-
-					RSAPublicKey preferredKey = readInfo();
-					if (preferredKey == null)
-						return;
-					if (!authenticateTheClient())
-						return;
-					if (!authenticateToClient())
-						return;
-
-					PortStatus chosenPort = createHandlerRunnable().get();
-
-					generator.writeStartObject();
-					if (chosenPort != null)
-					{
-						generator.write("port", chosenPort.port);
-					}
-					else
-					{
-						generator.write("port", -1);
-					}
-					generator.writeEnd();
-
-					generator.writeEnd();
+					// send wait message
+					return;
 				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
+				generator.writeStartObject();
+				generator.write("port", chosenPort.port);
+				generator.writeEnd();
+				generator.flush();
 
+				generator.writeEnd();
 			}
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
+			catch (Exception e)
+			{
+				LogWrapper.getLogger().log(Level.INFO, null, e);
+			}
 		}
 	}
 
-	private WaitForObject<PortStatus> createHandlerRunnable()
+	private WaitForObject<PortStatus> createHandlerRunnable(
+			RijndaelKey outgoing,
+			RijndaelKey incoming,
+			String remoteIdentifer,
+			String reason)
 	{
 		WaitForObject<PortStatus> wait = new WaitForObject<>(10 * 1000);
 		
 		handlerThreads.execute(() -> {
 			PortStatus reservedPort = reserveAPort();
+			if (reservedPort == null)
+			{
+				return;
+			}
 			try
 			{
-				wait.set(reservedPort);
-				
-				try (ServerSocket serverSocket = new ServerSocket();
-						)
+				try (Socket socket = getClientSocket(reservedPort, wait);
+						 Communication communication = new Communication(
+								 socket,
+								 incoming,
+								 outgoing,
+								 remoteIdentifer,
+								 reason);)
 				{
-					
+					new ConnectionRunnable(communication).run();
+				}
+				catch (InvalidKeyException | IOException ex)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Error while trying to connect to client.", ex);
 				}
 			}
 			finally
 			{
 				reservedPort.free();
 			}
-			
 		});
 		return wait;
 	}
@@ -113,6 +138,14 @@ public class HandshakeServer extends HandShake
 		return null;
 	}
 
+	private static Socket getClientSocket(PortStatus reservedPort, WaitForObject<PortStatus> wait) throws IOException
+	{
+		try (ServerSocket socket = new ServerSocket(reservedPort.port);)
+		{
+			wait.set(reservedPort);
+			return socket.accept();
+		}
+	}
 
 	
 	
@@ -131,5 +164,15 @@ public class HandshakeServer extends HandShake
 		{
 			inUse = false;
 		}
+	}
+
+
+
+
+
+	public void stop()
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

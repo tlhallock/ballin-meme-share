@@ -26,8 +26,6 @@
 package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -38,30 +36,15 @@ import org.cnv.shr.mdl.LocalFile;
 import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class ChecksumRequest extends Message
 {
-	public static int TYPE = 32;
-	
 	private SharedFileId descriptor;
 
 	public ChecksumRequest(RemoteFile remoteFile)
 	{
 		descriptor = new SharedFileId(remoteFile);
-	}
-	
-	public ChecksumRequest(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-	
-	@Override
-	protected int getType()
-	{
-		return TYPE;
 	}
 	
 	@Override
@@ -81,18 +64,6 @@ public class ChecksumRequest extends Message
 		checkPermissionsDownloadable(connection, connection.getMachine(), local.getRootDirectory(), "Creating checksum");
 		local.ensureChecksummed();
 		connection.send(new ChecksumResponse(local));
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		descriptor = reader.readSharedFileId();
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(descriptor);
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK

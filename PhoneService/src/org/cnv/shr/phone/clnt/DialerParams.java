@@ -40,17 +40,25 @@ public class DialerParams implements Storable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsIdent = true;
+		boolean needsVoiceMailDirectory = true;
 		boolean needsHEARTBEAT_PERIOD = true;
 		boolean needsHEARTBEAT_TIMEOUT = true;
 		boolean needsCONNECTION_INACTIVE_REPEAT_MILLISECONDS = true;
 		boolean needsCONNECTION_ACTIVE_REPEAT_MILLISECONDS = true;
-		boolean needsIdent = true;
-		boolean needsVoiceMailDirectory = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsIdent)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.DialerParams\" needs \"ident\"");
+				}
+				if (needsVoiceMailDirectory)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.DialerParams\" needs \"voiceMailDirectory\"");
+				}
 				if (needsHEARTBEAT_PERIOD)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.DialerParams\" needs \"HEARTBEAT_PERIOD\"");
@@ -67,18 +75,24 @@ public class DialerParams implements Storable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.DialerParams\" needs \"CONNECTION_ACTIVE_REPEAT_MILLISECONDS\"");
 				}
-				if (needsIdent)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.DialerParams\" needs \"ident\"");
-				}
-				if (needsVoiceMailDirectory)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.DialerParams\" needs \"voiceMailDirectory\"");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "ident":
+					needsIdent = false;
+					ident = parser.getString();
+					break;
+				case "voiceMailDirectory":
+					needsVoiceMailDirectory = false;
+					voiceMailDirectory = Paths.get(parser.getString());
+					break;
+				default: Services.logger.warning("Unknown key: " + key);
+				}
+				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -97,20 +111,6 @@ public class DialerParams implements Storable
 				case "CONNECTION_ACTIVE_REPEAT_MILLISECONDS":
 					needsCONNECTION_ACTIVE_REPEAT_MILLISECONDS = false;
 					CONNECTION_ACTIVE_REPEAT_MILLISECONDS = Long.parseLong(parser.getString());
-					break;
-				default: Services.logger.warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "ident":
-					needsIdent = false;
-					ident = parser.getString();
-					break;
-				case "voiceMailDirectory":
-					needsVoiceMailDirectory = false;
-					voiceMailDirectory = Paths.get(parser.getString());
 					break;
 				default: Services.logger.warning("Unknown key: " + key);
 				}

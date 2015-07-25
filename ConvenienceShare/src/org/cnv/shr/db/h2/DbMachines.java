@@ -196,8 +196,7 @@ public class DbMachines
 			String name,
 			PublicKey key,
 			String ip,
-			int port,
-			int nports)
+			int port)
 	{
 		Machine machine = getMachine(ident);
 		if (machine == null)
@@ -210,7 +209,6 @@ public class DbMachines
 		machine.setIp(ip);
 		machine.setPort(port);
 		machine.setName(name);
-		machine.setNumberOfPorts(nports);
 		machine.setLastActive(System.currentTimeMillis());
 		
 

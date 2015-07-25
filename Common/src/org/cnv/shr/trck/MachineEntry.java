@@ -44,23 +44,21 @@ public class MachineEntry extends TrackObject
 	private String name;
 	
 	private String ip;
-	private int beginPort;
-	private int endPort;
+	private int port;
 	
 	public MachineEntry() {}
 
-	public MachineEntry(String ident, RSAPublicKey key, String ip, int beginPort, int endPort, String name)
+	public MachineEntry(String ident, RSAPublicKey key, String ip, int port, String name)
 	{
-		this(ident, KeyPairObject.serialize(key), ip, beginPort, endPort, name);
+		this(ident, KeyPairObject.serialize(key), ip, port, name);
 	}
 	
-	public MachineEntry(String ident, String key, String ip, int beginPort, int endPort, String name)
+	public MachineEntry(String ident, String key, String ip, int port, String name)
 	{
 		this.ident = ident;
 		this.keyStr = key;
 		this.ip = ip;
-		this.beginPort = beginPort;
-		this.endPort = endPort;
+		this.port = port;
 		this.name = name;
 	}
 
@@ -74,13 +72,12 @@ public class MachineEntry extends TrackObject
 		return keyStr;
 	}
 	
-	public void set(String ident, String key, String ip, int beginPort, int endPort, String name)
+	public void set(String ident, String key, String ip, int port, String name)
 	{
 		this.ident = ident;
 		this.keyStr = key;
 		this.ip = ip;
-		this.beginPort = beginPort;
-		this.endPort = endPort;
+		this.port = port;
 		this.name = name;
 	}
 
@@ -89,14 +86,9 @@ public class MachineEntry extends TrackObject
 		return ident;
 	}
 
-	public int getPortEnd()
+	public int getPort()
 	{
-		return Math.min(endPort, beginPort + 1);
-	}
-
-	public int getPortBegin()
-	{
-		return beginPort;
+		return port;
 	}
 
 	public String getIp()
@@ -111,7 +103,7 @@ public class MachineEntry extends TrackObject
 
 	public String getAddress()
 	{
-		return ip + ":" + beginPort + "-" + endPort;
+		return ip + ":" + port;
 	}
 
 	public void setIp(String realAddress)
@@ -132,8 +124,7 @@ public class MachineEntry extends TrackObject
 		generator.write("keyStr", keyStr);
 		generator.write("name", name);
 		generator.write("ip", ip);
-		generator.write("beginPort", beginPort);
-		generator.write("endPort", endPort);
+		generator.write("port", port);
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -142,8 +133,7 @@ public class MachineEntry extends TrackObject
 		boolean needsIdent = true;
 		boolean needsName = true;
 		boolean needsIp = true;
-		boolean needsBeginPort = true;
-		boolean needsEndPort = true;
+		boolean needsPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -161,13 +151,9 @@ public class MachineEntry extends TrackObject
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"ip\"");
 				}
-				if (needsBeginPort)
+				if (needsPort)
 				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"beginPort\"");
-				}
-				if (needsEndPort)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"endPort\"");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"port\"");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -196,16 +182,11 @@ public class MachineEntry extends TrackObject
 				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "beginPort":
-					needsBeginPort = false;
-					beginPort = Integer.parseInt(parser.getString());
-					break;
-				case "endPort":
-					needsEndPort = false;
-					endPort = Integer.parseInt(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				if (key.equals("port")) {
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

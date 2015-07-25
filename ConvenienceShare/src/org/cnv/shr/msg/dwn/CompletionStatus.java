@@ -26,7 +26,6 @@
 package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -36,14 +35,10 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class CompletionStatus extends DownloadMessage
 {
-	public static int TYPE = 12;
-	
 	private double percentComplete;
 	
 	public CompletionStatus(FileEntry descriptor, double d)
@@ -52,21 +47,6 @@ public class CompletionStatus extends DownloadMessage
 		percentComplete = d;
 	}
 
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-	@Override
-	protected void finishParsing(ByteReader reader) throws IOException
-	{
-		percentComplete = reader.readDouble();
-	}
-	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(percentComplete);
-	}
 	@Override
 	public void perform(Communication connection) throws Exception
 	{

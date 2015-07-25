@@ -26,8 +26,6 @@
 package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -37,31 +35,11 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.ServeInstance;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class DownloadDone extends DownloadMessage
 {
 	public DownloadDone(FileEntry descriptor) { super(descriptor); }
-
-	public DownloadDone(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-
-	@Override
-	protected void finishParsing(ByteReader reader) throws IOException {}
-
-	@Override
-	protected void finishWriting(AbstractByteWriter buffer) {}
-
-	public static int TYPE = 15;
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
 
 	@Override
 	public void perform(Communication connection) throws Exception

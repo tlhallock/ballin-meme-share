@@ -26,8 +26,6 @@
 package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 
@@ -37,37 +35,24 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
+/**
+ * This needs to be redone...
+ * @author thallock
+ *
+ */
 public class ShowApplication extends Message
 {
 	public static final int TYPE = 40;
 	
 	public ShowApplication() {}
-	
-	public ShowApplication(InputStream input) throws IOException
-	{
-		super(input);
-	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException {}
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
 
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		InetSocketAddress remoteAddress = (InetSocketAddress) connection.getRemoteSocketAddress();
+		InetSocketAddress remoteAddress = connection.getRemoteSocketAddress();
 		String hostAddress = remoteAddress.getAddress().getHostAddress();
 		HashSet<String> collectIps = Misc.collectIps();
 		
@@ -81,12 +66,6 @@ public class ShowApplication extends Message
 		UserActions.showGui();
 	}
 	
-	@Override
-	public boolean requiresAthentication()
-	{
-		return false;
-	}
-
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator, String key) {

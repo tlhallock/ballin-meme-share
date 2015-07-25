@@ -49,8 +49,6 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.SharedFile;
 import org.cnv.shr.sync.RemoteSynchronizerQueue;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class PathList extends Message
@@ -168,42 +166,6 @@ public class PathList extends Message
 	}
 
 	@Override
-	protected void parse(final ByteReader reader) throws IOException
-	{
-		name = reader.readString();
-		currentPath = reader.readString();
-		final int numDirs = reader.readInt();
-		for (int i = 0; i < numDirs; i++)
-		{
-			subDirs.add(reader.readString());
-		}
-		final int numFiles = reader.readInt();
-		for (int i = 0; i < numFiles; i++)
-		{
-			PathListChild e = new PathListChild(reader);
-			e.setParent(this);
-			children.add(e);
-		}
-	}
-
-	@Override
-	protected void print(Communication connection, final AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(name);
-		buffer.append(currentPath);
-		buffer.append(subDirs.size());
-		for (final String sub : subDirs)
-		{
-			buffer.append(sub);
-		}
-		buffer.append(children.size());
-		for (final PathListChild c : children)
-		{
-			c.write(buffer);
-		}
-	}
-
-	@Override
 	public void perform(final Communication connection) throws Exception
 	{
 		for (PathListChild child : children)
@@ -261,13 +223,6 @@ public class PathList extends Message
 	{
 		return subDirs;
 	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-	
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override

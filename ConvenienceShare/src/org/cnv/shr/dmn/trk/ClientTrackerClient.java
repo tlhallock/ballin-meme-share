@@ -130,7 +130,7 @@ public class ClientTrackerClient extends TrackerClient
 	{
 		LogWrapper.getLogger().info("Found seeder " + entry);
 		
-		Services.networkManager.openConnection(new AutoCloseConnectionParams(entry.getIp() + ":" + entry.getPortBegin() /* TODO: */, false, "Download file") {
+		Services.networkManager.openConnection(new AutoCloseConnectionParams(entry.getIp() + ":" + entry.getPort(), false, "Download file") {
 			@Override
 			public void opened(Communication connection) throws Exception
 			{

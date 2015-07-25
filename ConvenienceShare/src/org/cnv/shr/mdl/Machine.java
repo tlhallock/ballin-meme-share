@@ -40,8 +40,8 @@ import org.cnv.shr.dmn.Services;
 
 public class Machine extends DbObject<Integer>
 {
-	private static final QueryWrapper MEREGE1 = new QueryWrapper("merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
-	private static final QueryWrapper MERGE2  = new QueryWrapper("merge into MACHINE key(IS_LOCAL) values ((select M_ID from MACHINE where IS_LOCAL=true), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+	private static final QueryWrapper MEREGE1 = new QueryWrapper("merge into MACHINE key(IDENT) values ((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+	private static final QueryWrapper MERGE2  = new QueryWrapper("merge into MACHINE key(IS_LOCAL) values ((select M_ID from MACHINE where IS_LOCAL=true), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	private String ip;
 	private int port;
 	
@@ -50,7 +50,6 @@ public class Machine extends DbObject<Integer>
 	
 	private long lastActive;
 	
-	private int nports;
 	private boolean allowsMessages;
 	
 	protected boolean acceptPeers;
@@ -67,13 +66,12 @@ public class Machine extends DbObject<Integer>
 		weShareToThem = SharingState.valueOf(Services.settings.defaultPermission.get());
 	}
 
-	public Machine(String ip2, int port2, int nports2, String name2, String identifier2, boolean allowsMessages2, SharingState weShareToThem2, SharingState sharesWithUs2, boolean pin)
+	public Machine(String ip2, int port2, String name2, String identifier2, boolean allowsMessages2, SharingState weShareToThem2, SharingState sharesWithUs2, boolean pin)
 	{
 		super(null);
 		
 		this.ip = ip2;
 		this.port = port2;
-		this.nports = nports2;
 		this.name = name2;
 		this.identifier = identifier2;
 		this.allowsMessages = allowsMessages2;
@@ -96,7 +94,6 @@ public class Machine extends DbObject<Integer>
 			name           = row.getString ("MNAME");        
 			ip             = row.getString ("IP");    
 			port		       = row.getInt    ("PORT");
-			nports         = row.getInt    ("NPORTS");
 		  lastActive     = row.getLong   ("LAST_ACTIVE");
 		  weShareToThem  = SharingState.get(row.getInt("SHARING"));
 		  sharesWithUs   = SharingState.get(row.getInt("SHARES_WITH_US"));
@@ -135,7 +132,6 @@ public class Machine extends DbObject<Integer>
 		stmt.setString( ndx++, getName());
 		stmt.setString( ndx++, getIp());
 		stmt.setInt(    ndx++, getPort());
-		stmt.setInt(    ndx++, getNumberOfPorts());
 		stmt.setLong(   ndx++, System.currentTimeMillis());
 		stmt.setInt(    ndx++, sharingWithOther().getDbValue());
 		stmt.setInt(    ndx++, getSharesWithUs().getDbValue());
@@ -154,11 +150,6 @@ public class Machine extends DbObject<Integer>
 	public void setPinned(boolean selected)
 	{
 		this.pin = selected;
-	}
-
-	public int getNumberOfPorts()
-	{
-		return nports;
 	}
 
 	public void setAllowsMessages(boolean b)
@@ -273,11 +264,6 @@ public class Machine extends DbObject<Integer>
 		return false;
 	}
 
-	public void setNumberOfPorts(int nports2)
-	{
-		nports = nports2;
-	}
-
 	public String getUrl()
 	{
 		return getIp() + ":" + getPort();
@@ -365,12 +351,6 @@ public class Machine extends DbObject<Integer>
 		public String getIdentifier()
 		{
 			return Services.settings.machineIdentifier.get();
-		}
-		
-		@Override
-		public int getNumberOfPorts()
-		{
-			return Services.settings.numHandlers.get();
 		}
 		
 		@Override

@@ -26,8 +26,6 @@
 package org.cnv.shr.msg.key;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -45,14 +43,10 @@ import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.mdl.RootDirectory;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class PermissionFailure extends Message
 {
-	public static int TYPE = 35;
-	
 	private String rootName;
 	private SharingState currentPermission;
 	private String action;
@@ -66,45 +60,6 @@ public class PermissionFailure extends Message
 			currentPermission = SharingState.DO_NOT_SHARE;
 		}
 		this.action = action;
-	}
-	
-	public PermissionFailure(InputStream input) throws IOException
-	{
-		super(input);
-	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		rootName = reader.readString();
-		currentPermission = SharingState.get(reader.readInt());
-		action = reader.readString();
-		
-		if (rootName.length() == 0)
-		{
-			rootName = null;
-		}
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		if (rootName == null)
-		{
-			buffer.append("");
-		}
-		else
-		{
-			buffer.append(rootName);
-		}
-		buffer.append(currentPermission.getDbValue());
-		buffer.append(action);
 	}
 
 	@Override

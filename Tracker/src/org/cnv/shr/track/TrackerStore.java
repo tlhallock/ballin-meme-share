@@ -76,7 +76,7 @@ public class TrackerStore implements Closeable
 		listCommentsStatement      = c.prepareStatement("select SENT, RATING, MESSAGE, IDENT from RATING_COMMENT join MACHINE on OID=MACHINE.M_ID where DID=(select M_ID from MACHINE where ident=?) LIMIT ? OFFSET ?;");
 		postCommentStatement       = c.prepareStatement("merge into RATING_COMMENT key (OID, DID) values((select C_ID from RATING_COMMENT where OID=? and DID=?), ?, ?, ?, ?, ?);");
 		getMachineStatement        = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, KEYSTR, MNAME from MACHINE where IDENT=?;");
-		machineFoundStatement      = c.prepareStatement("merge into MACHINE key (IDENT) values((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?, ?);");
+		machineFoundStatement      = c.prepareStatement("merge into MACHINE key (IDENT) values((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?);");
 		machineClaimsStatement     = c.prepareStatement("merge into MACHINE_CONTAINS key(FID, MID) values((select M_ID from MACHINE where IDENT=?),(select F_ID from SFILE where CHKSUM=?));");
 		machineLostStatement       = c.prepareStatement("delete from MACHINE_CONTAINS where MID=(select M_ID from MACHINE where IDENT=?) and FID=(select F_ID from SFILE where CHKSUM=?);");
 		listFilesStatement         = c.prepareStatement("select CHKSUM, FSIZE from SFILE join MACHINE_CONTAINS on FID=F_ID where MID=(select M_ID from MACHINE where IDENT=?);");
@@ -104,13 +104,12 @@ public class TrackerStore implements Closeable
 					int ndx = 1;
 					String ip = results.getString(ndx++);
 					int port = results.getInt(ndx++);
-					int nports = results.getInt(ndx++);
 					long lastActive = results.getLong(ndx++);
 					String ident = results.getString(ndx++);
 					String keyString = results.getString(ndx++);
 					String name = results.getString(ndx++);
 
-					entry.set(ident, keyString, ip, port, port + nports, name);
+					entry.set(ident, keyString, ip, port, name);
 					receiver.receive(entry);
 					count++;
 				}
@@ -210,13 +209,12 @@ public class TrackerStore implements Closeable
 					int ndx = 1;
 					String ip = results.getString(ndx++);
 					int port = results.getInt(ndx++);
-					int nports = results.getInt(ndx++);
 					long lastActive = results.getLong(ndx++);
 					String ident = results.getString(ndx++);
 					String keyString = results.getString(ndx++);
 					String name = results.getString(ndx++);
 
-					machineEntry.set(ident, keyString, ip, port, port + nports, name);
+					machineEntry.set(ident, keyString, ip, port, name);
 					output.receive(machineEntry);
 				}
 			}
@@ -301,12 +299,11 @@ public class TrackerStore implements Closeable
 				int ndx = 1;
 				String ip = results.getString(ndx++);
 				int port = results.getInt(ndx++);
-				int nports = results.getInt(ndx++);
 				long lastActive = results.getLong(ndx++);
 				String keyString = results.getString(ndx++);
 				String name = results.getString(ndx++);
 
-				return new MachineEntry(ident, keyString, ip, port, port + nports, name);
+				return new MachineEntry(ident, keyString, ip, port, name);
 			}
 		}
 		catch (SQLException e)
@@ -410,8 +407,7 @@ public class TrackerStore implements Closeable
 			machineFoundStatement.setString(ndx++, machine.getIdentifer());
 			machineFoundStatement.setString(ndx++, machine.getName());
 			machineFoundStatement.setString(ndx++, machine.getIp());
-			machineFoundStatement.setInt   (ndx++, machine.getPortBegin());
-			machineFoundStatement.setInt   (ndx++, machine.getPortEnd() - machine.getPortBegin());
+			machineFoundStatement.setInt   (ndx++, machine.getPort());
 			machineFoundStatement.setLong  (ndx++, now);
 			machineFoundStatement.setString(ndx++, machine.getKeyStr());
 			

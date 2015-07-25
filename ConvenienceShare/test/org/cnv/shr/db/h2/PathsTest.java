@@ -45,7 +45,6 @@ public class PathsTest
 		machine = new Machine(
 				"127.0.0.1",
 				8990,
-				5,
 				"machineName",
 				Misc.getRandomString(50),
 				true,

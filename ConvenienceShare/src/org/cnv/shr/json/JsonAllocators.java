@@ -221,41 +221,9 @@ public class JsonAllocators
 				{                                                                     
 					public org.cnv.shr.msg.LookingFor create(JsonParser p) { return new org.cnv.shr.msg.LookingFor(p); }  
 				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.ConnectionOpenAwk.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.ConnectionOpenAwk>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.ConnectionOpenAwk create(JsonParser p) { return new org.cnv.shr.msg.key.ConnectionOpenAwk(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.NewKey.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.NewKey>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.NewKey create(JsonParser p) { return new org.cnv.shr.msg.key.NewKey(p); }  
-				});                                                                   
 				ALLOCATORS.put(org.cnv.shr.msg.key.RevokeKey.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.RevokeKey>()          
 				{                                                                     
 					public org.cnv.shr.msg.key.RevokeKey create(JsonParser p) { return new org.cnv.shr.msg.key.RevokeKey(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.ConnectionOpened.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.ConnectionOpened>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.ConnectionOpened create(JsonParser p) { return new org.cnv.shr.msg.key.ConnectionOpened(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.KeyNotFound.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.KeyNotFound>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.KeyNotFound create(JsonParser p) { return new org.cnv.shr.msg.key.KeyNotFound(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.KeyFailure.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.KeyFailure>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.KeyFailure create(JsonParser p) { return new org.cnv.shr.msg.key.KeyFailure(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.OpenConnection.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.OpenConnection>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.OpenConnection create(JsonParser p) { return new org.cnv.shr.msg.key.OpenConnection(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.KeyChange.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.KeyChange>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.KeyChange create(JsonParser p) { return new org.cnv.shr.msg.key.KeyChange(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.WhoIAm.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.WhoIAm>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.WhoIAm create(JsonParser p) { return new org.cnv.shr.msg.key.WhoIAm(p); }  
 				});                                                                   
 				ALLOCATORS.put(org.cnv.shr.msg.EmptyMessage.getJsonName(), new JsonAllocator<org.cnv.shr.msg.EmptyMessage>()          
 				{                                                                     
@@ -272,10 +240,6 @@ public class JsonAllocators
 				ALLOCATORS.put(org.cnv.shr.msg.dwn.ChecksumResponse.getJsonName(), new JsonAllocator<org.cnv.shr.msg.dwn.ChecksumResponse>()          
 				{                                                                     
 					public org.cnv.shr.msg.dwn.ChecksumResponse create(JsonParser p) { return new org.cnv.shr.msg.dwn.ChecksumResponse(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.dwn.NewAesKey.getJsonName(), new JsonAllocator<org.cnv.shr.msg.dwn.NewAesKey>()          
-				{                                                                     
-					public org.cnv.shr.msg.dwn.NewAesKey create(JsonParser p) { return new org.cnv.shr.msg.dwn.NewAesKey(p); }  
 				});                                                                   
 				ALLOCATORS.put(org.cnv.shr.msg.key.PermissionFailure.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.PermissionFailure>()          
 				{                                                                     
@@ -304,10 +268,6 @@ public class JsonAllocators
 				ALLOCATORS.put(org.cnv.shr.msg.ShowApplication.getJsonName(), new JsonAllocator<org.cnv.shr.msg.ShowApplication>()          
 				{                                                                     
 					public org.cnv.shr.msg.ShowApplication create(JsonParser p) { return new org.cnv.shr.msg.ShowApplication(p); }  
-				});                                                                   
-				ALLOCATORS.put(org.cnv.shr.msg.key.ConnectionReason.getJsonName(), new JsonAllocator<org.cnv.shr.msg.key.ConnectionReason>()          
-				{                                                                     
-					public org.cnv.shr.msg.key.ConnectionReason create(JsonParser p) { return new org.cnv.shr.msg.key.ConnectionReason(p); }  
 				});                                                                   
 				ALLOCATORS.put(org.cnv.shr.db.h2.bak.LocalBackup.getJsonName(), new JsonAllocator<org.cnv.shr.db.h2.bak.LocalBackup>()          
 				{                                                                     

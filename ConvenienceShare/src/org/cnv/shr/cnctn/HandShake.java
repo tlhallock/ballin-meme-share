@@ -1,11 +1,14 @@
 package org.cnv.shr.cnctn;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.security.PublicKey;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
-import javax.swing.JFrame;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
@@ -17,20 +20,42 @@ import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.MissingKeyException;
 
+import de.flexiprovider.core.rijndael.RijndaelKey;
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
 public class HandShake
 {
+	private static RijndaelKey getKey(PublicKey pKey, byte[] bytes) throws IOException, ClassNotFoundException, MissingKeyException
+	{
+		try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(
+				Services.keyManager.decrypt(pKey, bytes)));)
+		{
+			return (RijndaelKey) objectInputStream.readObject();
+		}
+	}
+	
+	private static byte[] getBytes(PublicKey key, RijndaelKey aesKey) throws IOException
+	{
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);)
+		{
+			objectOutputStream.writeObject(aesKey);
+		}
+		return Services.keyManager.encrypt(key, byteArrayOutputStream.toByteArray());
+	}
 	
 	
-	protected static final void sendInfo(JsonGenerator generator, RSAPublicKey key)
+	protected static final void sendInfo(JsonGenerator generator, RSAPublicKey key, String reason)
 	{
 		generator.writeStartObject();
 		generator.write("ident", Services.localMachine.getIdentifier());
 		generator.write("port", Services.localMachine.getPort());
 		generator.write("name", Services.localMachine.getName());
 		generator.write("publicKey", KeyPairObject.serialize(key));
+		if (reason != null)
+			generator.write("reason", reason);
 		generator.writeEnd();
+		generator.flush();
 	}
 	
 	protected static final RemoteInfo readInfo(JsonParser parser)
@@ -60,6 +85,9 @@ public class HandShake
 					break;
 				case "name":
 					returnValue.name = parser.getString();
+					break;
+				case "reason":
+					returnValue.reason = parser.getString();
 					break;
 				default:
 					LogWrapper.getLogger().warning("Unknown key: " + key);
@@ -107,12 +135,25 @@ public class HandShake
 	protected static boolean authenticateTheRemote(
 			JsonGenerator generator, 
 			JsonParser parser,
-			String expectedIdentifier)
+			String expectedIdentifier,
+			boolean acceptKeys)
 	{
 		Machine machine = DbMachines.getMachine(expectedIdentifier);
+		PublicKey[] keys = DbKeys.getKeys(machine);
+		
+		boolean alreadyAuthenticated = keys.length <= 0 || acceptKeys;
+		generator.writeStartObject();
+		generator.write("authenticated", alreadyAuthenticated);
+		generator.writeEnd();
+		generator.flush();
+		
+		if (alreadyAuthenticated)
+		{
+			return true;
+		}
 		
 		generator.writeStartArray("naunceTests");
-		for (PublicKey key : DbKeys.getKeys(machine))
+		for (PublicKey key : keys)
 		{
 			byte[] naunce = Misc.createNaunce(Services.settings.minNaunce.get());
 			try
@@ -131,10 +172,12 @@ public class HandShake
 				generator.writeStartObject();
 				generator.write("authenticated", correct);
 				generator.writeEnd();
+				generator.flush();
 				
 				if (correct)
 				{
 					generator.writeEnd();
+					generator.flush();
 					return true;
 				}
 			}
@@ -178,6 +221,11 @@ public class HandShake
 			JsonGenerator generator, 
 			JsonParser parser)
 	{
+		if (isAuthenticated(parser))
+		{
+			return true;
+		}
+		
 		outer:
 		while (parser.hasNext())
 		{
@@ -197,6 +245,8 @@ public class HandShake
 				LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
+
+	// if accept key anyway:
 	
 	
 		return false;
@@ -236,31 +286,62 @@ public class HandShake
 	
 	static class RemoteInfo
 	{
+		public String reason;
 		String ident;
 		RSAPublicKey publicKey;
 		String name;
 		int port;
 	}
 	
-	static class HandShakeParams
-	{
-		JFrame origin;
-		String identifier;
-		String ip;
-		int port;
-		PublicKey remoteKey;
-		boolean acceptAllKeys;
-		String reason;
-	}
-	
-	
 	static class HandShakeResults
 	{
 		int port;
 		PublicKey remoteKey;
 		RSAPublicKey localKey;
-		boolean data;
-		boolean successful;
+		RijndaelKey outgoing;
+		RijndaelKey incoming;
+		public String ident;
+	}
+	
+	static class EncryptionKey
+	{
+		RijndaelKey encryptionKey;
+		
+		static void sendOpenParams(
+				JsonGenerator generator, 
+				PublicKey remoteKey,
+				RijndaelKey aesKey) throws IOException
+		{
+			generator.writeStartObject();
+			generator.write("aesKey", Misc.format(getBytes(remoteKey, aesKey)));
+			generator.writeEnd();
+			generator.flush();
+		}
+		
+		EncryptionKey(JsonParser parser, PublicKey localKey) throws ClassNotFoundException, IOException, MissingKeyException
+		{
+			String key = null;
+			while (parser.hasNext())
+			{
+				JsonParser.Event e = parser.next();
+				switch (e)
+				{
+				case KEY_NAME:
+					key = parser.getString();
+				case END_OBJECT:
+					return;
+				case VALUE_STRING:
+					switch (key)
+					{
+					case "key":
+						break;
+					case "aesKey":
+						encryptionKey = getKey(localKey, Misc.format(parser.getString()));
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	static class NaunceTest
@@ -313,4 +394,8 @@ public class HandShake
 			generator.flush();
 		}
 	}
+	
+	
+	
+	
 }

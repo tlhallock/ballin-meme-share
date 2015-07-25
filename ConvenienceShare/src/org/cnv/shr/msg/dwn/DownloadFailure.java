@@ -26,8 +26,6 @@
 package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -37,8 +35,6 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class DownloadFailure extends DownloadMessage
@@ -51,35 +47,11 @@ public class DownloadFailure extends DownloadMessage
 		this.message = message;
 	}
 
-	public DownloadFailure(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-
-	public static int TYPE = 41;
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
 	@Override
 	public void perform(Communication connection)
 	{
 		DownloadInstance downloadInstance = Services.downloads.getDownloadInstance(getDescriptor(), connection);
 		downloadInstance.removePeer(connection);
-	}
-
-	@Override
-	protected void finishParsing(ByteReader reader) throws IOException
-	{
-		message = reader.readString();
-	}
-
-	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(message);
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK

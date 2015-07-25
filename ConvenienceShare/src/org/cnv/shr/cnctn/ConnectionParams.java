@@ -1,10 +1,7 @@
 package org.cnv.shr.cnctn;
 
-import java.security.PublicKey;
-
 import javax.swing.JFrame;
 
-import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.Misc;
@@ -14,9 +11,7 @@ public abstract class ConnectionParams
 	JFrame origin;
 	String identifier;
 	String ip;
-	int portBegin;
-	int numPorts;
-	PublicKey remoteKey;
+	int port;
 	boolean acceptAllKeys;
 	String reason;
 	
@@ -27,9 +22,7 @@ public abstract class ConnectionParams
 		this.origin = null;
 		this.identifier = null;
 		this.ip = ConnectionManager.getIp(url);
-		this.portBegin = ConnectionManager.getPort(url);
-		this.numPorts = 1;
-		this.remoteKey = null;
+		this.port = ConnectionManager.getPort(url);
 		this.acceptAllKeys = acceptKeys;
 		this.reason = reason;
 	}
@@ -46,9 +39,7 @@ public abstract class ConnectionParams
 	{
 		identifier = machine.getIdentifier();
 		ip = machine.getIp();
-		portBegin = machine.getPort();
-		numPorts = machine.getNumberOfPorts();
-		remoteKey = DbKeys.getKey(machine);
+		port = machine.getPort();
 		return this;
 	}
 
@@ -68,17 +59,12 @@ public abstract class ConnectionParams
 		failed();
 	}
 	
-	int getPortEnd()
-	{
-		return portBegin + Math.min(50, numPorts);
-	}
-	
 	boolean tryingToConnectToLocal()
 	{
-		return Misc.collectIps().contains(ip)
-			&&  (portBegin            >= Services.localMachine.getPort() && portBegin            <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts())
-					||
-					(portBegin + numPorts >= Services.localMachine.getPort() && portBegin + numPorts <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts());
+		return Misc.collectIps().contains(ip) && port == Services.localMachine.getPort();
+//			&&  (portBegin            >= Services.localMachine.getPort() && portBegin            <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts())
+//					||
+//					(portBegin + numPorts >= Services.localMachine.getPort() && portBegin + numPorts <= Services.localMachine.getPort() + Services.localMachine.getNumberOfPorts());
 	}
 	
 	public static abstract class AutoCloseConnectionParams extends ConnectionParams

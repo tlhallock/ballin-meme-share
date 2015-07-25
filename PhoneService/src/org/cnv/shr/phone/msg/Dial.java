@@ -55,39 +55,39 @@ public class Dial extends PhoneMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsNumber = true;
 		boolean needsUniqueKey = true;
+		boolean needsNumber = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsNumber)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Dial\" needs \"number\"");
-				}
 				if (needsUniqueKey)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Dial\" needs \"uniqueKey\"");
+				}
+				if (needsNumber)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Dial\" needs \"number\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case START_OBJECT:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("number")) {
-					needsNumber = false;
-					number = new org.cnv.shr.phone.cmn.PhoneNumberWildCard(parser);
-				} else {
-					Services.logger.warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("uniqueKey")) {
 					needsUniqueKey = false;
 					uniqueKey = parser.getString();
+				} else {
+					Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("number")) {
+					needsNumber = false;
+					number = new org.cnv.shr.phone.cmn.PhoneNumberWildCard(parser);
 				} else {
 					Services.logger.warning("Unknown key: " + key);
 				}

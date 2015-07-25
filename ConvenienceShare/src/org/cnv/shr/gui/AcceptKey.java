@@ -38,60 +38,60 @@ import org.cnv.shr.util.LogWrapper;
  *
  * @author rever
  */
-public class AcceptKey extends javax.swing.JFrame {
+public class AcceptKey extends javax.swing.JFrame
+{
+	Boolean result;
 
-    Boolean result;
-    
-    Lock lock = new ReentrantLock();
-    Condition condition = lock.newCondition();
+	Lock lock = new ReentrantLock();
+	Condition condition = lock.newCondition();
     /**
      * Creates new form AcceptKey
      */
-    public AcceptKey() {
-        initComponents();
-    }
-    
-    public static boolean showAcceptDialog(String url, String machineName, String machineIdentifier, String key)
-    {
-        AcceptKey acceptKey = new AcceptKey();
-        acceptKey.setTitle("Would you like to accept a key from " + machineName);
-        Services.notifications.registerWindow(acceptKey);
-        acceptKey.jLabel6.setText(url);
-        acceptKey.jLabel7.setText(machineName);
-        acceptKey.jLabel8.setText(machineIdentifier);
-        if (key.length() > 50 - "...".length())
-        {
-        	key = key.substring(0, 50) + "...";
-        }
-        acceptKey.jLabel5.setText(key);
-        acceptKey.pack();
-        
-        
-        acceptKey.lock.lock();
-        try
-        {
-            acceptKey.setVisible(true);
-            acceptKey.setAlwaysOnTop(true);
-            
-            int count = 0;
-            while (acceptKey.result == null && count++ < 10)
-            {
-                acceptKey.condition.await(1, TimeUnit.SECONDS);
-            }
-            acceptKey.dispose();
-        }
-        catch (InterruptedException ex)
-        {
-        	acceptKey.dispose();
-        	LogWrapper.getLogger().log(Level.INFO, "Interrupted", ex);
-        	return false;
-        }
-        finally
-        {
-            acceptKey.lock.unlock();
-        }
-        return acceptKey.result != null && acceptKey.result;
-    }
+	public AcceptKey()
+	{
+		initComponents();
+	}
+
+	public static boolean showAcceptDialog(String url, String machineName, String machineIdentifier, String key)
+	{
+		AcceptKey acceptKey = new AcceptKey();
+		acceptKey.setTitle("Would you like to accept a key from " + machineName);
+		Services.notifications.registerWindow(acceptKey);
+		acceptKey.jLabel6.setText(url);
+		acceptKey.jLabel7.setText(machineName);
+		acceptKey.jLabel8.setText(machineIdentifier);
+		if (key.length() > 50 - "...".length())
+		{
+			key = key.substring(0, 50) + "...";
+		}
+		acceptKey.jLabel5.setText(key);
+		acceptKey.pack();
+
+		acceptKey.lock.lock();
+		try
+		{
+			acceptKey.setVisible(true);
+			acceptKey.setAlwaysOnTop(true);
+
+			int count = 0;
+			while (acceptKey.result == null && count++ < 10)
+			{
+				acceptKey.condition.await(1, TimeUnit.SECONDS);
+			}
+			acceptKey.dispose();
+		}
+		catch (InterruptedException ex)
+		{
+			acceptKey.dispose();
+			LogWrapper.getLogger().log(Level.INFO, "Interrupted", ex);
+			return false;
+		}
+		finally
+		{
+			acceptKey.lock.unlock();
+		}
+		return acceptKey.result != null && acceptKey.result;
+	}
 
     /**
      * This method is called from within the constructor to initialize the form.

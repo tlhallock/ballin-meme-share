@@ -102,6 +102,7 @@ public class DbKeys
 	public static PublicKey[] getKeys(Machine machine)
 	{
 		LinkedList<PublicKey> returnValue = new LinkedList<>();
+		if (machine == null) return returnValue.toArray(dummy);
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(SELECT1))
 		{

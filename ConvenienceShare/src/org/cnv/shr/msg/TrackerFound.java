@@ -1,7 +1,6 @@
 package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -11,8 +10,6 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerEntry;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class TrackerFound extends Message
@@ -89,10 +86,4 @@ public class TrackerFound extends Message
 		return new String(output.toByteArray());                                           
 	}                                                                                    
 	// GENERATED CODE: DO NOT EDIT. END   LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
-	@Override
-	protected int getType() { return 0; }
-	@Override
-	protected void parse(ByteReader reader) throws IOException {}
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
 }

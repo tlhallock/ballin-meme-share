@@ -85,19 +85,9 @@ import org.cnv.shr.msg.dwn.DownloadDone;
 import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.msg.dwn.MachineHasFile;
-import org.cnv.shr.msg.dwn.NewAesKey;
 import org.cnv.shr.msg.dwn.RequestCompletionStatus;
-import org.cnv.shr.msg.key.ConnectionOpenAwk;
-import org.cnv.shr.msg.key.ConnectionOpened;
-import org.cnv.shr.msg.key.ConnectionReason;
-import org.cnv.shr.msg.key.KeyChange;
-import org.cnv.shr.msg.key.KeyFailure;
-import org.cnv.shr.msg.key.KeyNotFound;
-import org.cnv.shr.msg.key.NewKey;
-import org.cnv.shr.msg.key.OpenConnection;
 import org.cnv.shr.msg.key.PermissionFailure;
 import org.cnv.shr.msg.key.RevokeKey;
-import org.cnv.shr.msg.key.WhoIAm;
 import org.cnv.shr.msg.swup.GetLogs;
 import org.cnv.shr.msg.swup.GotLogs;
 import org.cnv.shr.msg.swup.UpdateInfoMessage;
@@ -208,20 +198,20 @@ public class GenerateParserCode
 				Wait.class                       ,
 				HeartBeat.class                  ,
 				LookingFor.class                 ,
-				ConnectionOpenAwk.class          ,
-				NewKey.class                     ,
+//				ConnectionOpenAwk.class          ,
+//				NewKey.class                     ,
 				RevokeKey.class                  ,
-				ConnectionOpened.class           ,
-				KeyNotFound.class                ,
-				KeyFailure.class                 ,
-				OpenConnection.class             ,
-				KeyChange.class                  ,
-				WhoIAm.class                     ,
+//				ConnectionOpened.class           ,
+//				KeyNotFound.class                ,
+//				KeyFailure.class                 ,
+//				OpenConnection.class             ,
+//				KeyChange.class                  ,
+//				WhoIAm.class                     ,
 				EmptyMessage.class               ,
 				DoneResponse.class               ,
 				ChecksumRequest.class            ,
 				ChecksumResponse.class           ,
-				NewAesKey.class                  ,
+//				NewAesKey.class                  ,
 				PermissionFailure.class          ,
 				GetPermission.class              ,
 				GotPermission.class              ,
@@ -229,7 +219,7 @@ public class GenerateParserCode
 				UpdateInfoRequest.class          ,
 				UpdateInfoRequestRequest.class   ,
 				ShowApplication.class            ,
-				ConnectionReason.class           ,
+//				ConnectionReason.class           ,
 				
 				
 				OperatorInfo.class,

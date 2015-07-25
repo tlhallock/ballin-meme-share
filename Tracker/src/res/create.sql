@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS  MACHINE (
    MNAME          varchar(50)   ,
    IP             varchar(256)  NOT NULL,
    PORT           INT           NOT NULL,
-   NPORTS         INT           NOT NULL DEFAULT  1,
    LAST_ACTIVE    LONG          NOT NULL,
    KEYSTR         char(280)     NOT NULL,
 );

@@ -8,7 +8,6 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.MyParserIgnore;
-import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.phone.cmn.ConnectionParams;
 import org.cnv.shr.phone.cmn.PhoneLine;
 import org.cnv.shr.phone.cmn.PhoneNumber;
@@ -25,7 +24,7 @@ public class VoiceMail extends PhoneMessage
 	@MyParserIgnore
 	private Path outputDir;
 	
-	@MyParserNullable
+	@MyParserIgnore
 	JsonBinaryData data;
 	
 	public VoiceMail(long replyTime, PhoneNumberWildCard destinationNumber)
@@ -101,6 +100,7 @@ public class VoiceMail extends PhoneMessage
 		generator.write("replyTime", replyTime);
 		sourceNumber.generate(generator, "sourceNumber");
 		destinationNumber.generate(generator, "destinationNumber");
+		generator.write("hasData", hasData);
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -108,6 +108,7 @@ public class VoiceMail extends PhoneMessage
 		String key = null;                         
 		boolean needsSourceNumber = true;
 		boolean needsDestinationNumber = true;
+		boolean needsHasData = true;
 		boolean needsReplyTime = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
@@ -121,6 +122,10 @@ public class VoiceMail extends PhoneMessage
 				if (needsDestinationNumber)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.VoiceMail\" needs \"destinationNumber\"");
+				}
+				if (needsHasData)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.VoiceMail\" needs \"hasData\"");
 				}
 				if (needsReplyTime)
 				{
@@ -142,6 +147,24 @@ public class VoiceMail extends PhoneMessage
 					destinationNumber = new org.cnv.shr.phone.cmn.PhoneNumberWildCard(parser);
 					break;
 				default: Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_FALSE:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("hasData")) {
+					needsHasData = false;
+					hasData = false;
+				} else {
+					Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_TRUE:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("hasData")) {
+					needsHasData = false;
+					hasData = true;
+				} else {
+					Services.logger.warning("Unknown key: " + key);
 				}
 				break;
 			case VALUE_NUMBER:

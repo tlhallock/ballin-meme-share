@@ -26,7 +26,6 @@
 package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.List;
 
 import javax.json.stream.JsonGenerator;
@@ -39,8 +38,6 @@ import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.json.JsonList;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class ChunkList extends DownloadMessage
@@ -52,39 +49,13 @@ public class ChunkList extends DownloadMessage
 				{
 					return new Chunk(parser);
 				}});
-
-	public static int TYPE = 11;
 	
 	public ChunkList(List<Chunk> chunks2, FileEntry descriptor)
 	{
 		super(descriptor);
 		chunks.addAll(chunks2);
 	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
 	
-	@Override
-	protected void finishParsing(ByteReader reader) throws IOException
-	{
-		int numChunks = reader.readInt();
-		for (int i = 0; i < numChunks; i++)
-		{
-			chunks.add(new Chunk(reader));
-		}
-	}
-	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(chunks.size());
-		for (Chunk c : chunks)
-		{
-			c.write(buffer);
-		}
-	}
 	@Override
 	public void perform(Communication connection) throws Exception
 	{

@@ -26,8 +26,6 @@
 package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -39,8 +37,6 @@ import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.PathElement;
 import org.cnv.shr.mdl.RemoteDirectory;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class ListPath extends Message
@@ -52,34 +48,6 @@ public class ListPath extends Message
 	{
 		rootName = remote.getName();
 		this.path = path.getFullPath();
-	}
-	
-	public ListPath(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-	
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		rootName = reader.readString();
-		path = reader.readString();
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(rootName);
-		buffer.append(path);
-	}
-	
-	public static int TYPE = 10;
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
 	}
 
 	@Override

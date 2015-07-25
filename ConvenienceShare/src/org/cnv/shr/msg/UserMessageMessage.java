@@ -26,8 +26,6 @@
 package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -37,14 +35,10 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class UserMessageMessage extends Message
 {
-	public static int TYPE = 7;
-        
         private int type;
         private String messageStr;
 	
@@ -57,31 +51,7 @@ public class UserMessageMessage extends Message
         			messageStr = messageStr.substring(0, UserMessage.MAX_MESSAGE_LENGTH);
         		}
 	}
-
-	public UserMessageMessage(InputStream i) throws IOException
-	{
-		super(i);
-	}
-	
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
         
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-            type = reader.readInt();
-            messageStr = reader.readString();
-	}
-        
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(type);
-		buffer.append(messageStr);
-	}
 	@Override
 	public void perform(Communication connection) throws Exception
 	{

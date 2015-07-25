@@ -26,8 +26,8 @@
 package org.cnv.shr.msg.swup;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.PublicKey;
+import java.util.Arrays;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -36,16 +36,12 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class UpdateInfoMessage extends Message
 {
-	public static int TYPE = 39;
-	
 	private String ip;
 	private int port;
 	private PublicKey pKey;
@@ -60,33 +56,10 @@ public class UpdateInfoMessage extends Message
 	}
 	
 	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-	
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		ip = reader.readString();
-		port = reader.readInt();
-		pKey = reader.readPublicKey();
-		decryptedNaunce = reader.readVarByteArray();
-	}
-	
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(ip);
-		buffer.append(port);
-		buffer.append(pKey);
-		buffer.appendVarByteArray(decryptedNaunce);
-	}
-	
-	@Override
 	public void perform(Communication connection) throws Exception
 	{
-		if (!connection.getAuthentication().hasPendingNaunce(decryptedNaunce))
+		byte[] param = (byte[]) connection.getParam("decryptedNaunce");
+		if (!Arrays.equals(decryptedNaunce, param))
 		{
 			LogWrapper.getLogger().info("Update server machine failed authentication.");
 			connection.finish();

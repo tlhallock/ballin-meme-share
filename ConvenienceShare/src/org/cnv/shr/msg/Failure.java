@@ -26,16 +26,12 @@
 package org.cnv.shr.msg;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class Failure extends Message
@@ -46,27 +42,10 @@ public class Failure extends Message
 	{
 		this.message = message;
 	}
-	public Failure(InputStream stream) throws IOException
-	{
-		super(stream);
-	}
-	
 	@Override
 	public void perform(Communication connection)
 	{
 		System.out.println("Unable to perform request:" + message);
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException
-	{
-		message = reader.readString();
-	}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException
-	{
-		buffer.append(message);
 	}
 	
 	public String toString()

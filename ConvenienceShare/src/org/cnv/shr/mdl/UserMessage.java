@@ -313,7 +313,9 @@ public class UserMessage extends DbObject<Integer>
 		SHARE(0),
 		SHARE_ROOT(1),
 		SEE_ROOT(2),
-		TEXT(3)
+		TEXT(3),
+		CHANGE_KEYS(4),
+		CHANGE_IDENT(5),
 		
 		;
 		

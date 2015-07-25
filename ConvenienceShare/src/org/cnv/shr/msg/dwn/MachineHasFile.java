@@ -26,7 +26,6 @@
 package org.cnv.shr.msg.dwn;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
@@ -36,8 +35,6 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.dwn.DownloadInstance;
 import org.cnv.shr.trck.FileEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 
 public class MachineHasFile extends DownloadMessage
@@ -48,18 +45,6 @@ public class MachineHasFile extends DownloadMessage
 	{
 		super(entry);
 	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-	
-	@Override
-	protected void finishParsing(ByteReader reader) throws IOException {}
-	
-	@Override
-	protected void finishWriting(AbstractByteWriter buffer) throws IOException {}
 	
 	@Override
 	public void perform(Communication connection) throws Exception

@@ -26,7 +26,6 @@
 package org.cnv.shr.msg;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.db.h2.DbPermissions;
@@ -35,22 +34,11 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.LocalDirectory;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.key.PermissionFailure;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.Jsonable;
-import org.cnv.shr.util.OutputByteWriter;
 
 public abstract class Message implements Jsonable
 {
 	protected Message() {}
-	
-	// This constructor is no longer needed.
-	protected Message(InputStream stream) throws IOException {}
-	
-	public boolean requiresAthentication()
-	{
-		return true;
-	}
 	
 	@Override
 	public String toString()
@@ -60,20 +48,6 @@ public abstract class Message implements Jsonable
 		return builder.toString();
 	}
 	
-	public final void write(Communication connection, OutputByteWriter output) throws IOException
-	{
-		output.append(getType());
-		print(connection, output);
-	}
-	
-	public void read(ByteReader reader) throws IOException
-	{
-		parse(reader);
-	}
-
-	protected abstract int  getType();
-	protected abstract void parse(ByteReader reader) throws IOException;
-	protected abstract void print(Communication connection, AbstractByteWriter buffer) throws IOException;
 	public    abstract void perform(Communication connection) throws Exception;
 	
 	

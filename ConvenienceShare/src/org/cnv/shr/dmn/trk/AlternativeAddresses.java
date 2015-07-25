@@ -61,23 +61,17 @@ public class AlternativeAddresses
 			set = new HashSet<>();
 			alternativeIps.put(entry.getIp(), set);
 		}
-		for (int port = entry.getPortBegin(); port < entry.getPortEnd(); port++)
-		{
-			set.add(port);
-		}
+		set.add(entry.getPort());
 	}
 	
-	public void remove(String ip, int begin, int end)
+	public void remove(String ip, int port)
 	{
 		HashSet<Integer> set = alternativeIps.get(ip);
 		if (set == null)
 		{
 			return;
 		}
-		for (int port = begin; port < end; port++)
-		{
-			set.remove(port);
-		}
+		set.remove(port);
 		if (set.isEmpty())
 		{
 			alternativeIps.remove(ip);

@@ -46,6 +46,7 @@ import java.util.logging.Level;
 import javax.swing.ImageIcon;
 
 import org.cnv.shr.cnctn.ConnectionManager;
+import org.cnv.shr.cnctn.HandshakeServer;
 import org.cnv.shr.db.h2.DbConnectionCache;
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
@@ -85,7 +86,8 @@ public class Services
 	/** To handle outgoing network traffic **/
 	public static NonRejectingExecutor connectionThreads;
 	/** To handle incoming network traffic **/
-	public static RequestHandler[] handlers;
+	private static ServerSocket serveSocket;
+	public static HandshakeServer connectionServer;
 	public static ServerSocket[] sockets;
 	
 	public static Settings settings;
@@ -216,12 +218,10 @@ public class Services
 		trackers = new Trackers();
 		trackers.load(settings.trackerFile.getPath());
 
-		handlers = new RequestHandler[sockets.length];
-		for (int i = 0; i < handlers.length; i++)
-		{
-			if(sockets[i] != null)
-				handlers[i] = new RequestHandler(sockets[i]);
-		}
+		connectionServer = new HandshakeServer(
+				serveSocket,
+				settings.servePortBeginI.get() + 1,
+				settings.servePortBeginI.get() + settings.numHandlers.get());
 		
 		userThreads        = Executors.newCachedThreadPool();
 		connectionThreads  = new NonRejectingExecutor("cnctns", settings.maxDownloads.get());
@@ -285,11 +285,7 @@ public class Services
 		notifications.start();
 		// Now start other threads...
 		checksums.start(); checksums.kick();
-		for (int i = 0; i < handlers.length; i++)
-		{
-			if (handlers[i] != null)
-			handlers[i].start();
-		}
+		new Thread(connectionServer).start();
 		
 		downloads.startDownloadInitiator();
 		Misc.timer.scheduleAtFixedRate(updateManager, 10000L, 24L * 60L * 60L * 1000L);
@@ -388,12 +384,8 @@ public class Services
 			updateManager.cancel();
 		if (notifications != null)
 			notifications.stop();
-		if (handlers != null)
-		for (int i = 0; i < handlers.length; i++)
-		{
-			if (handlers[i] != null)
-				handlers[i].quit();
-		}
+		if (connectionServer != null)
+			connectionServer.stop();
 		if (downloads != null)
 			downloads.quitAllDownloads();
 		Misc.timer.cancel();
@@ -455,26 +447,14 @@ public class Services
 				Services.settings.logToFile.get() ? Services.settings.logFile.getPath() : null,
 				Services.settings.logLength.get());
 
-		if (screen != null)
-			screen.setStatus("Creating serve handlers");
-		int numServeThreads = Math.max(1, settings.numHandlers.get());
-		sockets = new ServerSocket[numServeThreads];
-		int successCount = 0;
-		for (int i = 0; i < sockets.length; i++)
+		int port = settings.servePortBeginI.get();
+		try
 		{
-			int port = settings.servePortBeginI.get() + i;
-			try
-			{
-				sockets[i] = new ServerSocket(port);
-				successCount++;
-			}
-			catch (IOException ex)
-			{
-				LogWrapper.getLogger().log(Level.WARNING, "Unable to start on port " + port, ex);
-			}
+			serveSocket = new ServerSocket(port);
 		}
-		if (successCount <= 0)
+		catch (IOException ex)
 		{
+			LogWrapper.getLogger().log(Level.WARNING, "Unable to start on port " + port, ex);
 			return true;
 		}
 

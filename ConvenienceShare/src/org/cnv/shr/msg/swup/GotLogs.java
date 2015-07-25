@@ -1,7 +1,6 @@
 package org.cnv.shr.msg.swup;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -17,8 +16,6 @@ import org.cnv.shr.gui.UpdateServerProgress;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -83,13 +80,6 @@ public class GotLogs extends Message
 			connection.finish();
 		}
 	}
-
-	@Override
-	protected int getType() { return 0; }
-	@Override
-	protected void parse(ByteReader reader) throws IOException {}
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override

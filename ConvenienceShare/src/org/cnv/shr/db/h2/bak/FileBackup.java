@@ -101,23 +101,15 @@ public class FileBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsFileSize = true;
-		boolean needsLastModified = true;
 		boolean needsPath = true;
 		boolean needsRootName = true;
+		boolean needsFileSize = true;
+		boolean needsLastModified = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsFileSize)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"fileSize\"");
-				}
-				if (needsLastModified)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"lastModified\"");
-				}
 				if (needsPath)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"path\"");
@@ -126,24 +118,18 @@ public class FileBackup implements Jsonable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"rootName\"");
 				}
+				if (needsFileSize)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"fileSize\"");
+				}
+				if (needsLastModified)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.FileBackup\" needs \"lastModified\"");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "fileSize":
-					needsFileSize = false;
-					fileSize = Long.parseLong(parser.getString());
-					break;
-				case "lastModified":
-					needsLastModified = false;
-					lastModified = Long.parseLong(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -160,6 +146,20 @@ public class FileBackup implements Jsonable
 					break;
 				case "tags":
 					tags = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "fileSize":
+					needsFileSize = false;
+					fileSize = Long.parseLong(parser.getString());
+					break;
+				case "lastModified":
+					needsLastModified = false;
+					lastModified = Long.parseLong(parser.getString());
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

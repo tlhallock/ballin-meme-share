@@ -44,39 +44,39 @@ public class Hangup extends PhoneMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsCode = true;
 		boolean needsMessage = true;
+		boolean needsCode = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsCode)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Hangup\" needs \"code\"");
-				}
 				if (needsMessage)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Hangup\" needs \"message\"");
+				}
+				if (needsCode)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.Hangup\" needs \"code\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("code")) {
-					needsCode = false;
-					code = Integer.parseInt(parser.getString());
-				} else {
-					Services.logger.warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("message")) {
 					needsMessage = false;
 					message = parser.getString();
+				} else {
+					Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("code")) {
+					needsCode = false;
+					code = Integer.parseInt(parser.getString());
 				} else {
 					Services.logger.warning("Unknown key: " + key);
 				}

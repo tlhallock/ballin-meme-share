@@ -60,18 +60,14 @@ public class PhoneRing extends PhoneMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsReplyPort = true;
 		boolean needsIdent = true;
 		boolean needsUniqueKey = true;
+		boolean needsReplyPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsReplyPort)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.PhoneRing\" needs \"replyPort\"");
-				}
 				if (needsIdent)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.PhoneRing\" needs \"ident\"");
@@ -80,19 +76,14 @@ public class PhoneRing extends PhoneMessage
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.PhoneRing\" needs \"uniqueKey\"");
 				}
+				if (needsReplyPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.PhoneRing\" needs \"replyPort\"");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("replyPort")) {
-					needsReplyPort = false;
-					replyPort = Integer.parseInt(parser.getString());
-				} else {
-					Services.logger.warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -105,6 +96,15 @@ public class PhoneRing extends PhoneMessage
 					uniqueKey = parser.getString();
 					break;
 				default: Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("replyPort")) {
+					needsReplyPort = false;
+					replyPort = Integer.parseInt(parser.getString());
+				} else {
+					Services.logger.warning("Unknown key: " + key);
 				}
 				break;
 			default: Services.logger.warning("Unknown type found in message: " + e);

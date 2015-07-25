@@ -26,8 +26,6 @@
 package org.cnv.shr.msg.swup;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.PublicKey;
 
 import javax.json.stream.JsonGenerator;
@@ -37,14 +35,11 @@ import org.cnv.shr.cnctn.Communication;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.msg.Message;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.AbstractByteWriter;
-import org.cnv.shr.util.ByteReader;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
 public class UpdateInfoRequestRequest extends Message
 {
-	public static final int TYPE = 37;
 	private String action;
 	
 	public UpdateInfoRequestRequest(String action)
@@ -52,28 +47,11 @@ public class UpdateInfoRequestRequest extends Message
 		this.action = action;
 	}
 
-	public UpdateInfoRequestRequest(InputStream input) throws IOException
-	{
-		super(input);
-	}
-
-	@Override
-	protected int getType()
-	{
-		return TYPE;
-	}
-
-	@Override
-	protected void parse(ByteReader reader) throws IOException {}
-
-	@Override
-	protected void print(Communication connection, AbstractByteWriter buffer) throws IOException {}
-
 	@Override
 	public void perform(Communication connection) throws Exception
 	{
 		byte[] pending = Misc.createNaunce(Services.settings.minNaunce.get());
-		connection.getAuthentication().addPendingNaunce(pending);
+		connection.putParam("decryptedNaunce", pending);
 		PublicKey publicKey = Services.updateManager.getPublicKey();
 		byte[] encrypted = Services.keyManager.encrypt(publicKey, pending);
 		connection.send(new UpdateInfoRequest(publicKey, encrypted, action));
