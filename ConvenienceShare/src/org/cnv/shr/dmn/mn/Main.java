@@ -35,8 +35,6 @@ import java.util.logging.Level;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
-import org.cnv.shr.cnctn.Communication;
-import org.cnv.shr.cnctn.ConnectionParams.AutoCloseConnectionParams;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.mn.strt.RunOnStartUp;
 import org.cnv.shr.gui.SplashScreen;
@@ -98,16 +96,6 @@ public class Main
 //			}
 //			Thread.sleep(1000);
 //		}
-		
-		if (Services.localMachine.getPort() == 9990)
-		{
-			Services.networkManager.openConnection(new AutoCloseConnectionParams("127.0.0.1:8990", false, "test") {
-				@Override
-				protected void opened(Communication connection) throws Exception
-				{
-					System.out.println("Opened!");
-				}});
-		}
 	}
 
 	private static void instanceAlreadyRunning(SplashScreen screen, Arguments a) throws UnknownHostException, InterruptedException, IOException
