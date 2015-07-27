@@ -27,7 +27,6 @@ package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -48,7 +47,6 @@ import org.cnv.shr.msg.dwn.ChunkResponse;
 import org.cnv.shr.msg.dwn.DownloadFailure;
 import org.cnv.shr.msg.dwn.RequestCompletionStatus;
 import org.cnv.shr.stng.Settings;
-import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.FileOutsideOfRootException;
 import org.cnv.shr.util.LogWrapper;
 
@@ -214,30 +212,19 @@ public class ServeInstance extends TimerTask
 		}
 	}
 	
-	public void serve(Chunk chunk, boolean compress)
+	public void serve(Chunk chunk)
 	{
 		synchronized (connection.getOutput())
 		{
 			try
 			{
-				compress |= Services.compressionManager.alwaysCompress(local.getPath().getUnbrokenName());
 				LogWrapper.getLogger().info("Sending chunk " + chunk);
-				connection.send(new ChunkResponse(local.getFileEntry(), chunk, compress));
+				connection.send(new ChunkResponse(local.getFileEntry(), chunk));
 				// Right here I could check that the checksum matches...
 
-				if (compress)
-				{
-					try (OutputStream out = CompressionStreams2.newCompressedOutputStream(connection.getOutput()))
-					{
-						ChunkData.write(chunk, local.getFsFile(), out);
-					}
-				}
-				else
-				{
-					connection.beginWriteRaw();
-					ChunkData.write(chunk, local.getFsFile(), connection.getOutput());
-					connection.endWriteRaw();
-				}
+				connection.beginWriteRaw();
+				ChunkData.write(chunk, local.getFsFile(), connection.getOutput());
+				connection.endWriteRaw();
 			}
 			catch (IOException e)
 			{

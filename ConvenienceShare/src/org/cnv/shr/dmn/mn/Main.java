@@ -53,7 +53,6 @@ public class Main
 	{
 		Arguments a = new Arguments();
 		a.parseArgs(args);
-		a.deleteDb = true;
 		SplashScreen screen = null;
 		if (a.showGui)
 		{
@@ -102,7 +101,7 @@ public class Main
 		
 		if (Services.localMachine.getPort() == 9990)
 		{
-			Services.networkManager.openConnection(new AutoCloseConnectionParams("127.0.0.1:8990", true, "test") {
+			Services.networkManager.openConnection(new AutoCloseConnectionParams("127.0.0.1:8990", false, "test") {
 				@Override
 				protected void opened(Communication connection) throws Exception
 				{

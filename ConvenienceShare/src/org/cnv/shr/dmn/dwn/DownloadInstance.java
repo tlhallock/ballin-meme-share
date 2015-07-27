@@ -26,7 +26,6 @@
 package org.cnv.shr.dmn.dwn;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -66,7 +65,6 @@ import org.cnv.shr.mdl.RemoteFile;
 import org.cnv.shr.msg.dwn.CompletionStatus;
 import org.cnv.shr.msg.dwn.FileRequest;
 import org.cnv.shr.trck.FileEntry;
-import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 
@@ -378,9 +376,7 @@ public class DownloadInstance implements Runnable
 			try
 			{
 				// TODO: move size check
-				boolean shouldCompress = c.getSize() > 50 && Services.compressionManager.shouldCompressFile(remoteFile.getPath().getUnbrokenName());
-				shouldCompress = true;
-				removeFirst.request(remoteFile.getFileEntry(), c, shouldCompress);
+				removeFirst.request(remoteFile.getFileEntry(), c);
 				pendingSeeders.put(c, removeFirst);
 				DbChunks.chunkDone(download, c, ChunkState.REQUESTED);
 				LogWrapper.getLogger().info("Requested chunk " + c + " from " + removeFirst.getConnection().getUrl());
@@ -448,7 +444,7 @@ public class DownloadInstance implements Runnable
 		return pendingSeeders.isEmpty() && DbChunks.allChunksAreDone(download);
 	}
 
-	public void download(Chunk chunk, Communication connection, boolean compressed) throws IOException, NoSuchAlgorithmException
+	public void download(Chunk chunk, Communication connection) throws IOException, NoSuchAlgorithmException
 	{
 		Seeder resquestedSeeder;
 		synchronized (this)
@@ -469,21 +465,10 @@ public class DownloadInstance implements Runnable
 			{
 				boolean successful;
 
-				if (compressed)
-				{
-					LogWrapper.getLogger().info("Chunk is compressed.");
-					try (InputStream in = CompressionStreams2.newCompressedInputStream(connection.getIn()))
-					{
-						successful = ChunkData.read(chunk, destination.toFile(), in);
-					}
-				}
-				else
-				{
-					LogWrapper.getLogger().info("Chunk is not compressed.");
-					connection.beginReadRaw();
-					successful = ChunkData.read(chunk, destination.toFile(), connection.getIn());
-					connection.endReadRaw();
-				}
+				LogWrapper.getLogger().info("Chunk is not compressed.");
+				connection.beginReadRaw();
+				successful = ChunkData.read(chunk, destination.toFile(), connection.getIn());
+				connection.endReadRaw();
 
 				synchronized (this)
 				{

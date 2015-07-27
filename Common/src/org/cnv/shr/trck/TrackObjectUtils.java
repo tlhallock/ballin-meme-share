@@ -25,6 +25,7 @@
 
 package org.cnv.shr.trck;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -72,6 +73,11 @@ public class TrackObjectUtils
 		return generatorFactory.createGenerator(output, UTF_8);
 	}
 	
+	public static JsonParser createParser(String msg)
+	{
+		return createParser(new ByteArrayInputStream(msg.getBytes()));
+	}
+	
 	public static JsonParser createParser(InputStream input)
 	{
 		// OMG, java is #!@%*&-up.
@@ -96,7 +102,7 @@ public class TrackObjectUtils
 					// This doesn't hurt, because we can block for 1 byte: we aren't waiting while we have something to return.
 					if (amountToRead < 1 && cbuf.length > 0)
 					{
-						System.out.println("Reading another anyway...");
+//						System.out.println("Reading another anyway...");
 						amountToRead = 1;
 					}
 					int read = super.read(cbuf, offset, amountToRead);

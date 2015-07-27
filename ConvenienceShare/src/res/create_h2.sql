@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS MESSAGE (
    MID            INTEGER       NOT NULL,
    SENT           LONG          NOT NULL,
    MTYPE          INTEGER       NOT NULL,
-   MESSAGE        varchar(1024) NOT NULL,
+   MESSAGE        varchar(8192) NOT NULL,
    
    FOREIGN KEY(MID) REFERENCES MACHINE(M_ID)  ON DELETE CASCADE
 );

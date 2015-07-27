@@ -38,6 +38,7 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -111,7 +112,6 @@ public class Services
 	
 	private static final Object localSyncerSync = new Object();
 	private static TimerTask localSynchronizer;
-	public static CompressionList compressionManager;
 	
 	public static void initialize(Arguments args, SplashScreen screen) throws Exception
 	{
@@ -193,7 +193,6 @@ public class Services
 	{
 		if (screen != null)
 			screen.setStatus("Creating services");
-		compressionManager = new CompressionList(); compressionManager.read(settings.compressionFile.getPath());
 		colors = new ColorSetter();
 		colors.read();
 		notifications = new Notifications();
@@ -380,6 +379,8 @@ public class Services
 
 	public static void deInitialize()
 	{
+		LogWrapper.getLogger().log(Level.SEVERE, "Shutting down", new Exception());
+		
 		if (updateManager != null)
 			updateManager.cancel();
 		if (notifications != null)
@@ -419,6 +420,8 @@ public class Services
 
 	public static boolean isAlreadyRunning(Arguments args, SplashScreen screen) throws FileNotFoundException, IOException
 	{
+		System.out.println("Starting from " + Paths.get(".").toAbsolutePath());
+		
 		quiter = args.quiter;
 
 		settings = args.settings;

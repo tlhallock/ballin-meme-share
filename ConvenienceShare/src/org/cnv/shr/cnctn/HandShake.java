@@ -9,12 +9,13 @@ import java.security.PublicKey;
 
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
+import javax.json.stream.JsonParser.Event;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
@@ -25,6 +26,15 @@ import de.flexiprovider.core.rsa.RSAPublicKey;
 
 public class HandShake
 {
+	protected static void expect(JsonParser parser, JsonParser.Event evnt)
+	{
+		Event next = parser.next();
+		if (!next.equals(evnt))
+		{
+			LogWrapper.getLogger().warning("Expected " + evnt + ": found " + next);
+		}
+	}
+	
 	private static RijndaelKey getKey(PublicKey pKey, byte[] bytes) throws IOException, ClassNotFoundException, MissingKeyException
 	{
 		try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(
@@ -43,7 +53,39 @@ public class HandShake
 		}
 		return Services.keyManager.encrypt(key, byteArrayOutputStream.toByteArray());
 	}
-	
+
+	public static boolean verifyMachine(
+			String ident,
+			String ip,
+			int port,
+			String name,
+			RSAPublicKey publicKey)
+	{
+		LogWrapper.getLogger().info("Remote identifer is " + ident);
+		if (ident == null || Services.blackList.contains(ident))
+		{
+			LogWrapper.getLogger().info("This machine is blacklisted.");
+			return false;
+		}
+
+		Machine findAnExistingMachine = DbMachines.findAnExistingMachine(ip, port);
+		if (findAnExistingMachine == null
+				|| findAnExistingMachine.getIdentifier().equals(ident))
+		{
+			return true;
+		}
+		
+		LogWrapper.getLogger().info("The machine at this address matches another machine at this address with a different identifer.\nDid it change identifiers?");
+		
+		UserMessage.addChangeIdentifierMessage(
+				findAnExistingMachine.getIdentifier(),
+				ident,
+				ip,
+				port,
+				name,
+				publicKey);
+		return false;
+	}
 	
 	protected static final void sendInfo(JsonGenerator generator, RSAPublicKey key, String reason)
 	{
@@ -62,6 +104,8 @@ public class HandShake
 	{
 		RemoteInfo returnValue = new RemoteInfo();
 		String key = null;
+
+		expect(parser, JsonParser.Event.START_OBJECT);
 		
 		outer:
 		while (parser.hasNext())
@@ -92,6 +136,7 @@ public class HandShake
 				default:
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
+				break;
 			case VALUE_NUMBER:
 				switch (key)
 				{
@@ -109,55 +154,35 @@ public class HandShake
 		return returnValue;
 	}
 	
-	
-	protected void ensureCanConnect(
-			RemoteInfo info,
-			String ip,
-			int port,
-			String expectedIdentifier)
-	{
-		if (info.ident == null || info.name == null || info.publicKey == null)
-		{
-			throw new RuntimeException("Did not find remote info.");
-		}
-
-		if (Services.blackList.contains(info.ident))
-		{
-			throw new RuntimeException(info.ident + " is a blacklisted machine.");
-		}
-		
-		if (!UserActions.checkIfMachineShouldNotReplaceOld(info.ident, ip, port))
-		{
-			throw new RuntimeException("A different machine at " + ip + " already exists");
-		}
-	}
-
 	protected static boolean authenticateTheRemote(
 			JsonGenerator generator, 
 			JsonParser parser,
 			String expectedIdentifier,
 			boolean acceptKeys)
 	{
+		LogWrapper.getLogger().info("Authenticating the remote.");
 		Machine machine = DbMachines.getMachine(expectedIdentifier);
 		PublicKey[] keys = DbKeys.getKeys(machine);
 		
 		boolean alreadyAuthenticated = keys.length <= 0 || acceptKeys;
-		generator.writeStartObject();
-		generator.write("authenticated", alreadyAuthenticated);
-		generator.writeEnd();
-		generator.flush();
+		
+		sendAuthentication(generator, alreadyAuthenticated);
 		
 		if (alreadyAuthenticated)
 		{
+			LogWrapper.getLogger().info("We either have no keys for the remote or are accepting all. Accepting new key...");
 			return true;
 		}
 		
-		generator.writeStartArray("naunceTests");
+		int count = 0;
+		
+		generator.writeStartArray();
 		for (PublicKey key : keys)
 		{
 			byte[] naunce = Misc.createNaunce(Services.settings.minNaunce.get());
 			try
 			{
+				LogWrapper.getLogger().info("Creating naunce with key #" + ++count);
 				byte[] encrypted = Services.keyManager.encrypt(key, naunce);
 
 				generator.writeStartObject();
@@ -168,26 +193,79 @@ public class HandShake
 				
 				String decrypted = getNaunceResponse(parser);
 				boolean correct = decrypted != null && decrypted.equals(Misc.format(naunce));
-				
-				generator.writeStartObject();
-				generator.write("authenticated", correct);
-				generator.writeEnd();
-				generator.flush();
+
+				sendAuthentication(generator, correct);
 				
 				if (correct)
 				{
+					LogWrapper.getLogger().info("The remote was able to authenticate with this key.");
 					generator.writeEnd();
 					generator.flush();
 					return true;
 				}
+				LogWrapper.getLogger().info("Remote failed to authenticate with this key.");
 			}
 			catch (IOException e)
 			{
 				e.printStackTrace();
 			}
 		}
+		LogWrapper.getLogger().info("The failed to authenticate with any keys we have. Terminating connection, and creating a message to add the new key.");
+		
 		generator.writeEnd();
 		return false;
+	}
+	protected static boolean authenticateToRemote(
+			JsonGenerator generator, 
+			JsonParser parser)
+	{
+		LogWrapper.getLogger().info("Authenticating ourselves...");
+		if (isAuthenticated(parser))
+		{
+			LogWrapper.getLogger().info("Remote does not need to authenticate us.");
+			return true;
+		}
+
+		expect(parser, JsonParser.Event.START_ARRAY);
+		
+		int count = 0;
+		
+		outer:
+		while (parser.hasNext())
+		{
+			JsonParser.Event e = parser.next();
+			switch (e)
+			{
+			case END_ARRAY:
+				break outer;
+			case START_OBJECT:
+				LogWrapper.getLogger().info("Trying the remote's key #" + ++count);
+				new NaunceTest(parser).respond(generator);
+				if (isAuthenticated(parser))
+				{
+					LogWrapper.getLogger().info("Successful.");
+					expect(parser, JsonParser.Event.END_ARRAY);
+					return true;
+				}
+				LogWrapper.getLogger().info("Fail.");
+				break;
+			default:
+				LogWrapper.getLogger().warning("Unknown type found in message: " + e);
+			}
+		}
+
+		LogWrapper.getLogger().info("Failure: we failed to authenticate with any of the keys the remote has for us.");
+		expect(parser, JsonParser.Event.END_ARRAY);
+	
+		return false;
+	}
+
+	private static void sendAuthentication(JsonGenerator generator, boolean alreadyAuthenticated)
+	{
+		generator.writeStartObject();
+		generator.write("authenticated", alreadyAuthenticated);
+		generator.writeEnd();
+		generator.flush();
 	}
 
 	private static String getNaunceResponse(JsonParser parser)
@@ -195,6 +273,9 @@ public class HandShake
 		boolean hasKey = false;
 		String returnValue = null;
 		String key = null;
+		
+		expect(parser, JsonParser.Event.START_OBJECT);
+		
 		while (parser.hasNext())
 		{
 			JsonParser.Event e = parser.next();
@@ -209,51 +290,25 @@ public class HandShake
 				break;
 			case END_OBJECT:
 				return returnValue;
+			case VALUE_TRUE:
+				if (key.equals("hasKey"))
+					hasKey = true;
+				break;
+			case VALUE_FALSE:
+				if (key.equals("hasKey"))
+					hasKey = false;
+				break;
 			default:
 				LogWrapper.getLogger().warning("Unknown type found in message: " + e);
 			}
 		}
 		return returnValue;
 	}
-
-
-	protected static boolean authenticateToRemote(
-			JsonGenerator generator, 
-			JsonParser parser)
-	{
-		if (isAuthenticated(parser))
-		{
-			return true;
-		}
-		
-		outer:
-		while (parser.hasNext())
-		{
-			JsonParser.Event e = parser.next();
-			switch (e)
-			{
-			case END_ARRAY:
-				break outer;
-			case START_OBJECT:
-				new NaunceTest(parser).respond(generator);
-				if (isAuthenticated(parser))
-				{
-					return true;
-				}
-				break;
-			default:
-				LogWrapper.getLogger().warning("Unknown type found in message: " + e);
-			}
-		}
-
-	// if accept key anyway:
-	
-	
-		return false;
-	}
 	
 	private static boolean isAuthenticated(JsonParser parser)
 	{
+		expect(parser, JsonParser.Event.START_OBJECT);
+		
 		boolean success = false;
 		while (parser.hasNext())
 		{
@@ -266,6 +321,8 @@ public class HandShake
 				break;
 			case VALUE_TRUE:
 				success = true;
+				break;
+			case VALUE_FALSE:
 				break;
 			case END_OBJECT:
 				return success;
@@ -320,6 +377,8 @@ public class HandShake
 		
 		EncryptionKey(JsonParser parser, PublicKey localKey) throws ClassNotFoundException, IOException, MissingKeyException
 		{
+			expect(parser, JsonParser.Event.START_OBJECT);
+			
 			String key = null;
 			while (parser.hasNext())
 			{
@@ -328,13 +387,12 @@ public class HandShake
 				{
 				case KEY_NAME:
 					key = parser.getString();
+					break;
 				case END_OBJECT:
 					return;
 				case VALUE_STRING:
 					switch (key)
 					{
-					case "key":
-						break;
 					case "aesKey":
 						encryptionKey = getKey(localKey, Misc.format(parser.getString()));
 						break;
@@ -352,6 +410,9 @@ public class HandShake
 		public NaunceTest(JsonParser parser)
 		{
 			String key = null;
+			
+//			expect(parser, JsonParser.Event.START_OBJECT);
+			
 			while (parser.hasNext())
 			{
 				JsonParser.Event e = parser.next();
@@ -359,6 +420,7 @@ public class HandShake
 				{
 				case KEY_NAME:
 					key = parser.getString();
+					break;
 				case END_OBJECT:
 					if (naunce == null || publicKey == null) throw new RuntimeException("Bad naunce test...");
 					return;
@@ -394,8 +456,4 @@ public class HandShake
 			generator.flush();
 		}
 	}
-	
-	
-	
-	
 }

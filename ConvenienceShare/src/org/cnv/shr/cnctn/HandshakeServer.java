@@ -13,9 +13,12 @@ import javax.json.stream.JsonParser;
 
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.AcceptKey;
+import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.SocketStreams;
 import org.cnv.shr.util.WaitForObject;
 import org.iq80.snappy.SnappyFramedInputStream;
 import org.iq80.snappy.SnappyFramedOutputStream;
@@ -52,40 +55,67 @@ public class HandshakeServer extends HandShake implements Runnable
 		while (!quit)
 		{
 			try (Socket socket = serverSocket.accept(); 
-					 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(socket.getOutputStream()));
-					 JsonParser parser = TrackObjectUtils.createParser(         new SnappyFramedInputStream(socket.getInputStream(), true));)
+					 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(SocketStreams.newSocketOutputStream(socket)), true);
+					 JsonParser parser = TrackObjectUtils.createParser(         new SnappyFramedInputStream( SocketStreams.newSocketInputStream (socket), true));)
 			{
+				String hostAddress = socket.getInetAddress().getHostAddress();
+				LogWrapper.getLogger().info("Accepted connection from " + hostAddress);
+				
 				generator.writeStartArray();
 
 				RSAPublicKey localKey = Services.keyManager.getPublicKey();
 				sendInfo(generator, localKey, null);
 
-				RemoteInfo preferredKey = readInfo(parser);
-				if (preferredKey == null)
+				expect(parser, JsonParser.Event.START_ARRAY);
+				RemoteInfo remoteInfo = readInfo(parser);
+				if (remoteInfo == null)
 					return;
-				if (!authenticateTheRemote(generator, parser, preferredKey.ident, false))
+
+				if (!verifyMachine(remoteInfo.ident, hostAddress, remoteInfo.port, remoteInfo.name, remoteInfo.publicKey))
+				{
 					return;
+				}
+				
+				if (!authenticateTheRemote(generator, parser, remoteInfo.ident, false)
+						&& !AcceptKey.showAcceptDialogAndWait(hostAddress, remoteInfo.name, remoteInfo.ident, remoteInfo.publicKey, 10))
+				{
+					UserMessage.addChangeKeyMessage(hostAddress, remoteInfo.ident, remoteInfo.publicKey);
+					return;
+				}
 				if (!authenticateToRemote(generator, parser))
 					return;
 
-				DbMachines.updateMachineInfo(preferredKey.ident, preferredKey.name, preferredKey.publicKey, socket.getInetAddress().getHostAddress(), preferredKey.port);
+				DbMachines.updateMachineInfo(
+						remoteInfo.ident, 
+						remoteInfo.name, 
+						remoteInfo.publicKey, 
+						hostAddress, 
+						remoteInfo.port);
 
 				RijndaelKey outgoing = KeysService.createAesKey();
-				EncryptionKey.sendOpenParams(generator, preferredKey.publicKey, outgoing);
+				EncryptionKey.sendOpenParams(generator, remoteInfo.publicKey, outgoing);
+				
 				RijndaelKey incoming = new EncryptionKey(parser, localKey).encryptionKey;
 
-				PortStatus chosenPort = createHandlerRunnable(outgoing, incoming, preferredKey.ident, preferredKey.reason).get();
+				PortStatus chosenPort = createHandlerRunnable(outgoing, incoming, remoteInfo.ident, remoteInfo.reason).get();
+				
+				generator.writeStartObject();
 				if (chosenPort == null)
 				{
-					// send wait message
-					return;
+					generator.write("port", "None");
+					LogWrapper.getLogger().info("All ports are busy.");
 				}
-				generator.writeStartObject();
-				generator.write("port", chosenPort.port);
+				else
+				{
+					generator.write("port", chosenPort.port);
+					LogWrapper.getLogger().info("Allocated port " + chosenPort.port);
+				}
 				generator.writeEnd();
 				generator.flush();
 
 				generator.writeEnd();
+
+				LogWrapper.getLogger().info("Handshake complete.");
 			}
 			catch (Exception e)
 			{
@@ -135,6 +165,18 @@ public class HandshakeServer extends HandShake implements Runnable
 	
 	private PortStatus reserveAPort()
 	{
+		synchronized (ports)
+		{
+			for (PortStatus status : ports)
+			{
+				if (status.inUse)
+				{
+					continue;
+				}
+				status.inUse = true;
+				return status;
+			}
+		}
 		return null;
 	}
 
@@ -147,8 +189,30 @@ public class HandshakeServer extends HandShake implements Runnable
 		}
 	}
 
+	public void stop()
+	{
+		quit = true;
+		try
+		{
+			serverSocket.close();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
 	
-	
+	public void debug()
+	{
+		synchronized (ports)
+		{
+			LogWrapper.getLogger().info("Port status:");
+			for (PortStatus status : ports)
+			{
+				LogWrapper.getLogger().info(status.toString());
+			}
+		}
+	}
 	
 	private static final class PortStatus
 	{
@@ -164,15 +228,10 @@ public class HandshakeServer extends HandShake implements Runnable
 		{
 			inUse = false;
 		}
-	}
-
-
-
-
-
-	public void stop()
-	{
-		// TODO Auto-generated method stub
 		
+		public String toString()
+		{
+			return "\t" + port + ": " + (inUse ? " in use" : "free"); 
+		}
 	}
 }

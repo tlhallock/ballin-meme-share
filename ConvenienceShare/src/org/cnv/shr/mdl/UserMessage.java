@@ -37,25 +37,31 @@ import org.cnv.shr.db.h2.ConnectionWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbLocals;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.DbObject;
 import org.cnv.shr.db.h2.DbPermissions;
 import org.cnv.shr.db.h2.DbRoots;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
 import org.cnv.shr.db.h2.SharingState;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.gui.AcceptKey;
+import org.cnv.shr.trck.TrackObjectUtils;
+import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
+
+import de.flexiprovider.core.rsa.RSAPublicKey;
 
 public class UserMessage extends DbObject<Integer>
 {
 	private static final QueryWrapper INSERT1 = new QueryWrapper("insert into MESSAGE values (DEFAULT, ?, ?, ?, ?)");
 
-	public static final int MAX_MESSAGE_LENGTH = 1024;
+	public static final int MAX_MESSAGE_LENGTH = 8192;
 	
 	private Machine machine;
 	private MessageType type;
 	// actually received...
 	private long sent;
-	private String message;
+	protected String message;
 	
 	public UserMessage(Integer int1)
 	{
@@ -144,11 +150,41 @@ public class UserMessage extends DbObject<Integer>
 		case TEXT:
 			showMessage(origin);
 			break;
+		case CHANGE_IDENT:
+			showChangeIdent(origin);
+			break;
+		case CHANGE_KEYS:
+			showChangeKey(origin);
+			break;
 		default:
 			LogWrapper.getLogger().info("Unknown message type: " + type.dbValue);
 		}
 	}
 	
+	private void showChangeKey(JFrame origin)
+	{
+		ChangeKeyUserMessageInfo info = new ChangeKeyUserMessageInfo(TrackObjectUtils.createParser(message));
+		AcceptKey.showAcceptDialog(info.url, info.machineName, info.machineIdentifier, KeyPairObject.deSerializePublicKey(info.key));
+	}
+
+	private void showChangeIdent(JFrame origin)
+	{
+		ChangeIdentifierUserMessage info = new ChangeIdentifierUserMessage(TrackObjectUtils.createParser(message));
+		
+		if (machine != null && JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(
+				Services.notifications.getCurrentContext(),
+				"For machine at " + info.ip + ":" + info.port + " we expected to find an identifier of\n"
+					+ "\"" + machine.getIdentifier() + "\"\nbut instead it was\n\"" + info.newIdentifer + "\n"
+					+ "Would you like to remove the previous machine and add a new one?\n This will change keys and remove all cached data.\n",
+				"Found wrong machine at " + info.newIdentifer,
+				JOptionPane.YES_NO_OPTION))
+		{
+			return;
+		}
+		DbMachines.delete(machine);
+		info.add();
+	}
+
 	private void shareMachine(JFrame origin)
 	{
 		if (machine == null)
@@ -284,6 +320,61 @@ public class UserMessage extends DbObject<Integer>
 	public static UserMessage createTextMessage(String text)
 	{
 		return new UserMessage(MessageType.TEXT, text);
+	}
+
+	public static void addChangeIdentifierMessage(String oldIdent, String newIdent, String ip, int port, String name, RSAPublicKey newKey)
+	{
+		Machine machine = DbMachines.getMachine(oldIdent);
+		if (machine == null)
+		{
+			LogWrapper.getLogger().info("Unable to create change identifer message for " + oldIdent + " as we have no machine entry for it.");
+			return;
+		}
+		if (!machine.getAllowsMessages())
+		{
+			LogWrapper.getLogger().info("Unable to create change identifer message for " + oldIdent + " as we not accepting messages from " + machine.getName());
+			return;
+		}
+		
+		String messageStr = new ChangeIdentifierUserMessage(
+				newIdent,
+				ip,
+				port,
+				newKey,
+				name).toDebugString();
+		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
+		{
+			LogWrapper.getLogger().info("The change identifer message is too long.");
+			return;
+		}
+		UserMessage message = new UserMessage(machine, UserMessage.MessageType.CHANGE_IDENT.getDbValue(), messageStr);
+		message.tryToSave();
+		Services.notifications.messageReceived(message);
+	}
+
+	public static void addChangeKeyMessage(String url, String identifer, RSAPublicKey newKey)
+	{
+		Machine machine = DbMachines.getMachine(identifer);
+		if (machine == null)
+		{
+			LogWrapper.getLogger().info("Unable to create change key message for " + identifer + " as we have no machine entry for it.");
+			return;
+		}
+		if (!machine.getAllowsMessages())
+		{
+			LogWrapper.getLogger().info("Unable to create change key message for " + identifer + " as we not accepting messages from " + machine.getName());
+			return;
+		}
+		
+		String messageStr = new ChangeKeyUserMessageInfo(url, machine, newKey).toDebugString();
+		if (messageStr.length() > UserMessage.MAX_MESSAGE_LENGTH)
+		{
+			LogWrapper.getLogger().info("The change key message is too long.");
+			return;
+		}
+		UserMessage message = new UserMessage(machine, UserMessage.MessageType.CHANGE_KEYS.getDbValue(), messageStr);
+		message.tryToSave();
+		Services.notifications.messageReceived(message);
 	}
 
     public int getType() {

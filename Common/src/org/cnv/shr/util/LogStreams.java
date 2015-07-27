@@ -11,7 +11,9 @@ public class LogStreams
 {
 	public static OutputStream newLogOutputStream(OutputStream output, String prefix) throws IOException
 	{
-		return newLogOutputStream(output, getRandomName("out." + prefix));
+		Path randomName = getRandomName("out." + prefix);
+		LogWrapper.getLogger().info("Loggoing stream to " + randomName);
+		return newLogOutputStream(output, randomName);
 	}
 	
 	public static OutputStream newLogOutputStream(OutputStream output, Path file) throws IOException

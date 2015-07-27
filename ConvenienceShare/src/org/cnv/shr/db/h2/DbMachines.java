@@ -33,6 +33,7 @@ import java.util.logging.Level;
 import org.cnv.shr.db.h2.ConnectionWrapper.QueryWrapper;
 import org.cnv.shr.db.h2.ConnectionWrapper.StatementWrapper;
 import org.cnv.shr.db.h2.DbTables.DbObjects;
+import org.cnv.shr.db.h2.bak.CleanBrowsingHistory;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.util.LogWrapper;
@@ -46,7 +47,7 @@ public class DbMachines
 	private static final QueryWrapper SELECT1_5 = new QueryWrapper("select * from MACHINE");
 	private static final QueryWrapper DELETE2   = new QueryWrapper("delete MACHINE where IS_LOCAL=true and not IDENT = ?;");
 	private static final QueryWrapper GET_STATS = new QueryWrapper("select sum(NFILES), sum(TSPACE) from ROOT where MID=?;");
-	private static final QueryWrapper SELECT4   = new QueryWrapper("select * from MACHINE where IP = ? and PORT <= ? and PORT + NPORTS >= ? and IS_LOCAL=false LIMIT 1;");
+	private static final QueryWrapper SELECT4   = new QueryWrapper("select * from MACHINE where IP = ? and PORT = ? LIMIT 1;");
 	
 	public static DbIterator<Machine> listMachines()
 	{
@@ -73,7 +74,6 @@ public class DbMachines
 			
 			stmt.setString(1, ip);
 			stmt.setInt(2, port);
-			stmt.setInt(3, port);
 
 			try (DbIterator<Machine> iterator = new DbIterator<>(c, stmt.executeQuery(), DbTables.DbObjects.MACHINE))
 			{
@@ -164,6 +164,8 @@ public class DbMachines
 
 	public static void delete(Machine remote)
 	{
+		CleanBrowsingHistory.cleanMachine(remote);
+		
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				StatementWrapper stmt = c.prepareStatement(DELETE1))
 		{
@@ -174,6 +176,9 @@ public class DbMachines
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to delete machine " + remote, e);
 		}
+		
+		LogWrapper.getLogger().info("Cleaning paths.");
+		DbPaths2.cleanPelem();
 	}
 
 	public static void cleanOldLocalMachine()

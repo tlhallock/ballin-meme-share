@@ -258,6 +258,13 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 				});
 		});
 		jMenu8.add(item);
+		item = new JMenuItem("Port status");
+		item.addActionListener((ActionEvent e) -> {
+				Services.userThreads.execute(() -> {
+					Services.connectionServer.debug();
+				});
+		});
+		jMenu8.add(item);
 		logHandler.setScrollOnUpdate(jCheckBox1.isSelected());
 	}
 

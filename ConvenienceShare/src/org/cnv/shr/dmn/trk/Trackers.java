@@ -100,7 +100,7 @@ public class Trackers
 		}
 		catch (Exception e)
 		{
-			LogWrapper.getLogger().log(Level.INFO, "Unable to save trackers", e);
+			LogWrapper.getLogger().log(Level.INFO, "Unable to read trackers", e);
 			save(trackersFile);
 		}
 	}

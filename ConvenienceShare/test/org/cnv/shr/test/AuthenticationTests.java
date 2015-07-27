@@ -1,7 +1,6 @@
 package org.cnv.shr.test;
 
 import java.io.Closeable;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.cnv.shr.db.h2.DbKeys;
 import org.cnv.shr.db.h2.DbMachines;
@@ -9,7 +8,6 @@ import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.AddMachine;
 import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
-import org.cnv.shr.mdl.UserMessage;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,17 +15,17 @@ public class AuthenticationTests extends RemotesTest
 {
 	// list keys
 
-	@Test
-	public void convenienceMethod() throws Exception
-	{
-		try (Closeable c2 = launchLocalMachine(true);
-			 Closeable c1 = getMachineInfo(0).launch(true);)
-		{
-			ReentrantLock reentrantLock = new ReentrantLock();
-			reentrantLock.lock();
-			reentrantLock.newCondition().await();
-		}
-	}
+//	@Test
+//	public void convenienceMethod() throws Exception
+//	{
+//		try (Closeable c2 = launchLocalMachine(true);
+//			 Closeable c1 = getMachineInfo(0).launch(true);)
+//		{
+//			ReentrantLock reentrantLock = new ReentrantLock();
+//			reentrantLock.lock();
+//			reentrantLock.newCondition().await();
+//		}
+//	}
 
 	@Test
 	public void testCanAddOther() throws Exception
@@ -35,9 +33,8 @@ public class AuthenticationTests extends RemotesTest
 		try (Closeable c2 = launchLocalMachine(true);
 			 Closeable c1 = getMachineInfo(0).launch(true);)
 		{
-			
-			getMachineInfo(1).launch(true);
-			new UserMessage(Services.localMachine, UserMessage.MessageType.TEXT.getDbValue(), "foobar").tryToSave();
+//			getMachineInfo(1).launch(true);
+//			new UserMessage(Services.localMachine, UserMessage.MessageType.TEXT.getDbValue(), "foobar").tryToSave();
                         
                         
 			UserActions.addMachine(getMachineInfo(0).getUrl(), new AddMachine.AddMachineParams(true));

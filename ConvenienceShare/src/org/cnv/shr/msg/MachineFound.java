@@ -32,10 +32,10 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
 import org.cnv.shr.cnctn.Communication;
+import org.cnv.shr.cnctn.HandShake;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.dmn.Services;
-import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.Machine;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.LogWrapper;
@@ -73,7 +73,7 @@ public class MachineFound extends Message
 			LogWrapper.getLogger().info("We already know about the local machine.");
 			return;
 		}
-		if (UserActions.checkIfMachineShouldNotReplaceOld(ident, ip, port))
+		if (!HandShake.verifyMachine(ident, ip, port, name, null))
 		{
 			LogWrapper.getLogger().info("A machine at " + ip + " already exists.");
 			return;

@@ -99,8 +99,6 @@ public class Communication implements Closeable
 		OutputStream output = socket.getOutputStream();
 		InputStream input = socket.getInputStream();
 		
-		
-		
 		CountingInputStream countingInput;
 		CountingOutputStream countingOutput;
 		input  = (countingInput = new CountingInputStream(input));
@@ -114,9 +112,9 @@ public class Communication implements Closeable
 			input = FlushableEncryptionStreams.createEncryptedInputStream(input, incoming);
 			output = FlushableEncryptionStreams.createEncryptedOutputStream(output, outgoing);
 		}
-		
-		input  = new SnappyFramedInputStream(input, false);
+
 		output = new SnappyFramedOutputStream(output);
+		input  = new SnappyFramedInputStream(input, false);
 
 		input  = (pausableInput = new PausableInputStream2(input));
 		output = (pausableOutput = new PausableOutputStream(output));

@@ -70,7 +70,7 @@ public class ProcessInfo
 	public static String getTestClassPath()
 	{
 		// Needs to be updated...
-		return "../lib/h2-1.4.187.jar:../lib/h2-1.3.175.jar:../lib/CoDec-build17-jdk13.jar:../lib/FlexiProvider-1.7p7.signed.jar:../../Common/bin:.";
+		return "../../libs/h2-1.4.187.jar:../../libs/CoDec-build17-jdk13.jar:../../libs/FlexiProvider-1.7p7.signed.jar:../../Common/bin:../../SourceDependencies/bin/:.";
 	}
 	
 	public static String getJarVersionFromUpdates(Path file, String jar)

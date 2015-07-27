@@ -498,27 +498,4 @@ public class UserActions
 		
 		Services.userThreads.execute(() -> { syncPermissions(viewer, machine); });
 	}
-
-	public static boolean checkIfMachineShouldNotReplaceOld(String ident, String ip, int port)
-	{
-		Machine findAnExistingMachine = DbMachines.findAnExistingMachine(ip, port);
-		return !(findAnExistingMachine == null
-				|| findAnExistingMachine.getIdentifier().equals(ident)
-				|| UserActions.userAcceptsNewIdentifier(ident, findAnExistingMachine, ip + ":" + port));
-	}
-	private static boolean userAcceptsNewIdentifier(String newidentifer, Machine machine, String url)
-	{
-		if (machine != null && JOptionPane.YES_OPTION != JOptionPane.showConfirmDialog(
-				Services.notifications.getCurrentContext(),
-				"For machine at " + url + " we expected to find an identifier of\n"
-					+ "\"" + machine.getIdentifier() + "\"\nbut instead it was\n\"" + newidentifer + "\n"
-					+ "Would you like to remove the previous machine and add the new one?",
-				"Found wrong machine at " + newidentifer,
-				JOptionPane.YES_NO_OPTION))
-		{
-			return false;
-		}
-		DbMachines.delete(machine);
-		return true;
-	}
 }

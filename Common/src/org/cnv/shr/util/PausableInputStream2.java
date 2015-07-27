@@ -203,7 +203,7 @@ public class PausableInputStream2 extends HardToCloseInputStream
 	public int available() throws IOException
 	{
 		int returnValue = myAvailable();
-		System.out.println("Pausable available = " + returnValue);
+//		System.out.println("Pausable available = " + returnValue);
 		return returnValue;
 	}
 	public int myAvailable() throws IOException

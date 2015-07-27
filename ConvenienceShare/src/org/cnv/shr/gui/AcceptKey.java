@@ -31,8 +31,14 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
+import org.cnv.shr.db.h2.DbKeys;
+import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
+import org.cnv.shr.mdl.Machine;
+import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
+
+import de.flexiprovider.core.rsa.RSAPublicKey;
 
 /**
  *
@@ -44,28 +50,54 @@ public class AcceptKey extends javax.swing.JFrame
 
 	Lock lock = new ReentrantLock();
 	Condition condition = lock.newCondition();
+	
+	private String ident;
+	private RSAPublicKey key;
     /**
      * Creates new form AcceptKey
      */
-	public AcceptKey()
+	public AcceptKey(String machineIdentifier, RSAPublicKey key)
 	{
+		this.ident = machineIdentifier;
+		this.key = key;
 		initComponents();
 	}
 
-	public static boolean showAcceptDialog(String url, String machineName, String machineIdentifier, String key)
+
+	public static AcceptKey showAcceptDialog(
+			String url,
+			String machineName, 
+			String machineIdentifier, 
+			RSAPublicKey publicKey)
 	{
-		AcceptKey acceptKey = new AcceptKey();
+		AcceptKey acceptKey = new AcceptKey(machineIdentifier, publicKey);
 		acceptKey.setTitle("Would you like to accept a key from " + machineName);
 		Services.notifications.registerWindow(acceptKey);
 		acceptKey.jLabel6.setText(url);
 		acceptKey.jLabel7.setText(machineName);
 		acceptKey.jLabel8.setText(machineIdentifier);
+		String key = KeyPairObject.serialize(publicKey);
 		if (key.length() > 50 - "...".length())
 		{
 			key = key.substring(0, 50) + "...";
 		}
 		acceptKey.jLabel5.setText(key);
 		acceptKey.pack();
+
+		acceptKey.setVisible(true);
+		acceptKey.setAlwaysOnTop(true);
+		
+		return acceptKey;
+	}
+
+	public static boolean showAcceptDialogAndWait(
+			String url, 
+			String machineName, 
+			String machineIdentifier, 
+			RSAPublicKey key,
+			int numSeconds)
+	{
+		AcceptKey acceptKey = showAcceptDialog(url, machineName, machineIdentifier, key);
 
 		acceptKey.lock.lock();
 		try
@@ -74,7 +106,7 @@ public class AcceptKey extends javax.swing.JFrame
 			acceptKey.setAlwaysOnTop(true);
 
 			int count = 0;
-			while (acceptKey.result == null && count++ < 10)
+			while (acceptKey.result == null && count++ < numSeconds)
 			{
 				acceptKey.condition.await(1, TimeUnit.SECONDS);
 			}
@@ -217,13 +249,25 @@ public class AcceptKey extends javax.swing.JFrame
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        lock.lock();
-        try {
-            result = true;
-            condition.notifyAll();
-        } finally {
-            lock.unlock();
-        }
+    	lock.lock();
+			try
+			{
+				Machine machine2 = DbMachines.getMachine(ident);
+				if (machine2 == null)
+				{
+					LogWrapper.getLogger().info("Unable to add key, as it is already gone.");
+				}
+				DbKeys.addKey(machine2, key);
+	
+				result = true;
+				condition.notifyAll();
+			}
+			finally
+			{
+				lock.unlock();
+			}
+
+				
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 

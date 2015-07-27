@@ -49,11 +49,12 @@ import javax.json.stream.JsonParser.Event;
 import org.cnv.shr.db.h2.MyParserIgnore;
 import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.db.h2.SharingState;
-import org.cnv.shr.dmn.CompressionList;
 import org.cnv.shr.dmn.JsonableUpdateInfo;
 import org.cnv.shr.dmn.dwn.Chunk;
 import org.cnv.shr.dmn.dwn.SharedFileId;
 import org.cnv.shr.dmn.trk.NumFilesMessage;
+import org.cnv.shr.mdl.ChangeIdentifierUserMessage;
+import org.cnv.shr.mdl.ChangeKeyUserMessageInfo;
 import org.cnv.shr.msg.DoneMessage;
 import org.cnv.shr.msg.DoneResponse;
 import org.cnv.shr.msg.EmptyMessage;
@@ -244,7 +245,11 @@ public class GenerateParserCode
 				org.cnv.shr.db.h2.bak.MessageBackup.class,
 				org.cnv.shr.db.h2.bak.DownloadBackup.class,
 				
-				CompressionList.class,
+				
+				ChangeIdentifierUserMessage.class,
+				ChangeKeyUserMessageInfo.class,
+				
+//				CompressionList.class,
 			})
 		{
 			try

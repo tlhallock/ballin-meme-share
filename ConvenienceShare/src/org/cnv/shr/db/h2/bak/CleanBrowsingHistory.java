@@ -60,7 +60,7 @@ public class CleanBrowsingHistory
 		}
 	}
 
-	private static void cleanMachine(Machine machine)
+	public static void cleanMachine(Machine machine)
 	{
 		try (DbIterator<RootDirectory> list = DbRoots.list(machine);)
 		{

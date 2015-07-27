@@ -83,7 +83,7 @@ public class ConnectionManager
 				{
 					HandShakeResults results = HandshakeClient.initiateHandShake(params);
 					if (results == null) return;
-					try (Socket socket = new Socket(params.ip, params.port))
+					try (Socket socket = new Socket(params.ip, results.port))
 					{
 						Communication connection = new Communication(
 								socket,

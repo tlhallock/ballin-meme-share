@@ -42,13 +42,11 @@ import org.cnv.shr.util.LogWrapper;
 public class ChunkRequest extends DownloadMessage
 {
 	private Chunk chunk;
-	private boolean pleaseCompress;
 
-	public ChunkRequest(FileEntry descriptor, Chunk removeFirst, boolean compress)
+	public ChunkRequest(FileEntry descriptor, Chunk removeFirst)
 	{
 		super(descriptor);
 		this.chunk = removeFirst;
-		pleaseCompress = compress;
 	}
 	
 	@Override
@@ -72,7 +70,7 @@ public class ChunkRequest extends DownloadMessage
 				return;
 			}
 		}
-		serveInstance.serve(chunk, pleaseCompress);
+		serveInstance.serve(chunk);
 	}
 
 	public Chunk getChunk()
@@ -98,7 +96,6 @@ public class ChunkRequest extends DownloadMessage
 		else
 			generator.writeStartObject();
 		chunk.generate(generator, "chunk");
-		generator.write("pleaseCompress", pleaseCompress);
 		descriptor.generate(generator, "descriptor");
 		generator.writeEnd();
 	}
@@ -107,7 +104,6 @@ public class ChunkRequest extends DownloadMessage
 		String key = null;                         
 		boolean needsChunk = true;
 		boolean needsDescriptor = true;
-		boolean needsPleaseCompress = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -120,10 +116,6 @@ public class ChunkRequest extends DownloadMessage
 				if (needsDescriptor)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.DownloadMessage\" needs \"descriptor\"");
-				}
-				if (needsPleaseCompress)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.dwn.ChunkRequest\" needs \"pleaseCompress\"");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -141,24 +133,6 @@ public class ChunkRequest extends DownloadMessage
 					descriptor = new FileEntry(parser);
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_FALSE:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("pleaseCompress")) {
-					needsPleaseCompress = false;
-					pleaseCompress = false;
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_TRUE:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("pleaseCompress")) {
-					needsPleaseCompress = false;
-					pleaseCompress = true;
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

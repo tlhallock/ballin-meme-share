@@ -11,15 +11,17 @@ import javax.swing.JOptionPane;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.trk.AlternativeAddresses;
+import org.cnv.shr.gui.AcceptKey;
+import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.SocketStreams;
 import org.iq80.snappy.SnappyFramedInputStream;
 import org.iq80.snappy.SnappyFramedOutputStream;
 
 public class HandshakeClient extends HandShake
 {
-	
 	private static Socket connect(ConnectionParams params)
 	{
 		try
@@ -101,44 +103,63 @@ public class HandshakeClient extends HandShake
 	public static HandShakeResults initiateHandShake(ConnectionParams params)
 	{
 		try (Socket socket           = connectWithException(params);
-				 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(socket.getOutputStream()));
-				 JsonParser parser       = TrackObjectUtils.createParser(   new SnappyFramedInputStream(socket.getInputStream(), true));)
+				 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(SocketStreams.newSocketOutputStream(socket)), true);
+				 JsonParser parser       = TrackObjectUtils.createParser(   new SnappyFramedInputStream( SocketStreams.newSocketInputStream (socket), true));)
 		{
 			generator.writeStartArray();
+
+			LogWrapper.getLogger().info("Beginning handshake.");
 
 			HandShakeResults results = new HandShakeResults();
 			results.localKey = Services.keyManager.getPublicKey();
 			
 			sendInfo(generator, results.localKey, params.reason);
-			RemoteInfo remoteKey = readInfo(parser);
-			results.remoteKey = remoteKey.publicKey;
+
+			expect(parser, JsonParser.Event.START_ARRAY);
+			RemoteInfo remoteInfo = readInfo(parser);
+			if (remoteInfo == null)
+				return null;
 			
+			if (!verifyMachine(remoteInfo.ident, socket.getInetAddress().getHostAddress(), remoteInfo.port, remoteInfo.name, remoteInfo.publicKey))
+			{
+				return null;
+			}
+		
+			results.remoteKey = remoteInfo.publicKey;
+			results.ident = remoteInfo.ident;
 			if (!authenticateToRemote(generator, parser))
 			{
 				return null;
 			}
 			
-			if (!authenticateTheRemote(generator, parser, params.identifier != null ? params.identifier : remoteKey.ident, params.acceptAllKeys))
+			if (!authenticateTheRemote(generator, parser, params.identifier != null ? params.identifier : remoteInfo.ident, params.acceptAllKeys)
+					&& !AcceptKey.showAcceptDialogAndWait(params.ip, remoteInfo.name, remoteInfo.ident, remoteInfo.publicKey, 10))
 			{
+				UserMessage.addChangeKeyMessage(params.ip, remoteInfo.ident, remoteInfo.publicKey);
 				return null;
 			}
 
 			DbMachines.updateMachineInfo(
-					remoteKey.ident,
-					remoteKey.name,
-					remoteKey.publicKey,
+					remoteInfo.ident,
+					remoteInfo.name,
+					remoteInfo.publicKey,
 					socket.getInetAddress().getHostAddress(),
 					params.port);
 			
+
+			LogWrapper.getLogger().info("Creating aes key for this connection.");
 			results.outgoing = KeysService.createAesKey();
-			EncryptionKey.sendOpenParams(generator, remoteKey.publicKey, results.outgoing);
+			EncryptionKey.sendOpenParams(generator, remoteInfo.publicKey, results.outgoing);
+			generator.writeEnd();
+			generator.flush();
 
 			EncryptionKey connectionOpenedParams = new EncryptionKey(parser, results.localKey);
 			results.incoming = connectionOpenedParams.encryptionKey;
 			
 			results.port = readPort(parser);
+
+			LogWrapper.getLogger().info("Handshake complete.");
 			
-			generator.writeEnd();
 			return results;
 		}
 		catch (Exception e)
@@ -151,6 +172,10 @@ public class HandshakeClient extends HandShake
 	private static int readPort(JsonParser parser)
 	{
 		int port = -1;
+		
+		expect(parser, JsonParser.Event.START_OBJECT);
+		
+		outer:
 		while (parser.hasNext())
 		{
 			JsonParser.Event e = parser.next();
@@ -160,11 +185,18 @@ public class HandshakeClient extends HandShake
 				if (!parser.getString().equals("port"))
 					throw new RuntimeException("Expected to see confirmation that we are authenticated.");
 				break;
+			case VALUE_STRING:
+				if (parser.getString().equals("None"))
+				{
+					LogWrapper.getLogger().info("Remote has no free ports...");
+				}
+				break;
 			case VALUE_NUMBER:
 				port = parser.getInt();
+				LogWrapper.getLogger().info("Remote has given us port " + port);
 				break;
 			case END_OBJECT:
-				break;
+				break outer;
 			default:
 				LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr("port", parser, e));
 			}

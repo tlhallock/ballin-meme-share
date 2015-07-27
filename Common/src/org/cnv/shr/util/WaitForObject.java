@@ -11,7 +11,7 @@ public class WaitForObject<T>
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
 	private boolean found;
-	private T object;
+	private transient T object;
 	private long timeout;
 	
 	public WaitForObject(int timeoutMillis)
