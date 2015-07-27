@@ -17,14 +17,14 @@ public class ChangeKeyUserMessageInfo implements Jsonable
 	String url;
 	String machineName;
 	String machineIdentifier; 
-	String key;
+	String publicKey;
 	
 	public ChangeKeyUserMessageInfo(String url, Machine machine, RSAPublicKey key)
 	{
 		this.url = url;
 		this.machineName = machine.getName();
 		this.machineIdentifier = machine.getIdentifier();
-		this.key = KeyPairObject.serialize(key);
+		this.publicKey = KeyPairObject.serialize(key);
 	}
 
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
@@ -37,7 +37,7 @@ public class ChangeKeyUserMessageInfo implements Jsonable
 		generator.write("url", url);
 		generator.write("machineName", machineName);
 		generator.write("machineIdentifier", machineIdentifier);
-		generator.write("key", key);
+		generator.write("publicKey", publicKey);
 		generator.writeEnd();
 	}
 	@Override                                    
@@ -46,7 +46,7 @@ public class ChangeKeyUserMessageInfo implements Jsonable
 		boolean needsUrl = true;
 		boolean needsMachineName = true;
 		boolean needsMachineIdentifier = true;
-		boolean needsKey = true;
+		boolean needsPublicKey = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
@@ -64,9 +64,9 @@ public class ChangeKeyUserMessageInfo implements Jsonable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeKeyUserMessageInfo\" needs \"machineIdentifier\"");
 				}
-				if (needsKey)
+				if (needsPublicKey)
 				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeKeyUserMessageInfo\" needs \"key\"");
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeKeyUserMessageInfo\" needs \"publicKey\"");
 				}
 				return;                                
 			case KEY_NAME:                           
@@ -87,9 +87,9 @@ public class ChangeKeyUserMessageInfo implements Jsonable
 					needsMachineIdentifier = false;
 					machineIdentifier = parser.getString();
 					break;
-				case "key":
-					needsKey = false;
-					key = parser.getString();
+				case "publicKey":
+					needsPublicKey = false;
+					publicKey = parser.getString();
 					break;
 				default: LogWrapper.getLogger().warning("Unknown key: " + key);
 				}

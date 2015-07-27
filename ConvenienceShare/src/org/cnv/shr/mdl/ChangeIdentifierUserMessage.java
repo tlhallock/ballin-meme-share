@@ -50,20 +50,80 @@ public class ChangeIdentifierUserMessage implements Jsonable
 			generator.writeStartObject(key);
 		else
 			generator.writeStartObject();
+		generator.write("newIdentifer", newIdentifer);
+		generator.write("ip", ip);
+		generator.write("port", port);
+		generator.write("name", name);
+		if (publicKey!=null)
+		generator.write("publicKey", publicKey);
 		generator.writeEnd();
 	}
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsNewIdentifer = true;
+		boolean needsIp = true;
+		boolean needsName = true;
+		boolean needsPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsNewIdentifer)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeIdentifierUserMessage\" needs \"newIdentifer\"");
+				}
+				if (needsIp)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeIdentifierUserMessage\" needs \"ip\"");
+				}
+				if (needsName)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeIdentifierUserMessage\" needs \"name\"");
+				}
+				if (needsPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeIdentifierUserMessage\" needs \"port\"");
+				}
 				return;                                
-			}                                      
-		}                                        
-	}                                          
+			case KEY_NAME:                           
+				key = parser.getString();              
+				break;                                 
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "newIdentifer":
+					needsNewIdentifer = false;
+					newIdentifer = parser.getString();
+					break;
+				case "ip":
+					needsIp = false;
+					ip = parser.getString();
+					break;
+				case "name":
+					needsName = false;
+					name = parser.getString();
+					break;
+				case "publicKey":
+					publicKey = parser.getString();
+					break;
+				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("port")) {
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning("Unknown key: " + key);
+				}
+				break;
+			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);
+			}
+		}
+	}
 	public static String getJsonName() { return "ChangeIdentifierUserMessage"; }
 	public String getJsonKey() { return getJsonName(); }
 	public ChangeIdentifierUserMessage(JsonParser parser) { parse(parser); }

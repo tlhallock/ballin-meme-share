@@ -61,6 +61,8 @@ public class AcceptKey extends javax.swing.JFrame
 		this.ident = machineIdentifier;
 		this.key = key;
 		initComponents();
+		// TODO: fix in netbeas...
+    setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
 

@@ -164,7 +164,7 @@ public class UserMessage extends DbObject<Integer>
 	private void showChangeKey(JFrame origin)
 	{
 		ChangeKeyUserMessageInfo info = new ChangeKeyUserMessageInfo(TrackObjectUtils.createParser(message));
-		AcceptKey.showAcceptDialog(info.url, info.machineName, info.machineIdentifier, KeyPairObject.deSerializePublicKey(info.key));
+		AcceptKey.showAcceptDialog(info.url, info.machineName, info.machineIdentifier, KeyPairObject.deSerializePublicKey(info.publicKey));
 	}
 
 	private void showChangeIdent(JFrame origin)
