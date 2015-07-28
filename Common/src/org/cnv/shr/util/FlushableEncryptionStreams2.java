@@ -29,6 +29,10 @@ public class FlushableEncryptionStreams2
 	public static final int BLOCK_SIZE = 8192;
 	public static final int META_INFO_SIZE = 4;
 
+	static int count = 0;
+	static int sentCount = 0;
+	static int readCount = 0;
+
 	public static OutputStream newFlushableEncryptionOutputStream(OutputStream delegate, RijndaelKey aesKey) throws InvalidKeyException, InvalidAlgorithmParameterException
 	{
 		return newFlushableEncryptionOutputStream(delegate, aesKey, BLOCK_SIZE);
@@ -107,6 +111,8 @@ public class FlushableEncryptionStreams2
 				{
 					nextBytesRange(random, inBuffer, inOffset, bufferSize);
 				}
+				
+				System.out.println("Serializing " + inOffset);
 				for (int i = 0; i < META_INFO_SIZE; i++)
 				{
 					inBuffer[i] = (byte) ((inOffset >> (i * 8)) & 0xff);
@@ -135,7 +141,7 @@ public class FlushableEncryptionStreams2
 				
 				delegate.write(outBuffer, 0, written);
 				
-				System.out.println("Sent " + (inOffset - 2));
+				System.out.println("sent "  + (sentCount++) + ": " + (inOffset - 2));
 				
 				inOffset = META_INFO_SIZE;
 			}
@@ -156,7 +162,7 @@ public class FlushableEncryptionStreams2
 		};
 		return returnValue;
 	}
-	static int count = 0;
+	
 	public static InputStream newFlushableEncryptionInputStream(InputStream delegate, SecretKey aesKey, int bufferLength) throws InvalidKeyException, IOException, InvalidAlgorithmParameterException
 	{
 		InputStream returnValue = new InputStream()
@@ -255,15 +261,16 @@ public class FlushableEncryptionStreams2
 
 				for (int i = 0; i < META_INFO_SIZE; i++)
 				{
-					validEnd |= (decryptedBuffer[i] >> (i * 8)) & 0xff;
+					validEnd |= (decryptedBuffer[i] & 0xff) << (i * 8) ;
 				}
+				System.out.println("\t\tdeserialed " + validEnd);
 
 				frameEnd = nextLarger(validEnd);
 
 				readSome(frameEnd, true);
 				validStart = META_INFO_SIZE;
 
-				System.out.println("read " + (validEnd - validStart));
+				System.out.println("\t\tread "  + (readCount++) + ": " + (validEnd - validStart));
 				
 //				System.out.println("Valid start = " + META_INFO_SIZE + "\nValidEnd = " + validEnd);
 				return true;
@@ -303,12 +310,12 @@ public class FlushableEncryptionStreams2
 				{
 					return -1;
 				}
-				System.out.println("read " + ++count);
-
-				if (count == 38)
-				{
-					System.out.println("debug me!");
-				}
+//				System.out.println("read " + ++count);
+//
+//				if (count == 38)
+//				{
+//					System.out.println("debug me!");
+//				}
 				if (validStart <= validEnd)
 				{
 					if (!fillNextFrame())
@@ -414,9 +421,10 @@ public class FlushableEncryptionStreams2
 	public void testFuzzy() throws Exception
 	{
 		Random random = new Random(50);
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < 1; i++)
 		{
-			int bufferSize = random.nextInt(1024 * 1024);
+			int bufferSize = random.nextInt(1024 * 1024 / 1024);
+			bufferSize = Short.MAX_VALUE / 2;
 			byte[][] sequence = new byte[random.nextInt(1024)][];
 			for (int j = 0; j < sequence.length; j++)
 			{
