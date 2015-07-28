@@ -448,7 +448,7 @@ public class GenerateParserCode
           }
           else
           {
-          	ps.println("\t\t\t\t\tLogWrapper.getLogger().warning(\"Unknown key: \" + key);");
+          	ps.println("\t\t\t\t\tLogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));");
           }
 				}
 			}
@@ -471,7 +471,7 @@ public class GenerateParserCode
         }
         else
         {
-        	ps.println("\t\t\t\tdefault: LogWrapper.getLogger().warning(\"Unknown key: \" + key);");
+        	ps.println("\t\t\t\tdefault: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));");
         }
 			}
 			ps.println("\t\t\t\t}");

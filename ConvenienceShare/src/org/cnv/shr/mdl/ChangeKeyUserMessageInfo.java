@@ -91,7 +91,7 @@ public class ChangeKeyUserMessageInfo implements Jsonable
 					needsPublicKey = false;
 					publicKey = parser.getString();
 					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

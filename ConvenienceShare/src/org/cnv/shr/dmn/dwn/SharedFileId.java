@@ -175,7 +175,7 @@ public class SharedFileId implements Jsonable
 					needsPath = false;
 					path = parser.getString();
 					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

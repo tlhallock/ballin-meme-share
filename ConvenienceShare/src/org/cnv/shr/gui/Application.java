@@ -1354,7 +1354,6 @@ public class Application extends javax.swing.JFrame implements NotificationListe
 					public void windowClosed(WindowEvent e)
 					{
 						List<SynchronizationListener> singletonList = Collections.singletonList(createLocalListener(local));
-						LogWrapper.getLogger().info("Why doesn't this work?");
 						UserActions.userSync(app, local, singletonList);
 					}
 				});

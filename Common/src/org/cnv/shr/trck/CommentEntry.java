@@ -165,16 +165,24 @@ public class CommentEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsRating = true;
+		boolean needsDate = true;
 		boolean needsOriginIdent = true;
 		boolean needsDestIdent = true;
 		boolean needsText = true;
-		boolean needsRating = true;
-		boolean needsDate = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsRating)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.CommentEntry\" needs \"rating\"");
+				}
+				if (needsDate)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.CommentEntry\" needs \"date\"");
+				}
 				if (needsOriginIdent)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.CommentEntry\" needs \"originIdent\"");
@@ -187,18 +195,24 @@ public class CommentEntry extends TrackObject
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.CommentEntry\" needs \"text\"");
 				}
-				if (needsRating)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.CommentEntry\" needs \"rating\"");
-				}
-				if (needsDate)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.CommentEntry\" needs \"date\"");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "rating":
+					needsRating = false;
+					rating = Integer.parseInt(parser.getString());
+					break;
+				case "date":
+					needsDate = false;
+					date = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -214,21 +228,7 @@ public class CommentEntry extends TrackObject
 					needsText = false;
 					text = parser.getString();
 					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "rating":
-					needsRating = false;
-					rating = Integer.parseInt(parser.getString());
-					break;
-				case "date":
-					needsDate = false;
-					date = Long.parseLong(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

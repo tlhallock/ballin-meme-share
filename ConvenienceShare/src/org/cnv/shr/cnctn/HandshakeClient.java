@@ -14,7 +14,6 @@ import org.cnv.shr.dmn.trk.AlternativeAddresses;
 import org.cnv.shr.gui.AcceptKey;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.SocketStreams;
 import org.iq80.snappy.SnappyFramedInputStream;
@@ -148,23 +147,24 @@ public class HandshakeClient extends HandShake
 			
 
 			LogWrapper.getLogger().info("Creating aes key for this connection.");
-			results.outgoing = KeysService.createAesKey();
-			EncryptionKey.sendOpenParams(generator, remoteInfo.publicKey, results.outgoing);
+			results.outgoing = new KeyInfo();
+			results.outgoing.generate(generator, remoteInfo.publicKey);
 			generator.writeEnd();
-			generator.flush();
 
-			EncryptionKey connectionOpenedParams = new EncryptionKey(parser, results.localKey);
-			results.incoming = connectionOpenedParams.encryptionKey;
+			results.incoming = new KeyInfo(parser, results.localKey);
 			
 			results.port = readPort(parser);
 
-			LogWrapper.getLogger().info("Handshake complete.");
+			generator.close();
+			expect(parser, JsonParser.Event.END_ARRAY);
 			
+			LogWrapper.getLogger().info("Handshake complete.");
+
 			return results;
 		}
 		catch (Exception e)
 		{
-			LogWrapper.getLogger().log(Level.INFO, null, e);
+			LogWrapper.getLogger().log(Level.INFO, "Error in handshake", e);
 			return null;
 		}
 	}
@@ -198,7 +198,7 @@ public class HandshakeClient extends HandShake
 			case END_OBJECT:
 				break outer;
 			default:
-				LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr("port", parser, e));
+				LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr("port", parser, e, null));
 			}
 		}
 		return port;

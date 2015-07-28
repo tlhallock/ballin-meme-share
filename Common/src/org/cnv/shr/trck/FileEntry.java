@@ -146,41 +146,41 @@ public class FileEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsChecksum = true;
 		boolean needsFileSize = true;
+		boolean needsChecksum = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsChecksum)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.FileEntry\" needs \"checksum\"");
-				}
 				if (needsFileSize)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.FileEntry\" needs \"fileSize\"");
+				}
+				if (needsChecksum)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.FileEntry\" needs \"checksum\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("checksum")) {
-					needsChecksum = false;
-					checksum = parser.getString();
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("fileSize")) {
 					needsFileSize = false;
 					fileSize = Long.parseLong(parser.getString());
 				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("checksum")) {
+					needsChecksum = false;
+					checksum = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

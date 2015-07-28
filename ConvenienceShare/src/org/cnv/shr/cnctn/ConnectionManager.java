@@ -90,7 +90,8 @@ public class ConnectionManager
 								results.incoming,
 								results.outgoing,
 								results.ident,
-								params.reason);
+								params.reason,
+								true);
 
 					Services.userThreads.execute(() -> {
 						try

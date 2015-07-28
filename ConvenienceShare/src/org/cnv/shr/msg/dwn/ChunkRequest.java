@@ -132,7 +132,7 @@ public class ChunkRequest extends DownloadMessage
 					needsDescriptor = false;
 					descriptor = new FileEntry(parser);
 					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

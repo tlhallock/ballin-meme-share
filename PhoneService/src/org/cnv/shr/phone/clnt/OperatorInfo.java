@@ -57,18 +57,14 @@ public class OperatorInfo implements Storable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsIp = true;
 		boolean needsBeginPort = true;
 		boolean needsEndPort = true;
+		boolean needsIp = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsIp)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.OperatorInfo\" needs \"ip\"");
-				}
 				if (needsBeginPort)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.OperatorInfo\" needs \"beginPort\"");
@@ -77,19 +73,14 @@ public class OperatorInfo implements Storable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.OperatorInfo\" needs \"endPort\"");
 				}
+				if (needsIp)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.clnt.OperatorInfo\" needs \"ip\"");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("ip")) {
-					needsIp = false;
-					ip = parser.getString();
-				} else {
-					Services.logger.warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -102,6 +93,15 @@ public class OperatorInfo implements Storable
 					endPort = Integer.parseInt(parser.getString());
 					break;
 				default: Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("ip")) {
+					needsIp = false;
+					ip = parser.getString();
+				} else {
+					Services.logger.warning("Unknown key: " + key);
 				}
 				break;
 			default: Services.logger.warning("Unknown type found in message: " + e);

@@ -130,15 +130,19 @@ public class MachineEntry extends TrackObject
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsPort = true;
 		boolean needsIdent = true;
 		boolean needsName = true;
 		boolean needsIp = true;
-		boolean needsPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"port\"");
+				}
 				if (needsIdent)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"ident\"");
@@ -151,14 +155,19 @@ public class MachineEntry extends TrackObject
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"ip\"");
 				}
-				if (needsPort)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.trck.MachineEntry\" needs \"port\"");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("port")) {
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -177,16 +186,7 @@ public class MachineEntry extends TrackObject
 					needsIp = false;
 					ip = parser.getString();
 					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("port")) {
-					needsPort = false;
-					port = Integer.parseInt(parser.getString());
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

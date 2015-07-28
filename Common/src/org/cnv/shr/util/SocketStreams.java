@@ -18,11 +18,21 @@ public class SocketStreams
 			@Override
 			public void write(int b) throws IOException
 			{
+				if (socket.isClosed())
+				{
+					LogWrapper.getLogger().info("socket already closed. Skipping write");
+					return;
+				}
 				delegate.write(b);
 			}
 			@Override
 			public void write(byte[] b, int off, int len) throws IOException
 			{
+				if (socket.isClosed())
+				{
+					LogWrapper.getLogger().info("socket already closed. Skipping write");
+					return;
+				}
 				delegate.write(b, off, len);
 			}
 			@Override

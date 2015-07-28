@@ -108,7 +108,7 @@ public class CompletionStatus extends DownloadMessage
 					needsDescriptor = false;
 					descriptor = new FileEntry(parser);
 				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			case VALUE_NUMBER:
@@ -117,7 +117,7 @@ public class CompletionStatus extends DownloadMessage
 					needsPercentComplete = false;
 					percentComplete = Double.parseDouble(parser.getString());
 				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

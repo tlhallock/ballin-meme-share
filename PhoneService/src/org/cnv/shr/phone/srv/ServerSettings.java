@@ -41,21 +41,17 @@ public class ServerSettings implements Storable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsVoiceRootMailPath = true;
 		boolean needsMetaPortBegin = true;
 		boolean needsMetaPortEnd = true;
 		boolean needsConnectionPortBegin = true;
 		boolean needsConnectionPortEnd = true;
 		boolean needsMAXIMUM_VOICE_MAIL_TIME = true;
+		boolean needsVoiceRootMailPath = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsVoiceRootMailPath)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"voiceRootMailPath\"");
-				}
 				if (needsMetaPortBegin)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"metaPortBegin\"");
@@ -76,19 +72,14 @@ public class ServerSettings implements Storable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"MAXIMUM_VOICE_MAIL_TIME\"");
 				}
+				if (needsVoiceRootMailPath)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.srv.ServerSettings\" needs \"voiceRootMailPath\"");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("voiceRootMailPath")) {
-					needsVoiceRootMailPath = false;
-					voiceRootMailPath = Paths.get(parser.getString());
-				} else {
-					Services.logger.warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -113,6 +104,15 @@ public class ServerSettings implements Storable
 					MAXIMUM_VOICE_MAIL_TIME = Long.parseLong(parser.getString());
 					break;
 				default: Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("voiceRootMailPath")) {
+					needsVoiceRootMailPath = false;
+					voiceRootMailPath = Paths.get(parser.getString());
+				} else {
+					Services.logger.warning("Unknown key: " + key);
 				}
 				break;
 			default: Services.logger.warning("Unknown type found in message: " + e);

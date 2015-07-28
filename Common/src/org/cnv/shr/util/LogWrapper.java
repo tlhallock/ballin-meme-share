@@ -66,7 +66,7 @@ public class LogWrapper
 		});
 	}
 	
-	public static String getUnknownMessageAttributeStr(String msgType, JsonParser p, JsonParser.Event e)
+	public static String getUnknownMessageAttributeStr(String msgType, JsonParser p, JsonParser.Event e, String key)
 	{
 		String msg = "Unkown attribute in type " + msgType + ". Attribute=" + e;
 		switch (e)
@@ -82,20 +82,24 @@ public class LogWrapper
 		case START_OBJECT:
 			break;
 		case VALUE_FALSE:
-			msg += "value = " + false;
+			msg += " value = " + false;
 			break;
 		case VALUE_NULL:
-			msg += "value = " + null;
+			msg += " value = " + null;
 			break;
 		case VALUE_NUMBER:
-			msg += "value = " + p.getBigDecimal();
+			msg += " value = " + p.getBigDecimal();
 			break;
 		case VALUE_STRING:
-			msg += "value = " + p.getString();
+			msg += " value = " + p.getString();
 			break;
 		case VALUE_TRUE:
-			msg += "value = " + true;
+			msg += " value = " + true;
 			break;
+		}
+		if (key != null)
+		{
+			msg += " key = " + key;
 		}
 		return msg;
 	}

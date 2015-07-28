@@ -137,6 +137,12 @@ public class HandShake
 					LogWrapper.getLogger().warning("Unknown key: " + key);
 				}
 				break;
+			case VALUE_TRUE:
+				if (key.equals("showGui"))
+				{
+					returnValue.showGui = true;
+				}
+				break;
 			case VALUE_NUMBER:
 				switch (key)
 				{
@@ -343,6 +349,7 @@ public class HandShake
 	
 	static class RemoteInfo
 	{
+		public boolean showGui;
 		public String reason;
 		String ident;
 		RSAPublicKey publicKey;
@@ -355,52 +362,52 @@ public class HandShake
 		int port;
 		PublicKey remoteKey;
 		RSAPublicKey localKey;
-		RijndaelKey outgoing;
-		RijndaelKey incoming;
+		KeyInfo outgoing;
+		KeyInfo incoming;
 		public String ident;
 	}
 	
-	static class EncryptionKey
-	{
-		RijndaelKey encryptionKey;
-		
-		static void sendOpenParams(
-				JsonGenerator generator, 
-				PublicKey remoteKey,
-				RijndaelKey aesKey) throws IOException
-		{
-			generator.writeStartObject();
-			generator.write("aesKey", Misc.format(getBytes(remoteKey, aesKey)));
-			generator.writeEnd();
-			generator.flush();
-		}
-		
-		EncryptionKey(JsonParser parser, PublicKey localKey) throws ClassNotFoundException, IOException, MissingKeyException
-		{
-			expect(parser, JsonParser.Event.START_OBJECT);
-			
-			String key = null;
-			while (parser.hasNext())
-			{
-				JsonParser.Event e = parser.next();
-				switch (e)
-				{
-				case KEY_NAME:
-					key = parser.getString();
-					break;
-				case END_OBJECT:
-					return;
-				case VALUE_STRING:
-					switch (key)
-					{
-					case "aesKey":
-						encryptionKey = getKey(localKey, Misc.format(parser.getString()));
-						break;
-					}
-				}
-			}
-		}
-	}
+//	static class EncryptionKey
+//	{
+//		RijndaelKey encryptionKey;
+//		
+//		static void sendOpenParams(
+//				JsonGenerator generator, 
+//				PublicKey remoteKey,
+//				RijndaelKey aesKey) throws IOException
+//		{
+//			generator.writeStartObject();
+//			generator.write("aesKey", Misc.format(getBytes(remoteKey, aesKey)));
+//			generator.writeEnd();
+//			generator.flush();
+//		}
+//		
+//		EncryptionKey(JsonParser parser, PublicKey localKey) throws ClassNotFoundException, IOException, MissingKeyException
+//		{
+//			expect(parser, JsonParser.Event.START_OBJECT);
+//			
+//			String key = null;
+//			while (parser.hasNext())
+//			{
+//				JsonParser.Event e = parser.next();
+//				switch (e)
+//				{
+//				case KEY_NAME:
+//					key = parser.getString();
+//					break;
+//				case END_OBJECT:
+//					return;
+//				case VALUE_STRING:
+//					switch (key)
+//					{
+//					case "aesKey":
+//						encryptionKey = getKey(localKey, Misc.format(parser.getString()));
+//						break;
+//					}
+//				}
+//			}
+//		}
+//	}
 
 	static class NaunceTest
 	{

@@ -126,18 +126,14 @@ public class PathListChild implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsName = true;
 		boolean needsSize = true;
 		boolean needsLastModified = true;
+		boolean needsName = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsName)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathListChild\" needs \"name\"");
-				}
 				if (needsSize)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathListChild\" needs \"size\"");
@@ -146,10 +142,28 @@ public class PathListChild implements Jsonable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathListChild\" needs \"lastModified\"");
 				}
+				if (needsName)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.PathListChild\" needs \"name\"");
+				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "size":
+					needsSize = false;
+					size = Long.parseLong(parser.getString());
+					break;
+				case "lastModified":
+					needsLastModified = false;
+					lastModified = Long.parseLong(parser.getString());
+					break;
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -163,21 +177,7 @@ public class PathListChild implements Jsonable
 				case "tags":
 					tags = parser.getString();
 					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "size":
-					needsSize = false;
-					size = Long.parseLong(parser.getString());
-					break;
-				case "lastModified":
-					needsLastModified = false;
-					lastModified = Long.parseLong(parser.getString());
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

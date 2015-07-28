@@ -106,15 +106,19 @@ public class VoiceMail extends PhoneMessage
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsHasData = true;
 		boolean needsSourceNumber = true;
 		boolean needsDestinationNumber = true;
-		boolean needsHasData = true;
 		boolean needsReplyTime = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsHasData)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.VoiceMail\" needs \"hasData\"");
+				}
 				if (needsSourceNumber)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.VoiceMail\" needs \"sourceNumber\"");
@@ -122,10 +126,6 @@ public class VoiceMail extends PhoneMessage
 				if (needsDestinationNumber)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.VoiceMail\" needs \"destinationNumber\"");
-				}
-				if (needsHasData)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.phone.msg.VoiceMail\" needs \"hasData\"");
 				}
 				if (needsReplyTime)
 				{
@@ -135,20 +135,6 @@ public class VoiceMail extends PhoneMessage
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case START_OBJECT:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "sourceNumber":
-					needsSourceNumber = false;
-					sourceNumber = new org.cnv.shr.phone.cmn.PhoneNumber(parser);
-					break;
-				case "destinationNumber":
-					needsDestinationNumber = false;
-					destinationNumber = new org.cnv.shr.phone.cmn.PhoneNumberWildCard(parser);
-					break;
-				default: Services.logger.warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_FALSE:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("hasData")) {
@@ -165,6 +151,20 @@ public class VoiceMail extends PhoneMessage
 					hasData = true;
 				} else {
 					Services.logger.warning("Unknown key: " + key);
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "sourceNumber":
+					needsSourceNumber = false;
+					sourceNumber = new org.cnv.shr.phone.cmn.PhoneNumber(parser);
+					break;
+				case "destinationNumber":
+					needsDestinationNumber = false;
+					destinationNumber = new org.cnv.shr.phone.cmn.PhoneNumberWildCard(parser);
+					break;
+				default: Services.logger.warning("Unknown key: " + key);
 				}
 				break;
 			case VALUE_NUMBER:

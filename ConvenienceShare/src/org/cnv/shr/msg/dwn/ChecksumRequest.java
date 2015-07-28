@@ -99,7 +99,7 @@ public class ChecksumRequest extends Message
 					needsDescriptor = false;
 					descriptor = new SharedFileId(parser);
 				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

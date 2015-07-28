@@ -165,7 +165,7 @@ public class RootList extends Message
 					needsSharedDirectories = false;
 					sharedDirectories.parse(parser);
 				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

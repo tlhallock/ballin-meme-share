@@ -31,11 +31,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.util.HashMap;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 
@@ -47,7 +50,6 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.ConnectionStatistics;
 import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.CountingOutputStream;
-import org.cnv.shr.util.FlushableEncryptionStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.PausableInputStream2;
@@ -55,16 +57,12 @@ import org.cnv.shr.util.PausableOutputStream;
 import org.iq80.snappy.SnappyFramedInputStream;
 import org.iq80.snappy.SnappyFramedOutputStream;
 
-import de.flexiprovider.core.rijndael.RijndaelKey;
-
 
 // TODO: this should really only need authentication to UPDATE machine info...
 public class Communication implements Closeable
 {
 	private static final int CLOSE_TIMEOUT = 1 * 60 * 1000;
 	
-	public static final boolean USE_ENCRYPTION = false;
-
 	// The streams
 	private Socket socket;
 	
@@ -88,10 +86,11 @@ public class Communication implements Closeable
 
 	Communication(
 			Socket socket,
-			RijndaelKey incoming,
-			RijndaelKey outgoing,
+			KeyInfo incoming,
+			KeyInfo outgoing,
 			String remoteIdentifier,
-			String reason) throws IOException, InvalidKeyException
+			String reason,
+			boolean pausable) throws IOException, InvalidKeyException, InvalidAlgorithmParameterException
 	{
 		this.socket = socket;
 		this.remoteIdentifier = remoteIdentifier;
@@ -107,17 +106,17 @@ public class Communication implements Closeable
 		stats = new ConnectionStatistics(countingInput, countingOutput);
 		stats.setReason(reason);
 		
-		if (USE_ENCRYPTION)
-		{
-			input = FlushableEncryptionStreams.createEncryptedInputStream(input, incoming);
-			output = FlushableEncryptionStreams.createEncryptedOutputStream(output, outgoing);
-		}
-
+		input = new CipherInputStream(input, incoming.createDecryptCipher());
+		output = new CipherOutputStream(output, outgoing.createEncryptCipher());
+		
 		output = new SnappyFramedOutputStream(output);
 		input  = new SnappyFramedInputStream(input, false);
 
-		input  = (pausableInput = new PausableInputStream2(input));
-		output = (pausableOutput = new PausableOutputStream(output));
+		if (pausable)
+		{
+			input  = (pausableInput = new PausableInputStream2(input));
+			output = (pausableOutput = new PausableOutputStream(output));
+		}
 
 		needsMore = true;
 

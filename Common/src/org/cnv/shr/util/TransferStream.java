@@ -37,6 +37,14 @@ public class TransferStream
 		@Override
 		public int read(byte[] b, int off, int len) throws IOException
 		{
+			if (len == 0)
+			{
+				return 0;
+			}
+			if (off + len > b.length || off < 0)
+			{
+				throw new ArrayIndexOutOfBoundsException();
+			}
 			if (closed)
 			{
 				return -1;
@@ -47,7 +55,14 @@ public class TransferStream
 			{
 				return first;
 			}
+			try
+			{
 			b[off] = (byte) first;
+			}
+			catch (ArrayIndexOutOfBoundsException e)
+			{
+				System.out.println("Caught");
+			}
 			
 			for (int i = 1; i < len; i++)
 			{

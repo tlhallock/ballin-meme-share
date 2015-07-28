@@ -3,6 +3,7 @@ package org.cnv.shr.cnctn;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -14,16 +15,16 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.db.h2.DbMachines;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.gui.AcceptKey;
+import org.cnv.shr.gui.UserActions;
 import org.cnv.shr.mdl.UserMessage;
 import org.cnv.shr.trck.TrackObjectUtils;
-import org.cnv.shr.util.KeysService;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.SocketStreams;
 import org.cnv.shr.util.WaitForObject;
 import org.iq80.snappy.SnappyFramedInputStream;
 import org.iq80.snappy.SnappyFramedOutputStream;
 
-import de.flexiprovider.core.rijndael.RijndaelKey;
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
 public class HandshakeServer extends HandShake implements Runnable
@@ -68,6 +69,13 @@ public class HandshakeServer extends HandShake implements Runnable
 
 				expect(parser, JsonParser.Event.START_ARRAY);
 				RemoteInfo remoteInfo = readInfo(parser);
+				
+				if (remoteInfo.showGui && Misc.collectIps().contains(hostAddress))
+				{
+					UserActions.showGui();
+					return;
+				}
+				
 				if (remoteInfo == null)
 					return;
 
@@ -92,41 +100,48 @@ public class HandshakeServer extends HandShake implements Runnable
 						hostAddress, 
 						remoteInfo.port);
 
-				RijndaelKey outgoing = KeysService.createAesKey();
-				EncryptionKey.sendOpenParams(generator, remoteInfo.publicKey, outgoing);
+				KeyInfo outgoing = new KeyInfo();
+				outgoing.generate(generator, remoteInfo.publicKey);
 				
-				RijndaelKey incoming = new EncryptionKey(parser, localKey).encryptionKey;
+				KeyInfo incoming = new KeyInfo(parser, localKey);
 
 				PortStatus chosenPort = createHandlerRunnable(outgoing, incoming, remoteInfo.ident, remoteInfo.reason).get();
 				
-				generator.writeStartObject();
-				if (chosenPort == null)
-				{
-					generator.write("port", "None");
-					LogWrapper.getLogger().info("All ports are busy.");
-				}
-				else
-				{
-					generator.write("port", chosenPort.port);
-					LogWrapper.getLogger().info("Allocated port " + chosenPort.port);
-				}
-				generator.writeEnd();
-				generator.flush();
+				writePort(generator, chosenPort);
 
 				generator.writeEnd();
+				generator.close();
+				expect(parser, JsonParser.Event.END_ARRAY);
 
 				LogWrapper.getLogger().info("Handshake complete.");
 			}
 			catch (Exception e)
 			{
-				LogWrapper.getLogger().log(Level.INFO, null, e);
+				LogWrapper.getLogger().log(Level.INFO, "Error in handshake server", e);
 			}
 		}
 	}
 
+	private static void writePort(JsonGenerator generator, PortStatus chosenPort)
+	{
+		generator.writeStartObject();
+		if (chosenPort == null)
+		{
+			generator.write("port", "None");
+			LogWrapper.getLogger().info("All ports are busy.");
+		}
+		else
+		{
+			generator.write("port", chosenPort.port);
+			LogWrapper.getLogger().info("Allocated port " + chosenPort.port);
+		}
+		generator.writeEnd();
+		generator.flush();
+	}
+
 	private WaitForObject<PortStatus> createHandlerRunnable(
-			RijndaelKey outgoing,
-			RijndaelKey incoming,
+			KeyInfo outgoing,
+			KeyInfo incoming,
 			String remoteIdentifer,
 			String reason)
 	{
@@ -146,11 +161,12 @@ public class HandshakeServer extends HandShake implements Runnable
 								 incoming,
 								 outgoing,
 								 remoteIdentifer,
-								 reason);)
+								 reason,
+								 true);)
 				{
 					new ConnectionRunnable(communication).run();
 				}
-				catch (InvalidKeyException | IOException ex)
+				catch (InvalidAlgorithmParameterException | InvalidKeyException | IOException ex)
 				{
 					LogWrapper.getLogger().log(Level.INFO, "Error while trying to connect to client.", ex);
 				}

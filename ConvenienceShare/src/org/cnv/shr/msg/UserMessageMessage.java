@@ -102,41 +102,41 @@ public class UserMessageMessage extends Message
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
-		boolean needsMessageStr = true;
 		boolean needsType = true;
+		boolean needsMessageStr = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
-				if (needsMessageStr)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.UserMessageMessage\" needs \"messageStr\"");
-				}
 				if (needsType)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.UserMessageMessage\" needs \"type\"");
+				}
+				if (needsMessageStr)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.msg.UserMessageMessage\" needs \"messageStr\"");
 				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
-			case VALUE_STRING:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("messageStr")) {
-					needsMessageStr = false;
-					messageStr = parser.getString();
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
 			case VALUE_NUMBER:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				if (key.equals("type")) {
 					needsType = false;
 					type = Integer.parseInt(parser.getString());
 				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
+			case VALUE_STRING:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("messageStr")) {
+					needsMessageStr = false;
+					messageStr = parser.getString();
+				} else {
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

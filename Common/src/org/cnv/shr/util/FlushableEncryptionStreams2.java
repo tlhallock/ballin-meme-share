@@ -12,14 +12,10 @@ import java.util.logging.Level;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 import de.flexiprovider.core.rijndael.RijndaelKey;
 
@@ -29,9 +25,9 @@ public class FlushableEncryptionStreams2
 	public static final int BLOCK_SIZE = 8192;
 	public static final int META_INFO_SIZE = 4;
 
-	static int count = 0;
-	static int sentCount = 0;
-	static int readCount = 0;
+//	static int count = 0;
+//	static int sentCount = 0;
+//	static int readCount = 0;
 
 	public static OutputStream newFlushableEncryptionOutputStream(OutputStream delegate, RijndaelKey aesKey) throws InvalidKeyException, InvalidAlgorithmParameterException
 	{
@@ -112,7 +108,7 @@ public class FlushableEncryptionStreams2
 					nextBytesRange(random, inBuffer, inOffset, bufferSize);
 				}
 				
-				System.out.println("Serializing " + inOffset);
+//				System.out.println("Serializing " + inOffset);
 				for (int i = 0; i < META_INFO_SIZE; i++)
 				{
 					inBuffer[i] = (byte) ((inOffset >> (i * 8)) & 0xff);
@@ -141,7 +137,7 @@ public class FlushableEncryptionStreams2
 				
 				delegate.write(outBuffer, 0, written);
 				
-				System.out.println("sent "  + (sentCount++) + ": " + (inOffset - 2));
+//				System.out.println("sent "  + (sentCount++) + ": " + (inOffset - 2));
 				
 				inOffset = META_INFO_SIZE;
 			}
@@ -195,7 +191,7 @@ public class FlushableEncryptionStreams2
 					{
 						if (failOnEnd)
 						{
-							throw new RuntimeException("Hit of stream inside frame!");
+							throw new RuntimeException("Hit end of stream inside frame!");
 						}
 						closed = true;
 						return false;
@@ -263,14 +259,14 @@ public class FlushableEncryptionStreams2
 				{
 					validEnd |= (decryptedBuffer[i] & 0xff) << (i * 8) ;
 				}
-				System.out.println("\t\tdeserialed " + validEnd);
+//				System.out.println("\t\tdeserialed " + validEnd);
 
 				frameEnd = nextLarger(validEnd);
 
 				readSome(frameEnd, true);
 				validStart = META_INFO_SIZE;
 
-				System.out.println("\t\tread "  + (readCount++) + ": " + (validEnd - validStart));
+//				System.out.println("\t\tread "  + (readCount++) + ": " + (validEnd - validStart));
 				
 //				System.out.println("Valid start = " + META_INFO_SIZE + "\nValidEnd = " + validEnd);
 				return true;
@@ -405,77 +401,6 @@ public class FlushableEncryptionStreams2
 			LogWrapper.getLogger().log(Level.SEVERE, "Unable to create aes cipher! Quiting.", e1);
 			System.exit(-1);
 			return null;
-		}
-	}
-	
-
-	@Test
-	public void simpl() throws Exception
-	{
-		int bufferSize = 32;
-		byte[][] testStrings = new byte[][] { "".getBytes(), "short".getBytes(), "really, really, really, really, really, really, really, reall long".getBytes() };
-		performTest(bufferSize, testStrings);
-	}
-	
-	@Test
-	public void testFuzzy() throws Exception
-	{
-		Random random = new Random(50);
-		for (int i = 0; i < 1; i++)
-		{
-			int bufferSize = random.nextInt(1024 * 1024 / 1024);
-			bufferSize = Short.MAX_VALUE / 2;
-			byte[][] sequence = new byte[random.nextInt(1024)][];
-			for (int j = 0; j < sequence.length; j++)
-			{
-				sequence[j] = new byte[random.nextInt(3 * bufferSize)];
-				random.nextBytes(sequence[j]);
-			}
-			performTest(bufferSize, sequence);
-		}
-	}
-
-	private static void performTest(int bufferSize, byte[][] testStrings) throws NoSuchAlgorithmException, IOException, InvalidKeyException, InvalidAlgorithmParameterException
-	{
-		SecretKey aesKey = KeyGenerator.getInstance("AES").generateKey();
-		System.out.println("testing with buffersize = " + bufferSize + " and " + testStrings.length + " separate messages.");
-		
-		TransferStream transferStream = new TransferStream();
-		
-		try (OutputStream output =
-						FlushableEncryptionStreams2.newFlushableEncryptionOutputStream(
-								transferStream.getOutput(), aesKey, bufferSize);
-				InputStream input =	
-						FlushableEncryptionStreams2.newFlushableEncryptionInputStream(
-								transferStream.getInput(), aesKey, bufferSize);)
-		{
-			
-			for (byte[] originalBytes : testStrings)
-			{
-//				System.out.println("Writing " + originalBytes.length + " bytes.");
-				
-				
-				output.write(originalBytes);
-				output.flush();
-	
-				byte[] decryptedBytes = new byte[originalBytes.length];
-	
-				int offset = 0;
-				while (offset < originalBytes.length)
-				{
-					int read = input.read(decryptedBytes, offset, decryptedBytes.length - offset);
-					if (read < 0)
-					{
-						throw new RuntimeException("Hit end of stream too early...");
-					}
-					offset += read;
-				}
-				
-				Assert.assertArrayEquals(originalBytes, decryptedBytes);
-			}
-			
-			output.close();
-			Assert.assertEquals(-1, input.read());
 		}
 	}
 }

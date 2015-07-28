@@ -10,6 +10,7 @@ import org.cnv.shr.db.h2.MyParserNullable;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.Jsonable;
 import org.cnv.shr.util.KeyPairObject;
+import org.cnv.shr.util.LogWrapper;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
@@ -61,15 +62,19 @@ public class ChangeIdentifierUserMessage implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsPort = true;
 		boolean needsNewIdentifer = true;
 		boolean needsIp = true;
 		boolean needsName = true;
-		boolean needsPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeIdentifierUserMessage\" needs \"port\"");
+				}
 				if (needsNewIdentifer)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeIdentifierUserMessage\" needs \"newIdentifer\"");
@@ -82,14 +87,19 @@ public class ChangeIdentifierUserMessage implements Jsonable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeIdentifierUserMessage\" needs \"name\"");
 				}
-				if (needsPort)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.mdl.ChangeIdentifierUserMessage\" needs \"port\"");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("port")) {
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -108,16 +118,7 @@ public class ChangeIdentifierUserMessage implements Jsonable
 				case "publicKey":
 					publicKey = parser.getString();
 					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("port")) {
-					needsPort = false;
-					port = Integer.parseInt(parser.getString());
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

@@ -253,9 +253,13 @@ public class PathTreeModelNode implements TaskListener
 		{
 			return;
 		}
-		for (final TreeModelListener listener : model.listeners)
+		
+		synchronized (model.listeners)
 		{
-			listener.treeStructureChanged(event);
+			for (final TreeModelListener listener : model.listeners)
+			{
+				listener.treeStructureChanged(event);
+			}
 		}
 	}
 	

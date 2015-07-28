@@ -170,21 +170,37 @@ public class MachineBackup implements Jsonable
 	@Override                                    
 	public void parse(JsonParser parser) {       
 		String key = null;                         
+		boolean needsAllowsMessages = true;
+		boolean needsPin = true;
+		boolean needsRoots = true;
+		boolean needsPort = true;
 		boolean needsIp = true;
 		boolean needsName = true;
 		boolean needsIdentifier = true;
 		boolean needsWeShareToThem = true;
 		boolean needsSharesWithUs = true;
 		boolean needsKeys = true;
-		boolean needsRoots = true;
-		boolean needsAllowsMessages = true;
-		boolean needsPin = true;
-		boolean needsPort = true;
 		while (parser.hasNext()) {                 
 			JsonParser.Event e = parser.next();      
 			switch (e)                               
 			{                                        
 			case END_OBJECT:                         
+				if (needsAllowsMessages)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"allowsMessages\"");
+				}
+				if (needsPin)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"pin\"");
+				}
+				if (needsRoots)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"roots\"");
+				}
+				if (needsPort)
+				{
+					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"port\"");
+				}
 				if (needsIp)
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"ip\"");
@@ -209,26 +225,56 @@ public class MachineBackup implements Jsonable
 				{
 					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"keys\"");
 				}
-				if (needsRoots)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"roots\"");
-				}
-				if (needsAllowsMessages)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"allowsMessages\"");
-				}
-				if (needsPin)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"pin\"");
-				}
-				if (needsPort)
-				{
-					throw new javax.json.JsonException("Incomplete json: type=\"org.cnv.shr.db.h2.bak.MachineBackup\" needs \"port\"");
-				}
 				return;                                
 			case KEY_NAME:                           
 				key = parser.getString();              
 				break;                                 
+			case VALUE_FALSE:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "allowsMessages":
+					needsAllowsMessages = false;
+					allowsMessages = false;
+					break;
+				case "pin":
+					needsPin = false;
+					pin = false;
+					break;
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
+			case VALUE_TRUE:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				switch(key) {
+				case "allowsMessages":
+					needsAllowsMessages = false;
+					allowsMessages = true;
+					break;
+				case "pin":
+					needsPin = false;
+					pin = true;
+					break;
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
+			case START_OBJECT:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("roots")) {
+					needsRoots = false;
+					roots.parse(parser);
+				} else {
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
+			case VALUE_NUMBER:
+				if (key==null) { throw new RuntimeException("Value with no key!"); }
+				if (key.equals("port")) {
+					needsPort = false;
+					port = Integer.parseInt(parser.getString());
+				} else {
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
+				}
+				break;
 			case VALUE_STRING:
 				if (key==null) { throw new RuntimeException("Value with no key!"); }
 				switch(key) {
@@ -252,7 +298,7 @@ public class MachineBackup implements Jsonable
 					needsSharesWithUs = false;
 					sharesWithUs = SharingState.valueOf(parser.getString());
 					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
+				default: LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			case START_ARRAY:
@@ -261,53 +307,7 @@ public class MachineBackup implements Jsonable
 					needsKeys = false;
 					keys.parse(parser);
 				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case START_OBJECT:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("roots")) {
-					needsRoots = false;
-					roots.parse(parser);
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_FALSE:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "allowsMessages":
-					needsAllowsMessages = false;
-					allowsMessages = false;
-					break;
-				case "pin":
-					needsPin = false;
-					pin = false;
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_TRUE:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				switch(key) {
-				case "allowsMessages":
-					needsAllowsMessages = false;
-					allowsMessages = true;
-					break;
-				case "pin":
-					needsPin = false;
-					pin = true;
-					break;
-				default: LogWrapper.getLogger().warning("Unknown key: " + key);
-				}
-				break;
-			case VALUE_NUMBER:
-				if (key==null) { throw new RuntimeException("Value with no key!"); }
-				if (key.equals("port")) {
-					needsPort = false;
-					port = Integer.parseInt(parser.getString());
-				} else {
-					LogWrapper.getLogger().warning("Unknown key: " + key);
+					LogWrapper.getLogger().warning(LogWrapper.getUnknownMessageAttributeStr(getJsonKey(), parser, e, key));
 				}
 				break;
 			default: LogWrapper.getLogger().warning("Unknown type found in message: " + e);

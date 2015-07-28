@@ -137,9 +137,13 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 		final PathTreeModelNode oldroot = this.root;
 		close();
 		root = new PathTreeModelNode(null, this, new NoPath(), false);
-		for (final TreeModelListener listener : listeners)
+		
+		synchronized (listeners)
 		{
-			listener.treeStructureChanged(new TreeModelEvent(this, (TreePath) null));
+			for (final TreeModelListener listener : listeners)
+			{
+				listener.treeStructureChanged(new TreeModelEvent(this, (TreePath) null));
+			}
 		}
 	}
 	
@@ -153,9 +157,12 @@ public class PathTreeModel extends TimerTask implements TreeModel, Closeable, Sy
 		iterator.queueSyncTask(rootSource, DbPaths2.getRoot(newRoot), this.root);
 		
 		this.root.expand();
-		for (final TreeModelListener listener : listeners)
+		synchronized (listeners)
 		{
-			listener.treeStructureChanged(new TreeModelEvent(this, (TreePath) null));
+			for (final TreeModelListener listener : listeners)
+			{
+				listener.treeStructureChanged(new TreeModelEvent(this, (TreePath) null));
+			}
 		}
 	}
 

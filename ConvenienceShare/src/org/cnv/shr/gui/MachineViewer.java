@@ -213,42 +213,58 @@ public class MachineViewer extends javax.swing.JFrame
         model.setRoot(remote);
     }
 
-    private void addPathsListener() {
-        final TableListener tableListener = new TableListener(pathsTable);
-        tableListener.addListener(new TableListener.TableRowListener() {
-            @Override
-            public void run(final int row) {
-                try {
-                    final String mId = tableListener.getTableValue("Name", row);
-                    if (mId == null) {
-                        LogWrapper.getLogger().info("Unable to find machine " + mId);
-                        return;
-                    }
-                    Services.userThreads.execute(() -> {
-	                    try {
-	                    	Machine machine = getMachine();
-	                    if (machine == null) return;
-	                        final RootDirectory root = DbRoots.getRoot(machine, mId);
-	                        if (root == null) {
-	                            LogWrapper.getLogger().info("Unable to find root mid=" + machine + " name=" + mId);
-	                            viewNoDirectory();
-	                        } else {
-	                            view(root);
-	                        }
-	                    } catch (final Exception ex) {
-	                        LogWrapper.getLogger().log(Level.INFO, "Unable to show directory " + mId, ex);
-	                    }});
-                } catch (final Exception ex) {
-                    LogWrapper.getLogger().log(Level.INFO, "Unable to show machine at index " + row, ex);
-                }
-            }
+	private void addPathsListener()
+	{
+		final TableListener tableListener = new TableListener(pathsTable);
+		tableListener.addListener(new TableListener.TableRowListener()
+		{
+			@Override
+			public void run(final int row)
+			{
+				try
+				{
+					final String mId = tableListener.getTableValue("Name", row);
+					if (mId == null)
+					{
+						LogWrapper.getLogger().info("Unable to find machine " + mId);
+						return;
+					}
+					Services.userThreads.execute(() -> {
+						try
+						{
+							Machine machine = getMachine();
+							if (machine == null)
+								return;
+							final RootDirectory root = DbRoots.getRoot(machine, mId);
+							if (root == null)
+							{
+								LogWrapper.getLogger().info("Unable to find root mid=" + machine + " name=" + mId);
+								viewNoDirectory();
+							}
+							else
+							{
+								view(root);
+							}
+						}
+						catch (final Exception ex)
+						{
+							LogWrapper.getLogger().log(Level.INFO, "Unable to show directory " + mId, ex);
+						}
+					});
+				}
+				catch (final Exception ex)
+				{
+					LogWrapper.getLogger().log(Level.INFO, "Unable to show machine at index " + row, ex);
+				}
+			}
 
-            @Override
-            public String getString() {
-                return "Show";
-            }
-        }, true);
-    }
+			@Override
+			public String getString()
+			{
+				return "Show";
+			}
+		}, true);
+	}
     
     private int popUpX, popUpY;
     private void addPopupMenu()

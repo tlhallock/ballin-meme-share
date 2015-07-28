@@ -38,10 +38,11 @@ import javax.json.stream.JsonParser;
 import org.cnv.shr.dmn.Services;
 import org.cnv.shr.dmn.mn.strt.RunOnStartUp;
 import org.cnv.shr.gui.SplashScreen;
-import org.cnv.shr.msg.DoneMessage;
-import org.cnv.shr.msg.ShowApplication;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.SocketStreams;
+import org.iq80.snappy.SnappyFramedInputStream;
+import org.iq80.snappy.SnappyFramedOutputStream;
 
 public class Main
 {
@@ -108,16 +109,15 @@ public class Main
 		LogWrapper.getLogger().info("Application must already be running.");
 		String address = InetAddress.getLocalHost().getHostAddress();
 		try (Socket socket = new Socket(address, a.settings.servePortBeginI.get());
-				JsonParser input = TrackObjectUtils.createParser(socket.getInputStream());
-				JsonGenerator outputStream = TrackObjectUtils.createGenerator(socket.getOutputStream());)
+				 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(SocketStreams.newSocketOutputStream(socket)), true);
+				 JsonParser parser       = TrackObjectUtils.createParser(   new SnappyFramedInputStream( SocketStreams.newSocketInputStream (socket), true));)
 		{
-			ShowApplication showApplication = new ShowApplication();
-			DoneMessage doneMessage = new DoneMessage();
-			outputStream.writeStartObject();
-			showApplication.generate(outputStream, showApplication.getJsonKey());
-			doneMessage.generate(outputStream, doneMessage.getJsonKey());
-			outputStream.writeEnd();
-			outputStream.flush();
+			generator.writeStartArray();
+			generator.writeStartObject();
+			generator.write("showGui", true);
+			generator.writeEnd();
+			generator.writeEnd();
+			generator.flush();
 			LogWrapper.getLogger().info("Message sent. Waiting...");
 			Thread.sleep(5000);
 		}
