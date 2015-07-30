@@ -83,10 +83,10 @@ public class Communication implements Closeable
 	
 	private HashMap<String, Object> params = new HashMap<>();
 	
-	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = true;
-	private static final boolean LOG_ALL_COMMUNICATION = true;
+	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = false;
+	private static final boolean LOG_ALL_COMMUNICATION = false;
 
-	Communication(
+	public Communication(
 			Socket socket,
 			KeyInfo incoming,
 			KeyInfo outgoing,
@@ -116,8 +116,8 @@ public class Communication implements Closeable
 		
 		if (LOG_ALL_COMMUNICATION)
 		{
-			input = LogStreams.newLogInputStream(input, "communication");
-			output = LogStreams.newLogOutputStream(output, "comunication");
+			input = LogStreams.newLogInputStream(input, "communication." + socket.getPort());
+			output = LogStreams.newLogOutputStream(output, "communication." + socket.getPort());
 		}
 
 		if (pausable)
@@ -125,8 +125,6 @@ public class Communication implements Closeable
 			input  = (pausableInput = new PausableInputStream2(input));
 			output = (pausableOutput = new PausableOutputStream(output));
 		}
-		
-		
 
 		needsMore = true;
 

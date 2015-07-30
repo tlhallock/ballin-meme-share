@@ -85,7 +85,7 @@ public class PausableInputStream2 extends HardToCloseInputStream
 		
 		if (DEBUG)
 		{
-			System.out.println("pausable byte returning " + new String(buf, off, len));
+//			System.out.println("pausable byte returning " + new String(buf, off, len));
 		}
 		
 		return read;

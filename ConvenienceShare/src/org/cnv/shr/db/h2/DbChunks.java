@@ -43,10 +43,11 @@ import org.cnv.shr.util.LogWrapper;
 public class DbChunks
 {
 	private static final QueryWrapper DELETE1 = new QueryWrapper("delete from CHUNK where DID=?;");
-	private static final QueryWrapper SELECT4 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET from CHUNK where DID=? and DOWNLOAD_STATE=" + ChunkState.NOT_DOWNLOADED.getDbValue() + ";");
+	private static final QueryWrapper SELECT4 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET from CHUNK where DID=? and DOWNLOAD_STATE=" + ChunkState.DOWNLOADED.getDbValue() + ";");
 	private static final QueryWrapper UPDATE1 = new QueryWrapper("update CHUNK set DOWNLOAD_STATE=? where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and CHECKSUM=?;");
 	private static final QueryWrapper SELECT3 = new QueryWrapper("select END_OFFSET, BEGIN_OFFSET, CHECKSUM from CHUNK where DID=? and DOWNLOAD_STATE=" + ChunkState.NOT_DOWNLOADED.getDbValue() + " limit ?;");
 	private static final QueryWrapper SELECT5 = new QueryWrapper("select count(C_ID) from CHUNK where DID=? and END_OFFSET=? and BEGIN_OFFSET=?;");
+	private static final QueryWrapper COUNT   = new QueryWrapper("select count(C_ID) from CHUNK where DID=?;");
 	private static final QueryWrapper SELECT1 = new QueryWrapper("select * from CHUNK where DID=?;");
 	private static final QueryWrapper MERGE1  = new QueryWrapper("merge into CHUNK key(DID, BEGIN_OFFSET, END_OFFSET) values (DEFAULT, ?, ?, ?, ?, ?);");
 	private static final QueryWrapper SELECT6 = new QueryWrapper("select count(C_ID) from CHUNK where DID=? and END_OFFSET=? and BEGIN_OFFSET=? and DOWNLOAD_STATE=" + ChunkState.DOWNLOADED.getDbValue() + ";");
@@ -250,27 +251,41 @@ public class DbChunks
 	
 	public static double getDownloadPercentage(Download d)
 	{
-		long done = 0;
+		long total = 0;
+		long numDone = 0;
+		long doneBytes = 0;
+		
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
-				StatementWrapper stmt = c.prepareStatement(SELECT4);)
+				 StatementWrapper stmt = c.prepareStatement(SELECT4);
+				 StatementWrapper count = c.prepareStatement(COUNT);)
 		{
-			int ndx = 1;
-			// the query
-			stmt.setInt(ndx++, d.getId()); // this file
+			count.setInt(1, d.getId()); // this file
+			try (ResultSet results = count.executeQuery();)
+			{
+				if (results.next())
+				{
+					total = results.getLong(1);
+				}
+			}
+			
+			stmt.setInt(1, d.getId()); // this file
 
 			try (ResultSet results = stmt.executeQuery();)
 			{
 				while (results.next())
 				{
-					done += results.getLong(1) - results.getLong(2);
+					numDone++;
+					doneBytes += results.getLong(1) - results.getLong(2);
 				}
 			}
+			
+			LogWrapper.getLogger().info(numDone + " chunks done out of " + total + " for download " + d);
 		}
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to get download percentage", e);
 		}
-		return done / (double) d.getFile().getFileSize();
+		return doneBytes / (double) d.getFile().getFileSize();
 	}
 	
 	

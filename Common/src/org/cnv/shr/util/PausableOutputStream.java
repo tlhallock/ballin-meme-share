@@ -56,6 +56,7 @@ public class PausableOutputStream extends OutputStream
 	public void close() throws IOException
 	{
 		stopOtherSide();
+		flush();
 	}
 	
 	/*

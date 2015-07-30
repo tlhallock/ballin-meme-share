@@ -105,6 +105,8 @@ public abstract class TrackerConnection implements Closeable
 				return;
 			}
 		}
+		request.generate(generator);
+		generator.flush();
 	}
 	
 	private void authenticate() throws IOException, MissingKeyException

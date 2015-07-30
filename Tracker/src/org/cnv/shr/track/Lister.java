@@ -47,5 +47,6 @@ public class Lister<T extends TrackObject> implements Receiver<T>
 	public void done()
 	{
 		generator.writeEnd();
+		generator.flush();
 	}
 }

@@ -94,7 +94,7 @@ public class Track
 		Class.forName("org.h2.Driver");
 		try
 		{
-			deleteDb();
+//			deleteDb();
 			createDb();
 			
 			ensureLocalTrackerIsPresent();

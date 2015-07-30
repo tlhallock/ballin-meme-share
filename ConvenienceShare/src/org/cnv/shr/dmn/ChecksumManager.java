@@ -58,7 +58,7 @@ public class ChecksumManager extends Thread
 	
 	private boolean stop;
 	
-	private Iterator<LocalFile> iterator;
+	private Iterator<Integer> iterator;
 	
 	public ChecksumManager()
 	{
@@ -106,11 +106,15 @@ public class ChecksumManager extends Thread
 				count++;
 			}
 			LocalFile next;
-			if (iterator.hasNext()
-					// We will be kicked when the synchronizing is done anyway...
-					&& !(next = iterator.next()).getRootDirectory().isSynchronizing())
+			while (iterator.hasNext())
 			{
-				return next;
+				Integer next2 = iterator.next();
+				LocalFile file = (LocalFile) DbFiles.getFile(next2);
+				// We will be kicked when the synchronizing is done anyway...
+				if (file != null && !file.getRootDirectory().isSynchronizing())
+				{
+					return file;
+				}
 			}
 
 			iterator = null;

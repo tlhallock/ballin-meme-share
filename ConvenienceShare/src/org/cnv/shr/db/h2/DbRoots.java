@@ -320,17 +320,14 @@ public class DbRoots
 				progressBar.begin(2, 1);
 				s3.setInt(1, root.getId());
 				s3.execute();
-	
 				LogWrapper.getLogger().fine("Done removing " + root);
-	
+				
 				progressBar.begin(3, 1);
 				DbRootPaths.removeRootPath(pathId);
 				LogWrapper.getLogger().fine("Done removing root path. ");
 			}
-			
 
 			Services.notifications.localsChanged();
-			
 
 			try (ResultSet executeQuery = countClean.executeQuery();)
 			{

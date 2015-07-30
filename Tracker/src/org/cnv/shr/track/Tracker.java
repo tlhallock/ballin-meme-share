@@ -74,8 +74,8 @@ public class Tracker implements Runnable
 			try (Socket socket = serverSocket.accept();
 					SnappyFramedOutputStream output = new SnappyFramedOutputStream(/*LogStreams.newLogOutputStream(*/socket.getOutputStream()/*, "socket")*/);
 					SnappyFramedInputStream  input  = new SnappyFramedInputStream(/*LogStreams.newLogInputStream( */socket.getInputStream() /*, "socket")*/, false);
-					JsonParser parser       = TrackObjectUtils.createParser(input, true);
-					JsonGenerator generator = TrackObjectUtils.createGenerator(output);)
+					JsonGenerator generator = TrackObjectUtils.createGenerator(output);
+					JsonParser parser       = TrackObjectUtils.createParser(input, true);)
 			{
 				EnsureClosed ensureClosed = new EnsureClosed();
 				Misc.timer.schedule(ensureClosed, 10 * 60 * 1000);

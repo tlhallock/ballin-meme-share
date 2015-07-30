@@ -26,12 +26,10 @@
 package org.cnv.shr.trck;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +42,7 @@ import javax.json.stream.JsonParser.Event;
 import javax.json.stream.JsonParserFactory;
 
 import org.cnv.shr.util.LogWrapper;
+import org.cnv.shr.util.OMGJavaDecoder;
 
 public class TrackObjectUtils
 {
@@ -90,69 +89,81 @@ public class TrackObjectUtils
 //		}
 //		else
 //			return parserFactory.createParser(new InputStreamReader(input));
-//	}
+//	}OMGJavaDecoder
 	
-	
-	public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable)
+
+public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable)
+{
+	if (streamMayNotHaveAvailable)
 	{
-		// OMG, java is #!@%*&-up.
-		// The default InputStreamReader will try to read past the end of what is available.
-		// This results in stream hanging, even though it has bytes to return.
-		// To fix this, we create our own parser that is 10x smarter.
-		if (!streamMayNotHaveAvailable)
-		{
-			return parserFactory.createParser(new InputStreamReader(input, UTF_8));
-		}
-		JsonParser parser = parserFactory.createParser(new InputStreamReader(input, UTF_8)
-		{
-			@Override
-			public int read(char[] cbuf, int offset, int length) throws IOException
-			{
-				for (;;)
-				{
-//				System.out.println("BEGIN read from stream buffer");
-//				try
-//				{
-					int amountToRead = length;
-					int available = input.available();
-					if (amountToRead > available)
-					{
-						amountToRead = available;
-					}
-					// We have to read 1 byte, because the json parser pukes otherwise.
-					// This doesn't hurt, because we can block for 1 byte: we aren't waiting while we have something to return.
-					if (amountToRead < 1 && cbuf.length > 0)
-					{
-//						System.out.println("Reading another anyway...");
-						amountToRead = 1;
-					}
-					int read = super.read(cbuf, offset, amountToRead);
-					if (read == 0)
-					{
-//						LogWrapper.getLogger().severe("Read 0 byte from input!!!!");
-						continue;
-					}
-					if (read < 0)
-					{
-//						LogWrapper.getLogger().info("Hit end of stream while inside json...");
-					}
-					if (read > 0)
-					{
-						LogWrapper.getLogger().info("Returned json: " + new String(Arrays.copyOfRange(cbuf, offset, offset + read)) + "\n");
-					}
-					
-					return read;
-//				}
-//				finally
-//				{
-//					System.out.println("End read from stream buffer");
-//				}
-				}
-			}
-		});
-		return parser;
-//		return parserFactory.createParser(input, UTF_8);
+		return parserFactory.createParser(new OMGJavaDecoder(input, 4096));
 	}
+	else
+	{
+		return parserFactory.createParser(new InputStreamReader(input));
+	}
+}
+	
+//	public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable)
+//	{
+//		// OMG, java is #!@%*&-up.
+//		// The default InputStreamReader will try to read past the end of what is available.
+//		// This results in stream hanging, even though it has bytes to return.
+//		// To fix this, we create our own parser that is 10x smarter.
+//		if (!streamMayNotHaveAvailable)
+//		{
+//			return parserFactory.createParser(new InputStreamReader(input, UTF_8));
+//		}
+//		JsonParser parser = parserFactory.createParser(new InputStreamReader(input, UTF_8)
+//		{
+//			@Override
+//			public int read(char[] cbuf, int offset, int length) throws IOException
+//			{
+//				for (;;)
+//				{
+////				System.out.println("BEGIN read from stream buffer");
+////				try
+////				{
+//					int amountToRead = length;
+//					int available = input.available();
+//					if (amountToRead > available)
+//					{
+//						amountToRead = available;
+//					}
+//					// We have to read 1 byte, because the json parser pukes otherwise.
+//					// This doesn't hurt, because we can block for 1 byte: we aren't waiting while we have something to return.
+//					if (amountToRead < 1 && cbuf.length > 0)
+//					{
+////						System.out.println("Reading another anyway...");
+//						amountToRead = 1;
+//					}
+//					int read = super.read(cbuf, offset, amountToRead);
+//					if (read == 0)
+//					{
+////						LogWrapper.getLogger().severe("Read 0 byte from input!!!!");
+//						continue;
+//					}
+//					if (read < 0)
+//					{
+////						LogWrapper.getLogger().info("Hit end of stream while inside json...");
+//					}
+//					if (read > 0)
+//					{
+//						LogWrapper.getLogger().info("Returned json: " + new String(Arrays.copyOfRange(cbuf, offset, offset + read)) + "\n");
+//					}
+//					
+//					return read;
+////				}
+////				finally
+////				{
+////					System.out.println("End read from stream buffer");
+////				}
+//				}
+//			}
+//		});
+//		return parser;
+////		return parserFactory.createParser(input, UTF_8);
+//	}
 	
 	
 	

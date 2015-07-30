@@ -47,7 +47,7 @@ public class DbFiles
 	private static final QueryWrapper DELETE1   = new QueryWrapper("delete from SFILE where F_ID=?;");
 	private static final QueryWrapper SELECT1   = new QueryWrapper("select * from SFILE where PATH=?;");
 	private static final QueryWrapper SELECT3   = new QueryWrapper("select * from SFILE where IS_LOCAL and CHKSUM=? and FSIZE=? LIMIT 1;");
-	private static final QueryWrapper UNCHECKED = new QueryWrapper("select * from SFILE where IS_LOCAL and SFILE.CHKSUM IS NULL and SFILE.MODIFIED < ? LIMIT 100;");
+	private static final QueryWrapper UNCHECKED = new QueryWrapper("select F_ID from SFILE where IS_LOCAL and SFILE.CHKSUM IS NULL and SFILE.MODIFIED < ? LIMIT 100;");
 	private static final QueryWrapper CHECKED   = new QueryWrapper("select * from SFILE where IS_LOCAL and SFILE.CHKSUM IS NOT NULL;");
 	private static final QueryWrapper ALL       = new QueryWrapper("select * from SFILE where IS_LOCAL;");
 	
@@ -157,9 +157,9 @@ public class DbFiles
 	
 
 
-	public static LinkedList<LocalFile> getSomeUnchecksummedFiles()
+	public static LinkedList<Integer> getSomeUnchecksummedFiles()
 	{
-		LinkedList<LocalFile> returnValue = new LinkedList<>();
+		LinkedList<Integer> returnValue = new LinkedList<>();
 		
 		try (ConnectionWrapper c = Services.h2DbCache.getThreadConnection();
 				 StatementWrapper prepareStatement = c.prepareStatement(UNCHECKED);)
@@ -169,7 +169,7 @@ public class DbFiles
 			{
 				while (results.next())
 				{
-					returnValue.add((LocalFile) DbTables.DbObjects.SFILE.create(c, results));
+					returnValue.add(results.getInt(1));
 				}
 			}
 		}
