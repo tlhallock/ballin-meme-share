@@ -110,7 +110,7 @@ public class Main
 		String address = InetAddress.getLocalHost().getHostAddress();
 		try (Socket socket = new Socket(address, a.settings.servePortBeginI.get());
 				 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(SocketStreams.newSocketOutputStream(socket)), true);
-				 JsonParser parser       = TrackObjectUtils.createParser(   new SnappyFramedInputStream( SocketStreams.newSocketInputStream (socket), true));)
+				 JsonParser parser       = TrackObjectUtils.createParser(   new SnappyFramedInputStream( SocketStreams.newSocketInputStream (socket), true), true);)
 		{
 			generator.writeStartArray();
 			generator.writeStartObject();

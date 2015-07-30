@@ -190,7 +190,7 @@ public class DbBackupRestore
 		dbRestoreProgress.setVisible(true);
 		
 		try (CountingInputStream newInputStream = new CountingInputStream(Files.newInputStream(f));
-				 JsonParser parser = TrackObjectUtils.createParser(newInputStream);
+				 JsonParser parser = TrackObjectUtils.createParser(newInputStream, true);
 				 ConnectionWrapper wrapper = Services.h2DbCache.getThreadConnection();)
 		{
 			String key = null;

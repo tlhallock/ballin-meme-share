@@ -180,7 +180,7 @@ public class CompressionTests
 		try (ServerSocket server = new ServerSocket(9999);
 				Socket accept = server.accept();
 				JsonGenerator generator = TrackObjectUtils.createGenerator(new CountingOutputStream(accept.getOutputStream()));
-				JsonParser    parser    = TrackObjectUtils.createParser   (new CountingInputStream(accept.getInputStream()));)
+				JsonParser    parser    = TrackObjectUtils.createParser   (new CountingInputStream(accept.getInputStream()), true);)
 		{
 			generator.writeStartArray();
 			generator.write("foobar");
@@ -204,7 +204,7 @@ public class CompressionTests
 	{
 			try (Socket accept = new Socket("127.0.0.1", 9999);
 					JsonGenerator generator = TrackObjectUtils.createGenerator(new CountingOutputStream(accept.getOutputStream()));
-					JsonParser    parser    = TrackObjectUtils.createParser   (new CountingInputStream(accept.getInputStream()));)
+					JsonParser    parser    = TrackObjectUtils.createParser   (new CountingInputStream(accept.getInputStream()), true);)
 			{
 				generator.writeStartArray();
 				generator.write("foobar");

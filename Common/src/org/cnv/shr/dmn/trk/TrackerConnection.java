@@ -27,6 +27,8 @@ package org.cnv.shr.dmn.trk;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 
@@ -37,13 +39,12 @@ import javax.json.stream.JsonParser.Event;
 import org.cnv.shr.trck.MachineEntry;
 import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerRequest;
-import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.KeyPairObject;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.MissingKeyException;
-import org.cnv.shr.util.PausableInputStream2;
-import org.cnv.shr.util.PausableOutputStream;
+import org.iq80.snappy.SnappyFramedInputStream;
+import org.iq80.snappy.SnappyFramedOutputStream;
 
 import de.flexiprovider.core.rsa.RSAPublicKey;
 
@@ -53,8 +54,8 @@ public abstract class TrackerConnection implements Closeable
 	JsonParser parser;
 	JsonGenerator generator;
 	
-	PausableOutputStream out;
-	PausableInputStream2 in;
+	OutputStream out;
+	InputStream in;
 
 	protected TrackerConnection(String url, int port) throws IOException
 	{
@@ -63,7 +64,7 @@ public abstract class TrackerConnection implements Closeable
 
 	void connect(TrackerRequest request) throws IOException
 	{
-		generator = TrackObjectUtils.createGenerator(out = new PausableOutputStream(socket.getOutputStream()));
+		generator = TrackObjectUtils.createGenerator(out = new SnappyFramedOutputStream(socket.getOutputStream()));
 		generator.writeStartArray();
 		
 		MachineEntry local = getLocalMachine();
@@ -82,7 +83,7 @@ public abstract class TrackerConnection implements Closeable
 		}
 		generator.flush();
 
-		parser = TrackObjectUtils.createParser(in = new PausableInputStream2(socket.getInputStream()));
+		parser = TrackObjectUtils.createParser(in = new SnappyFramedInputStream(socket.getInputStream(), false), true);
 		Event next = parser.next();
 		if (!next.equals(JsonParser.Event.START_ARRAY))
 		{
@@ -103,28 +104,6 @@ public abstract class TrackerConnection implements Closeable
 				socket.close();
 				return;
 			}
-		}
-		
-		// handshake done...
-		generator.writeEnd();
-		generator.close();
-		generator = TrackObjectUtils.createGenerator(CompressionStreams2.newCompressedOutputStream(out));
-		generator.writeStartArray();
-		request.generate(generator);
-		generator.flush();
-		
-		if (!parser.next().equals(JsonParser.Event.END_ARRAY))
-		{
-			throw new IOException("Expected end of old stream.");
-		}
-		in.startAgain();
-		parser = TrackObjectUtils.createParser(CompressionStreams2.newCompressedInputStream(in));
-		
-		System.out.println("here...");
-
-		if (!parser.next().equals(JsonParser.Event.START_ARRAY))
-		{
-			throw new IOException("Tracker content did not start with an array.");
 		}
 	}
 	

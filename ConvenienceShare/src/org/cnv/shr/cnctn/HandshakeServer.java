@@ -57,7 +57,7 @@ public class HandshakeServer extends HandShake implements Runnable
 		{
 			try (Socket socket = serverSocket.accept(); 
 					 JsonGenerator generator = TrackObjectUtils.createGenerator(new SnappyFramedOutputStream(SocketStreams.newSocketOutputStream(socket)), true);
-					 JsonParser parser = TrackObjectUtils.createParser(         new SnappyFramedInputStream( SocketStreams.newSocketInputStream (socket), true));)
+					 JsonParser parser = TrackObjectUtils.createParser(         new SnappyFramedInputStream( SocketStreams.newSocketInputStream (socket), true), true);)
 			{
 				String hostAddress = socket.getInetAddress().getHostAddress();
 				LogWrapper.getLogger().info("Accepted connection from " + hostAddress);

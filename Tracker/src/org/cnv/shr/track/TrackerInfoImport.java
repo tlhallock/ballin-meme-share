@@ -103,7 +103,7 @@ public class TrackerInfoImport extends Thread
 	{
     LogWrapper.getLogger().info("Import trackers/machines from file " + f);
 		try (CountingInputStream newInputStream = new CountingInputStream(Files.newInputStream(f));
-				 JsonParser parser = TrackObjectUtils.createParser(newInputStream);)
+				 JsonParser parser = TrackObjectUtils.createParser(newInputStream, false);)
 		{
 			String key = null;
 			while (parser.hasNext())

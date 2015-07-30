@@ -50,6 +50,7 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.util.ConnectionStatistics;
 import org.cnv.shr.util.CountingInputStream;
 import org.cnv.shr.util.CountingOutputStream;
+import org.cnv.shr.util.LogStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
 import org.cnv.shr.util.PausableInputStream2;
@@ -83,6 +84,7 @@ public class Communication implements Closeable
 	private HashMap<String, Object> params = new HashMap<>();
 	
 	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = true;
+	private static final boolean LOG_ALL_COMMUNICATION = true;
 
 	Communication(
 			Socket socket,
@@ -111,12 +113,20 @@ public class Communication implements Closeable
 		
 		output = new SnappyFramedOutputStream(output);
 		input  = new SnappyFramedInputStream(input, false);
+		
+		if (LOG_ALL_COMMUNICATION)
+		{
+			input = LogStreams.newLogInputStream(input, "communication");
+			output = LogStreams.newLogOutputStream(output, "comunication");
+		}
 
 		if (pausable)
 		{
 			input  = (pausableInput = new PausableInputStream2(input));
 			output = (pausableOutput = new PausableOutputStream(output));
 		}
+		
+		
 
 		needsMore = true;
 
@@ -124,7 +134,7 @@ public class Communication implements Closeable
 		generator.writeStartObject();
 		generator.flush();
 
-		parser = TrackObjectUtils.createParser(pausableInput);
+		parser = TrackObjectUtils.createParser(pausableInput, true);
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{
 			throw new RuntimeException("Expected start object!");
@@ -345,7 +355,7 @@ public class Communication implements Closeable
 	public void endReadRaw() throws IOException
 	{
 		pausableInput.setRawMode(false);
-		parser = TrackObjectUtils.createParser(pausableInput);
+		parser = TrackObjectUtils.createParser(pausableInput, true);
 		if (!parser.next().equals(JsonParser.Event.START_OBJECT))
 		{
 			throw new RuntimeException("Expected start object!");

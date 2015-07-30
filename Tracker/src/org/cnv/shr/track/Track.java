@@ -94,8 +94,10 @@ public class Track
 		Class.forName("org.h2.Driver");
 		try
 		{
-//			deleteDb();
+			deleteDb();
 			createDb();
+			
+			ensureLocalTrackerIsPresent();
 		}
 		catch (Exception ex)
 		{
@@ -103,8 +105,6 @@ public class Track
 			System.exit(-1);
 		}
 		keys = new KeysService();
-		
-		ensureLocalTrackerIsPresent();
 		
 		importer = new TrackerInfoImport(rootDirectory.resolve("importDirectory"));
 		importer.start();

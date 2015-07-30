@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,20 +76,40 @@ public class TrackObjectUtils
 	
 	public static JsonParser createParser(String msg)
 	{
-		return createParser(new ByteArrayInputStream(msg.getBytes()));
+		return createParser(new ByteArrayInputStream(msg.getBytes()), false);
 	}
 	
-	public static JsonParser createParser(InputStream input)
+
+//	public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable)
+//	{
+//		if (streamMayNotHaveAvailable)
+//		{
+//			EverythingSoFarInputStream in = new EverythingSoFarInputStream(input, 8192);
+//			new Thread(in).start();
+//			return parserFactory.createParser(new InputStreamReader(in, UTF_8));
+//		}
+//		else
+//			return parserFactory.createParser(new InputStreamReader(input));
+//	}
+	
+	
+	public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable)
 	{
 		// OMG, java is #!@%*&-up.
 		// The default InputStreamReader will try to read past the end of what is available.
 		// This results in stream hanging, even though it has bytes to return.
 		// To fix this, we create our own parser that is 10x smarter.
+		if (!streamMayNotHaveAvailable)
+		{
+			return parserFactory.createParser(new InputStreamReader(input, UTF_8));
+		}
 		JsonParser parser = parserFactory.createParser(new InputStreamReader(input, UTF_8)
 		{
 			@Override
 			public int read(char[] cbuf, int offset, int length) throws IOException
 			{
+				for (;;)
+				{
 //				System.out.println("BEGIN read from stream buffer");
 //				try
 //				{
@@ -108,7 +129,8 @@ public class TrackObjectUtils
 					int read = super.read(cbuf, offset, amountToRead);
 					if (read == 0)
 					{
-						LogWrapper.getLogger().severe("Read 0 byte from input!!!!");
+//						LogWrapper.getLogger().severe("Read 0 byte from input!!!!");
+						continue;
 					}
 					if (read < 0)
 					{
@@ -116,7 +138,7 @@ public class TrackObjectUtils
 					}
 					if (read > 0)
 					{
-//						LogWrapper.getLogger().info("Returned json: " + new String(Arrays.copyOfRange(cbuf, offset, offset + read)) + "\n");
+						LogWrapper.getLogger().info("Returned json: " + new String(Arrays.copyOfRange(cbuf, offset, offset + read)) + "\n");
 					}
 					
 					return read;
@@ -125,6 +147,7 @@ public class TrackObjectUtils
 //				{
 //					System.out.println("End read from stream buffer");
 //				}
+				}
 			}
 		});
 		return parser;

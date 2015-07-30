@@ -70,12 +70,12 @@ public class TrackerStore implements Closeable
 		
 		getMachineIdStatement      = c.prepareStatement("select M_ID from MACHINE where MACHINE.IDENT = ? LIMIT 1;");
 		addTrackerStatement        = c.prepareStatement("merge into TRACKER key (IP, PORT, ENDPORT) values((select T_ID from TRACKER where IP=? and PORT=? and ENDPORT=?), ?, ?, ?, ?, ?);");
-		listMachinesStatement      = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE join MACHINE_CONTAINS on MACHINE_CONTAINS.MID=MACHINE.M_ID join SFILE on SFILE.F_ID=MACHINE_CONTAINS.FID where SFILE.CHKSUM=?;");
+		listMachinesStatement      = c.prepareStatement("select IP, PORT, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE join MACHINE_CONTAINS on MACHINE_CONTAINS.MID=MACHINE.M_ID join SFILE on SFILE.F_ID=MACHINE_CONTAINS.FID where SFILE.CHKSUM=?;");
 		listTrackersStatement      = c.prepareStatement("select IP, PORT, ENDPORT, LAST_ACTIVE, KEEPS_FILES from TRACKER;");
-		listAllMachinesStatement   = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE LIMIT ? OFFSET ?;");
+		listAllMachinesStatement   = c.prepareStatement("select IP, PORT, LAST_ACTIVE, IDENT, KEYSTR, MNAME from MACHINE LIMIT ? OFFSET ?;");
 		listCommentsStatement      = c.prepareStatement("select SENT, RATING, MESSAGE, IDENT from RATING_COMMENT join MACHINE on OID=MACHINE.M_ID where DID=(select M_ID from MACHINE where ident=?) LIMIT ? OFFSET ?;");
 		postCommentStatement       = c.prepareStatement("merge into RATING_COMMENT key (OID, DID) values((select C_ID from RATING_COMMENT where OID=? and DID=?), ?, ?, ?, ?, ?);");
-		getMachineStatement        = c.prepareStatement("select IP, PORT, NPORTS, LAST_ACTIVE, KEYSTR, MNAME from MACHINE where IDENT=?;");
+		getMachineStatement        = c.prepareStatement("select IP, PORT, LAST_ACTIVE, KEYSTR, MNAME from MACHINE where IDENT=?;");
 		machineFoundStatement      = c.prepareStatement("merge into MACHINE key (IDENT) values((select M_ID from MACHINE where IDENT=?), ?, ?, ?, ?, ?, ?);");
 		machineClaimsStatement     = c.prepareStatement("merge into MACHINE_CONTAINS key(FID, MID) values((select M_ID from MACHINE where IDENT=?),(select F_ID from SFILE where CHKSUM=?));");
 		machineLostStatement       = c.prepareStatement("delete from MACHINE_CONTAINS where MID=(select M_ID from MACHINE where IDENT=?) and FID=(select F_ID from SFILE where CHKSUM=?);");
@@ -160,7 +160,7 @@ public class TrackerStore implements Closeable
 			removeTrackerStatement.setString(ndx++, entry.getIp());
 			removeTrackerStatement.setInt(ndx++, entry.getBeginPort());
 
-			addTrackerStatement.execute();
+			removeTrackerStatement.execute();
 		}
 		catch (SQLException e)
 		{

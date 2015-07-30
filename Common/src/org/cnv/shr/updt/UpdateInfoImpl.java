@@ -175,7 +175,7 @@ public class UpdateInfoImpl implements UpdateInfo
 	
 	private void readLastKnownVersions()
 	{
-		try (JsonParser generator = TrackObjectUtils.createParser(Files.newInputStream(versionsFile)))
+		try (JsonParser generator = TrackObjectUtils.createParser(Files.newInputStream(versionsFile), false);)
 		{
 			lastKnownVersions.parse(generator);
 		}

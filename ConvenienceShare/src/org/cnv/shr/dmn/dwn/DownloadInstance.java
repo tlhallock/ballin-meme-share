@@ -174,6 +174,11 @@ public class DownloadInstance implements Runnable
 			return;
 		}
 		
+		if (true)
+		{
+			return;
+		}
+		
 		long now = System.currentTimeMillis();
 		if (now - SEEDER_REQUEST_DELAY < lastSeederRequest)
 		{
@@ -465,7 +470,6 @@ public class DownloadInstance implements Runnable
 			{
 				boolean successful;
 
-				LogWrapper.getLogger().info("Chunk is not compressed.");
 				connection.beginReadRaw();
 				successful = ChunkData.read(chunk, destination.toFile(), connection.getIn());
 				connection.endReadRaw();
@@ -485,6 +489,7 @@ public class DownloadInstance implements Runnable
 			}
 			catch (IOException e)
 			{
+				// should set state to error or remove seeder...
 				if (e.getMessage().contains("No space"))
 				{
 					Services.userThreads.execute(() -> {

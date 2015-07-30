@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
@@ -26,11 +27,13 @@ public class ChecksumRequester extends Thread
 	
 	private HashSet<SharedFileId> pending = new HashSet<>();
 	private ConnectionWaiter waiter = new ConnectionWaiter();
-	
 
 	private static final QueryWrapper DELETE   = new QueryWrapper("delete CHK_REQ where FID=?;");
 	private static final QueryWrapper ADD      = new QueryWrapper("merge into CHK_REQ key (FID) values (?);");
 	private static final QueryWrapper GET      = new QueryWrapper("select FID from CHK_REQ;");
+	
+	private Lock lock = new ReentrantLock();
+	private Condition condition = lock.newCondition();
 	
 	{
 		Services.notifications.add(waiter);
@@ -48,6 +51,16 @@ public class ChecksumRequester extends Thread
 		catch (SQLException e)
 		{
 			LogWrapper.getLogger().log(Level.INFO, "Unable to add checksum request for " + remote, e);
+		}
+		
+		lock.lock();
+		try
+		{
+			condition.notifyAll();
+		}
+		finally
+		{
+			lock.unlock();
 		}
 	}
 	
@@ -78,6 +91,7 @@ public class ChecksumRequester extends Thread
 	@Override
 	public void run()
 	{
+		Thread.currentThread().setName("chksum_requester");
 		while (true)
 		{
 			try (ConnectionWrapper connection = Services.h2DbCache.getThreadConnection();
@@ -98,15 +112,20 @@ public class ChecksumRequester extends Thread
 			{
 				LogWrapper.getLogger().log(Level.INFO, "Unable to list checksum requests.", e);
 			}
-			
+
+			lock.lock();
 			try
 			{
-				Thread.sleep(10 * 1000);
+				condition.await(10, TimeUnit.MINUTES);
 			}
 			catch (InterruptedException e)
 			{
 				LogWrapper.getLogger().log(Level.INFO, "Interrupted", e);
 				return;
+			}
+			finally
+			{
+				lock.unlock();
 			}
 		}
 	}

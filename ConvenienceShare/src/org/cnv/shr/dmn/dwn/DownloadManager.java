@@ -268,6 +268,7 @@ public class DownloadManager
 	public void startDownloadInitiator()
 	{
 		initiator.start();
+		requester.start();
 	}
 
 	public void quitAllDownloads()

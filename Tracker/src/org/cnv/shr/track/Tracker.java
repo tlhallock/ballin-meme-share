@@ -44,11 +44,10 @@ import org.cnv.shr.trck.TrackObjectUtils;
 import org.cnv.shr.trck.TrackerAction;
 import org.cnv.shr.trck.TrackerEntry;
 import org.cnv.shr.trck.TrackerRequest;
-import org.cnv.shr.util.CompressionStreams2;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.Misc;
-import org.cnv.shr.util.PausableInputStream2;
-import org.cnv.shr.util.PausableOutputStream;
+import org.iq80.snappy.SnappyFramedInputStream;
+import org.iq80.snappy.SnappyFramedOutputStream;
 
 public class Tracker implements Runnable
 {
@@ -72,13 +71,12 @@ public class Tracker implements Runnable
 			}
 			LogWrapper.getLogger().info("Waiting on " + serverSocket.getLocalPort());
 
-			try (Socket socket = serverSocket.accept();)
+			try (Socket socket = serverSocket.accept();
+					SnappyFramedOutputStream output = new SnappyFramedOutputStream(/*LogStreams.newLogOutputStream(*/socket.getOutputStream()/*, "socket")*/);
+					SnappyFramedInputStream  input  = new SnappyFramedInputStream(/*LogStreams.newLogInputStream( */socket.getInputStream() /*, "socket")*/, false);
+					JsonParser parser       = TrackObjectUtils.createParser(input, true);
+					JsonGenerator generator = TrackObjectUtils.createGenerator(output);)
 			{
-				PausableInputStream2 input  = new PausableInputStream2(/*LogStreams.newLogInputStream( */socket.getInputStream() /*, "socket")*/);
-				PausableOutputStream output = new PausableOutputStream(/*LogStreams.newLogOutputStream(*/socket.getOutputStream()/*, "socket")*/);
-				JsonParser parser       = TrackObjectUtils.createParser(input);
-				JsonGenerator generator = TrackObjectUtils.createGenerator(output);
-				
 				EnsureClosed ensureClosed = new EnsureClosed();
 				Misc.timer.schedule(ensureClosed, 10 * 60 * 1000);
 				
@@ -91,25 +89,6 @@ public class Tracker implements Runnable
 				String hostName = socket.getInetAddress().getHostAddress();
 				LogWrapper.getLogger().info("Connected to " + hostName);
 				MachineEntry entry = authenticateClient(parser, generator, hostName);
-				
-				if (!parser.next().equals(JsonParser.Event.END_ARRAY))
-				{
-					throw new IOException("Expected end of old stream.");
-				}
-				parser.close();
-				input.startAgain();
-				parser = TrackObjectUtils.createParser(CompressionStreams2.newCompressedInputStream(input));
-				if (!parser.next().equals(JsonParser.Event.START_ARRAY))
-				{
-					throw new IOException("Client content did not start with an array.");
-				}
-				
-				// Handshake done
-				generator.writeEnd();
-				generator.close();
-				generator = TrackObjectUtils.createGenerator(CompressionStreams2.newCompressedOutputStream(output));
-				generator.writeStartArray();
-				generator.flush();
 				
 				handleAction(generator, parser, entry);
 				generator.writeEnd();

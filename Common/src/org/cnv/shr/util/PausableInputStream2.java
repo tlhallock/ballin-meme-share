@@ -76,13 +76,19 @@ public class PausableInputStream2 extends HardToCloseInputStream
 		return read(b, 0, b.length);
 	}
 	
+	
+	
+	private static final boolean DEBUG = true;
 	private int delegateRead(byte buf[], int off, int len) throws IOException
 	{
-//		if (delegate.available() == 0)
-//		{
-//			return 0;
-//		}
-		return delegate.read(buf, off, len);
+		int read = delegate.read(buf, off, len);
+		
+		if (DEBUG)
+		{
+			System.out.println("pausable byte returning " + new String(buf, off, len));
+		}
+		
+		return read;
 	}
 
 	public int read(byte buf[], int off, int len) throws IOException
@@ -93,17 +99,7 @@ public class PausableInputStream2 extends HardToCloseInputStream
 		}
 		if (rawMode)
 		{
-			int nread = delegateRead(buf, off, len);
-			return nread;
-		}
-		
-		if (delegate.available() == 0)
-		{
-			System.out.println("pausable nothing in the delegate.");
-		}
-		else
-		{
-			System.out.println("pausable something in the delegate...");
+			return delegateRead(buf, off, len);
 		}
 		
 		// if much?
@@ -117,10 +113,6 @@ public class PausableInputStream2 extends HardToCloseInputStream
 				{
 					return -1;
 				}
-//				if (bufferEnd == 0)
-//				{
-//					return 0;
-//				}
 				continue;
 			}
 			if (buffer[bufferBegin] != PAUSE_BYTE)
@@ -179,10 +171,6 @@ public class PausableInputStream2 extends HardToCloseInputStream
 				{
 					throw new IOException("Unescaped pause character!!");
 				}
-//				if (read == 0)
-//				{
-//					return 0;
-//				}
 				bufferEnd += read;
 				continue;
 			}

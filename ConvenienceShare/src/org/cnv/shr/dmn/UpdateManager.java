@@ -355,7 +355,7 @@ public class UpdateManager extends TimerTask
 	{
 		Path updateKeyPath = Services.settings.codeUpdateKey.getPath();
 		LogWrapper.getLogger().info("Reading update information from " + updateKeyPath);
-		try (JsonParser input = TrackObjectUtils.createParser(Files.newInputStream(updateKeyPath)))
+		try (JsonParser input = TrackObjectUtils.createParser(Files.newInputStream(updateKeyPath), false);)
 		{
 			info = new JsonableUpdateInfo(input);
 		}
