@@ -298,6 +298,7 @@ public class DownloadInstance implements Runnable
 				LogWrapper.getLogger().info("Testing chunk " + next.chunk);
 				if (ChunkData.test(next.chunk, downloadToTest.getTargetFile()))
 				{
+					LogWrapper.getLogger().info("done");
 					if (!next.state.isDone())
 					{
 						DbChunks.chunkDone(downloadToTest, next.chunk, ChunkState.DOWNLOADED);
@@ -305,6 +306,7 @@ public class DownloadInstance implements Runnable
 				}
 				else
 				{
+					LogWrapper.getLogger().info("not done");
 					DbChunks.chunkDone(downloadToTest, next.chunk, ChunkState.NOT_DOWNLOADED);
 					done = false;
 				}
