@@ -21,7 +21,7 @@ public class MetaMsg
 		void open(int remoteId);
 		void content(IndexedByteArray array, SocketContext context, long startOffset, int length);
 		void setAmountRead(SocketContext context, long readOffset) throws IOException;
-		void close(SocketContext context) throws IOException;
+		void close(SocketContext context, long totalSent) throws IOException;
 	}
 
 	public static void handleMessage(MetaListener listener, IndexedByteArray array)
@@ -62,7 +62,9 @@ public class MetaMsg
 	
 	private static void parseClose(MetaListener multipleSocket, IndexedByteArray array) throws IOException
 	{
-		multipleSocket.close(new SocketContext(array));
+		SocketContext context = new SocketContext(array);
+		long totalSent = array.readLong();
+		multipleSocket.close(context, totalSent);
 	}
 
 	public static void writeAmountRead(SocketContext context, IndexedByteArray array) throws IOException

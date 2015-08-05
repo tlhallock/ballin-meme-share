@@ -29,10 +29,10 @@ public class IndexedByteArray
 			throw new IOException("Read past end of packet.");
 		}
 
-		returnValue |= (input[offset++] & 0xff) >>  0;
-		returnValue |= (input[offset++] & 0xff) >>  8;
-		returnValue |= (input[offset++] & 0xff) >> 16;
-		returnValue |= (input[offset++] & 0xff) >> 24;
+		returnValue |= (input[offset++] & 0xff) <<  0;
+		returnValue |= (input[offset++] & 0xff) <<  8;
+		returnValue |= (input[offset++] & 0xff) << 16;
+		returnValue |= (input[offset++] & 0xff) << 24;
 		
 		return returnValue;
 	}
@@ -59,14 +59,14 @@ public class IndexedByteArray
 			throw new IOException("Read past end of packet.");
 		}
 
-		returnValue |= (input[offset++] & 0xffL) >>  0;
-		returnValue |= (input[offset++] & 0xffL) >>  8;
-		returnValue |= (input[offset++] & 0xffL) >> 16;
-		returnValue |= (input[offset++] & 0xffL) >> 24;
-		returnValue |= (input[offset++] & 0xffL) >> 32;
-		returnValue |= (input[offset++] & 0xffL) >> 40;
-		returnValue |= (input[offset++] & 0xffL) >> 48;
-		returnValue |= (input[offset++] & 0xffL) >> 56;
+		returnValue |= (input[offset++] & 0xffL) <<  0;
+		returnValue |= (input[offset++] & 0xffL) <<  8;
+		returnValue |= (input[offset++] & 0xffL) << 16;
+		returnValue |= (input[offset++] & 0xffL) << 24;
+		returnValue |= (input[offset++] & 0xffL) << 32;
+		returnValue |= (input[offset++] & 0xffL) << 40;
+		returnValue |= (input[offset++] & 0xffL) << 48;
+		returnValue |= (input[offset++] & 0xffL) << 56;
 		
 		return returnValue;
 	}

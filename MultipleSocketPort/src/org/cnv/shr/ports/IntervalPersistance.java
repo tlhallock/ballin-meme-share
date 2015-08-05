@@ -25,13 +25,22 @@ public class IntervalPersistance
 		return start;
 	}
 	
-	public void add(int left, int right)
+	public void add(int left, int right) 
 	{
+		if (left == right)
+		{
+			return;
+		}
+		if (right > maximum)
+		{
+			throw new IndexOutOfBoundsException();
+		}
 		WrittenInterval newNode = new WrittenInterval(left, right);
 		
 		WrittenInterval other = tree.ceiling(newNode);
 		while (other != null && other.leftIndex <= newNode.rightIndex)
 		{
+			newNode.leftIndex  = Math.min(newNode.leftIndex, other.leftIndex);
 			newNode.rightIndex = Math.max(newNode.rightIndex, other.rightIndex);
 			tree.remove(other);
 			other = tree.ceiling(other);
@@ -40,7 +49,8 @@ public class IntervalPersistance
 		other = tree.floor(newNode);
 		while (other != null && other.rightIndex >= newNode.leftIndex)
 		{
-			newNode.leftIndex = Math.min(newNode.leftIndex, other.leftIndex);
+			newNode.leftIndex  = Math.min(newNode.leftIndex, other.leftIndex);
+			newNode.rightIndex = Math.max(newNode.rightIndex, other.rightIndex);
 			tree.remove(other);
 			other = tree.floor(other);
 		}
@@ -50,32 +60,53 @@ public class IntervalPersistance
 	
 	public WrittenInterval getNextBlock()
 	{
-		WrittenInterval test = new WrittenInterval();
-		test.leftIndex = start;
-		WrittenInterval ceiling = tree.ceiling(test);
-		if (ceiling == null || ceiling.leftIndex > start)
+		WrittenInterval returnValue = new WrittenInterval();
+		returnValue.leftIndex = start;
+		WrittenInterval floor = tree.floor(returnValue);
+		if (floor == null || floor.rightIndex <= start)
 		{
 			return null;
 		}
-		return ceiling;
+		returnValue.rightIndex = floor.rightIndex;
+		return returnValue;
 	}
-	
+
+	private final WrittenInterval DUMMY = new WrittenInterval();
 	public void remove(int amount) throws NoSuchElementException
 	{
-		WrittenInterval next = getNextBlock();
-		if (next == null || next.rightIndex - next.leftIndex < amount)
+		if (amount == 0)
+		{
+			return;
+		}
+		DUMMY.leftIndex = start;
+		WrittenInterval next = tree.floor(DUMMY);
+		if ((next == null || next.rightIndex - start < amount) 
+//					&& 
+//					(next.rightIndex != maximum || tree.first().leftIndex != 0)
+					)
 		{
 			throw new NoSuchElementException("Nothing to be read right now.");
 		}
-		
-		next.leftIndex += amount;
-		start += amount;
-		if (next.leftIndex == next.rightIndex)
+		if (start == next.leftIndex)
 		{
-			tree.remove(next);
+			next.leftIndex += amount;
+			if (next.leftIndex == next.rightIndex)
+			{
+				tree.remove(next);
+			}
 		}
-		
-		if (tree.isEmpty() || start >= maximum)
+		else if (start + amount == next.rightIndex)
+		{
+			next.rightIndex = start;
+		}
+		else
+		{
+			tree.add(new WrittenInterval(start + amount, next.rightIndex));
+			next.rightIndex = start;
+		}
+
+		start += amount;
+		if ( /*tree.isEmpty() || */ start >= maximum)
 		{
 			start = 0;
 		}

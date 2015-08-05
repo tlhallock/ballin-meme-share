@@ -24,14 +24,15 @@ public class SingleConnection
 		outputStream.close();
 	}
 	
-	public void shutdownInput() throws IOException
+	public void shutdownInput(long totalSent) throws IOException
 	{
+		inputStream.setTotalSent(totalSent);
 		inputStream.close();
 	}
 	
 	public synchronized void close() throws IOException
 	{
-		shutdownInput();
+		shutdownInput(0);
 		shutdownOutput();
 	}
 	

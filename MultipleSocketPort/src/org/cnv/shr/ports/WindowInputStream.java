@@ -14,22 +14,29 @@ public class WindowInputStream extends InputStream
 	private byte[] buffer;
 	private IntervalPersistance persistance = new IntervalPersistance(0);
 	private long totalRead;
-	private boolean closed;
+	private long totalSent = -1;
 	
 	private Lock lock = new ReentrantLock();
 	private Condition condition = lock.newCondition();
 	
 	public WindowInputStream(int bufferSize)
 	{
-		buffer = new byte[bufferSize];
+		buffer      = new byte[bufferSize];
 		persistance = new IntervalPersistance(bufferSize);
 	}
 	
-	public void write(byte[] other, int offset, int length, long startOffset)
+	public void write(byte[] other, int offset, int length, long startOffset) 
 	{
 		lock.lock();
 		try
 		{
+			long prevWrite = totalRead - startOffset; 
+			if (prevWrite > 0)
+			{
+				length 			-= prevWrite;
+				offset 			+= prevWrite;
+				startOffset += prevWrite;
+			}
 			int possibleWrite = (int) (totalRead + buffer.length - startOffset);
 			if (length > possibleWrite)
 			{
@@ -59,19 +66,23 @@ public class WindowInputStream extends InputStream
 		}
 	}
 	
-	public int read(byte[] other, int offset, int length)
+	public int read(byte[] other, int offset, int length) 
 	{
-		if (closed)
-		{
-			return -1;
-		}
-		
 		lock.lock();
 		try
 		{
 			int totalReturned = 0;
 			while (length > 0)
 			{
+				if (totalSent > 0 && length > totalSent - totalRead)
+				{
+					length = (int) (totalSent - totalRead);
+					if (length <= 0)
+					{
+						return totalReturned > 0 ? totalReturned : -1;
+					}
+				}
+				
 				WrittenInterval nextBlock = persistance.getNextBlock();
 				while (nextBlock == null)
 				{
@@ -93,6 +104,8 @@ public class WindowInputStream extends InputStream
 				offset        += amountToRead;
 				totalReturned += amountToRead;
 				length        -= amountToRead;
+				totalRead 		+= amountToRead;
+				persistance.remove(amountToRead);
 			}
 			return totalReturned;
 		}
@@ -121,9 +134,9 @@ public class WindowInputStream extends InputStream
 	}
 
 	@Override
-	public int available() throws IOException
+	public int available()
 	{
-		return super.available();
+		return persistance.getNextBlock().length();
 	}
 	
 	@Override
@@ -135,16 +148,29 @@ public class WindowInputStream extends InputStream
 	@Override
 	public void close() throws IOException
 	{
-		closed = true;
+		lock.lock();
+		try
+		{
+			totalSent = totalRead;
+		}
+		finally
+		{
+			lock.unlock();
+		}
 	}
 
-	public boolean isClosed() throws IOException
+	public boolean isClosed()
 	{
-		return closed && available() == 0;
+		return totalSent >= 0 && totalRead >= totalSent;
 	}
 
 	public long getAmountRead()
 	{
 		return totalRead;
+	}
+	
+	public void setTotalSent(long totalSent)
+	{
+		this.totalSent = totalSent;
 	}
 }

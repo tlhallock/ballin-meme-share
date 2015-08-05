@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class WindowOutputStream extends OutputStream
 {
-	private static final int BUFFER_SIZE = 8192;
+	private static final int BUFFER_SIZE = 1024;
 	
 	private long totalRead;
 	private long totalWritten;
@@ -26,6 +26,13 @@ public class WindowOutputStream extends OutputStream
 		buffer = new byte[bufferSize];
 	}
 	
+	
+	public static final class Interval { long start; long stop; public Interval(long b, long e) { this.start = b; this.stop = e; } };
+	public Interval getWindow()
+	{
+		return new Interval(totalRead, totalWritten);
+	}
+	
 	/**
 	 * Write the bytes in values from offset to offset + length.
 	 * This method blocks until all bytes can be written.
@@ -35,22 +42,21 @@ public class WindowOutputStream extends OutputStream
 			int offset,
 			int length)
 	{
-		lock.lock();
+		lock.lock(); 
 		try
 		{
 			while (length > 0)
 			{
-				int amountToWrite = (int) (totalWritten - totalRead);
+				int amountToWrite = (int) (buffer.length - (totalWritten - totalRead)); 
 				if (amountToWrite <= 0)
 				{
-					System.out.println("Buffer full, waiting.");
 					condition.await(10, TimeUnit.MINUTES);
 					continue;
 				}
 				
 				int bufferIndexBegin = (int) (totalWritten % buffer.length);
 				int remBuffer = buffer.length - bufferIndexBegin;
-				if (amountToWrite > remBuffer)
+				if (amountToWrite > remBuffer) 
 				{
 					amountToWrite = remBuffer;
 				}
@@ -58,11 +64,10 @@ public class WindowOutputStream extends OutputStream
 				{
 					amountToWrite = length;
 				}
-				int bufferIndexEnd = bufferIndexBegin + amountToWrite;
+				System.arraycopy(values, offset, buffer, bufferIndexBegin, amountToWrite);
 				
-				System.out.println("Writing from " + bufferIndexBegin + " to " + bufferIndexEnd);
-				
-				length -= amountToWrite;
+				length       -= amountToWrite;
+				offset       += amountToWrite;
 				totalWritten += amountToWrite;
 				
 				condition.signalAll();
@@ -76,6 +81,21 @@ public class WindowOutputStream extends OutputStream
 		{
 			lock.unlock();
 		}
+	}
+	
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		builder.append("[totalRead = " + totalRead + "]");
+		builder.append("[totalWritten = " + totalWritten + "]");
+		builder.append("[bytes=");
+		for (byte b : buffer)
+		{
+			builder.append(String.format("%02X", b & 0xff));
+		}
+		builder.append("]");
+		
+		return builder.toString();
 	}
 	
 	/**
@@ -131,6 +151,7 @@ public class WindowOutputStream extends OutputStream
 				System.arraycopy(buffer, bufferIndexBegin, other, offset, readLength);
 				
 				length      -= readLength;
+				offset      += readLength;
 				startOffset += readLength;
 			}
 		}

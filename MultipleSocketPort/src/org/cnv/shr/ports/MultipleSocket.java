@@ -57,14 +57,14 @@ public class MultipleSocket extends Thread
 	private final class ListenerImpl implements MetaListener
 	{
 		@Override
-		public void close(SocketContext context) throws IOException
+		public void close(SocketContext context, long totalSent) throws IOException
 		{
 			SingleConnection single = openConnections.get(context.localId);
 			if (single == null)
 			{
 				return;
 			}
-			single.shutdownInput();
+			single.shutdownInput(totalSent);
 		}
 
 		@Override
