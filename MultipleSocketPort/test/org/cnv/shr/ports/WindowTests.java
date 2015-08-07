@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
-import org.cnv.shr.ports.WindowOutputStream.Interval;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,7 +74,7 @@ public class WindowTests
 			
 			outputStream.setRead(frameStart);
 			
-			Interval window = outputStream.getWindow();
+			IndexedOutputStream.Interval window = outputStream.getWindow();
 			
 			for (long start = window.start; start < window.stop; start += currentBytes.length)
 			{

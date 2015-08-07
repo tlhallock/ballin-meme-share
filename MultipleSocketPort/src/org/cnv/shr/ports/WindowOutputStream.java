@@ -1,16 +1,13 @@
 package org.cnv.shr.ports;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class WindowOutputStream extends OutputStream
+class WindowOutputStream extends IndexedOutputStream
 {
-	private static final int BUFFER_SIZE = 1024;
-	
 	private long totalRead;
 	private long totalWritten;
 	
@@ -26,8 +23,6 @@ public class WindowOutputStream extends OutputStream
 		buffer = new byte[bufferSize];
 	}
 	
-	
-	public static final class Interval { long start; long stop; public Interval(long b, long e) { this.start = b; this.stop = e; } };
 	public Interval getWindow()
 	{
 		return new Interval(totalRead, totalWritten);

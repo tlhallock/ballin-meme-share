@@ -60,7 +60,7 @@ public class TestIndexedByteArray
 	@Test
 	public void testReadPastEnd()
 	{
-		array.reset(5);
+		array.reset(0, 5);
 		try
 		{
 			array.readLong();
@@ -74,7 +74,7 @@ public class TestIndexedByteArray
 	@Test
 	public void testWritePastEnd()
 	{
-		array.reset(5);
+		array.reset(0, 5);
 		try
 		{
 			array.writeLong(0);
@@ -88,18 +88,18 @@ public class TestIndexedByteArray
 	
 	private void testInt(int value) throws IOException
 	{
-		array.reset(4);
+		array.reset(0, 4);
 		array.writeInt(value);
-		array.reset(4);
+		array.reset(0, 4);
 		int actual = array.readInt();
 		Assert.assertEquals(value, actual);
 	}
 
 	public void testLong(long value) throws IOException
 	{
-		array.reset(8);
+		array.reset(0, 8);
 		array.writeLong(value);
-		array.reset(8);
+		array.reset(0, 8);
 		long actual = array.readLong();
 		Assert.assertEquals(value, actual);
 	}

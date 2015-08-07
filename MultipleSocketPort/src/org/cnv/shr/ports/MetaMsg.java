@@ -2,11 +2,11 @@ package org.cnv.shr.ports;
 
 import java.io.IOException;
 
-
-
-public class MetaMsg
+class MetaMsg
 {
 	public static final int MAXIMUM_MESSAGE_SIZE = 1024;
+	public static final int MESSAGE_START = Streams.CRC_SIZE;
+	
 	private static final int PACKET_SIZE = 1024;
 	public static final byte[] MAGIC = "magic".getBytes();
 
@@ -15,16 +15,15 @@ public class MetaMsg
 	public static final int    COUNTER_TYPE = 2;
 	public static final int        END_TYPE = 3;
 	
-	
 	public static interface MetaListener
 	{
-		void open(int remoteId);
-		void content(IndexedByteArray array, SocketContext context, long startOffset, int length);
+		void open(SocketContext context) throws IOException;
+		void content(SocketContext context, IndexedByteArray array, long startOffset, int length);
 		void setAmountRead(SocketContext context, long readOffset) throws IOException;
 		void close(SocketContext context, long totalSent) throws IOException;
 	}
 
-	public static void handleMessage(MetaListener listener, IndexedByteArray array)
+	public static void handleMessage(MetaListener listener, IndexedByteArray array, Address address)
 	{
 		try
 		{
@@ -33,16 +32,16 @@ public class MetaMsg
 			switch (type)
 			{
 			case MetaMsg.OPEN_CONNECTION:
-				parseOpenMessage(listener, array);
+				parseOpenMessage(listener, array, address);
 				break;
 			case MetaMsg.CONTENT_TYPE:
-				parserContent(listener, array);
+				parserContent(listener, array, address);
 				break;
 			case MetaMsg.COUNTER_TYPE:
-				parseAmountRead(listener, array);
+				parseAmountRead(listener, array, address);
 				break;
 			case MetaMsg.END_TYPE:
-				parseClose(listener, array);
+				parseClose(listener, array, address);
 				break;
 			default:
 				System.out.println("Bad type: " + type);
@@ -60,20 +59,22 @@ public class MetaMsg
 		// have to write the context somewhere...
 	}
 	
-	private static void parseClose(MetaListener multipleSocket, IndexedByteArray array) throws IOException
+	private static void parseClose(MetaListener multipleSocket, IndexedByteArray array, Address address) throws IOException
 	{
 		SocketContext context = new SocketContext(array);
+		context.origin = address;
 		long totalSent = array.readLong();
 		multipleSocket.close(context, totalSent);
 	}
 
-	public static void writeAmountRead(SocketContext context, IndexedByteArray array) throws IOException
+	public static void writeAmountRead(SocketContext context, IndexedByteArray array, long amountRead) throws IOException
 	{
 		
 	}
-	private static void parseAmountRead(MetaListener multipleSocket, IndexedByteArray array) throws IOException
+	private static void parseAmountRead(MetaListener multipleSocket, IndexedByteArray array, Address address) throws IOException
 	{
 		SocketContext context = new SocketContext(array);
+		context.origin = address;
 		long readOffset = array.readLong();
 		multipleSocket.setAmountRead(context, readOffset);
 	}
@@ -82,27 +83,34 @@ public class MetaMsg
 	{
 		
 	}
-	private static void parserContent(MetaListener multipleSocket, IndexedByteArray array) throws IOException
+	private static void parserContent(MetaListener multipleSocket, IndexedByteArray array, Address address) throws IOException 
 	{
 		SocketContext context = new SocketContext(array);
+		context.origin = address;
 		long startOffset = array.readLong();
 		int length = array.readInt();
-		multipleSocket.content(array, context, startOffset, length);
+		multipleSocket.content(context, array, startOffset, length);
 	}
 
 	public static void writeOpen(SocketContext context, IndexedByteArray array) throws IOException
 	{
 		
 	}
-	private static void parseOpenMessage(MetaListener multipleSocket, IndexedByteArray array) throws IOException
+	private static void parseOpenMessage(MetaListener multipleSocket, IndexedByteArray array, Address address) throws IOException
 	{
-		multipleSocket.open(array.readInt());
+		SocketContext context = new SocketContext(array);
+		context.origin = address;
+		
+		// something about to file
+		multipleSocket.open(context);
 	}
 
 	public static final class SocketContext
 	{
 		public final int localId;
 		public final int remoteId;
+		
+		private Address origin;
 		
 		public SocketContext(IndexedByteArray array) throws IOException
 		{
@@ -114,6 +122,11 @@ public class MetaMsg
 		{
 			this.localId = localId;
 			this.remoteId = remoteId;
+		}
+		
+		public Address getOrigin()
+		{
+			return origin;
 		}
 	}
 }

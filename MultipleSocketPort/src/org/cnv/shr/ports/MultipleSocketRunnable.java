@@ -6,12 +6,12 @@ import java.net.DatagramPacket;
 import org.cnv.shr.ports.MetaMsg.MetaListener;
 import org.cnv.shr.ports.Streams.InputStreamWrapperIf;
 
-public class MultipleSocketRunnable extends Thread
+class MultipleSocketRunnable extends Thread
 {
 	private MetaListener listener;
 	private InputStreamWrapperIf msgStream;
 
-	public MultipleSocketRunnable(MetaListener listener, InputStreamWrapperIf msgStream)
+	MultipleSocketRunnable(MetaListener listener, InputStreamWrapperIf msgStream)
 	{
 		this.listener = listener;
 		this.msgStream = msgStream;
@@ -21,7 +21,7 @@ public class MultipleSocketRunnable extends Thread
 	{
 		byte[] buf = new byte[MetaMsg.MAXIMUM_MESSAGE_SIZE];
 		DatagramPacket packet = new DatagramPacket(buf, MetaMsg.MAXIMUM_MESSAGE_SIZE);
-		IndexedByteArray array = new IndexedByteArray(buf);
+		IndexedByteArray array = new IndexedByteArray(buf); 
 
 		while (true)
 		{
@@ -35,9 +35,12 @@ public class MultipleSocketRunnable extends Thread
 				continue;
 			}
 			
-			array.reset(packet.getLength());
+			array.reset(MetaMsg.MESSAGE_START, packet.getLength());
+			String ip = packet.getAddress().getHostAddress();
+			int port = packet.getPort();
+			Address address = new Address(ip, port);
 			
-			MetaMsg.handleMessage(listener, array);
+			MetaMsg.handleMessage(listener, array, address);
 		}
 	}
 }

@@ -43,7 +43,7 @@ public class DoneMessage extends Message
 	public void perform(Communication connection) throws Exception
 	{
 		connection.send(new DoneResponse());
-		// Give the other size a sec to receive DoneResponse
+		// Give the other side a sec to receive DoneResponse
 		Thread.sleep(1000);
 		connection.setDone();
 	}
@@ -55,11 +55,6 @@ public class DoneMessage extends Message
 		return builder.toString();
 	}
 	
-	public boolean requiresAthentication()
-	{
-		return false;
-	}
-
 	// GENERATED CODE: DO NOT EDIT. BEGIN LUxNSMW0LBRAvMs5QOeCYdGXnFC1UM9mFwpQtEZyYty536QTKK
 	@Override
 	public void generate(JsonGenerator generator, String key) {

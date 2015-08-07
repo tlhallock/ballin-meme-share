@@ -41,6 +41,7 @@ import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 import javax.json.stream.JsonParserFactory;
 
+import org.cnv.shr.util.LogStreams;
 import org.cnv.shr.util.LogWrapper;
 import org.cnv.shr.util.OMGJavaDecoder;
 
@@ -75,7 +76,7 @@ public class TrackObjectUtils
 	
 	public static JsonParser createParser(String msg)
 	{
-		return createParser(new ByteArrayInputStream(msg.getBytes()), false);
+		return createParser(new ByteArrayInputStream(msg.getBytes()), false, false);
 	}
 	
 
@@ -90,19 +91,28 @@ public class TrackObjectUtils
 //		else
 //			return parserFactory.createParser(new InputStreamReader(input));
 //	}OMGJavaDecoder
-	
 
-public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable)
-{
-	if (streamMayNotHaveAvailable)
+	public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable)
 	{
-		return parserFactory.createParser(new OMGJavaDecoder(input, 4096));
+		return createParser(input, streamMayNotHaveAvailable, false);
+		
 	}
-	else
+	public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable, boolean log)
 	{
-		return parserFactory.createParser(new InputStreamReader(input));
+		if (log)
+		{
+			input = LogStreams.newLogInputStream(input, "log.in");
+		}
+
+		if (streamMayNotHaveAvailable)
+		{
+			return parserFactory.createParser(new OMGJavaDecoder(input, 4096));
+		}
+		else
+		{
+			return parserFactory.createParser(new InputStreamReader(input));
+		}
 	}
-}
 	
 //	public static JsonParser createParser(InputStream input, boolean streamMayNotHaveAvailable)
 //	{

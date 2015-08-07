@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 
 public class LogStreams
 {
@@ -51,7 +52,7 @@ public class LogStreams
 		return returnValue;
 	}
 
-	public static InputStream newLogInputStream(InputStream input, String prefix) throws IOException
+	public static InputStream newLogInputStream(InputStream input, String prefix)
 	{
 		return newLogInputStream(input, getRandomName("in." + prefix));
 	}
@@ -61,9 +62,18 @@ public class LogStreams
 		return Paths.get(prefix + "." + System.currentTimeMillis() + Math.random() + ".txt");
 	}
 	
-	private static InputStream newLogInputStream(InputStream input, Path file) throws IOException
+	private static InputStream newLogInputStream(InputStream input, Path file)
 	{
-		OutputStream log = Files.newOutputStream(file);
+		OutputStream log;
+		try
+		{
+			log = Files.newOutputStream(file);
+		}
+		catch (Exception x)
+		{
+			LogWrapper.getLogger().log(Level.INFO, "Unable to create log file.", x);
+			return input;
+		}
 		
 		InputStream inputStream = new InputStream()
 		{

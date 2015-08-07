@@ -3,7 +3,7 @@ package org.cnv.shr.ports;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;
 
-public class IntervalPersistance
+class IntervalPersistance
 {
 	private TreeSet<WrittenInterval> tree = new TreeSet<>();
 	private int start = 0;

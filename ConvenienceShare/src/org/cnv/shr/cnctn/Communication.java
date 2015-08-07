@@ -83,8 +83,7 @@ public class Communication implements Closeable
 	
 	private HashMap<String, Object> params = new HashMap<>();
 	
-	private static final boolean PRETTY_PRINT_ALL_COMMUNICATION = false;
-	private static final boolean LOG_ALL_COMMUNICATION = false;
+	private static final boolean LOG_ALL_COMMUNICATION = true;
 
 	public Communication(
 			Socket socket,
@@ -128,7 +127,7 @@ public class Communication implements Closeable
 
 		needsMore = true;
 
-		generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
+		generator = TrackObjectUtils.createGenerator(pausableOutput, LOG_ALL_COMMUNICATION);
 		generator.writeStartObject();
 		generator.flush();
 
@@ -271,6 +270,10 @@ public class Communication implements Closeable
 		{
 			needsMore = false;
 			socket.shutdownInput();
+//			if (parser != null)
+//				parser.close();
+//			else
+//				pausableInput.close();
 		}
 		catch (IOException e)
 		{
@@ -336,7 +339,7 @@ public class Communication implements Closeable
 	public void endWriteRaw() throws IOException
 	{
 		pausableOutput.setRawMode(false);
-		generator = TrackObjectUtils.createGenerator(pausableOutput, PRETTY_PRINT_ALL_COMMUNICATION);
+		generator = TrackObjectUtils.createGenerator(pausableOutput, LOG_ALL_COMMUNICATION);
 		generator.writeStartObject();
 		generator.flush();
 	}

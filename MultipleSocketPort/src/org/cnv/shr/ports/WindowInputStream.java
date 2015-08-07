@@ -1,7 +1,6 @@
 package org.cnv.shr.ports;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -9,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.cnv.shr.ports.IntervalPersistance.WrittenInterval;
 
-public class WindowInputStream extends InputStream
+class WindowInputStream extends IndexedInputStream
 {
 	private byte[] buffer;
 	private IntervalPersistance persistance = new IntervalPersistance(0);

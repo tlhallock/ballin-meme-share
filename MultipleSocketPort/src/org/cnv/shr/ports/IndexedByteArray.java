@@ -3,21 +3,27 @@ package org.cnv.shr.ports;
 import java.io.IOException;
 
 
-public class IndexedByteArray
+class IndexedByteArray
 {
-	byte[] input;
-	int offset;
-	int maximum;
+	private byte[] input;
+	private int offset;
+	private int maximum;
 	
 	public IndexedByteArray(byte[] buf)
 	{
 		this.input = buf;
 	}
 	
-	public void reset(int newMaximum)
+
+	public void reset()
 	{
-		offset = 0;
-		this.maximum = newMaximum;
+		reset(MetaMsg.MESSAGE_START, MetaMsg.MAXIMUM_MESSAGE_SIZE);
+	}
+	
+	public void reset(int start, int newMaximum)
+	{
+		offset = start;
+		maximum = newMaximum;
 	}
 
 	public int readInt() throws IOException
@@ -86,5 +92,15 @@ public class IndexedByteArray
 		input[offset++] = (byte)((value >> 40) & 0xffL);
 		input[offset++] = (byte)((value >> 48) & 0xffL);
 		input[offset++] = (byte)((value >> 56) & 0xffL);
+	}
+
+	public int getOffset()
+	{
+		return offset;
+	}
+	
+	public byte[] getBytes()
+	{
+		return input;
 	}
 }
